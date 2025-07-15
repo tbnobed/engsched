@@ -1,0 +1,1649 @@
+
+obtv-admin@obtv-postsched2:~/postscheduler$ sudo docker-compose up --build
+[+] Building 0.4s (14/14) FINISHED
+ => [web internal] load build definition from Dockerfile                                                                                        0.0s
+ => => transferring dockerfile: 1.58kB                                                                                                          0.0s
+ => [web internal] load metadata for docker.io/library/python:3.11-slim                                                                         0.3s
+ => [web internal] load .dockerignore                                                                                                           0.0s
+ => => transferring context: 2B                                                                                                                 0.0s
+ => [web 1/9] FROM docker.io/library/python:3.11-slim@sha256:3eeabb8ee1b7f6894d5666d3da3297899072416520e8cb303dfbb6c8f89418c4                   0.0s
+ => [web internal] load build context                                                                                                           0.0s
+ => => transferring context: 4.12kB                                                                                                             0.0s
+ => CACHED [web 2/9] WORKDIR /app                                                                                                               0.0s
+ => CACHED [web 3/9] RUN apt-get update && apt-get install -y     postgresql-client     build-essential     libpq-dev     curl     && rm -rf /  0.0s
+ => CACHED [web 4/9] COPY pyproject.toml .                                                                                                      0.0s
+ => CACHED [web 5/9] RUN pip install --no-cache-dir     email-validator>=2.2.0     flask>=3.1.0     flask-login>=0.6.3     flask-sqlalchemy>=3  0.0s
+ => CACHED [web 6/9] COPY . .                                                                                                                   0.0s
+ => CACHED [web 7/9] RUN mkdir -p /app/static/uploads /app/static/backups                                                                       0.0s
+ => CACHED [web 8/9] RUN chmod -R 755 /app/static     && chmod -R 777 /app/static/backups                                                       0.0s
+ => CACHED [web 9/9] RUN useradd -m appuser && chown -R appuser:appuser /app                                                                    0.0s
+ => [web] exporting to image                                                                                                                    0.0s
+ => => exporting layers                                                                                                                         0.0s
+ => => writing image sha256:64754799030238bfe44b53d5bda9c51e093f6fe9da1b7c7cf644e79bf5fa7ce7                                                    0.0s
+ => => naming to docker.io/library/postscheduler-web                                                                                            0.0s
+[+] Running 5/4
+ ✔ Network postscheduler_app-network     Created                                                                                                0.1s
+ ✔ Volume "postscheduler_postgres_data"  Created                                                                                                0.0s
+ ✔ Volume "postscheduler_backup_data"    Created                                                                                                0.0s
+ ✔ Container postscheduler-db-1          Created                                                                                                0.0s
+ ✔ Container postscheduler-web-1         Created                                                                                                0.0s
+Attaching to postscheduler-db-1, postscheduler-web-1
+postscheduler-db-1   | The files belonging to this database system will be owned by user "postgres".
+postscheduler-db-1   | This user must also own the server process.
+postscheduler-db-1   |
+postscheduler-db-1   | The database cluster will be initialized with locale "en_US.utf8".
+postscheduler-db-1   | The default database encoding has accordingly been set to "UTF8".
+postscheduler-db-1   | The default text search configuration will be set to "english".
+postscheduler-db-1   |
+postscheduler-db-1   | Data page checksums are disabled.
+postscheduler-db-1   |
+postscheduler-db-1   |
+postscheduler-db-1   |
+postscheduler-db-1   | fixing permissions on existing directory /var/lib/postgresql/data ... ok
+postscheduler-db-1   | creating subdirectories ...
+postscheduler-db-1   | ok
+postscheduler-db-1   | selecting dynamic shared memory implementation ...
+postscheduler-db-1   | posix
+postscheduler-db-1   | selecting default max_connections ...
+postscheduler-db-1   | 100
+postscheduler-db-1   | selecting default shared_buffers ...
+postscheduler-db-1   | 128MB
+postscheduler-db-1   | selecting default time zone ...
+postscheduler-db-1   | America/Los_Angeles
+postscheduler-db-1   | creating configuration files ...
+postscheduler-db-1   | ok
+postscheduler-db-1   | running bootstrap script ...
+postscheduler-db-1   | ok
+postscheduler-db-1   | performing post-bootstrap initialization ...
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |                              ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |            ^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |           ^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |      ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |            ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |            ^^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | psycopg2.
+postscheduler-web-1  | OperationalError
+postscheduler-web-1  | : connection to server at "db" (172.18.0.2), port 5432 failed: Connection refused
+postscheduler-web-1  |  Is the server running on that host and accepting TCP/IP connections?
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | The above exception was the direct cause of the following exception:
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |   File "/app/main.py", line 3, in <module>
+postscheduler-web-1  |     from app import app, db
+postscheduler-web-1  |   File "/app/app.py", line 131, in <module>
+postscheduler-web-1  |     db.create_all()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 900, in create_all
+postscheduler-web-1  |     self._call_for_binds(bind_key, "create_all")
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 881, in _call_for_binds
+postscheduler-web-1  |     getattr(metadata, op_name)(bind=engine)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/schema.py", line 5925, in create_all
+postscheduler-web-1  |     bind._run_ddl_visitor(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3248, in _run_ddl_visitor
+postscheduler-web-1  |     with self.begin() as conn:
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/contextlib.py", line 137, in __enter__
+postscheduler-web-1  |     return next(self.gen)
+postscheduler-web-1  |            ^^^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3238, in begin
+postscheduler-web-1  |     with self.connect() as conn:
+postscheduler-web-1  |          ^^^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3274, in connect
+postscheduler-web-1  |     return self._connection_cls(self)
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 148, in __init__
+postscheduler-web-1  |     Connection._handle_dbapi_exception_noconnection(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2439, in _handle_dbapi_exception_noconnection
+postscheduler-web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   ^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |
+postscheduler-web-1  |  ^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |           ^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |            ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   ^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |            ^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | sqlalchemy.exc
+postscheduler-web-1  | .OperationalError
+postscheduler-web-1  | : (psycopg2.OperationalError) connection to server at "db" (172.18.0.2), port 5432 failed: Connection refused
+postscheduler-web-1  |  Is the server running on that host and accepting TCP/IP connections?
+postscheduler-web-1  |
+postscheduler-web-1  | (Background on this error at: https://sqlalche.me/e/20/e3q8)
+postscheduler-web-1  |
+postscheduler-db-1   | ok
+postscheduler-db-1   | syncing data to disk ...
+postscheduler-db-1   | initdb: warning: enabling "trust" authentication for local connections
+postscheduler-db-1   | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+postscheduler-db-1   | ok
+postscheduler-db-1   |
+postscheduler-db-1   |
+postscheduler-db-1   | Success. You can now start the database server using:
+postscheduler-db-1   |
+postscheduler-db-1   |     pg_ctl -D /var/lib/postgresql/data -l logfile start
+postscheduler-db-1   |
+postscheduler-db-1   |
+postscheduler-db-1   | waiting for server to start....
+postscheduler-db-1   | 2025-04-09 15:15:24.780 PDT [48] LOG:  starting PostgreSQL 15.12 (Debian 15.12-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+postscheduler-db-1   | 2025-04-09 15:15:24.782 PDT [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+postscheduler-db-1   | 2025-04-09 15:15:24.788 PDT [51] LOG:  database system was shut down at 2025-04-09 15:15:24 PDT
+postscheduler-db-1   | 2025-04-09 15:15:24.797 PDT [48] LOG:  database system is ready to accept connections
+postscheduler-db-1   |  done
+postscheduler-db-1   | server started
+postscheduler-web-1 exited with code 0
+postscheduler-db-1   | CREATE DATABASE
+postscheduler-db-1   |
+postscheduler-db-1   |
+postscheduler-db-1   |
+postscheduler-db-1   |
+postscheduler-db-1   | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/init.sql
+postscheduler-db-1   | CREATE TABLE
+postscheduler-db-1   | 2025-04-09 15:15:25.143 PDT [61] ERROR:  relation "location" does not exist
+postscheduler-db-1   | 2025-04-09 15:15:25.143 PDT [61] STATEMENT:  CREATE TABLE schedule (
+postscheduler-db-1   |      id SERIAL PRIMARY KEY,
+postscheduler-db-1   |      technician_id INTEGER REFERENCES users(id),
+postscheduler-db-1   |      start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+postscheduler-db-1   |      end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+postscheduler-db-1   |      description TEXT,
+postscheduler-db-1   |      time_off BOOLEAN DEFAULT FALSE,
+postscheduler-db-1   |      location_id INTEGER REFERENCES location(id),
+postscheduler-db-1   |      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+postscheduler-db-1   |  );
+postscheduler-db-1   | psql:/docker-entrypoint-initdb.d/init.sql:21: ERROR:  relation "location" does not exist
+postscheduler-db-1 exited with code 3
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |  ^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |            ^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |           ^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |            ^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |            ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |     ^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |            ^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |            ^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | psycopg2.OperationalError: could not translate host name "db" to address: Temporary failure in name resolution
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | The above exception was the direct cause of the following exception:
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |   File "/app/main.py", line 3, in <module>
+postscheduler-web-1  |     from app import app, db
+postscheduler-web-1  |   File "/app/app.py", line 131, in <module>
+postscheduler-web-1  |     db.create_all()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 900, in create_all
+postscheduler-web-1  |     self._call_for_binds(bind_key, "create_all")
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 881, in _call_for_binds
+postscheduler-web-1  |     getattr(metadata, op_name)(bind=engine)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/schema.py", line 5925, in create_all
+postscheduler-web-1  |     bind._run_ddl_visitor(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3248, in _run_ddl_visitor
+postscheduler-web-1  |     with self.begin() as conn:
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/contextlib.py", line 137, in __enter__
+postscheduler-web-1  |     return next(self.gen)
+postscheduler-web-1  |            ^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3238, in begin
+postscheduler-web-1  |     with self.connect() as conn:
+postscheduler-web-1  |          ^^^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3274, in connect
+postscheduler-web-1  |     return self._connection_cls(self)
+postscheduler-web-1  |            ^^^^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 148, in __init__
+postscheduler-web-1  |     Connection._handle_dbapi_exception_noconnection(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2439, in _handle_dbapi_exception_noconnection
+postscheduler-web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |             ^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |           ^^^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |            ^^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |            ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |   ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |            ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |            ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |            ^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | sqlalchemy.exc.
+postscheduler-web-1  | OperationalError: (psycopg2.OperationalError) could not translate host name "db" to address: Temporary failure in name resolution
+postscheduler-web-1  |
+postscheduler-web-1  | (Background on this error at: https://sqlalche.me/e/20/e3q8)
+postscheduler-web-1  |
+postscheduler-web-1 exited with code 1
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |     ^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |
+postscheduler-web-1  |  ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |
+postscheduler-web-1  |       ^^^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |            ^^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   ^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |     ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |            ^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | psycopg2.OperationalError: could not translate host name "db" to address: Temporary failure in name resolution
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | The above exception was the direct cause of the following exception:
+postscheduler-web-1  |
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/app/main.py", line 3, in <module>
+postscheduler-web-1  |     from app import app, db
+postscheduler-web-1  |   File "/app/app.py", line 131, in <module>
+postscheduler-web-1  |     db.create_all()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 900, in create_all
+postscheduler-web-1  |     self._call_for_binds(bind_key, "create_all")
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 881, in _call_for_binds
+postscheduler-web-1  |     getattr(metadata, op_name)(bind=engine)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/schema.py", line 5925, in create_all
+postscheduler-web-1  |     bind._run_ddl_visitor(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3248, in _run_ddl_visitor
+postscheduler-web-1  |     with self.begin() as conn:
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/contextlib.py", line 137, in __enter__
+postscheduler-web-1  |     return next(self.gen)
+postscheduler-web-1  |            ^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3238, in begin
+postscheduler-web-1  |     with self.connect() as conn:
+postscheduler-web-1  |          ^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3274, in connect
+postscheduler-web-1  |     return self._connection_cls(self)
+postscheduler-web-1  |            ^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 148, in __init__
+postscheduler-web-1  |     Connection._handle_dbapi_exception_noconnection(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2439, in _handle_dbapi_exception_noconnection
+postscheduler-web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |  ^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |            ^^^^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |            ^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |            ^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |  ^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |            ^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |
+postscheduler-web-1  |      ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |
+postscheduler-web-1  |    ^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | sqlalchemy.exc.OperationalError
+postscheduler-web-1  | : (psycopg2.OperationalError) could not translate host name "db" to address: Temporary failure in name resolution
+postscheduler-web-1  |
+postscheduler-web-1  | (Background on this error at: https://sqlalche.me/e/20/e3q8)
+postscheduler-web-1  |
+postscheduler-web-1 exited with code 1
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |          ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |            ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |           ^^^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |            ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |            ^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |        ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |            ^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | psycopg2.OperationalError:
+postscheduler-web-1  | could not translate host name "db" to address: Temporary failure in name resolution
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | The above exception was the direct cause of the following exception:
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |   File "/app/main.py", line 3, in <module>
+postscheduler-web-1  |     from app import app, db
+postscheduler-web-1  |   File "/app/app.py", line 131, in <module>
+postscheduler-web-1  |     db.create_all()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 900, in create_all
+postscheduler-web-1  |     self._call_for_binds(bind_key, "create_all")
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 881, in _call_for_binds
+postscheduler-web-1  |     getattr(metadata, op_name)(bind=engine)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/schema.py", line 5925, in create_all
+postscheduler-web-1  |     bind._run_ddl_visitor(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3248, in _run_ddl_visitor
+postscheduler-web-1  |     with self.begin() as conn:
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/contextlib.py", line 137, in __enter__
+postscheduler-web-1  |     return next(self.gen)
+postscheduler-web-1  |
+postscheduler-web-1  |     ^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3238, in begin
+postscheduler-web-1  |     with self.connect() as conn:
+postscheduler-web-1  |          ^^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3274, in connect
+postscheduler-web-1  |     return self._connection_cls(self)
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 148, in __init__
+postscheduler-web-1  |     Connection._handle_dbapi_exception_noconnection(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2439, in _handle_dbapi_exception_noconnection
+postscheduler-web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |            ^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |            ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |           ^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |            ^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |            ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |            ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |            ^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | sqlalchemy.exc.OperationalError
+postscheduler-web-1  | : (psycopg2.OperationalError) could not translate host name "db" to address: Temporary failure in name resolution
+postscheduler-web-1  |
+postscheduler-web-1  | (Background on this error at: https://sqlalche.me/e/20/e3q8)
+postscheduler-web-1  |
+postscheduler-web-1 exited with code 1
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   ^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |           ^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |            ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |     ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |            ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |            ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |            ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | psycopg2.OperationalError: could not translate host name "db" to address: Temporary failure in name resolution
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | The above exception was the direct cause of the following exception:
+postscheduler-web-1  |
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |   File "/app/main.py", line 3, in <module>
+postscheduler-web-1  |
+postscheduler-web-1  |     from app import app, db
+postscheduler-web-1  |   File "/app/app.py", line 131, in <module>
+postscheduler-web-1  |     db.create_all()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 900, in create_all
+postscheduler-web-1  |     self._call_for_binds(bind_key, "create_all")
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 881, in _call_for_binds
+postscheduler-web-1  |     getattr(metadata, op_name)(bind=engine)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/schema.py", line 5925, in create_all
+postscheduler-web-1  |     bind._run_ddl_visitor(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3248, in _run_ddl_visitor
+postscheduler-web-1  |     with self.begin() as conn:
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/contextlib.py", line 137, in __enter__
+postscheduler-web-1  |     return next(self.gen)
+postscheduler-web-1  |
+postscheduler-web-1  | ^^^^^^^^^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3238, in begin
+postscheduler-web-1  |
+postscheduler-web-1  |     with self.connect() as conn:
+postscheduler-web-1  |          ^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3274, in connect
+postscheduler-web-1  |     return self._connection_cls(self)
+postscheduler-web-1  |            ^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 148, in __init__
+postscheduler-web-1  |     Connection._handle_dbapi_exception_noconnection(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2439, in _handle_dbapi_exception_noconnection
+postscheduler-web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |  ^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |            ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |           ^^^^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |            ^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |    ^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |            ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |            ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |            ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | sqlalchemy.exc.OperationalError
+postscheduler-web-1  | : (psycopg2.OperationalError) could not translate host name "db" to address: Temporary failure in name resolution
+postscheduler-web-1  |
+postscheduler-web-1  | (Background on this error at: https://sqlalche.me/e/20/e3q8)
+postscheduler-web-1  |
+postscheduler-web-1 exited with code 1
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |
+postscheduler-web-1  |   ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |           ^^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |  ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^^^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |            ^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |  ^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |            ^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  | psycopg2.OperationalError: could not translate host name "db" to address: Temporary failure in name resolution
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | The above exception was the direct cause of the following exception:
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  | Traceback (most recent call last):
+postscheduler-web-1  |   File "/app/main.py", line 3, in <module>
+postscheduler-web-1  |
+postscheduler-web-1  |     from app import app, db
+postscheduler-web-1  |   File "/app/app.py", line 131, in <module>
+postscheduler-web-1  |     db.create_all()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 900, in create_all
+postscheduler-web-1  |     self._call_for_binds(bind_key, "create_all")
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_sqlalchemy/extension.py", line 881, in _call_for_binds
+postscheduler-web-1  |     getattr(metadata, op_name)(bind=engine)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/schema.py", line 5925, in create_all
+postscheduler-web-1  |     bind._run_ddl_visitor(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3248, in _run_ddl_visitor
+postscheduler-web-1  |     with self.begin() as conn:
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/contextlib.py", line 137, in __enter__
+postscheduler-web-1  |     return next(self.gen)
+postscheduler-web-1  |
+postscheduler-web-1  |  ^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3238, in begin
+postscheduler-web-1  |     with self.connect() as conn:
+postscheduler-web-1  |          ^^^^^^^^^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3274, in connect
+postscheduler-web-1  |     return self._connection_cls(self)
+postscheduler-web-1  |            ^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 148, in __init__
+postscheduler-web-1  |     Connection._handle_dbapi_exception_noconnection(
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2439, in _handle_dbapi_exception_noconnection
+postscheduler-web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 146, in __init__
+postscheduler-web-1  |     self._dbapi_connection = engine.raw_connection()
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |      ^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 3298, in raw_connection
+postscheduler-web-1  |     return self.pool.connect()
+postscheduler-web-1  |            ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 449, in connect
+postscheduler-web-1  |     return _ConnectionFairy._checkout(self)
+postscheduler-web-1  |
+postscheduler-web-1  |   ^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+postscheduler-web-1  |     fairy = _ConnectionRecord.checkout(pool)
+postscheduler-web-1  |             ^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 713, in checkout
+postscheduler-web-1  |     rec = pool._do_get()
+postscheduler-web-1  |           ^^
+postscheduler-web-1  | ^^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 179, in _do_get
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+postscheduler-web-1  |     return self._create_connection()
+postscheduler-web-1  |            ^^^^
+postscheduler-web-1  | ^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 390, in _create_connection
+postscheduler-web-1  |     return _ConnectionRecord(self)
+postscheduler-web-1  |
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 675, in __init__
+postscheduler-web-1  |     self.__connect()
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 901, in __connect
+postscheduler-web-1  |     with util.safe_reraise():
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+postscheduler-web-1  |     raise exc_value.with_traceback(exc_tb)
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/pool/base.py", line 897, in __connect
+postscheduler-web-1  |     self.dbapi_connection = connection = pool._invoke_creator(self)
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |                   ^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/create.py", line 646, in connect
+postscheduler-web-1  |     return dialect.connect(*cargs, **cparams)
+postscheduler-web-1  |
+postscheduler-web-1  |     ^^^^^^^^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  |
+postscheduler-web-1  |
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 625, in connect
+postscheduler-web-1  |     return self.loaded_dbapi.connect(*cargs, **cparams)  # type: ignore[no-any-return]  # NOQA: E501
+postscheduler-web-1  |            ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^
+postscheduler-web-1  | ^
+postscheduler-web-1  | ^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  | ^^^^^
+postscheduler-web-1  |   File "/usr/local/lib/python3.11/site-packages/psycopg2/__init__.py", line 122, in connect
+postscheduler-web-1  |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+postscheduler-web-1  |            ^^^
+postscheduler-web-1  | ^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^
+postscheduler-web-1  | ^^^^^^^^^^^^^^
+postscheduler-web-1  | sqlalchemy.exc.OperationalError
+postscheduler-web-1  | : (psycopg2.OperationalError) could not translate host name "db" to address: Temporary failure in name resolution
+postscheduler-web-1  |
+postscheduler-web-1  | (Background on this error at: https://sqlalche.me/e/20/e3q8)
+postscheduler-web-1  |
+postscheduler-web-1 exited with code 1
+^CGracefully stopping... (press Ctrl+C again to force)
+Aborting on container exit...
+[+] Stopping 2/0
+ ✔ Container postscheduler-web-1  Stopped                                                                                                       0.0s
+ ✔ Container postscheduler-db-1   Stopped                                                                                                       0.0s
+canceled
+obtv-admin@obtv-postsched2:~/postscheduler$ sudo docker-compose up --build

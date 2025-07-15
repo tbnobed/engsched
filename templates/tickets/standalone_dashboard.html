@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Dashboard</title>
+    <!-- Use Bootstrap CDN instead of local files -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container py-4">
+        <div class="tickets-dashboard">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Tickets - Standalone Dashboard</h2>
+                    <p class="text-muted">Showing {{ ticket_count }} ticket{% if ticket_count != 1 %}s{% endif %}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary">
+                        <span>+</span> New Ticket
+                    </a>
+                    <a href="{{ url_for('tickets.tickets_dashboard') }}" class="btn btn-outline-secondary">
+                        <span>≡</span> Regular Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Filter Tickets</h5>
+                            <form id="filter-form" method="GET" autocomplete="off" novalidate>
+                                <div class="mb-3">
+                                    <label class="form-label">Status</label>
+                                    <select name="status" id="status-filter" class="form-select">
+                                        <option value="all" {% if filter_info.status == 'all' %}selected{% endif %}>All</option>
+                                        {% for status in ticket_statuses %}
+                                        <option value="{{ status }}" {% if filter_info.status == status %}selected{% endif %}>
+                                            {{ status|replace('_', ' ')|title }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Category</label>
+                                    <select name="category" id="category-filter" class="form-select">
+                                        <option value="all" {% if filter_info.category == 'all' %}selected{% endif %}>All</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}" {% if filter_info.category|string == category.id|string %}selected{% endif %}>
+                                            {{ category.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Priority</label>
+                                    <select name="priority" id="priority-filter" class="form-select">
+                                        <option value="all" {% if filter_info.priority == 'all' %}selected{% endif %}>All</option>
+                                        <option value="0" {% if filter_info.priority|string == '0' %}selected{% endif %}>Low</option>
+                                        <option value="1" {% if filter_info.priority|string == '1' %}selected{% endif %}>Medium</option>
+                                        <option value="2" {% if filter_info.priority|string == '2' %}selected{% endif %}>High</option>
+                                        <option value="3" {% if filter_info.priority|string == '3' %}selected{% endif %}>Urgent</option>
+                                    </select>
+                                </div>
+                                <button type="button" id="apply-filters" class="btn btn-primary w-100">Apply Filters</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Title</th>
+                                            <th>Category</th>
+                                            <th>Status</th>
+                                            <th>Priority</th>
+                                            <th>Assigned To</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if tickets %}
+                                            {% for ticket in tickets %}
+                                            <tr>
+                                                <td>#{{ ticket.id }}</td>
+                                                <td>
+                                                    <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" class="fw-medium">
+                                                        {{ ticket.title }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark">
+                                                        {{ ticket.category.name }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% set status_class = {
+                                                        'open': 'primary',
+                                                        'in_progress': 'info',
+                                                        'pending': 'warning',
+                                                        'resolved': 'success',
+                                                        'closed': 'secondary'
+                                                    } %}
+                                                    <span class="badge bg-{{ status_class[ticket.status] }}">
+                                                        {{ ticket.status|replace('_', ' ')|title }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% set priority_class = {
+                                                        0: 'success',
+                                                        1: 'info',
+                                                        2: 'warning',
+                                                        3: 'danger'
+                                                    } %}
+                                                    {% set priority_label = {
+                                                        0: 'Low',
+                                                        1: 'Medium',
+                                                        2: 'High',
+                                                        3: 'Urgent'
+                                                    } %}
+                                                    <span class="badge bg-{{ priority_class[ticket.priority] }}">
+                                                        {{ priority_label[ticket.priority] }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if ticket.assigned_technician %}
+                                                        {{ ticket.assigned_technician.username }}
+                                                    {% else %}
+                                                        <span class="text-muted">Unassigned</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                <td>
+                                                    <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" class="btn btn-sm btn-primary">
+                                                        View
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="8" class="text-center py-4">
+                                                    <div class="py-5">
+                                                        <div class="text-muted mb-2">📭</div>
+                                                        <h4 class="mb-1">No tickets found</h4>
+                                                        <p class="text-muted">Try adjusting your search filters</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize filters and form handling
+        document.addEventListener('DOMContentLoaded', function() {
+            // No need for feather.replace() anymore
+            
+            // Debug log for current filters
+            console.log("Current filters:", {{ filter_info|tojson|safe }});
+
+            // Handle filter form submission
+            document.getElementById('apply-filters').addEventListener('click', function() {
+                const form = document.getElementById('filter-form');
+                const formData = new FormData(form);
+                
+                // Build query string
+                const params = new URLSearchParams();
+                
+                for (const [key, value] of formData.entries()) {
+                    if (value) {
+                        params.append(key, value);
+                    }
+                }
+                
+                // Add cache-busting parameter
+                params.append('timestamp', Date.now());
+                params.append('rand', Math.random());
+                
+                // Keep the current path and just update query params
+                const currentPath = window.location.pathname;
+                const newUrl = `${currentPath}?${params.toString()}`;
+                
+                console.log("Navigating to URL:", newUrl);
+                window.location.href = newUrl;
+            });
+        });
+    </script>
+</body>
+</html>

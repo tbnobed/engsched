@@ -1,0 +1,1305 @@
+/* Light Theme CSS */
+:root {
+  --light-bg: #f8f9fa;
+  --light-panel: #ffffff;
+  --light-card: #ffffff;
+  --light-accent: #6366f1;
+  --light-text: #1e293b;
+  --light-text-secondary: #475569;
+  --light-muted: #64748b;
+  --light-border: #e2e8f0;
+  --light-hover: #f1f5f9;
+  --light-active: #e2e8f0;
+  --light-input-bg: #ffffff;
+  --light-success: #10b981;
+  --light-info: #0ea5e9;
+  --light-warning: #f59e0b;
+  --light-danger: #ef4444;
+  
+  /* Sidebar section specific colors with vibrant gradients */
+  --sidebar-time-bg: linear-gradient(135deg, #7cbae4, #bae6fd, #60aed2);
+  --sidebar-active-bg: linear-gradient(135deg, #dbeafe, #bfdbfe, #93c5fd);
+  --sidebar-timeoff-bg: linear-gradient(135deg, #ddd6fe, #c4b5fd, #7e5ce6);
+  --sidebar-tickets-bg: linear-gradient(135deg, #c7d2fe, #4b5db9, #5b6af1);
+  --sidebar-links-bg: linear-gradient(135deg, #e0e7ff, #c7d2fe, #a5b4fc);
+
+  /* For Bootstrap compatibility */
+  --primary-color: #3498db;
+}
+
+body {
+  background-color: var(--light-bg);
+  color: var(--light-text);
+}
+
+.navbar {
+  background-color: var(--light-panel) !important;
+  border-bottom: 1px solid var(--light-border);
+}
+
+.card {
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease-in-out;
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(129, 140, 248, 0.05));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+  border-radius: 16px;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+.card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.card-header {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.8));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+}
+
+/* Dashboard specific header overrides - allow inline background-color to show */
+.dashboard .card-header[style*="background-color"] {
+  background: unset !important;
+}
+
+.table {
+  color: var(--light-text) !important;
+  border-color: var(--light-border) !important;
+  background-color: var(--light-card) !important;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.table thead th {
+  border-bottom: 2px solid var(--light-border);
+  background-color: #f8f9fa !important;
+  color: var(--light-text) !important;
+  padding: 14px 15px !important;
+  font-weight: 600 !important;
+}
+
+.table td, .table th {
+  border-top: 1px solid var(--light-border);
+  padding: 12px 15px !important;
+  color: var(--light-text) !important;
+  border-bottom: 1px solid var(--light-border) !important;
+}
+
+/* Specific for admin dashboard */
+.admin-dashboard .table {
+  border: 1px solid var(--light-border) !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Ensure buttons in tables have proper contrast */
+.table .btn-primary {
+  background-color: var(--light-accent) !important;
+  border-color: var(--light-accent) !important;
+}
+
+.table .btn-danger {
+  background-color: var(--light-danger) !important;
+  border-color: var(--light-danger) !important;
+}
+
+.form-control, .form-select {
+  background-color: var(--light-input-bg);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  color: #333333;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: var(--light-input-bg);
+  color: #333333;
+  border-color: var(--light-accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Ensure better contrast for select elements in light mode */
+.form-select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23333333' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+  background-color: #f8f9fa;
+  color: #333333;
+  font-weight: 500;
+  background-position: right 0.75rem center !important;
+  background-repeat: no-repeat !important;
+  background-size: 16px 12px !important;
+  padding-right: 2rem !important;
+}
+
+/* Specific styling for the calendar location filter to improve contrast in light mode */
+.calendar-location-filter {
+  border: 1px solid rgba(0, 0, 0, 0.2) !important;
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  font-weight: 500 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+  background-position: right 0.75rem center !important;
+  padding-right: 2.25rem !important;
+}
+
+.form-text {
+  color: var(--light-text-secondary);
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+}
+
+.form-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--light-text);
+}
+
+.form-check-input:checked {
+  background-color: var(--light-accent);
+  border-color: var(--light-accent);
+}
+
+/* Fix for readonly and disabled form controls to improve text visibility */
+.form-control[readonly], 
+.form-control:disabled {
+  background-color: rgba(0, 0, 0, 0.03);
+  color: var(--light-text);
+  opacity: 0.75;
+  border-color: transparent;
+}
+
+/* Ensure modal form inputs are never affected by disabled styling */
+.modal .form-control {
+  background-color: var(--light-input-bg) !important;
+  color: var(--light-text) !important;
+  opacity: 1 !important;
+  border-color: var(--light-border) !important;
+}
+
+/* Fix modal display issues */
+.modal-backdrop {
+  z-index: 1040 !important;
+  opacity: 0.5 !important;
+}
+
+.modal {
+  z-index: 1050 !important;
+}
+
+.modal-dialog {
+  z-index: 1060 !important;
+  margin: 1.75rem auto;
+  position: relative;
+}
+
+.modal-content {
+  background-color: var(--light-card) !important;
+  border: 1px solid var(--light-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+  position: relative;
+  z-index: 1070 !important;
+}
+
+/* Ensure modal forms work correctly */
+.modal .form-control {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  border: 1px solid #ced4da !important;
+}
+
+/* For admin form fields and profile fields to ensure better contrast */
+.profile-readonly-field,
+.admin-form-field {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+  color: var(--light-text) !important;
+  border-color: rgba(0, 0, 0, 0.05) !important;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+}
+
+.btn {
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  text-transform: none;
+  letter-spacing: 0.2px;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  border: none;
+  color: #fff;
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+  background: linear-gradient(135deg, #4f46e5, #6366f1) !important;
+  border: none;
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  border: none;
+  color: #fff;
+}
+
+.btn-secondary:hover, .btn-secondary:focus, .btn-secondary:active {
+  background: linear-gradient(135deg, #475569, #64748b) !important;
+  border: none;
+}
+
+.btn-outline-primary {
+  color: var(--light-accent);
+  border: 1px solid var(--light-accent);
+  background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  border-color: transparent;
+  color: #fff;
+}
+
+.btn-outline-danger {
+  color: var(--light-danger);
+  border: 1px solid var(--light-danger);
+  background-color: transparent;
+}
+
+.btn-outline-danger:hover {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  border-color: transparent;
+  color: #fff;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  border: none;
+}
+
+.btn-danger:hover, .btn-danger:focus, .btn-danger:active {
+  background: linear-gradient(135deg, #dc2626, #ef4444) !important;
+  border: none;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  border: none;
+}
+
+.btn-success:hover, .btn-success:focus, .btn-success:active {
+  background: linear-gradient(135deg, #059669, #10b981) !important;
+  border: none;
+}
+
+.btn-info {
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  border: none;
+}
+
+.btn-info:hover, .btn-info:focus, .btn-info:active {
+  background: linear-gradient(135deg, #0284c7, #0ea5e9) !important;
+  border: none;
+}
+
+.badge {
+  padding: 0.45em 0.75em;
+  font-size: 0.85em;
+  font-weight: 500;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.badge.bg-success {
+  background: linear-gradient(135deg, #10b981, #34d399) !important;
+  border: none;
+}
+
+.badge.bg-info {
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8) !important;
+  border: none;
+}
+
+.badge.bg-warning {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24) !important;
+  border: none;
+}
+
+.badge.bg-danger {
+  background: linear-gradient(135deg, #ef4444, #f87171) !important;
+  border: none;
+}
+
+.badge.bg-secondary {
+  background: linear-gradient(135deg, #64748b, #94a3b8) !important;
+  border: none;
+}
+
+.badge.bg-primary {
+  background: linear-gradient(135deg, #6366f1, #818cf8) !important;
+  border: none;
+}
+
+.list-group-item {
+  background-color: var(--light-card);
+  border-color: var(--light-border);
+  color: var(--light-text);
+}
+
+.list-group-item-action:hover {
+  background-color: var(--light-hover);
+}
+
+.nav-link {
+  color: var(--light-text-secondary);
+}
+
+.nav-link:hover, .nav-link:focus {
+  color: var(--light-text);
+}
+
+.nav-link.active {
+  color: var(--light-accent) !important;
+}
+
+.dropdown-menu {
+  background-color: var(--light-panel);
+  border-color: var(--light-border);
+}
+
+.dropdown-item {
+  color: var(--light-text);
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+  background-color: var(--light-hover);
+  color: var(--light-text);
+}
+
+.modal-content {
+  background-color: var(--light-card);
+  border: none;
+  color: var(--light-text);
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.modal-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.8));
+  padding: 1.2rem 1.5rem;
+}
+
+.modal-footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.5));
+  padding: 1.2rem 1.5rem;
+}
+
+.modal-title {
+  color: var(--light-text);
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: 0.3px;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.modal-body .form-label {
+  color: var(--light-text);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.modal-body .form-control, 
+.modal-body .form-select {
+  background-color: var(--light-input-bg);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--light-text);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+}
+
+.modal-body .form-control:focus, 
+.modal-body .form-select:focus {
+  background-color: var(--light-input-bg);
+  border-color: var(--light-accent);
+  color: var(--light-text);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  transform: translateY(-1px);
+}
+
+.modal-body .form-check-label {
+  color: var(--light-text);
+  font-weight: 500;
+  padding-left: 0.3rem;
+}
+
+.modal-body .form-check-input:checked {
+  background-color: var(--light-accent);
+  border-color: var(--light-accent);
+}
+
+.modal-footer .btn {
+  font-weight: 500;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  transform: none;
+}
+
+.modal-footer .btn:hover {
+  transform: translateY(-2px);
+}
+
+.modal-footer .btn-primary {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  border: none;
+  color: white;
+}
+
+.modal-footer .btn-danger {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  border: none;
+  color: white;
+}
+
+.modal-footer .btn-info {
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  border: none;
+  color: white;
+}
+
+/* Mini-calendar styles override for light theme */
+.mini-calendar {
+  background-color: var(--light-card) !important;
+  border-color: var(--light-border) !important;
+  color: var(--light-text) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Schedule form inputs */
+.modal-content .form-control,
+.modal-content .custom-select {
+  background-color: #ffffff !important;
+  border-color: #ced4da !important;
+  color: var(--light-text) !important;
+}
+
+.modal-content .form-control:focus,
+.modal-content .custom-select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.4) !important;
+  border-color: var(--light-accent) !important;
+}
+
+.modal-content .form-control::placeholder {
+  color: #adb5bd !important;
+}
+
+.modal-content label {
+  color: var(--light-text) !important;
+  font-weight: 500 !important;
+}
+
+.modal-content .form-text {
+  color: var(--light-text-secondary) !important;
+}
+
+/* Time inputs */
+.modal-content .form-control[type="time"] {
+  background-color: #ffffff !important;
+  color: var(--light-text) !important;
+  border-color: #ced4da !important;
+}
+
+.month-navigator {
+  background-color: #f8f9fa !important;
+  padding: 10px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  margin-bottom: 10px !important;
+}
+
+.calendar-month-heading {
+  background-color: #f8f9fa !important;
+  padding: 8px !important;
+  border-radius: 4px !important;
+  margin-bottom: 8px !important;
+}
+
+#calendar-month-year {
+  color: var(--light-text) !important;
+  font-weight: bold !important;
+  font-size: 1.1rem !important;
+}
+
+.day-names {
+  color: var(--light-text) !important;
+  background-color: #f8f9fa !important;
+  padding: 5px 0 !important;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
+  margin-bottom: 8px !important;
+}
+
+.day-names div {
+  color: var(--light-text) !important;
+}
+
+.day-item {
+  color: var(--light-text) !important;
+  border-radius: 4px !important;
+}
+
+.day-item:hover:not(.disabled) {
+  background-color: var(--light-hover) !important;
+}
+
+.day-item.outside-month {
+  color: var(--light-muted) !important;
+}
+
+.day-item.disabled {
+  color: var(--light-muted) !important;
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.day-item.today {
+  border: 1px solid var(--light-accent) !important;
+}
+
+.day-item.selected {
+  background-color: var(--light-accent) !important;
+  color: white !important;
+}
+
+.day-item.primary-date {
+  background-color: var(--light-info) !important;
+  color: white !important;
+}
+
+.date-tag {
+  background-color: var(--light-hover) !important;
+  color: var(--light-text) !important;
+  border-radius: 4px !important;
+  border: 1px solid var(--light-border) !important;
+}
+
+#selected-dates-container .text-muted {
+  color: var(--light-muted) !important;
+}
+
+.selected-dates strong {
+  color: var(--light-text) !important;
+}
+
+.month-navigator button,
+#clear-selection {
+  color: var(--light-text) !important;
+  background-color: #e9ecef !important;
+  border-color: #ced4da !important;
+  font-weight: bold !important;
+  padding: 5px 12px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.month-navigator button:hover,
+#clear-selection:hover {
+  background-color: #dee2e6 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Make selected date clearer */
+.selected-dates {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  padding: 10px !important;
+  border-radius: 4px !important;
+  margin-top: 8px !important;
+  border: 1px solid var(--light-border) !important;
+}
+
+#selected-dates-container {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  padding: 10px !important;
+  border-radius: 4px !important;
+  margin-bottom: 12px !important;
+}
+
+.alert-info {
+  background-color: rgba(23, 162, 184, 0.1);
+  border-color: rgba(23, 162, 184, 0.2);
+  color: var(--light-text);
+}
+
+.close {
+  color: var(--light-text);
+}
+
+.page-link {
+  background-color: var(--light-panel);
+  border-color: var(--light-border);
+  color: var(--light-text);
+}
+
+.page-link:hover {
+  background-color: var(--light-hover);
+  border-color: var(--light-border);
+  color: var(--light-text);
+}
+
+.page-item.active .page-link {
+  background-color: var(--light-accent);
+  border-color: var(--light-accent);
+}
+
+/* Sidebar styling */
+.sidebar {
+  background-color: var(--light-panel);
+  border-right: 1px solid var(--light-border);
+}
+
+.sidebar .nav-link {
+  color: var(--light-text-secondary);
+}
+
+.sidebar .nav-link:hover {
+  color: var(--light-text);
+  background-color: var(--light-hover);
+}
+
+.sidebar .nav-link.active {
+  color: var(--light-text);
+  background-color: var(--light-active);
+}
+
+/* Sidebar section-specific styling */
+#current-time-display {
+  background: var(--sidebar-time-bg);
+  border: none;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+  border-radius: 16px;
+}
+
+.col-md-2 .card:nth-of-type(1),
+.col-lg-2 .card:nth-of-type(1) {
+  background: var(--sidebar-active-bg);
+  border: none;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+}
+
+.col-md-2 .card:nth-of-type(2),
+.col-lg-2 .card:nth-of-type(2) {
+  background: var(--sidebar-timeoff-bg);
+  border: none;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+}
+
+.col-md-2 .card:nth-of-type(3),
+.col-lg-2 .card:nth-of-type(3) {
+  background: var(--sidebar-tickets-bg);
+  border: none;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+}
+
+.col-md-2 .card:nth-of-type(4),
+.col-lg-2 .card:nth-of-type(4) {
+  background: var(--sidebar-links-bg);
+  border: none;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+}
+
+/* Better contrast for active users and time off section */
+#active-users, #upcoming-time-off {
+  color: var(--light-text);
+  font-weight: 500;
+}
+
+.active-user-entry, .time-off-entry {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.85));
+  border-radius: 12px;
+  padding: 12px 12px 12px 16px;
+  margin-bottom: 8px;
+  border: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.active-user-entry::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 100%;
+  background: var(--user-color, linear-gradient(to bottom, #6366f1, #818cf8, #a5b4fc));
+  border-radius: 4px 0 0 4px;
+}
+
+.active-user-entry::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, 
+              rgba(var(--user-color-rgb, 99, 102, 241), 0.05), 
+              rgba(var(--user-color-rgb, 165, 180, 252), 0.03));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+  border-radius: 16px;
+}
+
+/* Color customization for individual users - fallback colors with gradients 
+   Only apply to active-user-entry, not time-off-entry */
+.active-user-entry.user-color-3498db::before {
+  background: linear-gradient(to bottom, #3498db, #54a0ff, #81ecec) !important;
+}
+
+.active-user-entry.user-color-e74c3c::before {
+  background: linear-gradient(to bottom, #e74c3c, #ff6b6b, #fab1a0) !important;
+}
+
+.active-user-entry.user-color-2ecc71::before {
+  background: linear-gradient(to bottom, #2ecc71, #55efc4, #81ecec) !important;
+}
+
+.active-user-entry.user-color-f39c12::before {
+  background: linear-gradient(to bottom, #f39c12, #fdcb6e, #ffeaa7) !important;
+}
+
+.active-user-entry.user-color-9b59b6::before {
+  background: linear-gradient(to bottom, #9b59b6, #a29bfe, #d6a2e8) !important;
+}
+
+.active-user-entry .username, .time-off-entry .username {
+  font-weight: 400;
+  color: var(--light-text) !important;
+  font-size: 1.0rem;
+  letter-spacing: 0.2px;
+}
+
+
+
+.active-user-entry .location, .time-off-entry .date-range {
+  margin-top: 6px;
+  color: var(--light-text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Time off entry text styling for light theme - completely override user colors */
+body.light-theme .time-off-entry .username-text,
+body.light-theme .time-off-entry .date-range,
+body.light-theme .time-off-entry .description-text,
+body.light-theme .time-off-entry strong,
+body.light-theme .time-off-entry small,
+body.light-theme .time-off-entry div {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+/* Prevent any user color classes from affecting time off entries */
+body.light-theme .time-off-entry[class*="user-color-"] .username-text,
+body.light-theme .time-off-entry[class*="user-color-"] .date-range,
+body.light-theme .time-off-entry[class*="user-color-"] .description-text,
+body.light-theme .time-off-entry[class*="user-color-"] strong,
+body.light-theme .time-off-entry[class*="user-color-"] small,
+body.light-theme .time-off-entry[class*="user-color-"] div {
+  color: white !important;
+}
+
+.active-user-entry:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(245, 247, 250, 0.9));
+  transform: translateY(-5px);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+}
+
+.active-user-entry:hover::after {
+  opacity: 1;
+}
+
+.active-user-entry > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Calendar styling */
+.fc-theme-standard .fc-scrollgrid {
+  border-color: var(--light-border) !important;
+}
+
+.fc-theme-standard th, .fc-theme-standard td {
+  border-color: var(--light-border) !important;
+}
+
+.fc-theme-standard .fc-toolbar {
+  color: var(--light-text) !important;
+}
+
+/* Custom calendar styles - not FullCalendar */
+.calendar-container {
+  background-color: var(--light-panel) !important;
+  border: 1px solid var(--light-border) !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.calendar-header {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+  border-radius: 16px !important;
+  padding: 18px 20px !important;
+  margin-bottom: 20px !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05) !important;
+  border: none !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), rgba(129, 140, 248, 0.02));
+  opacity: 0.7;
+  z-index: 0;
+}
+
+.calendar-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.calendar-header h2 {
+  color: var(--light-text) !important;
+  margin-bottom: 0 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+}
+
+.calendar-controls .btn {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+  border: none !important;
+  color: var(--light-text) !important;
+  font-weight: 500 !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  border-radius: 10px !important;
+  padding: 10px 16px !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
+}
+
+.calendar-controls .btn:hover {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.08) !important;
+}
+
+.calendar-controls .btn-outline-primary {
+  background: transparent !important;
+  border: 1px solid var(--light-accent) !important;
+  color: var(--light-accent) !important;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.calendar-controls .btn-outline-primary:hover {
+  background: linear-gradient(135deg, #6366f1, #818cf8) !important;
+  color: white !important;
+  border-color: transparent !important;
+}
+
+.calendar-controls .btn-outline-secondary {
+  background: transparent !important;
+  border: 1px solid #64748b !important;
+  color: #64748b !important;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.calendar-controls .btn-outline-secondary:hover {
+  background: linear-gradient(135deg, #64748b, #94a3b8) !important;
+  color: white !important;
+  border-color: transparent !important;
+}
+
+.calendar-controls .btn-success {
+  background: linear-gradient(135deg, #10b981, #34d399) !important;
+  border: none !important;
+  color: white !important;
+}
+
+/* Override calendar grid */
+.calendar-grid {
+  background-color: var(--light-border) !important;
+  border: 1px solid var(--light-border) !important;
+}
+
+.time-column, .day-column {
+  background-color: var(--light-panel) !important;
+}
+
+.day-header {
+  background: linear-gradient(135deg, #f1f5f9, #f8fafc) !important;
+  color: var(--light-text) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  padding: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
+}
+
+.day-header.today {
+  background: linear-gradient(135deg, #6366f1, #818cf8) !important;
+  color: white !important;
+  border-bottom: none !important;
+}
+
+.hour-slot {
+  border-bottom: 1px solid var(--light-border) !important;
+  color: var(--light-text-secondary) !important;
+}
+
+.time-slot {
+  background-color: rgba(0, 0, 0, 0.01) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Fix calendar text contrast issues */
+.fc .fc-col-header-cell-cushion {
+  color: var(--light-text);
+}
+
+.fc .fc-daygrid-day-number {
+  color: var(--light-text);
+}
+
+.fc-direction-ltr .fc-daygrid-event.fc-event-end {
+  color: white;
+  font-weight: 500;
+}
+
+.fc-direction-ltr .fc-daygrid-event.fc-event-start {
+  color: white;
+  font-weight: 500;
+}
+
+.fc-event-title {
+  color: white;
+  font-weight: 500;
+}
+
+.fc-event-time {
+  color: white;
+  font-weight: 500;
+}
+
+.fc-timegrid-event-harness .fc-timegrid-event {
+  background: linear-gradient(135deg, #6366f1, #818cf8) !important;
+  border: none !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.fc-timegrid-event-harness .fc-timegrid-event:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Add gradient colors to different user events */
+.fc-event[style*="background-color: #3498db"],
+.fc-event[style*="background-color:#3498db"] {
+  background: linear-gradient(135deg, #3498db, #54a0ff) !important;
+  border: none !important;
+  box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3) !important;
+}
+
+.fc-event[style*="background-color: #e74c3c"],
+.fc-event[style*="background-color:#e74c3c"] {
+  background: linear-gradient(135deg, #e74c3c, #ff6b6b) !important;
+  border: none !important;
+  box-shadow: 0 4px 6px rgba(231, 76, 60, 0.3) !important;
+}
+
+.fc-event[style*="background-color: #2ecc71"],
+.fc-event[style*="background-color:#2ecc71"] {
+  background: linear-gradient(135deg, #2ecc71, #55efc4) !important;
+  border: none !important;
+  box-shadow: 0 4px 6px rgba(46, 204, 113, 0.3) !important;
+}
+
+.fc-event[style*="background-color: #f39c12"],
+.fc-event[style*="background-color:#f39c12"] {
+  background: linear-gradient(135deg, #f39c12, #fdcb6e) !important;
+  border: none !important;
+  box-shadow: 0 4px 6px rgba(243, 156, 18, 0.3) !important;
+}
+
+.fc-event[style*="background-color: #9b59b6"],
+.fc-event[style*="background-color:#9b59b6"] {
+  background: linear-gradient(135deg, #9b59b6, #a29bfe) !important;
+  border: none !important;
+  box-shadow: 0 4px 6px rgba(155, 89, 182, 0.3) !important;
+}
+
+.fc-timegrid-slot-label-cushion {
+  color: var(--light-text);
+}
+
+.fc-col-header-cell a {
+  color: var(--light-text);
+  font-weight: 600;
+}
+
+.fc-daygrid-day-frame {
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+.fc-daygrid-day.fc-day-today {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(129, 140, 248, 0.03)) !important;
+  box-shadow: inset 0 0 16px rgba(99, 102, 241, 0.05) !important;
+}
+
+.fc-day-today .fc-daygrid-day-number {
+  background: linear-gradient(135deg, #6366f1, #818cf8) !important;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  line-height: 30px;
+  margin: 6px;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.25);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.fc-day-today .fc-daygrid-day-number:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(99, 102, 241, 0.3);
+}
+
+/* Alert styling */
+.alert {
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.alert::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 4px 0 0 4px;
+}
+
+.alert-success {
+  background-color: rgba(16, 185, 129, 0.05);
+  color: var(--light-text);
+}
+
+.alert-success::before {
+  background: linear-gradient(to bottom, #10b981, #34d399);
+}
+
+.alert-info {
+  background-color: rgba(14, 165, 233, 0.05);
+  color: var(--light-text);
+}
+
+.alert-info::before {
+  background: linear-gradient(to bottom, #0ea5e9, #38bdf8);
+}
+
+.alert-warning {
+  background-color: rgba(245, 158, 11, 0.05);
+  color: var(--light-text);
+}
+
+.alert-warning::before {
+  background: linear-gradient(to bottom, #f59e0b, #fbbf24);
+}
+
+.alert-danger {
+  background-color: rgba(239, 68, 68, 0.05);
+  color: var(--light-text);
+}
+
+.alert-danger::before {
+  background: linear-gradient(to bottom, #ef4444, #f87171);
+}
+
+/* Ticket badges and status coloring */
+.ticket-status-open {
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8) !important;
+  border: none;
+  padding: 0.45em 0.75em;
+  font-size: 0.85em;
+  font-weight: 500;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ticket-status-in-progress {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24) !important;
+  border: none;
+  padding: 0.45em 0.75em;
+  font-size: 0.85em;
+  font-weight: 500;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ticket-status-pending {
+  background: linear-gradient(135deg, #6366f1, #818cf8) !important;
+  border: none;
+  padding: 0.45em 0.75em;
+  font-size: 0.85em;
+  font-weight: 500;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ticket-status-resolved {
+  background: linear-gradient(135deg, #10b981, #34d399) !important;
+  border: none;
+  padding: 0.45em 0.75em;
+  font-size: 0.85em;
+  font-weight: 500;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ticket-status-closed {
+  background: linear-gradient(135deg, #64748b, #94a3b8) !important;
+  border: none;
+  padding: 0.45em 0.75em;
+  font-size: 0.85em;
+  font-weight: 500;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Theme toggle button */
+.theme-toggle-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 24px;
+  margin-right: 12px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  font-weight: 500;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  border: none;
+}
+
+.theme-toggle-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(129, 140, 248, 0.03));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.theme-toggle-btn i {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+/* Light theme specific for UI consistency */
+.theme-toggle-btn.light-theme {
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0, #cbd5e1);
+  color: #1e293b;
+}
+
+.theme-toggle-btn.light-theme:hover {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0, #cbd5e1);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle-btn.light-theme:hover::before {
+  opacity: 1;
+}
+
+/* Light theme overrides for better contrast */
+.light-theme .table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.075) !important;
+}
+
+.light-theme .badge {
+  color: white !important;
+}

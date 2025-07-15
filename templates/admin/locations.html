@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Locations</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#locationModal">
+            <i data-feather="plus"></i> Add Location
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for location in locations %}
+                <tr>
+                    <td>{{ location.name }}</td>
+                    <td>{{ location.description or '' }}</td>
+                    <td>
+                        <span class="badge {% if location.active %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ 'Active' if location.active else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary edit-location" 
+                                data-location-id="{{ location.id }}"
+                                data-location-name="{{ location.name }}"
+                                data-location-description="{{ location.description or '' }}"
+                                data-location-active="{{ location.active | lower }}">
+                            <i data-feather="edit"></i>
+                        </button>
+                        <a href="{{ url_for('admin_delete_location', location_id=location.id) }}" 
+                           class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Are you sure you want to delete this location?');">
+                            <i data-feather="trash-2"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Location Modal -->
+    <div class="modal fade" id="locationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Add Location</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="locationForm" method="POST">
+                        {{ form.hidden_tag() }}
+                        <input type="hidden" name="location_id" id="location_id">
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.active(class="form-check-input", id="active") }}
+                                {{ form.active.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save Location</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Feather icons
+    feather.replace();
+
+    // Handle edit location buttons
+    document.querySelectorAll('.edit-location').forEach(button => {
+        button.addEventListener('click', function() {
+            const locationId = this.dataset.locationId;
+            const locationName = this.dataset.locationName;
+            const locationDescription = this.dataset.locationDescription;
+            const locationActive = this.dataset.locationActive === 'true';
+
+            // Set form action for edit
+            document.getElementById('locationForm').action = `/admin/locations/edit/${locationId}`;
+            document.getElementById('modalTitle').textContent = 'Edit Location';
+
+            // Set form values
+            document.getElementById('location_id').value = locationId;
+            document.getElementById('name').value = locationName;
+            document.getElementById('description').value = locationDescription;
+            document.getElementById('active').checked = locationActive;
+
+            const modal = new bootstrap.Modal(document.getElementById('locationModal'));
+            modal.show();
+        });
+    });
+
+    // Reset form when adding new location
+    document.querySelector('[data-bs-target="#locationModal"]').addEventListener('click', function() {
+        document.getElementById('locationForm').action = "{{ url_for('admin_locations') }}";
+        document.getElementById('modalTitle').textContent = 'Add Location';
+        document.getElementById('locationForm').reset();
+        document.getElementById('location_id').value = '';
+        // Set active to checked by default for new locations
+        document.getElementById('active').checked = true;
+    });
+});
+</script>
+{% endblock %}

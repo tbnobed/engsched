@@ -1,0 +1,118 @@
+{% extends "auth_base.html" %}
+
+{% block content %}
+<div class="container-fluid p-0" style="min-height: 100vh; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1d4ed8 100%);">
+    <div class="row g-0 min-vh-100">
+        <!-- Left Side - Branding -->
+        <div class="col-lg-7 d-flex align-items-center justify-content-center position-relative overflow-hidden">
+            <!-- Animated Background Elements -->
+            <div class="position-absolute w-100 h-100" style="background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(30, 64, 175, 0.9) 50%, rgba(29, 78, 216, 0.9) 100%);">
+                <div class="position-absolute" style="top: 10%; left: 10%; width: 200px; height: 200px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; animation: float 6s ease-in-out infinite;"></div>
+                <div class="position-absolute" style="top: 60%; right: 15%; width: 150px; height: 150px; background: rgba(255, 255, 255, 0.05); border-radius: 50%; animation: float 8s ease-in-out infinite reverse;"></div>
+                <div class="position-absolute" style="bottom: 20%; left: 20%; width: 100px; height: 100px; background: rgba(255, 255, 255, 0.08); border-radius: 50%; animation: float 7s ease-in-out infinite;"></div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="text-center text-white position-relative z-index-2" style="z-index: 2;">
+                <div class="mb-5">
+                    <img src="{{ url_for('static', filename=site_logo) }}?v=4" alt="{{ company_name }} Logo" style="height: 120px; width: auto; margin-bottom: 2rem; background: rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 12px; backdrop-filter: blur(10px);">
+                    <h1 style="font-weight: 900; font-size: 3.5rem; letter-spacing: 2px; margin-bottom: 1.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">{{ site_name.upper() }}</h1>
+                    <p style="font-size: 1.3rem; font-weight: 300; opacity: 0.9; letter-spacing: 0.5px; margin-bottom: 0;">{{ site_description }}</p>
+                </div>
+                
+                <!-- Feature Highlights -->
+                <div class="row justify-content-center mt-5">
+                    <div class="col-md-4 mb-4">
+                        <div class="text-center" style="opacity: 0.8;">
+                            <div class="mb-3" style="font-size: 2.5rem;">📅</div>
+                            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">Smart Scheduling</h5>
+                            <p style="font-size: 0.9rem; opacity: 0.8;">Advanced calendar management</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="text-center" style="opacity: 0.8;">
+                            <div class="mb-3" style="font-size: 2.5rem;">🎫</div>
+                            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">Ticket System</h5>
+                            <p style="font-size: 0.9rem; opacity: 0.8;">Streamlined task management</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="text-center" style="opacity: 0.8;">
+                            <div class="mb-3" style="font-size: 2.5rem;">💬</div>
+                            <h5 style="font-weight: 600; margin-bottom: 0.5rem;">Team Chat</h5>
+                            <p style="font-size: 0.9rem; opacity: 0.8;">Real-time communication</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Side - Login Form -->
+        <div class="col-lg-5 d-flex align-items-center justify-content-center" style="background: #ffffff; min-height: 100vh;">
+            <div class="w-100" style="max-width: 400px; padding: 3rem 2rem;">
+                <div class="text-center mb-5">
+                    <h2 style="font-weight: 700; color: #1a202c; font-size: 2rem; margin-bottom: 0.5rem;">Welcome Back</h2>
+                    <p style="color: #718096; font-size: 1rem;">Sign in to access your dashboard</p>
+                </div>
+                
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        {{ form.email(class="form-control", style="border: none; border-bottom: 2px solid #e2e8f0; background: transparent; padding: 1rem 0; font-size: 1rem; color: #1a202c; transition: all 0.3s ease; border-radius: 0;", placeholder="your.email@company.com") }}
+                    </div>
+                    
+                    <div class="mb-4">
+                        {{ form.password(class="form-control", style="border: none; border-bottom: 2px solid #e2e8f0; background: transparent; padding: 1rem 0; font-size: 1rem; color: #1a202c; transition: all 0.3s ease; border-radius: 0;", placeholder="Enter your password") }}
+                    </div>
+                    
+                    <div class="mb-4 d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            {{ form.remember_me(class="form-check-input", style="border: 2px solid #cbd5e0; margin-top: 0.1rem;") }}
+                            <label class="form-check-label" for="remember_me" style="color: #4a5568; font-size: 0.9rem;">
+                                Remember me
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn" style="background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); border: none; padding: 1rem; border-radius: 12px; font-weight: 600; font-size: 1rem; color: white; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3);">
+                            Sign In
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center">
+                    <p style="color: #a0aec0; font-size: 0.875rem; margin: 0;">
+                        Need access? Contact your system administrator
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+.form-control:focus {
+    border-bottom-color: #667eea !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(30, 58, 138, 0.4) !important;
+}
+
+@media (max-width: 991.98px) {
+    .col-lg-7 {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=${FLASK_APP}
+      - FLASK_ENV=${FLASK_ENV}
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+      - SESSION_SECRET=${FLASK_SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - SENDGRID_FROM_EMAIL=${SENDGRID_FROM_EMAIL}
+      - EMAIL_DOMAIN=${EMAIL_DOMAIN}
+      - TZ=America/Los_Angeles
+      # Site branding configuration
+      - SITE_NAME=${SITE_NAME:-Plex Engineering}
+      - SITE_TITLE=${SITE_TITLE:-Tech Scheduler}
+      - SITE_DESCRIPTION=${SITE_DESCRIPTION:-Technician Scheduling and Management System}
+      - COMPANY_NAME=${COMPANY_NAME:-Plex Engineering}
+      - SITE_LOGO=${SITE_LOGO:-images/tbn_logo.webp}
+      - CHAT_ENABLED=${CHAT_ENABLED:-true}
+      - CHAT_URL=${CHAT_URL:-https://chat.obedtv.com}
+      - STUDIO_BOOKING_API_URL=${STUDIO_BOOKING_API_URL:-https://plex.bookstud.io}
+    env_file:
+      - .env
+    volumes:
+      - uploads_data:/app/static/uploads
+      - backup_data:/app/static/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - backup_data:/backups
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=America/Los_Angeles
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+  backup_data:
+  uploads_data:
+
+networks:
+  app-network:
+    driver: bridge

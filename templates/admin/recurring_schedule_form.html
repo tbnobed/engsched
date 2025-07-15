@@ -1,0 +1,913 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <!-- Header with technician name -->
+            <div class="mb-4">
+                <h2 class="h4 mb-0 text-dark fw-bold" id="header-title">
+                    {% if template and template.technician %}
+                        {{ template.technician.username }} - {{ template.template_name }}
+                    {% else %}
+                        New Recurring Schedule Template
+                    {% endif %}
+                </h2>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    {{ form.template_name.label(class="form-label text-dark fw-semibold") }}
+                                    {{ form.template_name(class="form-control border-2", style="border-radius: 8px;") }}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    {{ form.technician.label(class="form-label text-dark fw-semibold") }}
+                                    {{ form.technician(class="form-select border-2", style="border-radius: 8px;", onchange="updateHeaderTitle()") }}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    {{ form.location_id.label(class="form-label text-dark fw-semibold") }}
+                                    {{ form.location_id(class="form-select border-2", style="border-radius: 8px;") }}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label text-dark fw-semibold">Status</label>
+                                    <div class="form-check" style="padding-top: 8px;">
+                                        {{ form.active(class="form-check-input", style="width: 18px; height: 18px;") }}
+                                        <label class="form-check-label ms-2" for="{{ form.active.id }}">
+                                            Active Template
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Template Name Display -->
+                        <div class="mb-4">
+                            <h3 class="h5 text-dark fw-bold mb-3" id="template-display">
+                                <span id="template-name-display">{{ template.template_name if template else 'New Template' }}</span>
+                            </h3>
+                            
+                            <!-- Preset Buttons -->
+                            <div class="d-flex gap-3 mb-4">
+                                <button type="button" class="btn btn-outline-dark px-4 py-2 rounded-pill d-flex align-items-center" 
+                                        onclick="fillStandardWeek()" style="border-width: 2px;">
+                                    <i data-feather="zap" class="me-2" style="width: 18px; height: 18px;"></i>
+                                    Standard Week
+                                </button>
+                                <button type="button" class="btn btn-outline-dark px-4 py-2 rounded-pill d-flex align-items-center" 
+                                        onclick="fillEarlyWeek()" style="border-width: 2px;">
+                                    <i data-feather="clock" class="me-2" style="width: 18px; height: 18px;"></i>
+                                    Early Week
+                                </button>
+                                <button type="button" class="btn btn-outline-danger px-4 py-2 rounded-pill d-flex align-items-center" 
+                                        onclick="clearAll()" style="border-width: 2px;">
+                                    <i data-feather="x" class="me-2" style="width: 18px; height: 18px;"></i>
+                                    Clear All
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Weekly Schedule with Modern Design -->
+                        <div class="schedule-container">
+                            <!-- Monday -->
+                            <div class="d-flex align-items-center py-2" style="min-height: 40px;">
+                                <div class="form-check d-flex align-items-center" style="width: 120px;">
+                                    <input class="form-check-input" type="checkbox" id="monday-check" checked onchange="toggleDay('monday')" 
+                                           style="width: 18px; height: 18px;">
+                                    <label class="form-check-label ms-2" for="monday-check" style="font-size: 0.95rem;">
+                                        Monday
+                                    </label>
+                                </div>
+                                <div class="d-flex align-items-center ms-auto">
+                                    <select class="form-select form-select-sm me-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="monday_start" onchange="updateTime('monday')">
+                                        <option value="">--:--</option>
+                                        <option value="00:00">00:00</option>
+                                        <option value="00:30">00:30</option>
+                                        <option value="01:00">01:00</option>
+                                        <option value="01:30">01:30</option>
+                                        <option value="02:00">02:00</option>
+                                        <option value="02:30">02:30</option>
+                                        <option value="03:00">03:00</option>
+                                        <option value="03:30">03:30</option>
+                                        <option value="04:00">04:00</option>
+                                        <option value="04:30">04:30</option>
+                                        <option value="05:00">05:00</option>
+                                        <option value="05:30">05:30</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="06:30">06:30</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="07:30">07:30</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="08:30">08:30</option>
+                                        <option value="09:00" selected>09:00</option>
+                                        <option value="09:30">09:30</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="18:30">18:30</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="19:30">19:30</option>
+                                        <option value="20:00">20:00</option>
+                                        <option value="20:30">20:30</option>
+                                        <option value="21:00">21:00</option>
+                                        <option value="21:30">21:30</option>
+                                        <option value="22:00">22:00</option>
+                                        <option value="22:30">22:30</option>
+                                        <option value="23:00">23:00</option>
+                                        <option value="23:30">23:30</option>
+                                    </select>
+                                    <span style="font-size: 0.9rem; color: #6c757d;">—</span>
+                                    <select class="form-select form-select-sm ms-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="monday_end" onchange="updateTime('monday')">
+                                        <option value="">--:--</option>
+                                        <option value="00:00">00:00</option>
+                                        <option value="00:30">00:30</option>
+                                        <option value="01:00">01:00</option>
+                                        <option value="01:30">01:30</option>
+                                        <option value="02:00">02:00</option>
+                                        <option value="02:30">02:30</option>
+                                        <option value="03:00">03:00</option>
+                                        <option value="03:30">03:30</option>
+                                        <option value="04:00">04:00</option>
+                                        <option value="04:30">04:30</option>
+                                        <option value="05:00">05:00</option>
+                                        <option value="05:30">05:30</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="06:30">06:30</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="07:30">07:30</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="08:30">08:30</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="09:30">09:30</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00" selected>13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="18:30">18:30</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="19:30">19:30</option>
+                                        <option value="20:00">20:00</option>
+                                        <option value="20:30">20:30</option>
+                                        <option value="21:00">21:00</option>
+                                        <option value="21:30">21:30</option>
+                                        <option value="22:00">22:00</option>
+                                        <option value="22:30">22:30</option>
+                                        <option value="23:00">23:00</option>
+                                        <option value="23:30">23:30</option>
+                                    </select>
+                                    <div class="ms-2" style="width: 20px;">
+                                        <i data-feather="check" class="text-success d-none" id="monday-check-icon" style="width: 16px; height: 16px; stroke-width: 3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tuesday -->
+                            <div class="d-flex align-items-center py-2" style="min-height: 40px;">
+                                <div class="form-check d-flex align-items-center" style="width: 120px;">
+                                    <input class="form-check-input" type="checkbox" id="tuesday-check" onchange="toggleDay('tuesday')" 
+                                           style="width: 18px; height: 18px;">
+                                    <label class="form-check-label ms-2" for="tuesday-check" style="font-size: 0.95rem;">
+                                        Tuesday
+                                    </label>
+                                </div>
+                                <div class="d-flex align-items-center ms-auto">
+                                    <select class="form-select form-select-sm me-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="tuesday_start" onchange="updateTime('tuesday')">
+                                        <option value="">--:--</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="06:30">06:30</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="07:30">07:30</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="08:30">08:30</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="09:30">09:30</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                    </select>
+                                    <span style="font-size: 0.9rem; color: #6c757d;">—</span>
+                                    <select class="form-select form-select-sm ms-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="tuesday_end" onchange="updateTime('tuesday')">
+                                        <option value="">--:--</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="18:30">18:30</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="19:30">19:30</option>
+                                        <option value="20:00">20:00</option>
+                                    </select>
+                                    <div class="ms-2" style="width: 20px;">
+                                        <i data-feather="check" class="text-success d-none" id="tuesday-check-icon" style="width: 16px; height: 16px; stroke-width: 3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Wednesday -->
+                            <div class="d-flex align-items-center py-2" style="min-height: 40px;">
+                                <div class="form-check d-flex align-items-center" style="width: 120px;">
+                                    <input class="form-check-input" type="checkbox" id="wednesday-check" onchange="toggleDay('wednesday')" 
+                                           style="width: 18px; height: 18px;">
+                                    <label class="form-check-label ms-2" for="wednesday-check" style="font-size: 0.95rem;">
+                                        Wednesday
+                                    </label>
+                                </div>
+                                <div class="d-flex align-items-center ms-auto">
+                                    <select class="form-select form-select-sm me-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="wednesday_start" onchange="updateTime('wednesday')">
+                                        <option value="">--:--</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="06:30">06:30</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="07:30">07:30</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="08:30">08:30</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="09:30">09:30</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                    </select>
+                                    <span style="font-size: 0.9rem; color: #6c757d;">—</span>
+                                    <select class="form-select form-select-sm ms-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="wednesday_end" onchange="updateTime('wednesday')">
+                                        <option value="">--:--</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="18:30">18:30</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="19:30">19:30</option>
+                                        <option value="20:00">20:00</option>
+                                    </select>
+                                    <div class="ms-2" style="width: 20px;">
+                                        <i data-feather="check" class="text-success d-none" id="wednesday-check-icon" style="width: 16px; height: 16px; stroke-width: 3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Thursday -->
+                            <div class="d-flex align-items-center py-2" style="min-height: 40px;">
+                                <div class="form-check d-flex align-items-center" style="width: 120px;">
+                                    <input class="form-check-input" type="checkbox" id="thursday-check" onchange="toggleDay('thursday')" 
+                                           style="width: 18px; height: 18px;">
+                                    <label class="form-check-label ms-2" for="thursday-check" style="font-size: 0.95rem;">
+                                        Thursday
+                                    </label>
+                                </div>
+                                <div class="d-flex align-items-center ms-auto">
+                                    <select class="form-select form-select-sm me-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="thursday_start" onchange="updateTime('thursday')">
+                                        <option value="">--:--</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="06:30">06:30</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="07:30">07:30</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="08:30">08:30</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="09:30">09:30</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                    </select>
+                                    <span style="font-size: 0.9rem; color: #6c757d;">—</span>
+                                    <select class="form-select form-select-sm ms-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="thursday_end" onchange="updateTime('thursday')">
+                                        <option value="">--:--</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="18:30">18:30</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="19:30">19:30</option>
+                                        <option value="20:00">20:00</option>
+                                    </select>
+                                    <div class="ms-2" style="width: 20px;">
+                                        <i data-feather="check" class="text-success d-none" id="thursday-check-icon" style="width: 16px; height: 16px; stroke-width: 3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Friday -->
+                            <div class="d-flex align-items-center py-2" style="min-height: 40px;">
+                                <div class="form-check d-flex align-items-center" style="width: 120px;">
+                                    <input class="form-check-input" type="checkbox" id="friday-check" onchange="toggleDay('friday')" 
+                                           style="width: 18px; height: 18px;">
+                                    <label class="form-check-label ms-2" for="friday-check" style="font-size: 0.95rem;">
+                                        Friday
+                                    </label>
+                                </div>
+                                <div class="d-flex align-items-center ms-auto">
+                                    <select class="form-select form-select-sm me-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="friday_start" onchange="updateTime('friday')">
+                                        <option value="">--:--</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="06:30">06:30</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="07:30">07:30</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="08:30">08:30</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="09:30">09:30</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                    </select>
+                                    <span style="font-size: 0.9rem; color: #6c757d;">—</span>
+                                    <select class="form-select form-select-sm ms-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="friday_end" onchange="updateTime('friday')">
+                                        <option value="">--:--</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="18:30">18:30</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="19:30">19:30</option>
+                                        <option value="20:00">20:00</option>
+                                    </select>
+                                    <div class="ms-2" style="width: 20px;">
+                                        <i data-feather="check" class="text-success d-none" id="friday-check-icon" style="width: 16px; height: 16px; stroke-width: 3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Saturday -->
+                            <div class="d-flex align-items-center py-2" style="min-height: 40px;">
+                                <div class="form-check d-flex align-items-center" style="width: 120px;">
+                                    <input class="form-check-input" type="checkbox" id="saturday-check" onchange="toggleDay('saturday')" 
+                                           style="width: 18px; height: 18px;">
+                                    <label class="form-check-label ms-2" for="saturday-check" style="font-size: 0.95rem;">
+                                        Saturday
+                                    </label>
+                                </div>
+                                <div class="d-flex align-items-center ms-auto">
+                                    <select class="form-select form-select-sm me-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="saturday_start" onchange="updateTime('saturday')">
+                                        <option value="">--:--</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="06:30">06:30</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="07:30">07:30</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="08:30">08:30</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="09:30">09:30</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                    </select>
+                                    <span style="font-size: 0.9rem; color: #6c757d;">—</span>
+                                    <select class="form-select form-select-sm ms-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="saturday_end" onchange="updateTime('saturday')">
+                                        <option value="">--:--</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="18:30">18:30</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="19:30">19:30</option>
+                                        <option value="20:00">20:00</option>
+                                    </select>
+                                    <div class="ms-2" style="width: 20px;">
+                                        <i data-feather="check" class="text-success d-none" id="saturday-check-icon" style="width: 16px; height: 16px; stroke-width: 3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sunday -->
+                            <div class="d-flex align-items-center py-2" style="min-height: 40px;">
+                                <div class="form-check d-flex align-items-center" style="width: 120px;">
+                                    <input class="form-check-input" type="checkbox" id="sunday-check" onchange="toggleDay('sunday')" 
+                                           style="width: 18px; height: 18px;">
+                                    <label class="form-check-label ms-2" for="sunday-check" style="font-size: 0.95rem;">
+                                        Sunday
+                                    </label>
+                                </div>
+                                <div class="d-flex align-items-center ms-auto">
+                                    <select class="form-select form-select-sm me-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="sunday_start" onchange="updateTime('sunday')">
+                                        <option value="">--:--</option>
+                                        <option value="06:00">06:00</option>
+                                        <option value="06:30">06:30</option>
+                                        <option value="07:00">07:00</option>
+                                        <option value="07:30">07:30</option>
+                                        <option value="08:00">08:00</option>
+                                        <option value="08:30">08:30</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="09:30">09:30</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                    </select>
+                                    <span style="font-size: 0.9rem; color: #6c757d;">—</span>
+                                    <select class="form-select form-select-sm ms-2" style="width: 90px; font-size: 0.85rem;" 
+                                            id="sunday_end" onchange="updateTime('sunday')">
+                                        <option value="">--:--</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="18:30">18:30</option>
+                                        <option value="19:00">19:00</option>
+                                        <option value="19:30">19:30</option>
+                                        <option value="20:00">20:00</option>
+                                    </select>
+                                    <div class="ms-2" style="width: 20px;">
+                                        <i data-feather="check" class="text-success d-none" id="sunday-check-icon" style="width: 16px; height: 16px; stroke-width: 3;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Auto-Generate Toggle -->
+                        <div class="d-flex align-items-center justify-content-between p-4 rounded-3" style="background-color: #f8f9fa; border: 1px solid #e9ecef;">
+                            <div>
+                                <h6 class="mb-1 fw-bold text-dark">Auto-Generate Weekly</h6>
+                                <p class="mb-0 text-muted">This will automatically populate schedules every week based on this template</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                {{ form.auto_generate(class="form-check-input", style="width: 3rem; height: 1.5rem; background-color: #28a745; border-color: #28a745;") }}
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden form fields for all days -->
+                        <div style="display: none;">
+                            {{ form.monday_start }}
+                            {{ form.monday_end }}
+                            {{ form.tuesday_start }}
+                            {{ form.tuesday_end }}
+                            {{ form.wednesday_start }}
+                            {{ form.wednesday_end }}
+                            {{ form.thursday_start }}
+                            {{ form.thursday_end }}
+                            {{ form.friday_start }}
+                            {{ form.friday_end }}
+                            {{ form.saturday_start }}
+                            {{ form.saturday_end }}
+                            {{ form.sunday_start }}
+                            {{ form.sunday_end }}
+                            {{ form.weeks_ahead() }}
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between mt-5">
+                            <a href="{{ url_for('recurring_schedules') }}" class="btn btn-outline-secondary px-4 py-2 rounded-pill">
+                                <i data-feather="arrow-left" class="me-2"></i>
+                                Back to List
+                            </a>
+                            <div>
+                                {% if template %}
+                                    <a href="{{ url_for('preview_recurring_schedule', template_id=template.id) }}" 
+                                       class="btn btn-outline-info px-4 py-2 rounded-pill me-3">
+                                        <i data-feather="eye" class="me-2"></i>
+                                        Preview
+                                    </a>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill">
+                                    <i data-feather="save" class="me-2"></i>
+                                    Save Template
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize the form with existing data
+document.addEventListener('DOMContentLoaded', function() {
+    // First populate all time dropdowns with existing values
+    updateAllTimeDropdowns();
+    
+    // Initialize checkboxes and time displays based on existing form values
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    
+    days.forEach(day => {
+        const startInput = document.getElementById(day + '_start');
+        const endInput = document.getElementById(day + '_end');
+        const checkbox = document.getElementById(day + '-check');
+        
+        // Check if times are set and update display accordingly
+        updateDayDisplay(day);
+        
+        // Add event listeners for time input changes
+        if (startInput) {
+            startInput.addEventListener('change', () => {
+                updateTime(day);
+                updateDayDisplay(day);
+            });
+        }
+        if (endInput) {
+            endInput.addEventListener('change', () => {
+                updateTime(day);
+                updateDayDisplay(day);
+            });
+        }
+    });
+    
+    // Update header title based on current selections
+    updateHeaderTitle();
+    
+    // Listen for template name and technician changes
+    const templateNameInput = document.getElementById('template_name');
+    const technicianSelect = document.getElementById('technician');
+    if (templateNameInput) {
+        templateNameInput.addEventListener('input', updateHeaderTitle);
+    }
+    if (technicianSelect) {
+        technicianSelect.addEventListener('change', updateHeaderTitle);
+    }
+});
+
+function updateHeaderTitle() {
+    const technicianSelect = document.getElementById('technician');
+    const templateNameInput = document.getElementById('template_name');
+    const headerTitle = document.getElementById('header-title');
+    const templateDisplay = document.getElementById('template-name-display');
+    
+    if (technicianSelect && templateNameInput && headerTitle) {
+        const technicianText = technicianSelect.options[technicianSelect.selectedIndex]?.text || 'Select Technician';
+        const templateName = templateNameInput.value || 'New Template';
+        
+        if (technicianSelect.selectedIndex > 0) {
+            headerTitle.textContent = `${technicianText} - ${templateName}`;
+        } else {
+            headerTitle.textContent = 'New Recurring Schedule Template';
+        }
+        
+        if (templateDisplay) {
+            templateDisplay.textContent = templateName;
+        }
+    }
+}
+
+function toggleDay(day) {
+    const checkbox = document.getElementById(day + '-check');
+    const startDropdown = document.getElementById(day + '_start');
+    const endDropdown = document.getElementById(day + '_end');
+    const checkIcon = document.getElementById(day + '-check-icon');
+    
+    if (checkbox.checked) {
+        // Enable dropdowns and set default values if none exist
+        if (startDropdown) {
+            startDropdown.disabled = false;
+            startDropdown.style.opacity = '1';
+            if (!startDropdown.value) startDropdown.value = '09:00';
+        }
+        if (endDropdown) {
+            endDropdown.disabled = false;
+            endDropdown.style.opacity = '1';
+            if (!endDropdown.value) endDropdown.value = '13:00';
+        }
+        // Show checkmark icon
+        if (checkIcon) {
+            checkIcon.classList.remove('d-none');
+        }
+    } else {
+        // Disable dropdowns and clear values
+        if (startDropdown) {
+            startDropdown.disabled = true;
+            startDropdown.value = '';
+            startDropdown.style.opacity = '0.5';
+        }
+        if (endDropdown) {
+            endDropdown.disabled = true;
+            endDropdown.value = '';
+            endDropdown.style.opacity = '0.5';
+        }
+        // Hide checkmark icon
+        if (checkIcon) {
+            checkIcon.classList.add('d-none');
+        }
+    }
+    
+    // Update hidden form fields
+    updateTime(day);
+}
+
+function updateDayDisplay(day) {
+    const startInput = document.getElementById(day + '_start');
+    const endInput = document.getElementById(day + '_end');
+    const checkbox = document.getElementById(day + '-check');
+    const checkIcon = document.getElementById(day + '-check-icon');
+    
+    if (!startInput || !endInput || !checkbox) return;
+    
+    const startTime = startInput.value;
+    const endTime = endInput.value;
+    
+    // Update checkbox state based on whether times are set
+    checkbox.checked = (startTime && endTime);
+    
+    // Update dropdown states
+    if (startTime && endTime) {
+        // Enable dropdowns and show check icon
+        startInput.disabled = false;
+        endInput.disabled = false;
+        startInput.style.opacity = '1';
+        endInput.style.opacity = '1';
+        if (checkIcon) {
+            checkIcon.classList.remove('d-none');
+        }
+    } else {
+        // Disable dropdowns and hide check icon
+        if (!checkbox.checked) {
+            startInput.disabled = true;
+            endInput.disabled = true;
+            startInput.style.opacity = '0.5';
+            endInput.style.opacity = '0.5';
+        }
+        if (checkIcon) {
+            checkIcon.classList.add('d-none');
+        }
+    }
+}
+
+function fillStandardWeek() {
+    // Monday to Thursday 9:00-13:00 (matching image example)
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday'];
+    days.forEach(day => {
+        const startInput = document.getElementById(day + '_start');
+        const endInput = document.getElementById(day + '_end');
+        if (startInput) startInput.value = '09:00';
+        if (endInput) endInput.value = '13:00';
+        updateDayDisplay(day);
+    });
+}
+
+function fillEarlyWeek() {
+    // Monday to Thursday 8:00-12:00 (earlier morning shift)
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday'];
+    days.forEach(day => {
+        const startInput = document.getElementById(day + '_start');
+        const endInput = document.getElementById(day + '_end');
+        if (startInput) startInput.value = '08:00';
+        if (endInput) endInput.value = '12:00';
+        updateDayDisplay(day);
+    });
+}
+
+function clearAll() {
+    // Clear all days
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    days.forEach(day => {
+        const startInput = document.getElementById(day + '_start');
+        const endInput = document.getElementById(day + '_end');
+        if (startInput) startInput.value = '';
+        if (endInput) endInput.value = '';
+        updateDayDisplay(day);
+    });
+}
+
+function updateTime(day) {
+    // Update the hidden form inputs when dropdown values change
+    const startSelect = document.getElementById(day + '_start');
+    const endSelect = document.getElementById(day + '_end');
+    
+    // Update corresponding form fields if they exist
+    const hiddenStart = document.querySelector(`input[name="${day}_start"]`);
+    const hiddenEnd = document.querySelector(`input[name="${day}_end"]`);
+    
+    if (startSelect && hiddenStart) {
+        hiddenStart.value = startSelect.value;
+    }
+    if (endSelect && hiddenEnd) {
+        hiddenEnd.value = endSelect.value;
+    }
+}
+
+// Generate full 24-hour time options with 30-minute increments
+function generateTimeOptions(selectedValue = '') {
+    let options = '<option value="">--:--</option>';
+    for (let h = 0; h < 24; h++) {
+        for (let m = 0; m < 60; m += 30) {
+            const hour = h.toString().padStart(2, '0');
+            const minute = m.toString().padStart(2, '0');
+            const timeValue = `${hour}:${minute}`;
+            const selected = timeValue === selectedValue ? ' selected' : '';
+            options += `<option value="${timeValue}"${selected}>${timeValue}</option>`;
+        }
+    }
+    return options;
+}
+
+// Update all time dropdowns with 24-hour options
+function updateAllTimeDropdowns() {
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    
+    days.forEach(day => {
+        const startDropdown = document.getElementById(`${day}_start`);
+        const endDropdown = document.getElementById(`${day}_end`);
+        
+        // Get values from hidden form fields (WTForms data)
+        const hiddenStart = document.querySelector(`input[name="${day}_start"]`);
+        const hiddenEnd = document.querySelector(`input[name="${day}_end"]`);
+        
+        if (startDropdown) {
+            const startValue = hiddenStart ? hiddenStart.value : startDropdown.value;
+            startDropdown.innerHTML = generateTimeOptions(startValue);
+        }
+        
+        if (endDropdown) {
+            const endValue = hiddenEnd ? hiddenEnd.value : endDropdown.value;
+            endDropdown.innerHTML = generateTimeOptions(endValue);
+        }
+    });
+}
+
+
+</script>
+{% endblock %}

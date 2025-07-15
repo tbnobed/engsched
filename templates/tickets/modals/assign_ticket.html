@@ -1,0 +1,35 @@
+<!-- Assign Ticket Modal -->
+<div class="modal fade" id="assignTicketModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('tickets.assign_ticket', ticket_id=ticket['id']) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Assign To</label>
+                        <select name="assigned_to" class="form-select" required>
+                            <option value="">Select Technician</option>
+                            {% for tech in technicians %}
+                            <option value="{{ tech.id }}" {% if ticket['assigned_to'] == tech.id %}selected{% endif %}>
+                                {{ tech.username }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note (Optional)</label>
+                        <textarea name="note" class="form-control" rows="3" placeholder="Add a note about this assignment..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

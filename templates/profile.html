@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Profile Settings</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('update_profile') }}">
+                        {{ form.csrf_token }}
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control profile-readonly-field" value="{{ current_user.username }}" readonly style="color: #ffffff; background-color: #162439;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control profile-readonly-field" value="{{ current_user.email }}" readonly style="color: #ffffff; background-color: #162439;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Color</label>
+                            <input type="color" name="color" class="form-control form-control-color" value="{{ current_user.color }}" title="Choose your color">
+                            <div class="form-text">This color will be used to identify your schedules in the calendar.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </form>
+
+                    <hr>
+
+                    <h4 class="mt-4">Change Password</h4>
+                    <form method="POST" action="{{ url_for('change_password') }}">
+                        {{ password_form.csrf_token }}
+                        <div class="mb-3">
+                            {{ password_form.current_password.label(class="form-label") }}
+                            {{ password_form.current_password(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ password_form.new_password.label(class="form-label") }}
+                            {{ password_form.new_password(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ password_form.confirm_new_password.label(class="form-label") }}
+                            {{ password_form.confirm_new_password(class="form-control") }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

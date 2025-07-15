@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>Edit User: {{ user.username }}</h3>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                        <i data-feather="arrow-left" class="me-1"></i> Back to Dashboard
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_edit_user', user_id=user.id) }}" enctype="multipart/form-data">
+                        {{ form.csrf_token }}
+                        <div class="mb-3">
+                            {{ form.username.label(class="form-label") }}
+                            {{ form.username(class="form-control admin-form-field") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control admin-form-field") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.color.label(class="form-label") }}
+                            {{ form.color(class="form-control") }}
+                            <div class="mt-2 color-preview" style="width: 100%; height: 24px; background-color: {{ user.color }}; border: 1px solid #ddd; border-radius: 4px;"></div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control admin-form-field", placeholder="Leave blank to keep current password") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.timezone.label(class="form-label") }}
+                            {{ form.timezone(class="form-select admin-form-field") }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Profile Picture</label>
+                            <div class="d-flex align-items-center mb-2">
+                                {% if user.profile_picture %}
+                                    <img src="{{ url_for('static', filename=user.profile_picture) }}" 
+                                         alt="Current profile picture" 
+                                         class="rounded-circle me-3"
+                                         style="width: 60px; height: 60px; object-fit: cover;">
+                                    <div>
+                                        <strong>Current picture</strong><br>
+                                        <small class="text-muted">Upload a new image to replace it</small>
+                                    </div>
+                                {% else %}
+                                    <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 1.2rem; margin-right: 12px;">
+                                        {{ user.username.split(' ')|map('first')|join('')|upper|truncate(2, true, '') }}
+                                    </div>
+                                    <div>
+                                        <strong>No profile picture</strong><br>
+                                        <small class="text-muted">Upload an image to add a profile picture</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {{ form.profile_picture(class="form-control", accept="image/*") }}
+                            <small class="form-text text-muted">Supported formats: JPG, PNG, WEBP (Max size: 5MB)</small>
+                        </div>
+                        <div class="mb-3 form-check">
+                            {{ form.is_admin(class="form-check-input") }}
+                            {{ form.is_admin.label(class="form-check-label") }}
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">Update User</button>
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('input[type="color"]').addEventListener('input', function() {
+        document.querySelector('.color-preview').style.backgroundColor = this.value;
+    });
+});
+</script>
+{% endblock %}

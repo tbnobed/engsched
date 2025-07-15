@@ -1,0 +1,345 @@
+{% extends "mobile_base_simplified.html" %}
+
+{% block title %}Ticket #{{ ticket['id'] }} - The Plex Studios{% endblock %}
+
+{% block content %}
+<div class="ticket-view">
+    <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div class="card-header d-flex justify-content-between align-items-center"
+             style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #e9ecef, #f8f9fa);{% else %}background: linear-gradient(to right, #1A2332, #273449);{% endif %} border: none;">
+            <h5 class="card-title mb-0">Ticket #{{ ticket['id'] }}</h5>
+        </div>
+    </div>
+    
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('tickets.tickets_dashboard') }}" class="btn btn-outline-primary btn-sm">
+            <i data-feather="arrow-left" class="feather-small"></i> Back
+        </a>
+        
+        {% if current_user.is_admin or current_user.id == ticket['assigned_to'] or current_user.id == ticket['created_by'] %}
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i data-feather="more-vertical" class="feather-small"></i> Actions
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#assignTicketModal">
+                        <i data-feather="user"></i> Assign Ticket
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                        <i data-feather="refresh-cw"></i> Update Status
+                    </a>
+                </li>
+                {% if current_user.is_admin %}
+                <li>
+                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editTicketModal">
+                        <i data-feather="edit"></i> Edit Ticket
+                    </a>
+                </li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('tickets.archive_ticket', ticket_id=ticket['id']) }}" 
+                       onclick="return confirm('Are you sure you want to archive this ticket? It will be hidden from regular views.');">
+                        <i data-feather="archive"></i> Archive Ticket
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item text-danger" href="#" onclick="deleteTicket({{ ticket['id'] }})">
+                        <i data-feather="trash-2"></i> Delete Ticket
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Ticket Details -->
+    <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div class="card-body" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #ffffff, #f8f9fa);{% else %}background: linear-gradient(to right, #141B2D, #1A2332);{% endif %}">
+            <h5 class="card-title">{{ ticket['title'] }}</h5>
+            <div class="d-flex gap-2 mb-3">
+                <span class="badge bg-secondary">
+                    {{ ticket['category']['name'] }}
+                </span>
+                {% set status_colors = {
+                    'open': 'primary',
+                    'in_progress': 'info',
+                    'pending': 'warning',
+                    'resolved': 'success',
+                    'closed': 'secondary'
+                } %}
+                <span class="badge bg-{{ status_colors[ticket['status']] }}">
+                    {{ ticket['status']|replace('_', ' ')|title }}
+                </span>
+                {% set priority_colors = {
+                    0: 'secondary',
+                    1: 'info',
+                    2: 'warning',
+                    3: 'danger'
+                } %}
+                {% set priority_labels = {
+                    0: 'Low',
+                    1: 'Medium',
+                    2: 'High',
+                    3: 'Urgent'
+                } %}
+                <span class="badge bg-{{ priority_colors[ticket['priority']] }}">
+                    Priority: {{ priority_labels[ticket['priority']] }}
+                </span>
+            </div>
+            
+            <!-- Mobile Quick Action Buttons - Allow all users to see buttons -->
+            <div class="mb-3">
+                <div class="d-flex flex-wrap gap-2 justify-content-between">
+                    {% if ticket['status'] == 'open' %}
+                    <button type="button" class="btn btn-sm btn-primary flex-grow-1" 
+                            onclick="quickUpdateStatus('in_progress')">
+                        <i data-feather="play" class="feather-small"></i> Start Work
+                    </button>
+                    {% endif %}
+                    
+                    {% if ticket['status'] == 'in_progress' %}
+                    <button type="button" class="btn btn-sm btn-warning flex-grow-1" 
+                            onclick="quickUpdateStatus('pending')">
+                        <i data-feather="pause" class="feather-small"></i> Set Pending
+                    </button>
+                    {% endif %}
+                    
+                    {% if ticket['status'] in ['open', 'in_progress', 'pending'] %}
+                    <button type="button" class="btn btn-sm btn-success flex-grow-1" 
+                            onclick="quickUpdateStatus('resolved')">
+                        <i data-feather="check" class="feather-small"></i> Resolve
+                    </button>
+                    {% endif %}
+                    
+                    {% if ticket['status'] == 'resolved' %}
+                    <button type="button" class="btn btn-sm btn-secondary flex-grow-1" 
+                            onclick="quickUpdateStatus('closed')">
+                        <i data-feather="lock" class="feather-small"></i> Close
+                    </button>
+                    {% endif %}
+                    
+                    {% if ticket['status'] != 'open' and ticket['status'] != 'in_progress' %}
+                    <button type="button" class="btn btn-sm btn-primary flex-grow-1" 
+                            onclick="quickUpdateStatus('open')">
+                        <i data-feather="refresh-cw" class="feather-small"></i> Reopen
+                    </button>
+                    {% endif %}
+                    
+                    <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1" 
+                            data-bs-toggle="modal" data-bs-target="#assignTicketModal">
+                        <i data-feather="user" class="feather-small"></i> Assign
+                    </button>
+                    
+                    <button type="button" class="btn btn-sm btn-outline-info flex-grow-1" 
+                            data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                        <i data-feather="edit-2" class="feather-small"></i> Status
+                    </button>
+                    
+                    {% if current_user.is_admin %}
+                    <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1" 
+                            data-bs-toggle="modal" data-bs-target="#editTicketModal">
+                        <i data-feather="edit-3" class="feather-small"></i> Edit
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <p class="text-muted small mb-3">
+                <strong>Created by:</strong> {{ ticket['creator']['username'] }} on {{ ticket['created_at'].strftime('%Y-%m-%d %H:%M') }}
+            </p>
+            <div class="ticket-description">
+                {{ ticket['description']|nl2br }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Ticket Info -->
+    <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div class="card-header" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #e9ecef, #f8f9fa);{% else %}background: linear-gradient(to right, #1A2332, #273449);{% endif %} border: none;">
+            <h5 class="card-title mb-0">Ticket Information</h5>
+        </div>
+        <div class="card-body" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #ffffff, #f8f9fa);{% else %}background: linear-gradient(to right, #141B2D, #1A2332);{% endif %}">
+            <dl class="row mb-0">
+                <dt class="col-5">Assigned To</dt>
+                <dd class="col-7">
+                    {% if ticket['assigned_technician'] %}
+                        {{ ticket['assigned_technician']['username'] }}
+                    {% else %}
+                        <span class="text-muted">Unassigned</span>
+                    {% endif %}
+                </dd>
+
+                <dt class="col-5">Due Date</dt>
+                <dd class="col-7">
+                    {% if ticket['due_date'] %}
+                        {{ ticket['due_date'].strftime('%Y-%m-%d') }}
+                    {% else %}
+                        <span class="text-muted">Not set</span>
+                    {% endif %}
+                </dd>
+
+                <dt class="col-5">Last Updated</dt>
+                <dd class="col-7">{{ ticket['updated_at'].strftime('%Y-%m-%d %H:%M') }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div class="card-header" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #e9ecef, #f8f9fa);{% else %}background: linear-gradient(to right, #1A2332, #273449);{% endif %} border: none;">
+            <h5 class="card-title mb-0">Comments</h5>
+        </div>
+        <div class="card-body" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #ffffff, #f8f9fa);{% else %}background: linear-gradient(to right, #141B2D, #1A2332);{% endif %}">
+            <div class="comments-list mb-3">
+                {% for comment in ticket['comments'] %}
+                <div class="comment mb-3 p-3" 
+                     style="border-left: 4px solid #3498db; 
+                           border-radius: 8px;
+                           box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+                           transition: all 0.3s ease;
+                           {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+                           background: linear-gradient(to right, #f8f9fa, #ffffff);
+                           {% else %}
+                           background: linear-gradient(to right, #1A2332, #213346);
+                           {% endif %}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <strong class="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}text-dark{% else %}text-white{% endif %}">
+                                {{ comment['user']['username'] }}
+                            </strong>
+                            <small class="text-muted d-block">{{ comment['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        {% if current_user.is_admin or current_user.id == comment['user']['id'] %}
+                        <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteComment({{ comment['id'] }})">
+                            <i data-feather="trash-2" style="width: 16px; height: 16px;"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    <p class="mb-0 {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}text-dark{% else %}text-light{% endif %}">
+                        {{ comment['content']|nl2br }}
+                    </p>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No comments yet</p>
+                {% endfor %}
+            </div>
+
+            <!-- Add Comment Form -->
+            <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}">
+                {{ comment_form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ comment_form.content(class="form-control", rows="3", placeholder="Add a comment...") }}
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i data-feather="message-square"></i> Add Comment
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ticket History -->
+    <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div class="card-header" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #e9ecef, #f8f9fa);{% else %}background: linear-gradient(to right, #1A2332, #273449);{% endif %} border: none;">
+            <h5 class="card-title mb-0">History</h5>
+        </div>
+        <div class="card-body" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #ffffff, #f8f9fa);{% else %}background: linear-gradient(to right, #141B2D, #1A2332);{% endif %}">
+            {% for entry in ticket['history'] %}
+            <div class="history-entry mb-3 p-2" 
+                 style="border-radius: 6px;
+                       border-left: 3px solid #6c757d;
+                       box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+                       transition: all 0.3s ease;
+                       {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+                       background: linear-gradient(to right, #f8f9fa, #ffffff);
+                       {% else %}
+                       background: linear-gradient(to right, #1A2332, #213346);
+                       {% endif %}">
+                <small class="text-muted d-block mb-1">{{ entry['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
+                <p class="mb-1 {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}text-dark{% else %}text-white{% endif %}">
+                    <strong>{{ entry['user']['username'] }}</strong>
+                    {{ entry['action']|replace('_', ' ')|title }}
+                </p>
+                {% if entry['details'] %}
+                <p class="mb-0 text-muted small">{{ entry['details'] }}</p>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="text-muted text-center">No history available</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Include modals -->
+{% include 'tickets/modals/assign_ticket.html' %}
+{% include 'tickets/modals/mobile_update_status.html' %}
+{% include 'tickets/modals/edit_ticket.html' %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+    });
+
+    function deleteTicket(ticketId) {
+        if (confirm('Are you sure you want to delete this ticket? This action cannot be undone.')) {
+            window.location.href = "{{ url_for('tickets.delete_ticket', ticket_id=0) }}".replace('/0/delete', `/${ticketId}/delete`);
+        }
+    }
+
+    function deleteComment(commentId) {
+        if (confirm('Are you sure you want to delete this comment?')) {
+            window.location.href = "{{ url_for('tickets.delete_comment', comment_id=0) }}".replace('/0/delete', `/${commentId}/delete`);
+        }
+    }
+    
+    function quickUpdateStatus(newStatus) {
+        // Create a form for submission
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ url_for('tickets.mobile_update_status', ticket_id=ticket['id']) }}";
+        
+        // Add CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = "{{ csrf_token() }}";
+        form.appendChild(csrfInput);
+        
+        // Add status field
+        const statusInput = document.createElement('input');
+        statusInput.type = 'hidden';
+        statusInput.name = 'status';
+        statusInput.value = newStatus;
+        form.appendChild(statusInput);
+        
+        // Add comment field with default comment based on status
+        const commentInput = document.createElement('input');
+        commentInput.type = 'hidden';
+        commentInput.name = 'comment';
+        
+        // Set appropriate comment based on the status change
+        const statusMessages = {
+            'open': 'Reopened the ticket.',
+            'in_progress': 'Started working on the ticket.',
+            'pending': 'Set ticket to pending.',
+            'resolved': 'Resolved the issue.',
+            'closed': 'Closed the ticket.'
+        };
+        
+        commentInput.value = statusMessages[newStatus] || `Changed status to ${newStatus}.`;
+        form.appendChild(commentInput);
+        
+        // Submit the form
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Database Backup and Restore</h2>
+
+    <div class="row">
+        <!-- Backup Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Create Backup</h3>
+                </div>
+                <div class="card-body">
+                    <p>Create a backup of the current database state. This includes:</p>
+                    <ul>
+                        <li>User accounts (with passwords)</li>
+                        <li>All schedules</li>
+                        <li>Locations</li>
+                        <li>Quick links</li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="{{ url_for('download_backup') }}" class="btn btn-primary">
+                            <i data-feather="download"></i> Download Backup
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Restore Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Restore from Backup</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('restore_backup') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <p class="text-warning">Warning: Restoring a backup will merge with current data!</p>
+                        <div class="mb-3">
+                            <label for="backup_file" class="form-label">Select Backup File</label>
+                            <input type="file" class="form-control" id="backup_file" name="backup_file" accept=".json" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure? This will merge backup data with current data.')">
+                                <i data-feather="upload"></i> Restore Backup
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h3 class="card-title">Instructions</h3>
+        </div>
+        <div class="card-body">
+            <h4>Creating a Backup</h4>
+            <ol>
+                <li>Click the "Download Backup" button</li>
+                <li>Save the JSON file to a secure location</li>
+                <li>The backup includes all database content</li>
+            </ol>
+
+            <h4>Restoring from Backup</h4>
+            <ol>
+                <li>Click "Choose File" and select your backup file</li>
+                <li>Click "Restore Backup" to start the restore process</li>
+                <li>Wait for confirmation - this may take a few moments</li>
+            </ol>
+
+            <div class="alert alert-info">
+                <i data-feather="info"></i> Regular backups are recommended to prevent data loss.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

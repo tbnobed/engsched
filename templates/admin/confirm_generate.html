@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Schedules - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i data-feather="play" class="me-2"></i>
+                        Generate Schedules from Template
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i data-feather="info" class="me-2"></i>
+                        <strong>Generate schedules from "{{ template.template_name }}"</strong>
+                        <br>
+                        This will create {{ template.weeks_ahead }} weeks of schedule entries for {{ template.technician.username }}.
+                    </div>
+                    
+                    <!-- Template Details -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Template Details</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Technician:</strong> {{ template.technician.username }}</li>
+                                <li><strong>Location:</strong> 
+                                    {% if template.location %}
+                                        {{ template.location.name }}
+                                    {% else %}
+                                        No Location
+                                    {% endif %}
+                                </li>
+                                <li><strong>Weeks Ahead:</strong> {{ template.weeks_ahead }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Weekly Schedule</h6>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% set weekly_schedule = template.get_weekly_schedule() %}
+                                {% for day, times in weekly_schedule.items() %}
+                                    {% if times.working %}
+                                        <span class="badge bg-success">
+                                            {{ day[:3].upper() }}: {{ times.start }}-{{ times.end }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted">
+                                            {{ day[:3].upper() }}: Off
+                                        </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('recurring_schedules') }}" class="btn btn-secondary">
+                            <i data-feather="arrow-left" class="me-2"></i>
+                            Back to Templates
+                        </a>
+                        <div>
+                            <a href="{{ url_for('preview_recurring_schedule', template_id=template.id) }}" 
+                               class="btn btn-info me-2">
+                                <i data-feather="eye" class="me-2"></i>
+                                Preview First
+                            </a>
+                            <form method="POST" action="{{ url_for('generate_recurring_schedule', template_id=template.id) }}" 
+                                  class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-success">
+                                    <i data-feather="play" class="me-2"></i>
+                                    Generate Schedules
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

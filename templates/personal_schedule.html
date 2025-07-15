@@ -1,0 +1,941 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="calendar-container">
+    <div class="calendar-header d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <h2>My Schedule - {{ week_start.strftime('%B %Y') }}</h2>
+        </div>
+        <div class="calendar-controls">
+            <a href="{{ url_for('personal_schedule', week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d')) }}" 
+               class="btn btn-outline-secondary me-2">
+                <i data-feather="chevrons-left"></i> Previous Month
+            </a>
+            <a href="{{ url_for('personal_schedule', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d')) }}" 
+               class="btn btn-outline-primary me-2">
+                <i data-feather="chevron-left"></i> Previous Week
+            </a>
+            <a href="{{ url_for('personal_schedule') }}" 
+               class="btn btn-outline-primary me-2">
+                Current Week
+            </a>
+            <a href="{{ url_for('personal_schedule', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d')) }}" 
+               class="btn btn-outline-primary me-2">
+                Next Week <i data-feather="chevron-right"></i>
+            </a>
+            <a href="{{ url_for('personal_schedule', week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d')) }}" 
+               class="btn btn-outline-secondary me-2">
+                Next Month <i data-feather="chevrons-right"></i>
+            </a>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                <i data-feather="plus"></i> Add Schedule
+            </button>
+        </div>
+    </div>
+
+    <div class="week-view">
+        <div class="time-column">
+            {% for hour in range(24) %}
+                <div class="hour-slot">{{ "%02d:00"|format(hour) }}</div>
+            {% endfor %}
+        </div>
+
+        {% for day in range(7) %}
+        {% set current_date = week_start + timedelta(days=day) %}
+        {% set is_today = current_date.date() == today.date() %}
+        <div class="day-column {{ 'today' if is_today else '' }}">
+            <div class="day-header {{ 'today' if is_today else '' }}" data-bs-toggle="modal" data-bs-target="#scheduleModal" data-date="{{ current_date.strftime('%Y-%m-%d') }}">
+                {{ current_date.strftime('%a %m/%d') }}
+            </div>
+            <div class="day-slots" data-date="{{ current_date.strftime('%Y-%m-%d') }}">
+                {% for hour in range(24) %}
+                    <div class="time-slot" data-hour="{{ '%02d'|format(hour) }}" data-bs-toggle="modal" data-bs-target="#scheduleModal" data-date="{{ current_date.strftime('%Y-%m-%d') }}"></div>
+                {% endfor %}
+                {% if is_today %}
+                <div class="current-time-line" data-time=""></div>
+                {% endif %}
+                {% for schedule in schedules if 
+                    (schedule.time_off and schedule.all_day and schedule.start_time.replace(tzinfo=None).date() == current_date.date()) or
+                    (not (schedule.time_off and schedule.all_day) and schedule.start_time.date() == current_date.date()) %}
+                    <div class="schedule-event"
+                         style="--user-color: {{ '#6a6d6c' if schedule.time_off else current_user.color }};"
+                         data-schedule-id="{{ schedule.id }}"
+                         data-technician-id="{{ schedule.technician_id }}"
+                         data-start-time="{{ schedule.start_time.strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-end-time="{{ schedule.end_time.strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
+                         data-all-day="{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}"
+                         data-location-id="{{ schedule.location_id or '' }}"
+                         data-bs-toggle="modal"
+                         data-bs-target="#scheduleModal"
+                         data-toggle="tooltip"
+                         data-html="true"
+                         title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.strftime('%H:%M') }}-{{ schedule.end_time.strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br><i data-feather='map-pin'></i> {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
+                        <div class="schedule-header">
+                            <div class="schedule-title">
+                                {% if schedule.time_off %}Time Off{% else %}{{ schedule.technician.username }}{% endif %}
+                            </div>
+                            <div class="schedule-time">
+                                {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
+                            </div>
+                            {% if schedule.location %}
+                            <div class="schedule-location">
+                                <i data-feather="map-pin" class="feather-small"></i>
+                                {{ schedule.location.name }}
+                            </div>
+                            {% endif %}
+                            {% if schedule.description and not schedule.time_off %}
+                            <div class="schedule-desc">{{ schedule.description }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="schedule-body">
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        // Pass timezone from server to client
+        window.userTimezone = '{{ user_timezone }}';
+    </script>
+
+    <!-- Schedule Modal -->
+    <div class="modal fade" id="scheduleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Schedule</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="schedule_form" method="POST" action="{{ url_for('new_schedule', personal_view='true') }}">
+                        {{ form.hidden_tag() }}
+                        <input type="hidden" id="schedule_id" name="schedule_id">
+                        <input type="hidden" name="personal_view" value="true">
+                        {% if request.args.get('week_start') %}
+                        <input type="hidden" name="week_start" value="{{ request.args.get('week_start') }}">
+                        {% endif %}
+                        
+                        {% if current_user.is_admin %}
+                        <div class="mb-3">
+                            {{ form.technician.label(class="form-label") }}
+                            {{ form.technician(class="form-control") }}
+                        </div>
+                        {% endif %}
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", id="description") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.location_id.label(class="form-label") }}
+                            {{ form.location_id(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" id="schedule_date" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Repeat Schedule</label>
+                            <div class="mt-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="repeat_days_toggle" onchange="toggleRepeatDaysSelection()">
+                                    <label class="form-check-label" for="repeat_days_toggle">Schedule for multiple days</label>
+                                </div>
+                            </div>
+                            <div id="repeat_days_container" class="mt-2" style="display: none;">
+                                <div class="alert alert-info mb-3">
+                                    <small>Select the days to create this schedule. The same time and details will be used for all selected days.</small>
+                                </div>
+                                <div id="miniCalendar" class="mini-calendar">
+                                    <!-- Calendar will be populated by JavaScript -->
+                                </div>
+                                
+                                <div class="selected-dates mt-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="m-0">Selected Dates</h6>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-selection">
+                                            Clear All
+                                        </button>
+                                    </div>
+                                    <div id="selected-dates-container">
+                                        <span class="text-muted" id="no-dates-selected">No additional dates selected</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label">Start Time</label>
+                                <select id="start_hour" class="form-control" onchange="updateEndTimeOptions()">
+                                    {% for hour in range(24) %}
+                                        <option value="{{ '%02d'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">End Time</label>
+                                <select id="end_hour" class="form-control">
+                                    {% for hour in range(1, 24) %}
+                                        <option value="{{ '%02d'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
+                                    {% endfor %}
+                                    <option value="00">00:00</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.time_off(class="form-check-input", id="time_off") }}
+                                {{ form.time_off.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-check">
+                                {{ form.all_day(class="form-check-input", id="all_day") }}
+                                <label class="form-check-label" for="all_day">OOO (Out of Office)</label>
+                            </div>
+                        </div>
+                        
+                        {{ form.start_time(type="hidden", id="start_time_input") }}
+                        {{ form.end_time(type="hidden", id="end_time_input") }}
+                        {{ form.repeat_days(type="hidden", id="repeat_days_input") }}
+                        <div class="modal-footer">
+                            <button type="button" id="delete_button" class="btn btn-danger" style="display: none;">Delete</button>
+                            <button type="button" id="copy_button" class="btn btn-info" style="display: none;">Copy Schedule</button>
+                            <button type="submit" class="btn btn-primary">Add Schedule</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.calendar-container {
+    background-color: var(--calendar-bg);
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.day-column {
+    width: calc((100% - 50px) / 7);
+    border-right: 1px solid var(--border-color);
+    position: relative;
+}
+
+.day-column:last-child {
+    border-right: none;
+}
+
+.day-column.today {
+    background-color: var(--today-highlight);
+}
+
+.day-header {
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(to bottom, var(--calendar-header-start), var(--calendar-header-end));
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+}
+
+.day-header.today {
+    background: linear-gradient(to bottom, var(--calendar-today-header-start), var(--calendar-today-header-end));
+    color: var(--calendar-today-text);
+}
+
+.week-view {
+    display: flex;
+    overflow-x: auto;
+    min-height: 600px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.time-column {
+    width: 50px;
+    border-right: 1px solid var(--border-color);
+    position: sticky;
+    left: 0;
+    background-color: var(--calendar-bg);
+    z-index: 1;
+}
+
+.hour-slot {
+    height: 60px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+    font-size: 0.8rem;
+    padding-top: 5px;
+}
+
+.day-slots {
+    position: relative;
+}
+
+.time-slot {
+    height: 60px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.time-slot:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Schedule event styling is now handled in main style.css */
+
+/* Make sure events are positioned correctly using JavaScript */
+{% for day in range(7) %}
+{% set current_date = week_start + timedelta(days=day) %}
+{% for schedule in schedules if schedule.start_time.date() == current_date.date() %}
+.day-column:nth-child({{ day + 2 }}) .schedule-event[data-schedule-id="{{ schedule.id }}"] {
+    top: {{ ((schedule.start_time.hour * 60 + schedule.start_time.minute) / 60) * 60 }}px;
+    height: {{ (((schedule.end_time - schedule.start_time).total_seconds() / 3600) * 60) }}px;
+}
+{% endfor %}
+{% endfor %}
+
+.schedule-time {
+    font-weight: bold;
+}
+
+.schedule-tech {
+    font-style: italic;
+}
+
+.schedule-location, .schedule-desc {
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.feather-small {
+    width: 12px;
+    height: 12px;
+}
+
+.mini-calendar {
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.day-names {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.day-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-gap: 3px;
+}
+
+.day-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 36px;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.9rem;
+}
+
+.day-item.today {
+    border: 1px solid #007bff;
+    font-weight: bold;
+}
+
+.day-item.selected {
+    background-color: #007bff;
+    color: white;
+}
+
+.day-item.primary-date {
+    background-color: #28a745;
+    color: white;
+}
+
+.day-item.disabled {
+    color: #adb5bd;
+    cursor: not-allowed;
+    background-color: #e9ecef;
+}
+
+.day-item.has-schedule {
+    position: relative;
+}
+
+.day-item.has-schedule:after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background-color: #dc3545;
+    border-radius: 50%;
+}
+
+.selected-date-pill {
+    background-color: #007bff;
+    color: white;
+    padding: 2px 10px;
+    border-radius: 15px;
+    margin: 2px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+#selected-dates-container {
+    min-height: 38px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips for schedule events
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl, {
+            html: true,
+            container: 'body',
+            boundary: 'window'
+        });
+    });
+    
+    // Auto-check "Time Off" when "OOO (Out of Office)" is checked
+    const allDayCheckbox = document.getElementById('all_day');
+    const timeOffCheckbox = document.getElementById('time_off');
+    const startHourSelect = document.getElementById('start_hour');
+    const endHourSelect = document.getElementById('end_hour');
+    
+    if (allDayCheckbox && timeOffCheckbox && startHourSelect && endHourSelect) {
+        allDayCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                timeOffCheckbox.checked = true;
+                // Automatically set times to cover the full day
+                startHourSelect.value = '00';
+                endHourSelect.value = '23';
+                console.log('OOO checked: automatically set times to 00:00-23:00');
+            }
+        });
+    }
+    
+    // Set up clear selection button
+    const clearButton = document.getElementById('clear-selection');
+    if (clearButton) {
+        clearButton.addEventListener('click', function() {
+            clearDateSelection();
+        });
+    }
+    
+    // Initialize variables required for the calendar functionality
+    // These would normally be defined in calendar.js but we need them here too
+    let currentMonth = new Date();
+    let selectedDates = [];
+    let primaryDate = null;
+    let scheduleDates = [];
+    
+    // Only initialize calendar components when the modal is opened
+    const scheduleModal = document.getElementById('scheduleModal');
+    if (scheduleModal) {
+        scheduleModal.addEventListener('show.bs.modal', function(event) {
+            // Get all schedule dates for highlighting
+            scheduleDates = [];
+            document.querySelectorAll('.schedule-event').forEach(event => {
+                const startTime = new Date(event.getAttribute('data-start-time'));
+                const dateStr = startTime.toISOString().split('T')[0];
+                if (!scheduleDates.includes(dateStr)) {
+                    scheduleDates.push(dateStr);
+                }
+            });
+            
+            // Initialize the mini calendar
+            try {
+                initMiniCalendar();
+            } catch (e) {
+                console.error("Error initializing mini calendar:", e);
+            }
+            
+            // Clear previous selections
+            selectedDates = [];
+            primaryDate = null;
+            // Update the calendar display if it exists
+            if (document.getElementById('calendar-days')) {
+                generateCalendarDays();
+            }
+            // Clear the selected dates container if it exists
+            const selectedDatesContainer = document.getElementById('selected-dates-container');
+            if (selectedDatesContainer) {
+                selectedDatesContainer.innerHTML = '<span class="text-muted" id="no-dates-selected">No additional dates selected</span>';
+            }
+        
+            // If triggered by a schedule event (for editing)
+            if (event.relatedTarget && event.relatedTarget.classList.contains('schedule-event')) {
+                const scheduleEvent = event.relatedTarget;
+                document.getElementById('schedule_id').value = scheduleEvent.getAttribute('data-schedule-id');
+                
+                // Populate the form with existing data
+                const startTime = new Date(scheduleEvent.getAttribute('data-start-time'));
+                const endTime = new Date(scheduleEvent.getAttribute('data-end-time'));
+                const timeOff = scheduleEvent.getAttribute('data-time-off') === 'true';
+                
+                // Set the date
+                document.getElementById('schedule_date').valueAsDate = startTime;
+                
+                // Set the times
+                document.getElementById('start_time_input').value = 
+                    `${String(startTime.getHours()).padStart(2, '0')}:${String(startTime.getMinutes()).padStart(2, '0')}`;
+                document.getElementById('end_time_input').value = 
+                    `${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`;
+                
+                // Set the time off checkbox
+                document.getElementById('time_off').checked = timeOff;
+                
+                // Set the all_day checkbox
+                const allDay = scheduleEvent.getAttribute('data-all-day') === 'true';
+                const allDayCheckbox = document.getElementById('all_day');
+                if (allDayCheckbox) {
+                    allDayCheckbox.checked = allDay;
+                }
+                
+                // Get description - try both .schedule-description and .schedule-desc for compatibility
+                let description = '';
+                const descElement = scheduleEvent.querySelector('.schedule-description');
+                const descAltElement = scheduleEvent.querySelector('.schedule-desc');
+                
+                if (descElement) {
+                    description = descElement.textContent;
+                } else if (descAltElement) {
+                    description = descAltElement.textContent;
+                }
+                
+                document.getElementById('description').value = description || '';
+                
+                // Set modal title
+                document.querySelector('#scheduleModal .modal-title').textContent = 'Edit Schedule';
+                
+                // Show delete button
+                document.getElementById('delete_button').style.display = 'block';
+                document.getElementById('copy_button').style.display = 'block';
+                document.querySelector('#scheduleModal .btn-primary').textContent = 'Save Changes';
+                
+                // Delete button is handled by the global event listener in calendar.js
+                // No need to set up a custom handler here
+            } else {
+                // Creating new schedule
+                document.getElementById('schedule_id').value = '';
+                document.getElementById('description').value = '';
+                document.getElementById('time_off').checked = false;
+                
+                // Clear the all_day checkbox
+                const allDayCheckbox = document.getElementById('all_day');
+                if (allDayCheckbox) {
+                    allDayCheckbox.checked = false;
+                }
+                document.querySelector('#scheduleModal .modal-title').textContent = 'Add New Schedule';
+                document.getElementById('delete_button').style.display = 'none';
+                document.getElementById('copy_button').style.display = 'none';
+                document.querySelector('#scheduleModal .btn-primary').textContent = 'Add Schedule';
+                
+                // Set default date to the clicked day or today
+                let clickedDate = null;
+                if (event.relatedTarget) {
+                    clickedDate = event.relatedTarget.getAttribute('data-date');
+                    
+                    // If the time slot was clicked, also set a default time
+                    if (event.relatedTarget.classList.contains('time-slot')) {
+                        const clickedHour = event.relatedTarget.getAttribute('data-hour');
+                        if (clickedHour) {
+                            document.getElementById('start_time_input').value = `${clickedHour}:00`;
+                            document.getElementById('end_time_input').value = `${parseInt(clickedHour) + 1}:00`;
+                        }
+                    }
+                }
+                if (clickedDate) {
+                    document.getElementById('schedule_date').value = clickedDate;
+                    primaryDate = clickedDate;
+                    selectedDates = [clickedDate];
+                    updateSelectedDatesDisplay();
+                } else {
+                    const now = new Date();
+                    document.getElementById('schedule_date').valueAsDate = now;
+                }
+                
+                // Set default times (9am - 5pm)
+                document.getElementById('start_time_input').value = '09:00';
+                document.getElementById('end_time_input').value = '17:00';
+            }
+            
+            // Update the calendar display
+            updateMiniCalendar();
+        });
+    }
+    
+    // Handle form submission
+    try {
+        const scheduleForm = document.getElementById('schedule_form');
+        if (scheduleForm) {
+            scheduleForm.addEventListener('submit', function(event) {
+                try {
+                    // Get form values
+                    const dateInput = document.getElementById('schedule_date').value;
+                    const startHour = document.getElementById('start_hour').value;
+                    const endHour = document.getElementById('end_hour').value;
+                    
+                    // Log the form submission for debugging
+                    console.log("Form submission:", {
+                        date: dateInput,
+                        startHour: startHour,
+                        endHour: endHour,
+                        repeatEnabled: document.getElementById('repeat_days_toggle').checked,
+                        repeatDays: selectedDates.join(',')
+                    });
+                    
+                    if (dateInput && startHour && endHour) {
+                        // Create datetime strings in the format expected by the server
+                        let startDate = new Date(`${dateInput}T${startHour}:00`);
+                        let endDate = new Date(`${dateInput}T${endHour}:00`);
+                        
+                        // If end time is midnight (00:00), we need to add a day to the end date
+                        if (endHour === '00') {
+                            endDate.setDate(endDate.getDate() + 1);
+                        }
+                        
+                        // Format for the backend (YYYY-MM-DD HH:MM)
+                        const startTimeFormatted = 
+                            `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')} ${startHour}:00`;
+                        const endTimeFormatted = 
+                            `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')} ${endHour}:00`;
+                        
+                        // Set the hidden input values
+                        document.getElementById('start_time_input').value = startTimeFormatted;
+                        document.getElementById('end_time_input').value = endTimeFormatted;
+                    }
+                    
+                    // Set repeat days if we have any selected and the toggle is checked
+                    if (document.getElementById('repeat_days_toggle').checked && selectedDates.length > 0) {
+                        document.getElementById('repeat_days_input').value = selectedDates.join(',');
+                    } else {
+                        document.getElementById('repeat_days_input').value = '';
+                    }
+                } catch (error) {
+                    console.error("Error in form submission handler:", error);
+                }
+            });
+        } else {
+            console.error("Schedule form element not found");
+        }
+    } catch (error) {
+        console.error("Error setting up form submission handler:", error);
+    }
+
+    // Functions for the mini calendar
+    function initMiniCalendar() {
+        const miniCalendar = document.getElementById('miniCalendar');
+        if (!miniCalendar) return;
+        
+        // Clear any existing content
+        miniCalendar.innerHTML = '';
+        
+        // Create the month navigation header
+        const monthNav = document.createElement('div');
+        monthNav.className = 'month-navigator d-flex justify-content-between align-items-center mb-2';
+        
+        const prevBtn = document.createElement('button');
+        prevBtn.className = 'btn btn-sm btn-outline-secondary';
+        prevBtn.id = 'prev-month';
+        prevBtn.onclick = () => navigateMonth(-1);
+        
+        const prevIcon = document.createElement('i');
+        prevIcon.setAttribute('data-feather', 'chevron-left');
+        prevBtn.appendChild(prevIcon);
+        
+        const monthLabel = document.createElement('h6');
+        monthLabel.className = 'm-0';
+        monthLabel.id = 'calendar-month-year';
+        monthLabel.textContent = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'btn btn-sm btn-outline-secondary';
+        nextBtn.id = 'next-month';
+        nextBtn.onclick = () => navigateMonth(1);
+        
+        const nextIcon = document.createElement('i');
+        nextIcon.setAttribute('data-feather', 'chevron-right');
+        nextBtn.appendChild(nextIcon);
+        
+        monthNav.appendChild(prevBtn);
+        monthNav.appendChild(monthLabel);
+        monthNav.appendChild(nextBtn);
+        
+        // Create calendar days container
+        const calendarDays = document.createElement('div');
+        calendarDays.className = 'calendar-days';
+        
+        // Add day names header
+        const dayNames = document.createElement('div');
+        dayNames.className = 'day-names';
+        
+        const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        weekDays.forEach(day => {
+            const dayDiv = document.createElement('div');
+            dayDiv.textContent = day;
+            dayNames.appendChild(dayDiv);
+        });
+        
+        // Create grid for days
+        const dayGrid = document.createElement('div');
+        dayGrid.className = 'day-grid';
+        dayGrid.id = 'calendar-days';
+        
+        // Append all elements to the mini calendar
+        calendarDays.appendChild(dayNames);
+        calendarDays.appendChild(dayGrid);
+        
+        miniCalendar.appendChild(monthNav);
+        miniCalendar.appendChild(calendarDays);
+        
+        // Initialize Feather icons for the buttons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+        
+        // Generate calendar days
+        generateCalendarDays();
+    }
+    
+    function generateCalendarDays() {
+        const calendarDays = document.getElementById('calendar-days');
+        if (!calendarDays) return;
+        
+        // Clear existing days
+        calendarDays.innerHTML = '';
+        
+        // Update the month/year display
+        const monthYearLabel = document.getElementById('calendar-month-year');
+        if (monthYearLabel) {
+            monthYearLabel.textContent = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+        
+        // Get the first day of the month
+        const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+        const startingDay = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        
+        // Get the number of days in the month
+        const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+        const totalDays = lastDay.getDate();
+        
+        // Add empty cells for days before the first day of the month
+        for (let i = 0; i < startingDay; i++) {
+            const emptyDay = document.createElement('div');
+            emptyDay.className = 'day-item outside-month';
+            calendarDays.appendChild(emptyDay);
+        }
+        
+        // Add the days of the month
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        for (let day = 1; day <= totalDays; day++) {
+            const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+            const dateFormatted = formatDate(date);
+            const isToday = date.getTime() === today.getTime();
+            const isPrimary = primaryDate === dateFormatted;
+            const isSelected = selectedDates.includes(dateFormatted);
+            
+            // Check if this date has a schedule
+            const hasSchedule = scheduleDates.includes(dateFormatted);
+            
+            // Create day element
+            const dayItem = document.createElement('div');
+            dayItem.className = 'day-item';
+            dayItem.textContent = day;
+            dayItem.setAttribute('data-date', dateFormatted);
+            
+            // Add classes based on state
+            if (isToday) dayItem.classList.add('today');
+            if (isPrimary) dayItem.classList.add('primary-date');
+            else if (isSelected) dayItem.classList.add('selected');
+            if (hasSchedule) dayItem.classList.add('has-schedule');
+            
+            // Add click handler
+            dayItem.addEventListener('click', () => toggleDateSelection(dateFormatted, dayItem));
+            
+            calendarDays.appendChild(dayItem);
+        }
+        
+        // Add empty cells for days after the last day of the month to fill out the grid
+        const totalCells = startingDay + totalDays;
+        const remainingCells = 7 - (totalCells % 7);
+        if (remainingCells < 7) {
+            for (let i = 0; i < remainingCells; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'day-item outside-month';
+                calendarDays.appendChild(emptyDay);
+            }
+        }
+    }
+    
+    function toggleDateSelection(dateStr, dayItem) {
+        const index = selectedDates.indexOf(dateStr);
+        
+        if (index > -1) {
+            // Deselect date
+            selectedDates.splice(index, 1);
+            dayItem.classList.remove('selected');
+            
+            // If this was the primary date, clear primary
+            if (primaryDate === dateStr) {
+                primaryDate = null;
+                dayItem.classList.remove('primary-date');
+            }
+        } else {
+            // Select date
+            selectedDates.push(dateStr);
+            
+            // If this is the first date, make it primary
+            if (!primaryDate) {
+                primaryDate = dateStr;
+                dayItem.classList.add('primary-date');
+            } else {
+                dayItem.classList.add('selected');
+            }
+        }
+        
+        // Update the date input
+        if (primaryDate) {
+            document.getElementById('schedule_date').value = primaryDate;
+        }
+        
+        // Update the selected dates display
+        updateSelectedDatesDisplay();
+    }
+    
+    function updateSelectedDatesDisplay() {
+        const container = document.getElementById('selected-dates-container');
+        if (!container) return;
+        
+        // Clear the container
+        container.innerHTML = '';
+        
+        // Add date pills
+        selectedDates.forEach(dateStr => {
+            const pill = document.createElement('div');
+            pill.className = 'selected-date-pill';
+            
+            // Format the date
+            const date = parseDate(dateStr);
+            const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            
+            // Create the pill content
+            pill.innerHTML = `${formattedDate} ${dateStr === primaryDate ? '<span class="ms-1 badge bg-success">Primary</span>' : '<span class="ms-1">×</span>'}`;
+            
+            // Add click handler to remove
+            pill.addEventListener('click', () => {
+                const index = selectedDates.indexOf(dateStr);
+                if (index > -1) {
+                    selectedDates.splice(index, 1);
+                    if (dateStr === primaryDate) {
+                        primaryDate = selectedDates.length > 0 ? selectedDates[0] : null;
+                    }
+                    updateMiniCalendar();
+                    updateSelectedDatesDisplay();
+                }
+            });
+            
+            container.appendChild(pill);
+        });
+    }
+    
+    function updateMiniCalendar() {
+        // Update the calendar display
+        generateCalendarDays();
+        
+        // Update the header month if primary date changes
+        if (primaryDate) {
+            const primaryDateObj = parseDate(primaryDate);
+            if (primaryDateObj.getMonth() !== currentMonth.getMonth() || 
+                primaryDateObj.getFullYear() !== currentMonth.getFullYear()) {
+                currentMonth = new Date(primaryDateObj.getFullYear(), primaryDateObj.getMonth(), 1);
+                generateCalendarDays();
+            }
+        }
+    }
+    
+    function navigateMonth(direction) {
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + direction, 1);
+        generateCalendarDays();
+    }
+    
+    function clearDateSelection(keepHidden = false) {
+        selectedDates = [];
+        primaryDate = null;
+        
+        // Clear the input
+        if (!keepHidden) {
+            document.getElementById('repeat_days_input').value = '';
+        }
+        
+        // Update UI
+        updateMiniCalendar();
+        updateSelectedDatesDisplay();
+    }
+    
+    function formatDate(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+    
+    function parseDate(dateStr) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
+    
+    function toggleRepeatDaysSelection() {
+        const container = document.getElementById('repeat_days_container');
+        const isChecked = document.getElementById('repeat_days_toggle').checked;
+        
+        if (container) {
+            container.style.display = isChecked ? 'block' : 'none';
+            
+            // Clear selected dates if toggling off
+            if (!isChecked) {
+                clearDateSelection();
+            } else {
+                // Initialize and update mini calendar when showing
+                if (document.getElementById('miniCalendar')) {
+                    try {
+                        initMiniCalendar();
+                    } catch (e) {
+                        console.error("Error initializing mini calendar:", e);
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

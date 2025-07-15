@@ -1,0 +1,52 @@
+<!-- Edit Ticket Modal -->
+<div class="modal fade" id="editTicketModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('tickets.edit_ticket', ticket_id=ticket['id']) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" value="{{ ticket['title'] }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="4">{{ ticket['description'] }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select name="category_id" class="form-select" required>
+                            {% for category in categories %}
+                            <option value="{{ category['id'] }}" {% if ticket['category_id'] == category['id'] %}selected{% endif %}>
+                                {{ category['name'] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Priority</label>
+                        <select name="priority" class="form-select" required>
+                            <option value="0" {% if ticket['priority'] == 0 %}selected{% endif %}>Low</option>
+                            <option value="1" {% if ticket['priority'] == 1 %}selected{% endif %}>Medium</option>
+                            <option value="2" {% if ticket['priority'] == 2 %}selected{% endif %}>High</option>
+                            <option value="3" {% if ticket['priority'] == 3 %}selected{% endif %}>Urgent</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" name="due_date" class="form-control" 
+                            value="{{ ticket['due_date'].strftime('%Y-%m-%d') if ticket['due_date'] else '' }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

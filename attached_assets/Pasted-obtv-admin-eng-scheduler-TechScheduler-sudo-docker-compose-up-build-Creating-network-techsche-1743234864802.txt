@@ -1,0 +1,301 @@
+obtv-admin@eng-scheduler:~/TechScheduler$ sudo docker-compose up --build
+Creating network "techscheduler_app-network" with driver "bridge"
+Building web
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  1.275MB
+Step 1/16 : FROM python:3.11-slim
+ ---> 2c2c44fb54ac
+Step 2/16 : WORKDIR /app
+ ---> Using cache
+ ---> 00db0a1ccebd
+Step 3/16 : RUN apt-get update && apt-get install -y     postgresql-client     build-essential     libpq-dev     curl     && rm -rf /var/lib/apt/lists/*
+ ---> Using cache
+ ---> 2d56806d0319
+Step 4/16 : COPY pyproject.toml .
+ ---> Using cache
+ ---> 60eade3236ad
+Step 5/16 : RUN pip install --no-cache-dir     email-validator>=2.2.0     flask>=3.1.0     flask-login>=0.6.3     flask-sqlalchemy>=3.1.1     flask-wtf>=1.2.2     openpyxl>=3.1.5     psycopg2-binary>=2.9.10     python-dotenv>=1.0.1     pytz>=2024.2     sendgrid>=6.11.0     sqlalchemy>=2.0.36     werkzeug>=3.1.3     wtforms>=3.2.1
+ ---> Using cache
+ ---> c1ce8bdd1a29
+Step 6/16 : COPY . .
+ ---> Using cache
+ ---> 2859feae0ee1
+Step 7/16 : ENV FLASK_APP=app.py
+ ---> Using cache
+ ---> e715f877abbd
+Step 8/16 : ENV FLASK_ENV=production
+ ---> Using cache
+ ---> 2599025cfc73
+Step 9/16 : ENV PYTHONUNBUFFERED=1
+ ---> Using cache
+ ---> e021da958df2
+Step 10/16 : RUN mkdir -p /app/static/uploads /app/static/backups
+ ---> Using cache
+ ---> 3491ddf12efd
+Step 11/16 : RUN chmod -R 755 /app/static     && chmod -R 777 /app/static/backups
+ ---> Using cache
+ ---> 6d5303dd5586
+Step 12/16 : RUN useradd -m appuser && chown -R appuser:appuser /app
+ ---> Using cache
+ ---> adfe029a5dc6
+Step 13/16 : USER appuser
+ ---> Using cache
+ ---> a79fa009304e
+Step 14/16 : EXPOSE 5000
+ ---> Using cache
+ ---> 14bb95037839
+Step 15/16 : HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3     CMD curl -f http://localhost:5000/health || exit 1
+ ---> Using cache
+ ---> 686d9dd94702
+Step 16/16 : CMD ["python", "main.py"]
+ ---> Using cache
+ ---> d74c89f551ea
+Successfully built d74c89f551ea
+Successfully tagged techscheduler_web:latest
+Creating techscheduler_db_1 ... done
+Creating techscheduler_web_1 ... done
+Attaching to techscheduler_db_1, techscheduler_web_1
+db_1   |
+db_1   | PostgreSQL Database directory appears to contain a database; Skipping initialization
+db_1   |
+db_1   | 2025-03-29 00:54:04.411 PDT [1] LOG:  starting PostgreSQL 15.12 (Debian 15.12-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+db_1   | 2025-03-29 00:54:04.411 PDT [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+db_1   | 2025-03-29 00:54:04.411 PDT [1] LOG:  listening on IPv6 address "::", port 5432
+db_1   | 2025-03-29 00:54:04.412 PDT [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+db_1   | 2025-03-29 00:54:04.416 PDT [30] LOG:  database system was shut down at 2025-03-29 00:54:01 PDT
+db_1   | 2025-03-29 00:54:04.422 PDT [1] LOG:  database system is ready to accept connections
+web_1  |  * Serving Flask app 'app'
+web_1  |  * Debug mode: on
+web_1  | INFO:werkzeug:WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+web_1  |  * Running on all addresses (0.0.0.0)
+web_1  |  * Running on http://127.0.0.1:5000
+web_1  |  * Running on http://192.168.192.3:5000
+web_1  | INFO:werkzeug:Press CTRL+C to quit
+web_1  | INFO:werkzeug: * Restarting with stat
+web_1  | WARNING:werkzeug: * Debugger is active!
+web_1  | INFO:werkzeug: * Debugger PIN: 970-073-616
+db_1   | 2025-03-29 00:54:08.532 PDT [35] ERROR:  column user.theme_preference does not exist at character 232
+db_1   | 2025-03-29 00:54:08.532 PDT [35] STATEMENT:  SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".is_admin AS user_is_admin, "user".color AS user_color, "user".timezone AS user_timezone, "user".theme_preference AS user_theme_preference
+db_1   |        FROM "user"
+db_1   |        WHERE "user".id = 1
+web_1  | INFO:werkzeug:192.168.1.140 - - [29/Mar/2025 00:54:08] "GET / HTTP/1.1" 500 -
+web_1  | Traceback (most recent call last):
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+web_1  |     self.dialect.do_execute(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+web_1  |     cursor.execute(statement, parameters)
+web_1  | psycopg2.errors.UndefinedColumn: column user.theme_preference does not exist
+web_1  | LINE 1: ... AS user_color, "user".timezone AS user_timezone, "user".the...
+web_1  |                                                              ^
+web_1  |
+web_1  |
+web_1  | The above exception was the direct cause of the following exception:
+web_1  |
+web_1  | Traceback (most recent call last):
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+web_1  |     return self.wsgi_app(environ, start_response)
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1514, in wsgi_app
+web_1  |     response = self.handle_exception(e)
+web_1  |                ^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+web_1  |     response = self.full_dispatch_request()
+web_1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+web_1  |     rv = self.handle_user_exception(e)
+web_1  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+web_1  |     rv = self.dispatch_request()
+web_1  |          ^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+web_1  |     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/app/routes.py", line 26, in index
+web_1  |     if current_user.is_authenticated:
+web_1  |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/werkzeug/local.py", line 318, in __get__
+web_1  |     obj = instance._get_current_object()
+web_1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/werkzeug/local.py", line 526, in _get_current_object
+web_1  |     return get_name(local())
+web_1  |                     ^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/utils.py", line 25, in <lambda>
+web_1  |     current_user = LocalProxy(lambda: _get_user())
+web_1  |                                       ^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/utils.py", line 370, in _get_user
+web_1  |     current_app.login_manager._load_user()
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/login_manager.py", line 364, in _load_user
+web_1  |     user = self._user_callback(user_id)
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/app/models.py", line 12, in load_user
+web_1  |     return User.query.get(int(id))
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "<string>", line 2, in get
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/deprecations.py", line 386, in warned
+web_1  |     return fn(*args, **kwargs)  # type: ignore[no-any-return]
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 1126, in get
+web_1  |     return self._get_impl(ident, loading.load_on_pk_identity)
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 1135, in _get_impl
+web_1  |     return self.session._get_impl(
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3874, in _get_impl
+web_1  |     return db_load_fn(
+web_1  |            ^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/loading.py", line 694, in load_on_pk_identity
+web_1  |     session.execute(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+web_1  |     return self._execute_internal(
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+web_1  |     result: Result[Any] = compile_state_cls.orm_execute_statement(
+web_1  |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+web_1  |     result = conn.execute(
+web_1  |              ^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+web_1  |     return meth(
+web_1  |            ^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+web_1  |     return connection._execute_clauseelement(
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+web_1  |     ret = self._execute_context(
+web_1  |           ^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1843, in _execute_context
+web_1  |     return self._exec_single_context(
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+web_1  |     self._handle_dbapi_exception(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2352, in _handle_dbapi_exception
+web_1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+web_1  |     self.dialect.do_execute(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+web_1  |     cursor.execute(statement, parameters)
+web_1  | sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column user.theme_preference does not exist
+web_1  | LINE 1: ... AS user_color, "user".timezone AS user_timezone, "user".the...
+web_1  |                                                              ^
+web_1  |
+web_1  | [SQL: SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".is_admin AS user_is_admin, "user".color AS user_color, "user".timezone AS user_timezone, "user".theme_preference AS user_theme_preference
+web_1  | FROM "user"
+web_1  | WHERE "user".id = %(pk_1)s]
+web_1  | [parameters: {'pk_1': 1}]
+web_1  | (Background on this error at: https://sqlalche.me/e/20/f405)
+web_1  | INFO:werkzeug:192.168.1.140 - - [29/Mar/2025 00:54:08] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 304 -
+web_1  | INFO:werkzeug:192.168.1.140 - - [29/Mar/2025 00:54:08] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 304 -
+db_1   | 2025-03-29 00:54:12.976 PDT [35] ERROR:  column user.theme_preference does not exist at character 232
+db_1   | 2025-03-29 00:54:12.976 PDT [35] STATEMENT:  SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".is_admin AS user_is_admin, "user".color AS user_color, "user".timezone AS user_timezone, "user".theme_preference AS user_theme_preference
+db_1   |        FROM "user"
+db_1   |        WHERE "user".id = 1
+web_1  | INFO:werkzeug:192.168.1.140 - - [29/Mar/2025 00:54:12] "GET / HTTP/1.1" 500 -
+web_1  | Traceback (most recent call last):
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+web_1  |     self.dialect.do_execute(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+web_1  |     cursor.execute(statement, parameters)
+web_1  | psycopg2.errors.UndefinedColumn: column user.theme_preference does not exist
+web_1  | LINE 1: ... AS user_color, "user".timezone AS user_timezone, "user".the...
+web_1  |                                                              ^
+web_1  |
+web_1  |
+web_1  | The above exception was the direct cause of the following exception:
+web_1  |
+web_1  | Traceback (most recent call last):
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+web_1  |     return self.wsgi_app(environ, start_response)
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1514, in wsgi_app
+web_1  |     response = self.handle_exception(e)
+web_1  |                ^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+web_1  |     response = self.full_dispatch_request()
+web_1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+web_1  |     rv = self.handle_user_exception(e)
+web_1  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+web_1  |     rv = self.dispatch_request()
+web_1  |          ^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+web_1  |     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/app/routes.py", line 26, in index
+web_1  |     if current_user.is_authenticated:
+web_1  |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/werkzeug/local.py", line 318, in __get__
+web_1  |     obj = instance._get_current_object()
+web_1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/werkzeug/local.py", line 526, in _get_current_object
+web_1  |     return get_name(local())
+web_1  |                     ^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/utils.py", line 25, in <lambda>
+web_1  |     current_user = LocalProxy(lambda: _get_user())
+web_1  |                                       ^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/utils.py", line 370, in _get_user
+web_1  |     current_app.login_manager._load_user()
+web_1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/login_manager.py", line 364, in _load_user
+web_1  |     user = self._user_callback(user_id)
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/app/models.py", line 12, in load_user
+web_1  |     return User.query.get(int(id))
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "<string>", line 2, in get
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/deprecations.py", line 386, in warned
+web_1  |     return fn(*args, **kwargs)  # type: ignore[no-any-return]
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 1126, in get
+web_1  |     return self._get_impl(ident, loading.load_on_pk_identity)
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 1135, in _get_impl
+web_1  |     return self.session._get_impl(
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3874, in _get_impl
+web_1  |     return db_load_fn(
+web_1  |            ^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/loading.py", line 694, in load_on_pk_identity
+web_1  |     session.execute(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+web_1  |     return self._execute_internal(
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+web_1  |     result: Result[Any] = compile_state_cls.orm_execute_statement(
+web_1  |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+web_1  |     result = conn.execute(
+web_1  |              ^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+web_1  |     return meth(
+web_1  |            ^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+web_1  |     return connection._execute_clauseelement(
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+web_1  |     ret = self._execute_context(
+web_1  |           ^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1843, in _execute_context
+web_1  |     return self._exec_single_context(
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+web_1  |     self._handle_dbapi_exception(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2352, in _handle_dbapi_exception
+web_1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+web_1  |     self.dialect.do_execute(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+web_1  |     cursor.execute(statement, parameters)
+web_1  | sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column user.theme_preference does not exist
+web_1  | LINE 1: ... AS user_color, "user".timezone AS user_timezone, "user".the...
+web_1  |                                                              ^
+web_1  |
+web_1  | [SQL: SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".is_admin AS user_is_admin, "user".color AS user_color, "user".timezone AS user_timezone, "user".theme_preference AS user_theme_preference
+web_1  | FROM "user"
+web_1  | WHERE "user".id = %(pk_1)s]
+web_1  | [parameters: {'pk_1': 1}]
+web_1  | (Background on this error at: https://sqlalche.me/e/20/f405)
+web_1  | INFO:werkzeug:192.168.1.140 - - [29/Mar/2025 00:54:13] "GET /?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 304 -
+web_1  | INFO:werkzeug:192.168.1.140 - - [29/Mar/2025 00:54:13] "GET /?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 304 -

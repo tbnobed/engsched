@@ -1,0 +1,172 @@
+{% extends "mobile_base_simplified.html" %}
+
+{% block title %}The Plex Studios - Ticket Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <div class="card-header d-flex justify-content-between align-items-center"
+             style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #e9ecef, #f8f9fa);{% else %}background: linear-gradient(to right, #1A2332, #273449);{% endif %} border: none;">
+            <h5 class="card-title mb-0">Tickets</h5>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary btn-sm"
+               style="background: linear-gradient(45deg, #4747A1, #6A6AE3); border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                <i data-feather="plus" class="feather-small"></i> New Ticket
+            </a>
+            
+            <form method="GET" action="{{ url_for('tickets.tickets_dashboard') }}" class="d-flex gap-2">
+                <div>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">All Statuses</option>
+                        <option value="open" {% if filter_status == 'open' %}selected{% endif %}>Open</option>
+                        <option value="in_progress" {% if filter_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="pending" {% if filter_status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="resolved" {% if filter_status == 'resolved' %}selected{% endif %}>Resolved</option>
+                        <option value="closed" {% if filter_status == 'closed' %}selected{% endif %}>Closed</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-sm btn-secondary">
+                    <i data-feather="filter" class="feather-small"></i>
+                </button>
+            </form>
+        </div>
+        
+        <!-- Search Form -->
+        <form method="GET" action="{{ url_for('tickets.tickets_dashboard') }}" class="mb-2">
+            <div class="input-group">
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search tickets..." value="{{ filter_info.search }}">
+                <button type="submit" class="btn btn-sm btn-secondary">
+                    <i data-feather="search" class="feather-small"></i>
+                </button>
+            </div>
+            <!-- Keep any existing filters when searching -->
+            {% if filter_status and filter_status != 'all' %}
+            <input type="hidden" name="status" value="{{ filter_status }}">
+            {% endif %}
+            {% if filter_assigned_to %}
+            <input type="hidden" name="assigned_to" value="{{ filter_assigned_to }}">
+            {% endif %}
+            {% if filter_created_by %}
+            <input type="hidden" name="created_by" value="{{ filter_created_by }}">
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="card" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div class="card-header" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #e9ecef, #f8f9fa);{% else %}background: linear-gradient(to right, #1A2332, #273449);{% endif %} border: none;">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link {% if not filter_assigned_to and not filter_created_by %}active{% endif %}" href="{{ url_for('tickets.tickets_dashboard') }}">All</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if filter_assigned_to == current_user.id %}active{% endif %}" href="{{ url_for('tickets.tickets_dashboard', assigned_to=current_user.id) }}">Assigned to Me</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if filter_created_by == current_user.id %}active{% endif %}" href="{{ url_for('tickets.tickets_dashboard', created_by=current_user.id) }}">Created by Me</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body p-0" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background-color: #ffffff;{% else %}background-color: #0F1624;{% endif %}">
+            <div class="list-group list-group-flush p-2">
+                {% if tickets %}
+                    {% for ticket in tickets %}
+                        <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" 
+                           class="list-group-item list-group-item-action p-3 mb-3 ticket-card"
+                           style="border-radius: 12px; 
+                           border: 1px solid {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#e0e0e0{% else %}#273449{% endif %};
+                           box-shadow: 0 4px 8px rgba(0,0,0,0.08); 
+                           {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+                           background: linear-gradient(to right, #ffffff, #f8f9fa);
+                           {% else %}
+                           background: linear-gradient(to right, #141B2D, #1A2332);
+                           {% endif %}
+                           transform: translateY(0); 
+                           transition: all 0.3s ease;"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.15)';"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge {% if ticket.priority >= 3 %}bg-danger{% elif ticket.priority == 2 %}bg-warning{% elif ticket.priority == 1 %}bg-info{% else %}bg-secondary{% endif %} me-2">
+                                        {{ {0: 'Low', 1: 'Medium', 2: 'High', 3: 'Urgent'}.get(ticket.priority, 'Unknown') }}
+                                    </span>
+                                    <span class="badge bg-dark me-2">
+                                        #{{ ticket.id }}
+                                    </span>
+                                </div>
+                                <span class="badge 
+                                    {% if ticket.status == 'open' %}bg-success{% endif %}
+                                    {% if ticket.status == 'in_progress' %}bg-primary{% endif %}
+                                    {% if ticket.status == 'pending' %}bg-warning{% endif %}
+                                    {% if ticket.status == 'resolved' %}bg-info{% endif %}
+                                    {% if ticket.status == 'closed' %}bg-secondary{% endif %}">
+                                    {{ ticket.status|replace('_', ' ')|title }}
+                                </span>
+                            </div>
+                            <h6 class="mb-1 fw-bold">{{ ticket.title }}</h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="small text-muted">
+                                    {% if ticket.category %}
+                                    <span class="me-2">{{ ticket.category.name }}</span>
+                                    {% endif %}
+                                    {% if ticket.assigned_technician %}
+                                    <span class="me-2">Assigned: {{ ticket.assigned_technician.username }}</span>
+                                    {% else %}
+                                    <span class="me-2">Unassigned</span>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">{{ ticket.created_at.strftime('%b %d, %Y') }}</small>
+                            </div>
+                        </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <p>No tickets found</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.ticket-card {
+    position: relative;
+    border-radius: 12px !important;
+    border-left-width: 5px !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08) !important;
+    transition: all 0.3s ease !important;
+    z-index: 1;
+}
+
+.ticket-card:active,
+.ticket-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important;
+    z-index: 2;
+}
+
+/* Make badges more visible */
+.badge {
+    padding: 0.4em 0.6em;
+    font-weight: 500;
+    border-radius: 4px;
+}
+
+/* Fix ticket titles to be more readable */
+.ticket-card h6 {
+    font-weight: 600;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#000000{% else %}#ffffff{% endif %};
+}
+
+/* Better styling for muted text in tickets */
+.ticket-card .text-muted {
+    color: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#6c757d{% else %}#a0aec0{% endif %} !important;
+}
+</style>
+{% endblock %}

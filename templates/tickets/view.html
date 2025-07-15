@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="ticket-view">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Ticket #{{ ticket['id'] }}</h2>
+            <p class="text-muted mb-0">
+                Created by {{ ticket['creator']['username'] }} on {{ ticket['created_at'].strftime('%Y-%m-%d %H:%M') }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if current_user.is_admin or current_user.id == ticket['assigned_to'] or current_user.id == ticket['created_by'] %}
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i data-feather="more-vertical"></i> Actions
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#assignTicketModal">
+                            <i data-feather="user"></i> Assign Ticket
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                            <i data-feather="refresh-cw"></i> Update Status
+                        </a>
+                    </li>
+                    {% if current_user.is_admin %}
+                    <li>
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editTicketModal">
+                            <i data-feather="edit"></i> Edit Ticket
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('tickets.archive_ticket', ticket_id=ticket['id']) }}" 
+                           onclick="return confirm('Are you sure you want to archive this ticket? It will be hidden from regular views.');">
+                            <i data-feather="archive"></i> Archive Ticket
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="#" onclick="deleteTicket({{ ticket['id'] }})">
+                            <i data-feather="trash-2"></i> Delete Ticket
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+            <a href="{{ url_for('tickets.tickets_dashboard') }}" class="btn btn-outline-primary">
+                <i data-feather="arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Ticket Details -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">{{ ticket['title'] }}</h3>
+                    <div class="ticket-meta d-flex gap-3 mb-4">
+                        <span class="badge bg-secondary">
+                            {{ ticket['category']['name'] }}
+                        </span>
+                        {% set status_colors = {
+                            'open': 'primary',
+                            'in_progress': 'info',
+                            'pending': 'warning',
+                            'resolved': 'success',
+                            'closed': 'secondary'
+                        } %}
+                        <span class="badge bg-{{ status_colors[ticket['status']] }}">
+                            {{ ticket['status']|replace('_', ' ')|title }}
+                        </span>
+                        {% set priority_colors = {
+                            0: 'secondary',
+                            1: 'info',
+                            2: 'warning',
+                            3: 'danger'
+                        } %}
+                        {% set priority_labels = {
+                            0: 'Low',
+                            1: 'Medium',
+                            2: 'High',
+                            3: 'Urgent'
+                        } %}
+                        <span class="badge bg-{{ priority_colors[ticket['priority']] }}">
+                            Priority: {{ priority_labels[ticket['priority']] }}
+                        </span>
+                    </div>
+                    <div class="ticket-description mb-4">
+                        {{ ticket['description']|nl2br }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4>Comments</h4>
+                    <div class="comments-list mb-4">
+                        {% for comment in ticket['comments'] %}
+                        <div class="comment mb-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ comment['user']['username'] }}</strong>
+                                    <small class="text-muted">{{ comment['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
+                                </div>
+                                {% if current_user.is_admin or current_user.id == comment['user']['id'] %}
+                                <button class="btn btn-sm btn-link text-danger" onclick="deleteComment({{ comment['id'] }})">
+                                    <i data-feather="trash-2"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            <p class="mb-0">{{ comment['content']|nl2br }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Add Comment Form -->
+                    <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}">
+                        {{ comment_form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ comment_form.content(class="form-control", rows="3", placeholder="Add a comment...") }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-feather="message-square"></i> Add Comment
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Ticket Info -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4>Ticket Information</h4>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Assigned To</dt>
+                        <dd class="col-sm-8">
+                            {% if ticket['assigned_technician'] %}
+                                {{ ticket['assigned_technician']['username'] }}
+                            {% else %}
+                                <span class="text-muted">Unassigned</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">Due Date</dt>
+                        <dd class="col-sm-8">
+                            {% if ticket['due_date'] %}
+                                {{ ticket['due_date'].strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                                <span class="text-muted">Not set</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">Created</dt>
+                        <dd class="col-sm-8">{{ ticket['created_at'].strftime('%Y-%m-%d %H:%M') }}</dd>
+
+                        <dt class="col-sm-4">Last Updated</dt>
+                        <dd class="col-sm-8">{{ ticket['updated_at'].strftime('%Y-%m-%d %H:%M') }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Ticket History -->
+            <div class="card">
+                <div class="card-body">
+                    <h4>History</h4>
+                    <div class="ticket-history">
+                        {% for entry in ticket['history'] %}
+                        <div class="history-entry">
+                            <small class="text-muted">{{ entry['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
+                            <p class="mb-1">
+                                <strong>{{ entry['user']['username'] }}</strong>
+                                {{ entry['action']|replace('_', ' ')|title }}
+                            </p>
+                            {% if entry['details'] %}
+                            <p class="mb-0 text-muted">{{ entry['details'] }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include modals -->
+{% include 'tickets/modals/assign_ticket.html' %}
+{% include 'tickets/modals/update_status.html' %}
+{% include 'tickets/modals/edit_ticket.html' %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        feather.replace();
+    });
+
+    function deleteTicket(ticketId) {
+        if (confirm('Are you sure you want to delete this ticket? This action cannot be undone.')) {
+            window.location.href = "{{ url_for('tickets.delete_ticket', ticket_id=0) }}".replace('/0/delete', `/${ticketId}/delete`);
+        }
+    }
+
+    function deleteComment(commentId) {
+        if (confirm('Are you sure you want to delete this comment?')) {
+            window.location.href = "{{ url_for('tickets.delete_comment', comment_id=0) }}".replace('/0/delete', `/${commentId}/delete`);
+        }
+    }
+</script>
+{% endblock %}

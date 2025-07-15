@@ -1,0 +1,754 @@
+5ed2ae395c785a9cd4b9db3e99bb6213ba69f421534f611ca3a5520b03f5aa4490facde045f1fa5069a0a78a44edec306863b7ac30251dfdf21', '_permanent': True, '_user_id': '1', 'csrf_token': '2d9948110becf4ba1909dd8f88970bcc42baf577'}>
+web-1  | DEBUG:app:Already authenticated user: admin
+web-1  | DEBUG:app:Current session: <SecureCookieSession {'_flashes': [('message', 'Invalid email or password')], '_fresh': True, '_id': '167a1e34d84e15ed2ae395c785a9cd4b9db3e99bb6213ba69f421534f611ca3a5520b03f5aa4490facde045f1fa5069a0a78a44edec306863b7ac30251dfdf21', '_permanent': True, '_user_id': '1', 'csrf_token': '2d9948110becf4ba1909dd8f88970bcc42baf577'}>
+web-1  | is_mobile_device() in calendar: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | is_mobile value: False
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | ERROR:app:Exception on /calendar [GET]
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | psycopg2.errors.UndefinedColumn: column quick_link.created_at does not exist
+web-1  | LINE 1: ...category, quick_link."order" AS quick_link_order, quick_link...
+web-1  |                                                              ^
+web-1  |
+web-1  |
+web-1  | The above exception was the direct cause of the following exception:
+web-1  |
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+web-1  |     response = self.full_dispatch_request()
+web-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+web-1  |     rv = self.handle_user_exception(e)
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+web-1  |     rv = self.dispatch_request()
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+web-1  |     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
+web-1  |     return current_app.ensure_sync(func)(*args, **kwargs)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/app/routes.py", line 432, in calendar
+web-1  |     return render_template('calendar.html',
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/templating.py", line 150, in render_template
+web-1  |     return _render(app, template, context)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/templating.py", line 131, in _render
+web-1  |     rv = template.render(context)
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 1295, in render
+web-1  |     self.environment.handle_exception()
+web-1  |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 942, in handle_exception
+web-1  |     raise rewrite_traceback_stack(source=source)
+web-1  |   File "/app/templates/calendar.html", line 1, in top-level template code
+web-1  |     {% extends "base.html" %}
+web-1  |   File "/app/templates/base.html", line 386, in top-level template code
+web-1  |     {% for link in get_quick_links() %}
+web-1  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/app/routes.py", line 1647, in get_quick_links
+web-1  |     return QuickLink.query.order_by(QuickLink.order.asc(), QuickLink.category).all()
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+web-1  |     return self._iter().all()  # type: ignore
+web-1  |            ^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+web-1  |     result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+web-1  |                                                   ^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+web-1  |     return self._execute_internal(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+web-1  |     result: Result[Any] = compile_state_cls.orm_execute_statement(
+web-1  |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+web-1  |     result = conn.execute(
+web-1  |              ^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
+web-1  |     return meth(
+web-1  |            ^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+web-1  |     return connection._execute_clauseelement(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
+web-1  |     ret = self._execute_context(
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+web-1  |     return self._exec_single_context(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
+web-1  |     self._handle_dbapi_exception(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
+web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column quick_link.created_at does not exist
+web-1  | LINE 1: ...category, quick_link."order" AS quick_link_order, quick_link...
+web-1  |                                                              ^
+web-1  |
+web-1  | [SQL: SELECT quick_link.id AS quick_link_id, quick_link.title AS quick_link_title, quick_link.url AS quick_link_url, quick_link.icon AS quick_link_icon, quick_link.category AS quick_link_category, quick_link."order" AS quick_link_order, quick_link.created_at AS quick_link_created_at, quick_link.updated_at AS quick_link_updated_at
+web-1  | FROM quick_link ORDER BY quick_link."order" ASC, quick_link.category]
+web-1  | (Background on this error at: https://sqlalche.me/e/20/f405)
+^C
+obtv-admin@dev-sched:~/engsched$ docker compose logs -f
+WARN[0000] /home/obtv-admin/engsched/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion
+web-1  | Waiting for PostgreSQL to be ready...
+web-1  | Attempt 1 of 30...
+web-1  | db:5432 - accepting connections
+web-1  | PostgreSQL is up and running!
+db-1   | The files belonging to this database system will be owned by user "postgres".
+db-1   | This user must also own the server process.
+db-1   |
+db-1   | The database cluster will be initialized with locale "en_US.utf8".
+db-1   | The default database encoding has accordingly been set to "UTF8".
+db-1   | The default text search configuration will be set to "english".
+db-1   |
+db-1   | Data page checksums are disabled.
+db-1   |
+db-1   | fixing permissions on existing directory /var/lib/postgresql/data ... ok
+db-1   | creating subdirectories ... ok
+db-1   | selecting dynamic shared memory implementation ... posix
+db-1   | selecting default max_connections ... 100
+db-1   | selecting default shared_buffers ... 128MB
+db-1   | selecting default time zone ... America/Los_Angeles
+db-1   | creating configuration files ... ok
+db-1   | running bootstrap script ... ok
+db-1   | performing post-bootstrap initialization ... ok
+db-1   | syncing data to disk ... ok
+db-1   |
+web-1  | Starting the application with: gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
+web-1  | [2025-07-13 14:11:44 -0700] [1] [INFO] Starting gunicorn 23.0.0
+web-1  | [2025-07-13 14:11:44 -0700] [1] [INFO] Listening at: http://0.0.0.0:5000 (1)
+web-1  | [2025-07-13 14:11:44 -0700] [1] [INFO] Using worker: sync
+web-1  | [2025-07-13 14:11:44 -0700] [8] [INFO] Booting worker with pid: 8
+web-1  | INFO:app:Attempting to connect to the database...
+web-1  | INFO:app:Successfully connected to the database!
+web-1  | INFO:app:Database tables created successfully!
+web-1  | DEBUG:app:Login attempt - Method: GET
+web-1  | DEBUG:app:Session before login: <SecureCookieSession {}>
+web-1  | DEBUG:app:Login attempt - Method: POST
+web-1  | DEBUG:app:Session before login: <SecureCookieSession {'csrf_token': '2d9948110becf4ba1909dd8f88970bcc42baf577'}>
+web-1  | DEBUG:app:Login form submitted for email: admin@obedtv.com
+web-1  | WARNING:app:Failed login attempt for email: admin@obedtv.com
+web-1  | DEBUG:app:Login attempt - Method: POST
+web-1  | DEBUG:app:Session before login: <SecureCookieSession {'_flashes': [('message', 'Invalid email or password')], '_fresh': False, 'csrf_token': '2d9948110becf4ba1909dd8f88970bcc42baf577'}>
+web-1  | DEBUG:app:Login form submitted for email: admin@obedtv.com
+web-1  | INFO:app:User admin logged in successfully
+db-1   |
+db-1   | Success. You can now start the database server using:
+db-1   |
+db-1   | initdb: warning: enabling "trust" authentication for local connections
+db-1   | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+db-1   |     pg_ctl -D /var/lib/postgresql/data -l logfile start
+db-1   |
+db-1   | waiting for server to start....2025-07-13 14:11:35.489 PDT [48] LOG:  starting PostgreSQL 15.13 (Debian 15.13-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+db-1   | 2025-07-13 14:11:35.493 PDT [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+db-1   | 2025-07-13 14:11:35.509 PDT [51] LOG:  database system was shut down at 2025-07-13 14:11:34 PDT
+db-1   | 2025-07-13 14:11:35.524 PDT [48] LOG:  database system is ready to accept connections
+db-1   |  done
+db-1   | server started
+db-1   | CREATE DATABASE
+db-1   |
+db-1   |
+db-1   | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/init.sql
+db-1   | CREATE TABLE
+db-1   | CREATE TABLE
+db-1   | CREATE TABLE
+db-1   | CREATE TABLE
+db-1   | CREATE TABLE
+db-1   | CREATE TABLE
+db-1   | CREATE TABLE
+db-1   | CREATE TABLE
+db-1   | CREATE TABLE
+db-1   | CREATE INDEX
+db-1   | CREATE INDEX
+db-1   | CREATE INDEX
+db-1   | CREATE INDEX
+db-1   | CREATE INDEX
+db-1   | CREATE INDEX
+db-1   | CREATE INDEX
+db-1   | CREATE INDEX
+db-1   | CREATE INDEX
+db-1   | CREATE INDEX
+db-1   | CREATE INDEX
+db-1   | CREATE INDEX
+db-1   | INSERT 0 10
+db-1   | INSERT 0 5
+db-1   | INSERT 0 5
+db-1   |  setval
+db-1   | --------
+db-1   |      10
+db-1   | (1 row)
+db-1   |
+db-1   |  setval
+db-1   | --------
+db-1   |       5
+db-1   | (1 row)
+db-1   |
+db-1   |  setval
+db-1   | --------
+db-1   |
+db-1   | (1 row)
+db-1   |
+db-1   |  setval
+db-1   | --------
+db-1   |
+db-1   | (1 row)
+db-1   |
+db-1   |  setval
+db-1   | --------
+db-1   |
+db-1   | (1 row)
+db-1   |
+db-1   |  setval
+db-1   | --------
+db-1   |       5
+db-1   | (1 row)
+db-1   |
+db-1   |  setval
+db-1   | --------
+db-1   |
+db-1   | (1 row)
+db-1   |
+db-1   |  setval
+db-1   | --------
+db-1   |
+db-1   | (1 row)
+db-1   |
+db-1   |  setval
+db-1   | --------
+web-1  | DEBUG:app:Session after login: <SecureCookieSession {'_flashes': [('message', 'Invalid email or password')], '_fresh': True, 'csrf_token': '2d9948110becf4ba1909dd8f88970bcc42baf577', '_permanent': True, '_user_id': '1', '_id': '167a1e34d84e15ed2ae395c785a9cd4b9db3e99bb6213ba69f421534f611ca3a5520b03f5aa4490facde045f1fa5069a0a78a44edec306863b7ac30251dfdf21'}>
+web-1  | DEBUG:app:Redirecting to: calendar
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | is_mobile_device() in calendar: False
+web-1  | DEBUG:app:is_mobile_device detection result: False
+db-1   |
+db-1   | (1 row)
+db-1   |
+db-1   |
+db-1   |
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | is_mobile value: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | ERROR:app:Exception on /calendar [GET]
+web-1  | Traceback (most recent call last):
+db-1   | waiting for server to shut down...2025-07-13 14:11:36.589 PDT [48] LOG:  received fast shutdown request
+db-1   | .2025-07-13 14:11:36.593 PDT [48] LOG:  aborting any active transactions
+db-1   | 2025-07-13 14:11:36.599 PDT [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+db-1   | 2025-07-13 14:11:36.600 PDT [49] LOG:  shutting down
+db-1   | 2025-07-13 14:11:36.603 PDT [49] LOG:  checkpoint starting: shutdown immediate
+db-1   | 2025-07-13 14:11:36.783 PDT [49] LOG:  checkpoint complete: wrote 972 buffers (5.9%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.080 s, sync=0.078 s, total=0.184 s; sync files=361, longest=0.004 s, average=0.001 s; distance=4526 kB, estimate=4526 kB
+db-1   | 2025-07-13 14:11:36.802 PDT [48] LOG:  database system is shut down
+db-1   |  done
+db-1   | server stopped
+db-1   |
+db-1   | PostgreSQL init process complete; ready for start up.
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | psycopg2.errors.UndefinedColumn: column quick_link.created_at does not exist
+web-1  | LINE 1: ...category, quick_link."order" AS quick_link_order, quick_link...
+web-1  |                                                              ^
+web-1  |
+db-1   |
+db-1   | 2025-07-13 14:11:36.980 PDT [1] LOG:  starting PostgreSQL 15.13 (Debian 15.13-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+db-1   | 2025-07-13 14:11:36.980 PDT [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+web-1  |
+web-1  | The above exception was the direct cause of the following exception:
+web-1  |
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+web-1  |     response = self.full_dispatch_request()
+web-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+db-1   | 2025-07-13 14:11:36.981 PDT [1] LOG:  listening on IPv6 address "::", port 5432
+db-1   | 2025-07-13 14:11:36.988 PDT [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+db-1   | 2025-07-13 14:11:37.001 PDT [66] LOG:  database system was shut down at 2025-07-13 14:11:36 PDT
+db-1   | 2025-07-13 14:11:37.018 PDT [1] LOG:  database system is ready to accept connections
+db-1   | 2025-07-13 14:15:01.955 PDT [79] ERROR:  column quick_link.created_at does not exist at character 232
+db-1   | 2025-07-13 14:15:01.955 PDT [79] STATEMENT:  SELECT quick_link.id AS quick_link_id, quick_link.title AS quick_link_title, quick_link.url AS quick_link_url, quick_link.icon AS quick_link_icon, quick_link.category AS quick_link_category, quick_link."order" AS quick_link_order, quick_link.created_at AS quick_link_created_at, quick_link.updated_at AS quick_link_updated_at
+db-1   |        FROM quick_link ORDER BY quick_link."order" ASC, quick_link.category
+db-1   | 2025-07-13 14:15:04.034 PDT [79] ERROR:  column quick_link.created_at does not exist at character 232
+db-1   | 2025-07-13 14:15:04.034 PDT [79] STATEMENT:  SELECT quick_link.id AS quick_link_id, quick_link.title AS quick_link_title, quick_link.url AS quick_link_url, quick_link.icon AS quick_link_icon, quick_link.category AS quick_link_category, quick_link."order" AS quick_link_order, quick_link.created_at AS quick_link_created_at, quick_link.updated_at AS quick_link_updated_at
+db-1   |        FROM quick_link ORDER BY quick_link."order" ASC, quick_link.category
+db-1   | 2025-07-13 14:15:08.114 PDT [79] ERROR:  column ticket.archived does not exist at character 412
+db-1   | 2025-07-13 14:15:08.114 PDT [79] STATEMENT:  SELECT ticket.id AS ticket_id, ticket.title AS ticket_title, ticket.description AS ticket_description, ticket.category_id AS ticket_category_id, ticket.status AS ticket_status, ticket.priority AS ticket_priority, ticket.assigned_to AS ticket_assigned_to, ticket.created_by AS ticket_created_by, ticket.created_at AS ticket_created_at, ticket.updated_at AS ticket_updated_at, ticket.due_date AS ticket_due_date, ticket.archived AS ticket_archived
+db-1   |        FROM ticket
+db-1   |        WHERE ticket.status IN ('open', 'in_progress', 'pending') ORDER BY ticket.priority DESC, ticket.created_at DESC
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+web-1  |     rv = self.handle_user_exception(e)
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+db-1   |         LIMIT 10
+db-1   | 2025-07-13 14:15:10.551 PDT [79] ERROR:  column quick_link.created_at does not exist at character 232
+db-1   | 2025-07-13 14:15:10.551 PDT [79] STATEMENT:  SELECT quick_link.id AS quick_link_id, quick_link.title AS quick_link_title, quick_link.url AS quick_link_url, quick_link.icon AS quick_link_icon, quick_link.category AS quick_link_category, quick_link."order" AS quick_link_order, quick_link.created_at AS quick_link_created_at, quick_link.updated_at AS quick_link_updated_at
+db-1   |        FROM quick_link ORDER BY quick_link."order" ASC, quick_link.category
+db-1   | 2025-07-13 14:15:11.069 PDT [79] ERROR:  column quick_link.created_at does not exist at character 232
+db-1   | 2025-07-13 14:15:11.069 PDT [79] STATEMENT:  SELECT quick_link.id AS quick_link_id, quick_link.title AS quick_link_title, quick_link.url AS quick_link_url, quick_link.icon AS quick_link_icon, quick_link.category AS quick_link_category, quick_link."order" AS quick_link_order, quick_link.created_at AS quick_link_created_at, quick_link.updated_at AS quick_link_updated_at
+db-1   |        FROM quick_link ORDER BY quick_link."order" ASC, quick_link.category
+web-1  |     rv = self.dispatch_request()
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+web-1  |     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
+web-1  |     return current_app.ensure_sync(func)(*args, **kwargs)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/app/routes.py", line 432, in calendar
+web-1  |     return render_template('calendar.html',
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/templating.py", line 150, in render_template
+web-1  |     return _render(app, template, context)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/templating.py", line 131, in _render
+web-1  |     rv = template.render(context)
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 1295, in render
+web-1  |     self.environment.handle_exception()
+web-1  |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 942, in handle_exception
+web-1  |     raise rewrite_traceback_stack(source=source)
+web-1  |   File "/app/templates/calendar.html", line 1, in top-level template code
+web-1  |     {% extends "base.html" %}
+web-1  |   File "/app/templates/base.html", line 386, in top-level template code
+web-1  |     {% for link in get_quick_links() %}
+web-1  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/app/routes.py", line 1647, in get_quick_links
+web-1  |     return QuickLink.query.order_by(QuickLink.order.asc(), QuickLink.category).all()
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+web-1  |     return self._iter().all()  # type: ignore
+web-1  |            ^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+web-1  |     result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+web-1  |                                                   ^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+web-1  |     return self._execute_internal(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+web-1  |     result: Result[Any] = compile_state_cls.orm_execute_statement(
+web-1  |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+web-1  |     result = conn.execute(
+web-1  |              ^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
+web-1  |     return meth(
+web-1  |            ^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+web-1  |     return connection._execute_clauseelement(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
+web-1  |     ret = self._execute_context(
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+web-1  |     return self._exec_single_context(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
+web-1  |     self._handle_dbapi_exception(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
+web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column quick_link.created_at does not exist
+web-1  | LINE 1: ...category, quick_link."order" AS quick_link_order, quick_link...
+web-1  |                                                              ^
+web-1  |
+web-1  | [SQL: SELECT quick_link.id AS quick_link_id, quick_link.title AS quick_link_title, quick_link.url AS quick_link_url, quick_link.icon AS quick_link_icon, quick_link.category AS quick_link_category, quick_link."order" AS quick_link_order, quick_link.created_at AS quick_link_created_at, quick_link.updated_at AS quick_link_updated_at
+web-1  | FROM quick_link ORDER BY quick_link."order" ASC, quick_link.category]
+web-1  | (Background on this error at: https://sqlalche.me/e/20/f405)
+web-1  | is_mobile_device() in calendar: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | is_mobile value: False
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | ERROR:app:Exception on /calendar [GET]
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | psycopg2.errors.UndefinedColumn: column quick_link.created_at does not exist
+web-1  | LINE 1: ...category, quick_link."order" AS quick_link_order, quick_link...
+web-1  |                                                              ^
+web-1  |
+web-1  |
+web-1  | The above exception was the direct cause of the following exception:
+web-1  |
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+web-1  |     response = self.full_dispatch_request()
+web-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+web-1  |     rv = self.handle_user_exception(e)
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+web-1  |     rv = self.dispatch_request()
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+web-1  |     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
+web-1  |     return current_app.ensure_sync(func)(*args, **kwargs)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/app/routes.py", line 432, in calendar
+web-1  |     return render_template('calendar.html',
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/templating.py", line 150, in render_template
+web-1  |     return _render(app, template, context)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/templating.py", line 131, in _render
+web-1  |     rv = template.render(context)
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 1295, in render
+web-1  |     self.environment.handle_exception()
+web-1  |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 942, in handle_exception
+web-1  |     raise rewrite_traceback_stack(source=source)
+web-1  |   File "/app/templates/calendar.html", line 1, in top-level template code
+web-1  |     {% extends "base.html" %}
+web-1  |   File "/app/templates/base.html", line 386, in top-level template code
+web-1  |     {% for link in get_quick_links() %}
+web-1  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/app/routes.py", line 1647, in get_quick_links
+web-1  |     return QuickLink.query.order_by(QuickLink.order.asc(), QuickLink.category).all()
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+web-1  |     return self._iter().all()  # type: ignore
+web-1  |            ^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+web-1  |     result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+web-1  |                                                   ^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+web-1  |     return self._execute_internal(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+web-1  |     result: Result[Any] = compile_state_cls.orm_execute_statement(
+web-1  |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+web-1  |     result = conn.execute(
+web-1  |              ^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
+web-1  |     return meth(
+web-1  |            ^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+web-1  |     return connection._execute_clauseelement(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
+web-1  |     ret = self._execute_context(
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+web-1  |     return self._exec_single_context(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
+web-1  |     self._handle_dbapi_exception(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
+web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column quick_link.created_at does not exist
+web-1  | LINE 1: ...category, quick_link."order" AS quick_link_order, quick_link...
+web-1  |                                                              ^
+web-1  |
+web-1  | [SQL: SELECT quick_link.id AS quick_link_id, quick_link.title AS quick_link_title, quick_link.url AS quick_link_url, quick_link.icon AS quick_link_icon, quick_link.category AS quick_link_category, quick_link."order" AS quick_link_order, quick_link.created_at AS quick_link_created_at, quick_link.updated_at AS quick_link_updated_at
+web-1  | FROM quick_link ORDER BY quick_link."order" ASC, quick_link.category]
+web-1  | (Background on this error at: https://sqlalche.me/e/20/f405)
+web-1  | ERROR:app:Exception on /dashboard [GET]
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | psycopg2.errors.UndefinedColumn: column ticket.archived does not exist
+web-1  | LINE 1: ...t_updated_at, ticket.due_date AS ticket_due_date, ticket.arc...
+web-1  |                                                              ^
+web-1  |
+web-1  |
+web-1  | The above exception was the direct cause of the following exception:
+web-1  |
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+web-1  |     response = self.full_dispatch_request()
+web-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+web-1  |     rv = self.handle_user_exception(e)
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+web-1  |     rv = self.dispatch_request()
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+web-1  |     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
+web-1  |     return current_app.ensure_sync(func)(*args, **kwargs)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/app/routes.py", line 47, in dashboard
+web-1  |     ).order_by(Ticket.priority.desc(), Ticket.created_at.desc()).limit(10).all()
+web-1  |                                                                            ^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+web-1  |     return self._iter().all()  # type: ignore
+web-1  |            ^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+web-1  |     result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+web-1  |                                                   ^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+web-1  |     return self._execute_internal(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+web-1  |     result: Result[Any] = compile_state_cls.orm_execute_statement(
+web-1  |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+web-1  |     result = conn.execute(
+web-1  |              ^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
+web-1  |     return meth(
+web-1  |            ^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+web-1  |     return connection._execute_clauseelement(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
+web-1  |     ret = self._execute_context(
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+web-1  |     return self._exec_single_context(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
+web-1  |     self._handle_dbapi_exception(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
+web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column ticket.archived does not exist
+web-1  | LINE 1: ...t_updated_at, ticket.due_date AS ticket_due_date, ticket.arc...
+web-1  |                                                              ^
+web-1  |
+web-1  | [SQL: SELECT ticket.id AS ticket_id, ticket.title AS ticket_title, ticket.description AS ticket_description, ticket.category_id AS ticket_category_id, ticket.status AS ticket_status, ticket.priority AS ticket_priority, ticket.assigned_to AS ticket_assigned_to, ticket.created_by AS ticket_created_by, ticket.created_at AS ticket_created_at, ticket.updated_at AS ticket_updated_at, ticket.due_date AS ticket_due_date, ticket.archived AS ticket_archived
+web-1  | FROM ticket
+web-1  | WHERE ticket.status IN (%(status_1_1)s, %(status_1_2)s, %(status_1_3)s) ORDER BY ticket.priority DESC, ticket.created_at DESC
+web-1  |  LIMIT %(param_1)s]
+web-1  | [parameters: {'param_1': 10, 'status_1_1': 'open', 'status_1_2': 'in_progress', 'status_1_3': 'pending'}]
+web-1  | (Background on this error at: https://sqlalche.me/e/20/f405)
+web-1  | is_mobile_device() in calendar: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | is_mobile value: False
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | ERROR:app:Exception on /calendar [GET]
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | psycopg2.errors.UndefinedColumn: column quick_link.created_at does not exist
+web-1  | LINE 1: ...category, quick_link."order" AS quick_link_order, quick_link...
+web-1  |                                                              ^
+web-1  |
+web-1  |
+web-1  | The above exception was the direct cause of the following exception:
+web-1  |
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+web-1  |     response = self.full_dispatch_request()
+web-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+web-1  |     rv = self.handle_user_exception(e)
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+web-1  |     rv = self.dispatch_request()
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+web-1  |     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
+web-1  |     return current_app.ensure_sync(func)(*args, **kwargs)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/app/routes.py", line 432, in calendar
+web-1  |     return render_template('calendar.html',
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/templating.py", line 150, in render_template
+web-1  |     return _render(app, template, context)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/templating.py", line 131, in _render
+web-1  |     rv = template.render(context)
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 1295, in render
+web-1  |     self.environment.handle_exception()
+web-1  |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 942, in handle_exception
+web-1  |     raise rewrite_traceback_stack(source=source)
+web-1  |   File "/app/templates/calendar.html", line 1, in top-level template code
+web-1  |     {% extends "base.html" %}
+web-1  |   File "/app/templates/base.html", line 386, in top-level template code
+web-1  |     {% for link in get_quick_links() %}
+web-1  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/app/routes.py", line 1647, in get_quick_links
+web-1  |     return QuickLink.query.order_by(QuickLink.order.asc(), QuickLink.category).all()
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+web-1  |     return self._iter().all()  # type: ignore
+web-1  |            ^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+web-1  |     result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+web-1  |                                                   ^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+web-1  |     return self._execute_internal(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+web-1  |     result: Result[Any] = compile_state_cls.orm_execute_statement(
+web-1  |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+web-1  |     result = conn.execute(
+web-1  |              ^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
+web-1  |     return meth(
+web-1  |            ^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+web-1  |     return connection._execute_clauseelement(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
+web-1  |     ret = self._execute_context(
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+web-1  |     return self._exec_single_context(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
+web-1  |     self._handle_dbapi_exception(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
+web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column quick_link.created_at does not exist
+web-1  | LINE 1: ...category, quick_link."order" AS quick_link_order, quick_link...
+web-1  |                                                              ^
+web-1  |
+web-1  | [SQL: SELECT quick_link.id AS quick_link_id, quick_link.title AS quick_link_title, quick_link.url AS quick_link_url, quick_link.icon AS quick_link_icon, quick_link.category AS quick_link_category, quick_link."order" AS quick_link_order, quick_link.created_at AS quick_link_created_at, quick_link.updated_at AS quick_link_updated_at
+web-1  | FROM quick_link ORDER BY quick_link."order" ASC, quick_link.category]
+web-1  | (Background on this error at: https://sqlalche.me/e/20/f405)
+web-1  | DEBUG:app:Login attempt - Method: GET
+web-1  | DEBUG:app:Session before login: <SecureCookieSession {'_flashes': [('message', 'Invalid email or password')], '_fresh': True, '_id': '167a1e34d84e15ed2ae395c785a9cd4b9db3e99bb6213ba69f421534f611ca3a5520b03f5aa4490facde045f1fa5069a0a78a44edec306863b7ac30251dfdf21', '_permanent': True, '_user_id': '1', 'csrf_token': '2d9948110becf4ba1909dd8f88970bcc42baf577'}>
+web-1  | DEBUG:app:Already authenticated user: admin
+web-1  | DEBUG:app:Current session: <SecureCookieSession {'_flashes': [('message', 'Invalid email or password')], '_fresh': True, '_id': '167a1e34d84e15ed2ae395c785a9cd4b9db3e99bb6213ba69f421534f611ca3a5520b03f5aa4490facde045f1fa5069a0a78a44edec306863b7ac30251dfdf21', '_permanent': True, '_user_id': '1', 'csrf_token': '2d9948110becf4ba1909dd8f88970bcc42baf577'}>
+web-1  | is_mobile_device() in calendar: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | is_mobile value: False
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | DEBUG:app:User-Agent: mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/138.0.0.0 safari/537.36
+web-1  | DEBUG:app:is_mobile_device detection result: False
+web-1  | ERROR:app:Exception on /calendar [GET]
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | psycopg2.errors.UndefinedColumn: column quick_link.created_at does not exist
+web-1  | LINE 1: ...category, quick_link."order" AS quick_link_order, quick_link...
+web-1  |                                                              ^
+web-1  |
+web-1  |
+web-1  | The above exception was the direct cause of the following exception:
+web-1  |
+web-1  | Traceback (most recent call last):
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+web-1  |     response = self.full_dispatch_request()
+web-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+web-1  |     rv = self.handle_user_exception(e)
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+web-1  |     rv = self.dispatch_request()
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+web-1  |     return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
+web-1  |     return current_app.ensure_sync(func)(*args, **kwargs)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/app/routes.py", line 432, in calendar
+web-1  |     return render_template('calendar.html',
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/templating.py", line 150, in render_template
+web-1  |     return _render(app, template, context)
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/flask/templating.py", line 131, in _render
+web-1  |     rv = template.render(context)
+web-1  |          ^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 1295, in render
+web-1  |     self.environment.handle_exception()
+web-1  |   File "/usr/local/lib/python3.11/site-packages/jinja2/environment.py", line 942, in handle_exception
+web-1  |     raise rewrite_traceback_stack(source=source)
+web-1  |   File "/app/templates/calendar.html", line 1, in top-level template code
+web-1  |     {% extends "base.html" %}
+web-1  |   File "/app/templates/base.html", line 386, in top-level template code
+web-1  |     {% for link in get_quick_links() %}
+web-1  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/app/routes.py", line 1647, in get_quick_links
+web-1  |     return QuickLink.query.order_by(QuickLink.order.asc(), QuickLink.category).all()
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2704, in all
+web-1  |     return self._iter().all()  # type: ignore
+web-1  |            ^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+web-1  |     result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+web-1  |                                                   ^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+web-1  |     return self._execute_internal(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+web-1  |     result: Result[Any] = compile_state_cls.orm_execute_statement(
+web-1  |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+web-1  |     result = conn.execute(
+web-1  |              ^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
+web-1  |     return meth(
+web-1  |            ^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+web-1  |     return connection._execute_clauseelement(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
+web-1  |     ret = self._execute_context(
+web-1  |           ^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+web-1  |     return self._exec_single_context(
+web-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
+web-1  |     self._handle_dbapi_exception(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
+web-1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+web-1  |     self.dialect.do_execute(
+web-1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+web-1  |     cursor.execute(statement, parameters)
+web-1  | sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column quick_link.created_at does not exist
+web-1  | LINE 1: ...category, quick_link."order" AS quick_link_order, quick_link...
+web-1  |                                                              ^
+web-1  |
+web-1  | [SQL: SELECT quick_link.id AS quick_link_id, quick_link.title AS quick_link_title, quick_link.url AS quick_link_url, quick_link.icon AS quick_link_icon, quick_link.category AS quick_link_category, quick_link."order" AS quick_link_order, quick_link.created_at AS quick_link_created_at, quick_link.updated_at AS quick_link_updated_at
+web-1  | FROM quick_link ORDER BY quick_link."order" ASC, quick_link.category]
+web-1  | (Background on this error at: https://sqlalche.me/e/20/f405)

@@ -1,0 +1,17 @@
+web-1  | ERROR:app:Error processing schedule: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (raised as a result of Query-invoked autoflush; consider using a session.no_autoflush block if this flush is occurring prematurely)
+web-1  | (psycopg2.errors.ForeignKeyViolation) insert or update on table "schedule" violates foreign key constraint "schedule_technician_id_fkey"
+web-1  | DETAIL:  Key (technician_id)=(12) is not present in table "users".
+web-1  |
+web-1  | [SQL: INSERT INTO schedule (technician_id, start_time, end_time, description, location_id, created_at, time_off) VALUES (%(technician_id)s, %(start_time)s, %(end_time)s, %(description)s, %(location_id)s, %(created_at)s, %(time_off)s) RETURNING schedule.id]
+web-1  | [parameters: {'technician_id': 12, 'start_time': datetime.datetime(2025, 2, 17, 9, 0, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=57600))), 'end_time': datetime.datetime(2025, 2, 17, 17, 0, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=57600))), 'description': '', 'location_id': 7, 'created_at': datetime.datetime(2025, 7, 14, 3, 3, 2, 173587, tzinfo=<UTC>), 'time_off': False}]
+web-1  | (Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+web-1  | ERROR:app:Error processing schedule: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (raised as a result of Query-invoked autoflush; consider using a session.no_autoflush block if this flush is occurring prematurely)
+web-1  | (psycopg2.errors.ForeignKeyViolation) insert or update on table "schedule" violates foreign key constraint "schedule_technician_id_fkey"
+web-1  | DETAIL:  Key (technician_id)=(12) is not present in table "users".
+web-1  |
+web-1  | [SQL: INSERT INTO schedule (technician_id, start_time, end_time, description, location_id, created_at, time_off) VALUES (%(technician_id)s, %(start_time)s, %(end_time)s, %(description)s, %(location_id)s, %(created_at)s, %(time_off)s) RETURNING schedule.id]
+web-1  | [parameters: {'technician_id': 12, 'start_time': datetime.datetime(2025, 2, 17, 9, 0, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=57600))), 'end_time': datetime.datetime(2025, 2, 17, 17, 0, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=57600))), 'description': '', 'location_id': 7, 'created_at': datetime.datetime(2025, 7, 14, 3, 3, 2, 173587, tzinfo=<UTC>), 'time_off': False}]
+web-1  | (Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
+web-1  | ERROR:app:Error processing schedule: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (raised as a result of Query-invoked autoflush; consider using a session.no_autoflush block if this flush is occurring prematurely)
+web-1  | (psycopg2.errors.ForeignKeyViolation) insert or update on table "schedule" violates foreign key constraint "schedule_technician_id_fkey"
+web-1  | DETAIL:  Key (technician_id)=(12) is not present in table "users".

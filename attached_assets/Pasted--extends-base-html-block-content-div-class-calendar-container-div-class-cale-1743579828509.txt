@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="calendar-container">
+    <div class="calendar-header d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <h2>{{ week_start.strftime('%B %Y') }}</h2>
+            <div class="ms-4">
+                <select id="locationFilter" class="form-select calendar-location-filter" onchange="applyLocationFilter(this.value)">
+                    <option value="">All Locations</option>
+                    {% for location in locations %}
+                    <option value="{{ location.id }}" {% if selected_location == location.id %}selected{% endif %}>
+                        {{ location.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="calendar-controls">
+            {% if personal_view %}
+            <a href="{{ url_for('personal_schedule', week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d')) }}" 
+               class="btn btn-outline-secondary me-2">
+                <i data-feather="chevrons-left"></i> Previous Month
+            </a>
+            <a href="{{ url_for('personal_schedule', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d')) }}" 
+               class="btn btn-outline-primary me-2">
+                <i data-feather="chevron-left"></i> Previous Week
+            </a>
+            <a href="{{ url_for('personal_schedule') }}" 
+               class="btn btn-outline-primary me-2">
+                Current Week
+            </a>
+            <a href="{{ url_for('personal_schedule', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d')) }}"
+               class="btn btn-outline-primary me-2">
+                Next Week <i data-feather="chevron-right"></i>
+            </a>
+            <a href="{{ url_for('personal_schedule', week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d')) }}"
+               class="btn btn-outline-secondary me-2">
+                Next Month <i data-feather="chevrons-right"></i>
+            </a>
+            {% else %}
+            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location) }}" 
+               class="btn btn-outline-secondary me-2">
+                <i data-feather="chevrons-left"></i> Previous Month
+            </a>
+            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location) }}" 
+               class="btn btn-outline-primary me-2">
+                <i data-feather="chevron-left"></i> Previous Week
+            </a>
+            <a href="{{ url_for('calendar', location_id=selected_location) }}" 
+               class="btn btn-outline-primary me-2">
+                Current Week
+            </a>
+            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location) }}"
+               class="btn btn-outline-primary me-2">
+                Next Week <i data-feather="chevron-right"></i>
+            </a>
+            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location) }}"
+               class="btn btn-outline-secondary me-2">
+                Next Month <i data-feather="chevrons-right"></i>
+            </a>
+            {% endif %}
+            {% if current_user.is_admin %}
+            <form method="POST" action="{{ url_for('copy_previous_week_schedules') }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="target_week_start" value="{{ week_start.strftime('%Y-%m-%d') }}">
+                <button type="submit" class="btn btn-success">
+                    <i data-feather="copy"></i> Copy Previous Week
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function applyLocationFilter(locationId) {
+            const currentUrl = new URL(window.location.href);
+            if (locationId) {
+                currentUrl.searchParams.set('location_id', locationId);
+            } else {
+                currentUrl.searchParams.delete('location_id');
+            }
+            window.location.href = currentUrl.toString();
+        }
+    </script>
+
+    <div class="calendar-grid">
+        <div class="time-column">
+            {% for hour in range(24) %}
+                <div class="hour-slot">{{ "%02d:00"|format(hour) }}</div>
+            {% endfor %}
+        </div>
+
+        {% for day in range(7) %}
+        {% set current_date = week_start + timedelta(days=day) %}
+        {% set is_today = current_date.date() == today.date() %}
+        <div class="day-column {{ 'today' if is_today else '' }}">
+            <div class="day-header {{ 'today' if is_today else '' }}">
+                {{ current_date.strftime('%A %m/%d') }}
+            </div>
+            <div class="day-slots" data-date="{{ current_date.strftime('%Y-%m-%d') }}">
+                {% for hour in range(24) %}
+                    <div class="time-slot" data-hour="{{ '%02d'|format(hour) }}"></div>
+                {% endfor %}
+                {% for schedule in schedules if schedule.start_time.date() == current_date.date() %}
+                    <div class="schedule-event"
+                         style="background-color: {{ '#6a6d6c' if schedule.time_off else schedule.technician.color }}"
+                         data-schedule-id="{{ schedule.id }}"
+                         data-technician-id="{{ schedule.technician_id }}"
+                         data-start-time="{{ schedule.start_time.strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-end-time="{{ schedule.end_time.strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
+                         data-toggle="tooltip"
+                         data-html="true"
+                         title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.strftime('%H:%M') }}-{{ schedule.end_time.strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br><i data-feather='map-pin'></i> {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
+                        <div class="schedule-time">
+                            {{ schedule.start_time.strftime('%H:%M') }} - 
+                            {{ schedule.end_time.strftime('%H:%M') }}
+                        </div>
+                        <div class="schedule-tech">{{ schedule.technician.username }}</div>
+                        {% if schedule.location %}
+                        <div class="schedule-location"><i data-feather="map-pin"></i> {{ schedule.location.name }}</div>
+                        {% endif %}
+                        <div class="schedule-desc">{{ schedule.description }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="modal fade" id="scheduleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Schedule</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="schedule_form" method="POST" action="{{ url_for('new_schedule', personal_view=personal_view) }}">
+                        {{ form.hidden_tag() }}
+                        <input type="hidden" id="schedule_id" name="schedule_id">
+                        {% if request.args.get('week_start') %}
+                        <input type="hidden" name="week_start" value="{{ request.args.get('week_start') }}">
+                        {% endif %}
+                        {% if current_user.is_admin %}
+                        <div class="mb-3">
+                            {{ form.technician.label(class="form-label") }}
+                            {{ form.technician(class="form-control") }}
+                        </div>
+                        {% endif %}
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", id="description") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.location_id.label(class="form-label") }}
+                            {{ form.location_id(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" id="schedule_date" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Repeat Schedule</label>
+                            <div class="mt-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="repeat_days_toggle" onchange="toggleRepeatDaysSelection()">
+                                    <label class="form-check-label" for="repeat_days_toggle">Schedule for multiple days</label>
+                                </div>
+                            </div>
+                            <div id="repeat_days_container" class="mt-2" style="display: none;">
+                                <div class="alert alert-info mb-3">
+                                    <small>Select the days to create this schedule. The same time and details will be used for all selected days.</small>
+                                </div>
+                                <div class="mini-calendar">
+                                    <div class="month-navigator d-flex justify-content-between align-items-center mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="prev-month">
+                                            <i data-feather="chevron-left"></i>
+                                        </button>
+                                        <h6 class="m-0" id="calendar-month-year">March 2025</h6>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="next-month">
+                                            <i data-feather="chevron-right"></i>
+                                        </button>
+                                    </div>
+                                    <div class="calendar-days">
+                                        <div class="day-names">
+                                            <div>Sun</div>
+                                            <div>Mon</div>
+                                            <div>Tue</div>
+                                            <div>Wed</div>
+                                            <div>Thu</div>
+                                            <div>Fri</div>
+                                            <div>Sat</div>
+                                        </div>
+                                        <div class="day-grid" id="calendar-days">
+                                            <!-- Days will be populated by JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="selected-dates mt-3">
+                                    <div class="d-flex mb-2">
+                                        <strong>Selected Dates:</strong>
+                                        <button type="button" class="btn btn-sm btn-link ms-auto" id="clear-selection">Clear All</button>
+                                    </div>
+                                    <div id="selected-dates-container" class="d-flex flex-wrap">
+                                        <!-- Selected dates will appear here -->
+                                        <span class="text-muted" id="no-dates-selected">No additional dates selected</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label">Start Time</label>
+                                <select id="start_hour" class="form-control" onchange="updateEndTimeOptions()">
+                                    {% for hour in range(24) %}
+                                        <option value="{{ '%02d'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">End Time</label>
+                                <select id="end_hour" class="form-control">
+                                    {% for hour in range(1, 24) %}
+                                        <option value="{{ '%02d'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
+                                    {% endfor %}
+                                    <option value="00">00:00</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.time_off.label(class="form-check-label") }}
+                            {{ form.time_off(class="form-check-input", id="time_off") }}
+                        </div>
+                        {{ form.start_time(type="hidden", id="start_time_input") }}
+                        {{ form.end_time(type="hidden", id="end_time_input") }}
+                        {{ form.repeat_days(type="hidden", id="repeat_days_input") }}
+                        <div class="modal-footer">
+                            <button type="button" id="delete_button" class="btn btn-danger" style="display: none;">Delete</button>
+                            <button type="button" id="copy_button" class="btn btn-info" style="display: none;">Copy Schedule</button>
+                            <button type="submit" class="btn btn-primary">Add Schedule</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Add custom tooltip styling */
+.tooltip {
+    position: absolute;
+    z-index: 1070;
+    display: block;
+    font-size: 0.875rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.tooltip.show {
+    opacity: 1;
+}
+
+.tooltip-inner {
+    max-width: 200px;
+    padding: 0.4rem 0.6rem;
+    color: #fff;
+    text-align: left;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-radius: 0.25rem;
+    white-space: nowrap;
+}
+
+.hover-content {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.3;
+}
+
+.hover-content span.text-muted {
+    font-style: italic;
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+/* Mini-calendar styles */
+.mini-calendar {
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+.day-names {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.day-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-gap: 3px;
+}
+
+.day-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 36px;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.9rem;
+}
+
+.day-item:hover:not(.disabled) {
+    background-color: #e2e6ea;
+}
+
+.day-item.outside-month {
+    color: #adb5bd;
+}
+
+.day-item.today {
+    border: 1px solid #007bff;
+    font-weight: bold;
+}
+
+.day-item.selected {
+    background-color: #007bff;
+    color: white;
+}
+
+.day-item.primary-date {
+    background-color: #28a745;
+    color: white;
+}
+
+.day-item.disabled {
+    color: #adb5bd;
+    cursor: not-allowed;
+    background-color: #e9ecef;
+}
+
+.day-item.has-schedule {
+    position: relative;
+}
+
+.day-item.has-schedule:after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: #dc3545;
+}
+
+.date-tag {
+    background-color: #e2e6ea;
+    border-radius: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    margin: 0.25rem;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+}
+
+.date-tag .close {
+    margin-left: 0.5rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+#selected-dates-container {
+    min-height: 38px;
+}
+</style>
+
+<script>
+// Initialize tooltips after the document is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl, {
+            html: true,
+            container: 'body',
+            boundary: 'window'
+        });
+    });
+});
+</script>
+{% endblock %}

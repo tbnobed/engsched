@@ -1,0 +1,555 @@
+/* General Styles */
+body {
+    background-color: #f8f9fa;
+}
+
+/* Remove focus outline from all elements */
+*:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Specifically target current time display */
+#current-time-display *, 
+.current-datetime,
+.current-datetime * {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+}
+
+/* Reset all possible border/outline sources */
+div[style*="gradient"] {
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    -moz-box-shadow: none !important;
+}
+
+/* Calendar Styles */
+.calendar-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Current Time Line */
+.current-time-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #dc3545;
+    z-index: 100;
+    pointer-events: none;
+    display: none;
+}
+
+.current-time-line::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: -4px;
+    width: 12px;
+    height: 12px;
+    background: #dc3545;
+    border-radius: 50%;
+}
+
+.current-time-line::after {
+    content: attr(data-time);
+    position: absolute;
+    left: 10px;
+    top: -10px;
+    background: #dc3545;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* Quick Links Management Styles */
+.drag-handle {
+    cursor: grab;
+    color: #6c757d;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.sortable-row {
+    transition: background-color 0.2s;
+}
+
+.sortable-row:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.sortable-ghost {
+    background-color: #e9ecef;
+    opacity: 0.8;
+}
+
+.sortable-chosen {
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Calendar Styles */
+.calendar-header {
+    margin-bottom: 20px;
+}
+
+.calendar-controls {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.day-column.today {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.day-header.today {
+    background-color: #007bff;
+    color: white;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 1px;
+    background: #dee2e6;
+    border: 1px solid #dee2e6;
+}
+
+.time-column, .day-column {
+    background: white;
+    min-height: 1440px; /* 24 hours * 60px */
+}
+
+.hour-slot {
+    height: 60px;
+    padding: 4px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.day-header {
+    padding: 8px;
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: bold;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    height: 40px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.day-slots {
+    position: relative;
+    height: calc(24 * 60px); /* 24 hours */
+}
+
+.time-column {
+    position: relative;
+}
+
+.time-column::before {
+    content: '';
+    display: block;
+    height: 40px; /* Match day header height exactly */
+    border-bottom: 2px solid #dee2e6;
+}
+
+.time-slot {
+    height: 60px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.time-slot:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.schedule-event {
+    position: absolute;
+    border-radius: 6px;
+    font-size: 0.9em;
+    overflow: visible;
+    transition: all 0.2s ease;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    min-height: 40px;
+    /* Default positioning for non-dashboard schedules */
+    left: 0px;
+    right: 0px;
+    width: 100%;
+}
+
+/* Calendar page events use transparent background for CSS layering */
+.calendar-container .schedule-event {
+    background: transparent !important;
+}
+
+/* Dashboard events use same approach as main calendar */
+.dashboard .schedule-event {
+    background: transparent !important;
+    color: white !important;
+}
+
+/* Dashboard events get the same semi-transparent body effect as main calendar */
+.dashboard .schedule-event::before {
+    content: '';
+    position: absolute;
+    top: 32px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--user-color);
+    opacity: 0.2;
+    border-radius: 0 0 6px 6px;
+    z-index: -1;
+}
+
+/* Dashboard specific schedule events - allow JS positioning */
+.dashboard .dashboard-schedule-event {
+    position: absolute !important;
+    box-sizing: border-box !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    flex: none !important;
+    display: block !important;
+    /* Override default positioning to allow JS control */
+    left: auto !important;
+    right: auto !important;
+    width: auto !important;
+    background: transparent !important;
+    color: white !important;
+}
+
+/* Calendar events get the layered background effect */
+.calendar-container .schedule-event::before {
+    content: '';
+    position: absolute;
+    top: 32px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--user-color);
+    opacity: 0.2;
+    border-radius: 0 0 6px 6px;
+    z-index: -1;
+}
+
+/* Remove this rule - dashboard events DO need the ::before pseudo-element */
+
+.schedule-event:hover {
+    transform: scale(1.02);
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.day-slots {
+    position: relative;
+    height: calc(24 * 60px); /* 24 hours */
+    overflow: visible;
+}
+
+/* Schedule header with solid user color background */
+.schedule-header {
+    padding: 6px 8px 4px 8px;
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+    background: var(--user-color) !important;
+    min-height: 24px;
+}
+
+/* Schedule body with transparent background - color comes from parent pseudo-element */
+.schedule-body {
+    padding: 4px 8px 6px 8px;
+    background: transparent !important;
+    border-radius: 0 0 6px 6px;
+    color: white;
+    min-height: 20px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.schedule-title {
+    font-weight: bold;
+    font-size: 0.9em;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.schedule-time {
+    font-weight: 600;
+    font-size: 0.85em;
+    line-height: 1.1;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.schedule-location {
+    font-size: 0.75em;
+    font-weight: 500;
+    line-height: 1.1;
+    margin-top: 2px;
+    opacity: 0.95;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.schedule-location i {
+    width: 12px;
+    height: 12px;
+    margin-right: 3px;
+    vertical-align: middle;
+}
+
+.schedule-desc {
+    font-size: 0.75em;
+    font-weight: 400;
+    line-height: 1.2;
+    margin-top: 2px;
+    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.schedule-tech {
+    font-size: 0.75em;
+    opacity: 0.9;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.schedule-location {
+    font-size: 0.75em;
+    margin-top: 2px;
+    opacity: 0.95;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.schedule-location svg {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+}
+
+.schedule-desc {
+    font-size: 0.75em;
+    margin-top: 2px;
+    opacity: 0.9;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-style: italic;
+}
+
+
+/* Modal Styles */
+.modal-content {
+    border-radius: 8px;
+}
+
+.modal-header {
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+/* Form Styles */
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+/* Default light mode styles - increased sizing by 10% */
+.grid-item {
+    background: #fff;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 0.55rem !important; /* 10% increase from 0.5rem */
+}
+
+.grid-item .user-name {
+    color: #1a1a1a;
+    font-size: 1.1rem; /* 10% increase from base size */
+    font-weight: 600;
+}
+
+.grid-item .user-time {
+    color: #666;
+    font-size: 0.94rem; /* 10% increase from 0.85rem */
+}
+
+.grid-item .user-location {
+    color: #888;
+    font-size: 0.88rem; /* 10% increase from 0.8rem */
+}
+
+.time-off-card {
+    background: #fff;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 0.55rem !important; /* 10% increase from 0.5rem */
+    margin-bottom: 0.66rem !important; /* 10% increase from 0.6rem */
+}
+
+.time-off-name {
+    color: #1a1a1a !important;
+    font-size: 1.1rem !important; /* 10% increase */
+    font-weight: 600 !important;
+}
+
+.time-off-date {
+    color: #666 !important;
+    font-size: 0.94rem !important; /* 10% increase */
+}
+
+.time-off-duration {
+    color: #888 !important;
+    font-size: 0.88rem !important; /* 10% increase */
+}
+
+.time-off-desc {
+    color: #666 !important;
+    font-size: 0.88rem !important; /* 10% increase */
+}
+
+.time-off-icon {
+    color: #666 !important;
+    width: 22px !important; /* 10% increase from 20px */
+    height: 22px !important;
+}
+
+/* Dark Mode Styles */
+[data-bs-theme="dark"] .grid-item {
+    background: #2d2d2d !important;
+    border: 1px solid #3a3a3a !important;
+    box-shadow: none !important;
+    padding: 0.55rem !important; /* 10% increase from 0.5rem */
+}
+
+[data-bs-theme="dark"] .grid-item .user-name {
+    color: #ffffff !important;
+    font-size: 1.1rem !important; /* 10% increase */
+    font-weight: 600 !important;
+}
+
+[data-bs-theme="dark"] .grid-item .user-time {
+    color: #b0b0b0 !important;
+    font-size: 0.94rem !important; /* 10% increase */
+}
+
+[data-bs-theme="dark"] .grid-item .user-location {
+    color: #909090 !important;
+    font-size: 0.88rem !important; /* 10% increase */
+}
+
+[data-bs-theme="dark"] .time-off-card {
+    background: #2d2d2d !important;
+    border: 1px solid #3a3a3a !important;
+    box-shadow: none !important;
+    padding: 0.55rem !important; /* 10% increase from 0.5rem */
+    margin-bottom: 0.66rem !important; /* 10% increase from 0.6rem */
+}
+
+[data-bs-theme="dark"] .time-off-name {
+    color: #ffffff !important;
+    font-size: 1.1rem !important; /* 10% increase */
+    font-weight: 600 !important;
+}
+
+[data-bs-theme="dark"] .time-off-date {
+    color: #b0b0b0 !important;
+    font-size: 0.94rem !important; /* 10% increase */
+}
+
+[data-bs-theme="dark"] .time-off-duration {
+    color: #909090 !important;
+    font-size: 0.88rem !important; /* 10% increase */
+}
+
+[data-bs-theme="dark"] .time-off-desc {
+    color: #b0b0b0 !important;
+    font-size: 0.88rem !important; /* 10% increase */
+}
+
+[data-bs-theme="dark"] .time-off-icon {
+    color: #b0b0b0 !important;
+    width: 22px !important; /* 10% increase from 20px */
+    height: 22px !important;
+}
+
+[data-bs-theme="dark"] .sidebar {
+    background-color: #1a1a1a !important;
+    border-right: 1px solid #404040 !important;
+}
+
+[data-bs-theme="dark"] .sidebar h6 {
+    color: #ffffff !important;
+    font-size: 1.21rem !important; /* 10% increase from 1.1rem */
+}
+
+[data-bs-theme="dark"] .sidebar .text-muted {
+    color: #b0b0b0 !important;
+}
+
+[data-bs-theme="dark"] .sidebar .btn-outline-primary {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+[data-bs-theme="dark"] .sidebar .btn-outline-primary:hover {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #ffffff;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .calendar-grid {
+        grid-template-columns: 60px repeat(7, 1fr);
+    }
+
+    .hour-slot {
+        font-size: 0.7em;
+    }
+
+    .schedule-event {
+        font-size: 0.8em;
+    }
+}

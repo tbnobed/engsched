@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
+  <g transform="translate(5, 5) scale(0.4)">
+    <!-- Left blue bar -->
+    <path d="M0,0 L0,120 L40,120 L40,80 L20,80 L20,40 Z" fill="#0078D7"/>
+    
+    <!-- Dark blue edge -->
+    <path d="M0,0 L60,0 L80,40 L20,40 Z" fill="#002744"/>
+    
+    <!-- Orange top bar -->
+    <path d="M60,0 L120,0 L140,40 L80,40 Z" fill="#FF6C37"/>
+    
+    <!-- Orange right edge -->
+    <path d="M120,0 L140,40 L140,80 L120,40 Z" fill="#FFA553"/>
+    
+    <!-- Teal bottom bar -->
+    <path d="M40,80 L100,80 L100,120 L40,120 Z" fill="#36B1A0"/>
+    
+    <!-- Dark blue inner section -->
+    <path d="M20,40 L80,40 L80,80 L40,80 L20,40 Z" fill="#002744"/>
+    
+    <!-- Inner hexagon cutout -->
+    <path d="M50,40 L70,40 L70,80 L50,80 Z" fill="white"/>
+  </g>
+</svg>

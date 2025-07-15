@@ -1,0 +1,797 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Content Area -->
+        <div class="col-md-8">
+            <div class="row h-100">
+                <!-- Top Left: Ticket Information -->
+                <div class="col-12 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header text-white" style="background-color: #1e3a8a !important;">
+                            <h5 class="mb-0">
+                                <i data-feather="alert-circle"></i>
+                                Active Tickets
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_tickets %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Priority</th>
+                                                <th>Title</th>
+                                                <th>Status</th>
+                                                <th>Assigned To</th>
+                                                <th>Created</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for ticket in recent_tickets %}
+                                            <tr onclick="location.href='{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}'" style="cursor: pointer;">
+                                                <td>
+                                                    <span class="badge badge-priority-{{ ticket.priority }}">
+                                                        {% if ticket.priority == 0 %}Low
+                                                        {% elif ticket.priority == 1 %}Medium
+                                                        {% elif ticket.priority == 2 %}High
+                                                        {% else %}Urgent{% endif %}
+                                                    </span>
+                                                </td>
+                                                <td>{{ ticket.title[:50] }}{% if ticket.title|length > 50 %}...{% endif %}</td>
+                                                <td>
+                                                    <span class="badge badge-status-{{ ticket.status }}">
+                                                        {{ ticket.status.replace('_', ' ').title() }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if ticket.assigned_to %}
+                                                        {{ ticket.assigned_technician.username }}
+                                                    {% else %}
+                                                        <span class="text-muted">Unassigned</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ ticket.created_at.astimezone(current_user.get_timezone_obj()).strftime('%m/%d %H:%M') }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <a href="{{ url_for('tickets.tickets_dashboard') }}" class="btn btn-primary btn-sm">
+                                        <i data-feather="list"></i> View All Tickets
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="text-center text-muted py-4">
+                                    <i data-feather="check-circle" class="mb-2" style="width: 48px; height: 48px;"></i>
+                                    <p>No active tickets at the moment!</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Left: Studio Calendar Bookings -->
+                <div class="col-12">
+                    <div class="card h-100">
+                        <div class="card-header text-white" style="background-color: #064e3b !important;">
+                            <h5 class="mb-0">
+                                <i data-feather="calendar"></i>
+                                Studio Bookings - {{ today.strftime('%A, %B %d') }}
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="studio-bookings-content">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted">Loading studio bookings...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Today's Technician Schedules -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header text-white" style="background-color: #155e75 !important;">
+                    <h5 class="mb-0">
+                        <i data-feather="users"></i>
+                        Today's Schedule - {{ today.strftime('%a %m/%d') }}
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if schedules_by_tech %}
+                        <!-- Single Day Timeline - Exact Calendar Copy -->
+                        <div class="calendar-grid" style="grid-template-columns: 80px 1fr; border-radius: 8px; overflow: hidden;">
+                            <!-- Time Column -->
+                            <div class="time-column">
+                                {% for hour in range(24) %}
+                                    <div class="hour-slot">{{ "%02d:00"|format(hour) }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Day Column -->
+                            <div class="day-column">
+                                <div class="day-header">
+                                    {{ today.strftime('%a %m/%d') }}
+                                </div>
+                                <div class="day-slots" data-date="{{ today.strftime('%Y-%m-%d') }}">
+                                    {% for hour in range(24) %}
+                                        <div class="time-slot" data-hour="{{ '%02d'|format(hour) }}"></div>
+                                    {% endfor %}
+                                    <div class="current-time-line" data-time=""></div>
+                                    
+                                    {% set all_schedules = [] %}
+                                    {% for tech_name, tech_data in schedules_by_tech.items() %}
+                                        {% for schedule in tech_data.schedules %}
+                                            {% set _ = all_schedules.append(schedule) %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                    
+                                    {% for schedule in all_schedules %}
+                                        <div class="schedule-event"
+                                             style="--user-color: {{ '#6a6d6c' if schedule.time_off else schedule.technician.color }};"
+                                             data-schedule-id="{{ schedule.id }}"
+                                             data-technician-id="{{ schedule.technician_id }}"
+                                             data-start-time="{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
+                                             data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
+                                             data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
+                                             data-all-day="{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}"
+">
+                                            <div class="schedule-header">
+                                                <div class="schedule-title">{{ schedule.technician.username }}{% if schedule.time_off %} - Time Off{% endif %}</div>
+                                                <div class="schedule-time">
+                                                    {% set user_tz = current_user.get_timezone_obj() %}
+                                                    {% set start_local = schedule.start_time.astimezone(user_tz) %}
+                                                    {% set end_local = schedule.end_time.astimezone(user_tz) %}
+                                                    {% if end_local.date() > start_local.date() %}
+                                                        {{ start_local.strftime('%H:%M') }} - {{ end_local.strftime('%H:%M') }} <span style="font-size: 0.8em; opacity: 0.8;">(+1)</span>
+                                                    {% else %}
+                                                        {{ start_local.strftime('%H:%M') }} - {{ end_local.strftime('%H:%M') }}
+                                                    {% endif %}
+                                                </div>
+                                                {% if schedule.location %}
+                                                <div class="schedule-location">
+                                                    <i data-feather="map-pin"></i>
+                                                    {{ schedule.location.name }}
+                                                </div>
+                                                {% else %}
+                                                <div class="schedule-location">
+                                                    <i data-feather="map-pin"></i>
+                                                    Plex
+                                                </div>
+                                                {% endif %}
+                                                {% if schedule.description %}
+                                                <div class="schedule-desc">{{ schedule.description }}</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i data-feather="calendar" class="mb-2" style="width: 48px; height: 48px;"></i>
+                            <p>No technician schedules for today</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Priority badges */
+.badge-priority-0 { background-color: #28a745; }
+.badge-priority-1 { background-color: #ffc107; color: #212529; }
+.badge-priority-2 { background-color: #fd7e14; }
+.badge-priority-3 { background-color: #dc3545; }
+
+/* Status badges */
+.badge-status-open { background-color: #007bff; }
+.badge-status-in_progress { background-color: #ffc107; color: #212529; }
+.badge-status-pending { background-color: #6f42c1; }
+.badge-status-resolved { background-color: #28a745; }
+.badge-status-closed { background-color: #6c757d; }
+
+/* Single Day Timeline - Absolute Positioning */
+.single-day-timeline {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.timeline-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.timeline-container-absolute {
+    position: relative;
+    height: 1440px; /* 24 hours * 60px per hour */
+    width: 100%;
+    background: #f8f9fa;
+}
+
+.schedule-block-positioned {
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: 100%;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+    border-radius: 0;
+    border: 1px solid rgba(255,255,255,0.2);
+    box-sizing: border-box;
+    z-index: 10;
+}
+
+.schedule-header-abs {
+    padding: 8px 12px;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.schedule-title-abs {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.schedule-time-abs {
+    font-weight: 600;
+    font-size: 12px;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.schedule-location-abs {
+    font-size: 10px;
+    opacity: 0.9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.time-grid-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    border-top: 1px solid #e9ecef;
+    z-index: 1;
+}
+
+.time-label-abs {
+    position: absolute;
+    left: -60px;
+    top: -8px;
+    width: 50px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6c757d;
+    text-align: right;
+    background: #f8f9fa;
+    padding: 2px 4px;
+}
+
+
+
+.current-time-bar {
+    background-color: #dc3545;
+    color: white;
+    padding: 12px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Booking item styling */
+.booking-item {
+    border-left: 4px solid #007bff;
+    background-color: rgba(0, 123, 255, 0.05);
+    transition: all 0.2s ease;
+}
+
+.booking-item:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    transform: translateX(2px);
+}
+
+/* Spinning animation for refresh icon */
+.spin-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .col-md-8, .col-md-4 {
+        margin-bottom: 1rem;
+    }
+    
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}
+</style>
+
+<script>
+// Pass timezone from server to client for schedule positioning
+window.userTimezone = '{{ user_timezone }}';
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Load studio bookings initially
+    loadStudioBookings();
+    
+    // Set up auto-refresh for studio bookings every 3 minutes (180,000 ms)
+    setInterval(function() {
+        console.log('Auto-refreshing studio bookings...');
+        loadStudioBookings();
+    }, 180000);
+    
+    // Initialize Feather icons
+    feather.replace();
+});
+
+function loadStudioBookings() {
+    // Show subtle loading indicator in the header
+    const header = document.querySelector('.card-header h5');
+    if (header) {
+        const originalText = header.innerHTML;
+        if (!originalText.includes('spinner')) {
+            header.innerHTML = originalText + ' <span class="ml-2 text-light" style="font-size: 0.8em;"><i data-feather="refresh-cw" class="spin-icon" style="width: 12px; height: 12px;"></i></span>';
+            feather.replace();
+        }
+    }
+    
+    fetch('/api/studio-bookings')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('studio-bookings-content');
+            
+            if (data.success && data.bookings && data.bookings.length > 0) {
+                let html = '<div class="booking-list">';
+                
+                data.bookings.forEach(booking => {
+                    const startTime = new Date(booking.start).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                        timeZone: '{{ current_user.get_timezone() }}'
+                    });
+                    const endTime = new Date(booking.end).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                        timeZone: '{{ current_user.get_timezone() }}'
+                    });
+                    
+                    html += `
+                        <div class="booking-item p-3 mb-2 rounded">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="booking-title font-weight-bold">
+                                        ${booking.title || 'Studio Booking'}
+                                    </div>
+                                    <div class="booking-time text-primary">
+                                        <i data-feather="clock" style="width: 14px; height: 14px;"></i>
+                                        ${startTime} - ${endTime}
+                                    </div>
+                                    ${booking.client ? `<div class="booking-client text-muted small">
+                                        <i data-feather="user" style="width: 12px; height: 12px;"></i>
+                                        ${booking.client}
+                                    </div>` : ''}
+                                    ${booking.studio ? `<div class="booking-studio small">
+                                        <i data-feather="home" style="width: 12px; height: 12px;"></i>
+                                        ${booking.studio}
+                                    </div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+            } else if (data.success && (!data.bookings || data.bookings.length === 0)) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i data-feather="calendar-x" class="mb-2" style="width: 48px; height: 48px;"></i>
+                        <p>No studio bookings for today</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="text-center text-warning py-4">
+                        <i data-feather="alert-triangle" class="mb-2" style="width: 48px; height: 48px;"></i>
+                        <p>Unable to load studio bookings</p>
+                        <small class="text-muted">${data.error || 'Unknown error'}</small>
+                    </div>
+                `;
+            }
+            
+            // Remove loading indicator from header
+            const header = document.querySelector('.card-header h5');
+            if (header && header.innerHTML.includes('spin-icon')) {
+                header.innerHTML = header.innerHTML.replace(/ <span class="ml-2 text-light".*?<\/span>/, '');
+            }
+            
+            // Re-initialize Feather icons for the new content
+            feather.replace();
+        })
+        .catch(error => {
+            console.error('Error loading studio bookings:', error);
+            document.getElementById('studio-bookings-content').innerHTML = `
+                <div class="text-center text-danger py-4">
+                    <i data-feather="wifi-off" class="mb-2" style="width: 48px; height: 48px;"></i>
+                    <p>Connection error</p>
+                    <small class="text-muted">Please check your internet connection</small>
+                </div>
+            `;
+            
+            // Remove loading indicator from header
+            const header = document.querySelector('.card-header h5');
+            if (header && header.innerHTML.includes('spin-icon')) {
+                header.innerHTML = header.innerHTML.replace(/ <span class="ml-2 text-light".*?<\/span>/, '');
+            }
+            
+            feather.replace();
+        });
+}
+
+// Position schedule events in the timeline - Using working main calendar logic
+function positionSchedules() {
+    console.log('Dashboard positionSchedules called');
+    const daySlots = document.querySelectorAll('.day-slots');
+    console.log('Found day slots:', daySlots.length);
+    
+    daySlots.forEach(daySlot => {
+        const events = daySlot.querySelectorAll('.schedule-event');
+        console.log('Found schedule events:', events.length);
+        const eventArray = Array.from(events);
+
+        // Sort events by start time
+        eventArray.sort((a, b) => {
+            const aStart = new Date(a.dataset.startTime);
+            const bStart = new Date(b.dataset.startTime);
+            return aStart - bStart;
+        });
+
+        // Find overlapping groups - using main calendar logic
+        const overlappingGroups = [];
+
+        eventArray.forEach(event => {
+            let foundGroup = false;
+            const eventStart = new Date(event.dataset.startTime);
+            const eventEnd = new Date(event.dataset.endTime);
+
+            // Normalize end time - treat 00:00 as 24:00
+            const normalizedEndHour = eventEnd.getHours() === 0 && eventEnd.getMinutes() === 0 
+                ? 24 
+                : eventEnd.getHours() + eventEnd.getMinutes() / 60;
+
+            // Check if event overlaps with any existing group
+            for (let group of overlappingGroups) {
+                const overlapsWithGroup = group.some(existingEvent => {
+                    const existingStart = new Date(existingEvent.dataset.startTime);
+                    const existingEnd = new Date(existingEvent.dataset.endTime);
+                    const existingEndHour = existingEnd.getHours() === 0 && existingEnd.getMinutes() === 0 
+                        ? 24 
+                        : existingEnd.getHours() + existingEnd.getMinutes() / 60;
+
+                    return (
+                        eventStart < (existingEndHour === 24 ? new Date(existingEnd).setHours(24, 0, 0) : existingEnd) && 
+                        (normalizedEndHour === 24 ? new Date(eventEnd).setHours(24, 0, 0) : eventEnd) > existingStart
+                    );
+                });
+
+                if (overlapsWithGroup) {
+                    group.push(event);
+                    foundGroup = true;
+                    break;
+                }
+            }
+
+            // If no overlapping group found, create new group
+            if (!foundGroup) {
+                overlappingGroups.push([event]);
+            }
+        });
+
+        // Merge overlapping groups
+        for (let i = overlappingGroups.length - 1; i > 0; i--) {
+            for (let j = i - 1; j >= 0; j--) {
+                const groupOverlaps = overlappingGroups[i].some(event1 => 
+                    overlappingGroups[j].some(event2 => {
+                        const start1 = new Date(event1.dataset.startTime);
+                        const end1 = new Date(event1.dataset.endTime);
+                        const end1Hour = end1.getHours() === 0 && end1.getMinutes() === 0 ? 24 : end1.getHours() + end1.getMinutes() / 60;
+
+                        const start2 = new Date(event2.dataset.startTime);
+                        const end2 = new Date(event2.dataset.endTime);
+                        const end2Hour = end2.getHours() === 0 && end2.getMinutes() === 0 ? 24 : end2.getHours() + end2.getMinutes() / 60;
+
+                        return (
+                            start1 < (end2Hour === 24 ? new Date(end2).setHours(24, 0, 0) : end2) && 
+                            (end1Hour === 24 ? new Date(end1).setHours(24, 0, 0) : end1) > start2
+                        );
+                    })
+                );
+                
+                if (groupOverlaps) {
+                    overlappingGroups[j].push(...overlappingGroups[i]);
+                    overlappingGroups.splice(i, 1);
+                    break;
+                }
+            }
+        }
+
+        console.log('Found overlapping groups:', overlappingGroups.length);
+
+        // Position events vertically first
+        eventArray.forEach(event => {
+            const startTime = new Date(event.dataset.startTime);
+            const endTime = new Date(event.dataset.endTime);
+            const startHour = startTime.getHours() + startTime.getMinutes() / 60;
+            let endHour = endTime.getHours() + endTime.getMinutes() / 60;
+            const isTimeOff = event.dataset.timeOff === 'true';
+
+            // Special handling for all-day time-off events using data attribute
+            const isAllDay = event.dataset.allDay === 'true';
+            
+            // Debug all-day detection for dashboard
+            if (isTimeOff) {
+                console.log('Dashboard time-off event debug:', {
+                    scheduleId: event.dataset.scheduleId,
+                    startTime: event.dataset.startTime,
+                    endTime: event.dataset.endTime,
+                    dataAllDay: event.dataset.allDay,
+                    isAllDay: isAllDay,
+                    startHour: startHour,
+                    endHour: endHour
+                });
+            }
+            
+            if (isTimeOff && isAllDay) {
+                // Position as compact "OOO all day" entry in 00:00 slot only
+                event.style.top = '0px';
+                event.style.height = '60px'; // Height of one time slot
+                event.style.position = 'absolute';
+                event.classList.add('all-day-time-off');
+                
+                // Apply enhanced styling for better visibility
+                event.style.setProperty('border', '2px dashed #cc5500', 'important');
+                event.style.setProperty('background', 'linear-gradient(135deg, #fff4e6 0%, #ffe8cc 100%)', 'important');
+                event.style.setProperty('border-radius', '8px', 'important');
+                event.style.setProperty('box-shadow', '0 2px 8px rgba(204, 85, 0, 0.3)', 'important');
+                
+                // Add vacation emoji icon
+                if (!event.querySelector('.vacation-icon')) {
+                    const icon = document.createElement('span');
+                    icon.className = 'vacation-icon';
+                    icon.textContent = '🏖️';
+                    icon.style.cssText = 'position: absolute; top: 2px; right: 4px; font-size: 14px; opacity: 0.7;';
+                    event.appendChild(icon);
+                }
+                
+                // Update the display text to show "OOO all day"
+                const scheduleTitle = event.querySelector('.schedule-title');
+                if (scheduleTitle) {
+                    const username = scheduleTitle.textContent.replace(' - Time Off', '');
+                    scheduleTitle.textContent = username + ' - OOO ALL DAY';
+                    scheduleTitle.style.setProperty('font-weight', 'bold', 'important');
+                    scheduleTitle.style.setProperty('color', 'white', 'important');
+                    scheduleTitle.style.setProperty('text-shadow', '1px 1px 2px rgba(0, 0, 0, 0.3)', 'important');
+                    scheduleTitle.style.setProperty('text-transform', 'uppercase', 'important');
+                    scheduleTitle.style.setProperty('letter-spacing', '0.5px', 'important');
+                }
+                
+                // Hide the time display for all-day events
+                const scheduleTime = event.querySelector('.schedule-time');
+                if (scheduleTime) {
+                    scheduleTime.style.display = 'none';
+                }
+            } else {
+                // Normal event positioning
+                // Special handling for midnight (00:00) as end time
+                if (endHour === 0) {
+                    endHour = 24;
+                }
+
+                const top = startHour * 60;
+                const height = (endHour - startHour) * 60;
+
+                event.style.top = `${top}px`;
+                event.style.height = `${height}px`;
+                event.style.position = 'absolute';
+            }
+        });
+
+        // Position overlapping events horizontally using main calendar logic
+        overlappingGroups.forEach(group => {
+            if (group.length > 1) {
+                // Group events by start time within this overlap group
+                const startTimeGroups = {};
+                group.forEach(event => {
+                    const startTime = event.dataset.startTime;
+                    if (!startTimeGroups[startTime]) {
+                        startTimeGroups[startTime] = [];
+                    }
+                    startTimeGroups[startTime].push(event);
+                });
+                
+                // Get all start time groups that have multiple events
+                const sameTimeGroups = Object.values(startTimeGroups).filter(g => g.length > 1);
+                
+                // If we have events that start at the same time, handle them specially
+                if (sameTimeGroups.length > 0) {
+                    let processedEvents = new Set();
+                    
+                    sameTimeGroups.forEach(sameTimeGroup => {
+                        // Divide these same-time events evenly across column width
+                        const eventWidth = Math.floor(100 / sameTimeGroup.length);
+                        const spacing = 1;
+                        
+                        sameTimeGroup.forEach((event, index) => {
+                            const leftPosition = index * eventWidth;
+                            const actualWidth = Math.min(eventWidth - spacing, 100 - leftPosition);
+                            
+                            event.style.setProperty('width', `${Math.max(10, actualWidth)}%`, 'important');
+                            event.style.setProperty('left', `${leftPosition}%`, 'important');
+                            event.style.setProperty('right', 'auto', 'important');
+                            event.style.setProperty('z-index', `${10 + index}`, 'important');
+                            
+                            processedEvents.add(event);
+                            
+                            console.log(`Same-time event ${index + 1}/${sameTimeGroup.length}:`, {
+                                width: `${Math.max(10, actualWidth)}%`,
+                                left: `${leftPosition}%`
+                            });
+                        });
+                    });
+                    
+                    // Handle remaining events (that don't have same start times) with offset positioning
+                    const remainingEvents = group.filter(event => !processedEvents.has(event));
+                    const offsetStep = 8;
+                    
+                    remainingEvents.forEach((event, index) => {
+                        const leftPosition = index * offsetStep;
+                        const maxWidth = 100 - leftPosition;
+                        
+                        event.style.setProperty('width', `${Math.min(75, maxWidth)}%`, 'important');
+                        event.style.setProperty('left', `${leftPosition}%`, 'important');
+                        event.style.setProperty('right', 'auto', 'important');
+                        event.style.setProperty('z-index', `${20 + index}`, 'important');
+                    });
+                } else {
+                    // No same-time events, use standard offset positioning
+                    const offsetStep = 8;
+                    group.forEach((event, index) => {
+                        const leftPosition = index * offsetStep;
+                        const maxWidth = 100 - leftPosition;
+                        
+                        event.style.setProperty('width', `${Math.min(75, maxWidth)}%`, 'important');
+                        event.style.setProperty('left', `${leftPosition}%`, 'important');
+                        event.style.setProperty('right', 'auto', 'important');
+                        event.style.setProperty('z-index', `${10 + index}`, 'important');
+                    });
+                }
+            } else {
+                // Single event takes full width
+                const event = group[0];
+                
+                event.style.setProperty('left', '0%', 'important');
+                event.style.setProperty('width', '100%', 'important');
+                event.style.setProperty('right', 'auto', 'important');
+                event.style.setProperty('z-index', '10', 'important');
+            }
+        });
+
+        // Add dashboard-specific class to all events
+        eventArray.forEach(event => {
+            event.classList.add('dashboard-schedule-event');
+        });
+    });
+}
+
+// Initialize positions when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard DOMContentLoaded');
+    setTimeout(() => {
+        positionSchedules();
+        updateCurrentTimeLine();
+        feather.replace();
+    }, 100);
+    
+    // Update current time line every minute
+    setInterval(updateCurrentTimeLine, 60000);
+});
+
+// Function to update current time line position (using user's timezone)
+function updateCurrentTimeLine() {
+    const timeLine = document.querySelector('.current-time-line');
+    if (!timeLine) return;
+    
+    // Get current time in user's timezone (same approach as main calendar)
+    const now = new Date();
+    const userTimezone = '{{ current_user.timezone }}' || 'UTC';
+    
+    let currentHour, currentMinute, timeString;
+    
+    try {
+        // Get the current time in the user's timezone
+        const timeInUserTimezone = new Intl.DateTimeFormat('en-US', {
+            timeZone: userTimezone,
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        }).format(now);
+        
+        // Parse the formatted time
+        const [hour, minute] = timeInUserTimezone.split(':').map(Number);
+        currentHour = hour;
+        currentMinute = minute;
+        
+        // Format time for display
+        timeString = new Intl.DateTimeFormat('en-US', {
+            timeZone: userTimezone,
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        }).format(now);
+        
+    } catch (error) {
+        console.warn('Error getting time in user timezone, falling back to local time:', error);
+        // Fallback to local time
+        currentHour = now.getHours();
+        currentMinute = now.getMinutes();
+        timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    const totalMinutes = currentHour * 60 + currentMinute;
+    const topPosition = totalMinutes; // Each minute = 1 pixel
+    
+    timeLine.style.top = `${topPosition}px`;
+    timeLine.style.display = 'block';
+    timeLine.setAttribute('data-time', timeString);
+    
+    console.log('Current time line updated (user timezone):', `${currentHour}:${currentMinute.toString().padStart(2, '0')}`, 'position:', topPosition);
+}
+</script>
+</div>
+{% endblock %}

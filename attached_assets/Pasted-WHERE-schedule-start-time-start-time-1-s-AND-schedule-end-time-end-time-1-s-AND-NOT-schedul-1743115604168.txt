@@ -1,0 +1,18 @@
+WHERE schedule.start_time <= %(start_time_1)s AND schedule.end_time > %(end_time_1)s AND NOT schedule.time_off
+DEBUG:app:Found 1 active schedules
+DEBUG:app:Returning 1 active users
+INFO:werkzeug:172.31.128.123 - - [27/Mar/2025 22:45:45] "GET /api/active_users HTTP/1.1" 200 -
+DEBUG:app:Starting ticket creation transaction
+DEBUG:app:Created ticket with ID: 9
+INFO:app:Successfully created ticket 9 with history entry
+INFO:werkzeug:172.31.128.123 - - [27/Mar/2025 22:46:00] "POST /tickets/create HTTP/1.1" 302 -
+INFO:werkzeug:172.31.128.123 - - [27/Mar/2025 22:46:00] "GET /tickets/9 HTTP/1.1" 200 -
+INFO:werkzeug:172.31.128.123 - - [27/Mar/2025 22:46:00] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:172.31.128.123 - - [27/Mar/2025 22:46:00] "GET /static/js/calendar.js HTTP/1.1" 304 -
+DEBUG:app:Current time (UTC): 2025-03-27 22:46:01.131083+00:00
+DEBUG:app:Active users query SQL: SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".is_admin AS user_is_admin, "user".color AS user_color, "user".timezone AS user_timezone, schedule.id AS schedule_id, schedule.technician_id AS schedule_technician_id, schedule.start_time AS schedule_start_time, schedule.end_time AS schedule_end_time, schedule.description AS schedule_description, schedule.location_id AS schedule_location_id, schedule.created_at AS schedule_created_at, schedule.time_off AS schedule_time_off, location.id AS location_id, location.name AS location_name, location.description AS location_description, location.active AS location_active, location.created_at AS location_created_at, location.updated_at AS location_updated_at 
+FROM "user" JOIN schedule ON "user".id = schedule.technician_id LEFT OUTER JOIN location ON schedule.location_id = location.id 
+WHERE schedule.start_time <= %(start_time_1)s AND schedule.end_time > %(end_time_1)s AND NOT schedule.time_off
+DEBUG:app:Found 1 active schedules
+DEBUG:app:Returning 1 active users
+INFO:werkzeug:172.31.128.123 - - [27/Mar/2025 22:46:01] "GET /api/active_users HTTP/1.1" 200 -

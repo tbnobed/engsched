@@ -1,0 +1,138 @@
+DEBUG:app:Raw filter values from request - status: None, category: None, priority: None
+DEBUG:app:No filters specified or only cache parameters, defaulting to open tickets
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:06] "GET /tickets/dashboard HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/ticket_routes.py", line 188, in tickets_dashboard
+    valid_statuses = vars(TicketStatus).values()
+                          ^^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'TicketStatus' where it is not associated with a value
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:06] "GET / HTTP/1.1" 302 -
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:06] "GET /tickets/dashboard?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 304 -
+DEBUG:app:Raw request URL: http://3f052e03-dbd2-4cad-9269-6a43cf17e21b-00-18oqqlkt38owk.janeway.replit.dev/tickets/dashboard
+DEBUG:app:Raw query args: ImmutableMultiDict([])
+DEBUG:app:Raw filter values from request - status: None, category: None, priority: None
+DEBUG:app:No filters specified or only cache parameters, defaulting to open tickets
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:06] "GET /tickets/dashboard?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 304 -
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:06] "GET /tickets/dashboard HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/ticket_routes.py", line 188, in tickets_dashboard
+    valid_statuses = vars(TicketStatus).values()
+                          ^^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'TicketStatus' where it is not associated with a value
+DEBUG:app:Fetching up to 5 active tickets for sidebar display
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:06] "GET /tickets/dashboard?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 304 -
+DEBUG:app:Found 5 active tickets for sidebar display
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:06] "GET /tickets/dashboard?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 304 -
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:06] "GET /calendar HTTP/1.1" 200 -
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:06] "GET /static/css/style.css HTTP/1.1" 304 -
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:07] "GET /static/js/calendar.js HTTP/1.1" 304 -
+DEBUG:app:Fetching up to 5 active tickets for sidebar display
+DEBUG:app:Found 5 active tickets for sidebar display
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:07] "GET /calendar HTTP/1.1" 200 -
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:07] "GET /static/css/style.css HTTP/1.1" 304 -
+DEBUG:app:Current time (UTC): 2025-03-28 05:51:07.485177+00:00
+DEBUG:app:Active users query SQL: SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".is_admin AS user_is_admin, "user".color AS user_color, "user".timezone AS user_timezone, schedule.id AS schedule_id, schedule.technician_id AS schedule_technician_id, schedule.start_time AS schedule_start_time, schedule.end_time AS schedule_end_time, schedule.description AS schedule_description, schedule.location_id AS schedule_location_id, schedule.created_at AS schedule_created_at, schedule.time_off AS schedule_time_off, location.id AS location_id, location.name AS location_name, location.description AS location_description, location.active AS location_active, location.created_at AS location_created_at, location.updated_at AS location_updated_at 
+FROM "user" JOIN schedule ON "user".id = schedule.technician_id LEFT OUTER JOIN location ON schedule.location_id = location.id 
+WHERE schedule.start_time <= %(start_time_1)s AND schedule.end_time > %(end_time_1)s AND NOT schedule.time_off
+DEBUG:app:Found 0 active schedules
+DEBUG:app:Returning 0 active users
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:07] "GET /static/js/calendar.js HTTP/1.1" 304 -
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:07] "GET /api/active_users HTTP/1.1" 200 -
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:07] "GET /api/upcoming_time_off HTTP/1.1" 200 -
+DEBUG:app:Current time (UTC): 2025-03-28 05:51:07.751896+00:00
+DEBUG:app:Active users query SQL: SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".is_admin AS user_is_admin, "user".color AS user_color, "user".timezone AS user_timezone, schedule.id AS schedule_id, schedule.technician_id AS schedule_technician_id, schedule.start_time AS schedule_start_time, schedule.end_time AS schedule_end_time, schedule.description AS schedule_description, schedule.location_id AS schedule_location_id, schedule.created_at AS schedule_created_at, schedule.time_off AS schedule_time_off, location.id AS location_id, location.name AS location_name, location.description AS location_description, location.active AS location_active, location.created_at AS location_created_at, location.updated_at AS location_updated_at 
+FROM "user" JOIN schedule ON "user".id = schedule.technician_id LEFT OUTER JOIN location ON schedule.location_id = location.id 
+WHERE schedule.start_time <= %(start_time_1)s AND schedule.end_time > %(end_time_1)s AND NOT schedule.time_off
+DEBUG:app:Found 0 active schedules
+DEBUG:app:Returning 0 active users
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:07] "GET /api/active_users HTTP/1.1" 200 -
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:07] "GET /api/upcoming_time_off HTTP/1.1" 200 -
+DEBUG:app:Current time (UTC): 2025-03-28 05:51:07.996018+00:00
+DEBUG:app:Active users query SQL: SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".is_admin AS user_is_admin, "user".color AS user_color, "user".timezone AS user_timezone, schedule.id AS schedule_id, schedule.technician_id AS schedule_technician_id, schedule.start_time AS schedule_start_time, schedule.end_time AS schedule_end_time, schedule.description AS schedule_description, schedule.location_id AS schedule_location_id, schedule.created_at AS schedule_created_at, schedule.time_off AS schedule_time_off, location.id AS location_id, location.name AS location_name, location.description AS location_description, location.active AS location_active, location.created_at AS location_created_at, location.updated_at AS location_updated_at 
+FROM "user" JOIN schedule ON "user".id = schedule.technician_id LEFT OUTER JOIN location ON schedule.location_id = location.id 
+WHERE schedule.start_time <= %(start_time_1)s AND schedule.end_time > %(end_time_1)s AND NOT schedule.time_off
+DEBUG:app:Found 0 active schedules
+DEBUG:app:Returning 0 active users
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:08] "GET /api/active_users HTTP/1.1" 200 -
+DEBUG:app:Current time (UTC): 2025-03-28 05:51:08.246958+00:00
+DEBUG:app:Active users query SQL: SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".is_admin AS user_is_admin, "user".color AS user_color, "user".timezone AS user_timezone, schedule.id AS schedule_id, schedule.technician_id AS schedule_technician_id, schedule.start_time AS schedule_start_time, schedule.end_time AS schedule_end_time, schedule.description AS schedule_description, schedule.location_id AS schedule_location_id, schedule.created_at AS schedule_created_at, schedule.time_off AS schedule_time_off, location.id AS location_id, location.name AS location_name, location.description AS location_description, location.active AS location_active, location.created_at AS location_created_at, location.updated_at AS location_updated_at 
+FROM "user" JOIN schedule ON "user".id = schedule.technician_id LEFT OUTER JOIN location ON schedule.location_id = location.id 
+WHERE schedule.start_time <= %(start_time_1)s AND schedule.end_time > %(end_time_1)s AND NOT schedule.time_off
+DEBUG:app:Found 0 active schedules
+DEBUG:app:Returning 0 active users
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:08] "GET /api/active_users HTTP/1.1" 200 -
+DEBUG:app:Raw request URL: http://3f052e03-dbd2-4cad-9269-6a43cf17e21b-00-18oqqlkt38owk.janeway.replit.dev/tickets/dashboard
+DEBUG:app:Raw query args: ImmutableMultiDict([])
+DEBUG:app:Raw filter values from request - status: None, category: None, priority: None
+DEBUG:app:No filters specified or only cache parameters, defaulting to open tickets
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:14] "GET /tickets/dashboard HTTP/1.1" 500 -
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/ticket_routes.py", line 188, in tickets_dashboard
+    valid_statuses = vars(TicketStatus).values()
+                          ^^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'TicketStatus' where it is not associated with a value
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:15] "GET /tickets/dashboard?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 304 -
+INFO:werkzeug:172.31.128.68 - - [28/Mar/2025 05:51:15] "GET /tickets/dashboard?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 304 -

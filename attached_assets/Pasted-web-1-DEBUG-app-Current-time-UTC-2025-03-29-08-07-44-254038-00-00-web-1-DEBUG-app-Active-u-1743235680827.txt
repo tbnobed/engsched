@@ -1,0 +1,16 @@
+web_1  | DEBUG:app:Current time (UTC): 2025-03-29 08:07:44.254038+00:00
+web_1  | DEBUG:app:Active users query SQL: SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".is_admin AS user_is_admin, "user".color AS user_color, "user".timezone AS user_timezone, "user".theme_preference AS user_theme_preference, schedule.id AS schedule_id, schedule.technician_id AS schedule_technician_id, schedule.start_time AS schedule_start_time, schedule.end_time AS schedule_end_time, schedule.description AS schedule_description, schedule.location_id AS schedule_location_id, schedule.created_at AS schedule_created_at, schedule.time_off AS schedule_time_off, location.id AS location_id, location.name AS location_name, location.description AS location_description, location.active AS location_active, location.created_at AS location_created_at, location.updated_at AS location_updated_at
+web_1  | FROM "user" JOIN schedule ON "user".id = schedule.technician_id LEFT OUTER JOIN location ON schedule.location_id = location.id
+web_1  | WHERE schedule.start_time <= %(start_time_1)s AND schedule.end_time > %(end_time_1)s AND NOT schedule.time_off
+web_1  | DEBUG:app:Found 0 active schedules
+web_1  | DEBUG:app:Returning 0 active users
+web_1  | INFO:werkzeug:192.168.1.140 - - [29/Mar/2025 01:07:44] "GET /api/upcoming_time_off HTTP/1.1" 200 -
+web_1  | DEBUG:app:Current time (UTC): 2025-03-29 08:07:44.259991+00:00
+web_1  | INFO:werkzeug:192.168.1.140 - - [29/Mar/2025 01:07:44] "GET /api/active_users HTTP/1.1" 200 -
+web_1  | DEBUG:app:Active users query SQL: SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".is_admin AS user_is_admin, "user".color AS user_color, "user".timezone AS user_timezone, "user".theme_preference AS user_theme_preference, schedule.id AS schedule_id, schedule.technician_id AS schedule_technician_id, schedule.start_time AS schedule_start_time, schedule.end_time AS schedule_end_time, schedule.description AS schedule_description, schedule.location_id AS schedule_location_id, schedule.created_at AS schedule_created_at, schedule.time_off AS schedule_time_off, location.id AS location_id, location.name AS location_name, location.description AS location_description, location.active AS location_active, location.created_at AS location_created_at, location.updated_at AS location_updated_at
+web_1  | FROM "user" JOIN schedule ON "user".id = schedule.technician_id LEFT OUTER JOIN location ON schedule.location_id = location.id
+web_1  | WHERE schedule.start_time <= %(start_time_1)s AND schedule.end_time > %(end_time_1)s AND NOT schedule.time_off
+web_1  | INFO:werkzeug:192.168.1.140 - - [29/Mar/2025 01:07:44] "GET /api/upcoming_time_off HTTP/1.1" 200 -
+web_1  | DEBUG:app:Found 0 active schedules
+web_1  | DEBUG:app:Returning 0 active users
+web_1  | INFO:werkzeug:192.168.1.140 - - [29/Mar/2025 01:07:44] "GET /api/active_users HTTP/1.1" 200 -

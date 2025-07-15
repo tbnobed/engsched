@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Email Notification Settings</h2>
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin_email_settings') }}">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.admin_email_group.label(class="form-label") }}
+                    {{ form.admin_email_group(class="form-control") }}
+                    <div class="form-text">Email address for the admin notification group</div>
+                </div>
+
+                <div class="mb-4">
+                    <h5>Notification Preferences</h5>
+                    <div class="form-check mb-2">
+                        {{ form.notify_on_create(class="form-check-input") }}
+                        {{ form.notify_on_create.label(class="form-check-label") }}
+                    </div>
+                    <div class="form-check mb-2">
+                        {{ form.notify_on_update(class="form-check-input") }}
+                        {{ form.notify_on_update.label(class="form-check-label") }}
+                    </div>
+                    <div class="form-check mb-2">
+                        {{ form.notify_on_delete(class="form-check-input") }}
+                        {{ form.notify_on_delete.label(class="form-check-label") }}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

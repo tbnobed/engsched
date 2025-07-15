@@ -1,0 +1,2080 @@
+{
+  "metadata": {
+    "created_at": "2025-02-07T18:18:53.286384+00:00",
+    "version": "1.0"
+  },
+  "users": [
+    {
+      "username": "Thomas V",
+      "email": "TValenzuela@tbn.tv",
+      "password_hash": "scrypt:32768:8:1$INIAFTTfa8ewFHUd$7a37190ab1d458dc29c28a8837c2122528719248e7965b04b470d2970e9db135a9bd117911484da66b9c3a1e7b52bfc4e77ed6689269594a5ed082b8a389a361",
+      "is_admin": false,
+      "color": "#db5d33",
+      "timezone": "UTC"
+    },
+    {
+      "username": "Adrian C",
+      "email": "ACervantes@tbn.tv",
+      "password_hash": "scrypt:32768:8:1$dX32IZYJbTzyjIe6$93df119758950bfbbef81beb106f032f185eadf7067a365ba45184027e031b2ae556c7af2c2989ec5ab7d721766bcf56efb0a8940b074f3df759b15daa837a1b",
+      "is_admin": false,
+      "color": "#7f33db",
+      "timezone": "UTC"
+    },
+    {
+      "username": "Blake G",
+      "email": "BGeorge@tbn.tv",
+      "password_hash": "scrypt:32768:8:1$DleVxI2IPzetpQ4Y$2859920ea702569a163eaa0e163a9eb863523fe8a0eb5995645ded9a87dc258d6c51fb4425112bac5c27a85c8bef8b9fc17b9ecd9c1746fe8dd0f542575a9a22",
+      "is_admin": false,
+      "color": "#dbbf33",
+      "timezone": "UTC"
+    },
+    {
+      "username": "Obed S",
+      "email": "osandoval@tbn.tv",
+      "password_hash": "scrypt:32768:8:1$hjgRFe4gKlrJqjYk$13d64a3dbe3808f6fd2dee0448c89a727cd0f6aa40b9229a850e62f78bdefee22451d4d3be652ea467bd938589b72fec4f5dc3ce208c39f3810f2a68d8777946",
+      "is_admin": false,
+      "color": "#3366db",
+      "timezone": "America/Los_Angeles"
+    },
+    {
+      "username": "Nic C",
+      "email": "NCasoria@tbn.tv",
+      "password_hash": "scrypt:32768:8:1$EcQQ1NkH3PMrMCPy$d716babad7d5faecb5d8a1a3bf1839d30ef8a754b5f218c4dd021779e60dfa46259446eb982295b65f0a31b9a6e781635a97dfc149e9aca17fd28f5bb32af854",
+      "is_admin": false,
+      "color": "#004040",
+      "timezone": "America/Los_Angeles"
+    },
+    {
+      "username": "Sarah H",
+      "email": "SHusted@tbn.tv",
+      "password_hash": "scrypt:32768:8:1$OyMSd6GNRnSkw2Jc$7c250062d48092b25eb9ecea210f5e82bb8df8a3e40079b10d8925d8b5b28f3934d2eea2d47347033010d0a891b548e443b34f88bcd599dff05581282282364a",
+      "is_admin": true,
+      "color": "#ae33db",
+      "timezone": "America/Los_Angeles"
+    },
+    {
+      "username": "Marty C",
+      "email": "MCruz@tbn.tv",
+      "password_hash": "scrypt:32768:8:1$6KwnqLHpzfp0tA07$a6c7f9d079fd75a87ed537ede7d7fa52f45898e7de48d5febef2c216748c0c986737f53db97a603ab2e659f00d7f27148e9d640788261ff69d05471ac2a8796a",
+      "is_admin": false,
+      "color": "#3498db",
+      "timezone": "America/Los_Angeles"
+    },
+    {
+      "username": "admin",
+      "email": "admin@postsupport.tv",
+      "password_hash": "scrypt:32768:8:1$YZ4gm91MkS075SE1$2df4a29d88adbcf82002b5db90c1d0a3634637fa7aa2e532e02358b095d0918c0454f9aa087a1d323d26c58365c1f6ff8620773a44f9b567b54f2a448a96b535",
+      "is_admin": true,
+      "color": "#ff0000",
+      "timezone": "America/Los_Angeles"
+    },
+    {
+      "username": "Zach M",
+      "email": "ZMorales@tbn.tv",
+      "password_hash": "scrypt:32768:8:1$1B6nYEmTU5n9syFc$8b177dda6a0c7ea752ab3a6c99b6d05cf65d8715a578ca990e9c1f88c36ac0f4647c8f6f4c0d46a11d9af448740b3ec56e584607451fcd75e1dd39418dc3362b",
+      "is_admin": false,
+      "color": "#2bdc1e",
+      "timezone": "UTC"
+    },
+    {
+      "username": "David H",
+      "email": "DHarvilla@tbn.tv",
+      "password_hash": "scrypt:32768:8:1$igGtD8Nb2gevX5Uv$22778f15438c5bc52c557526070459637afbba7e2d813d948f64a6d5e3685aa4a0cab4c533880ddc33f323de0cd158dc9aee6a08984dff9e091308001683b62d",
+      "is_admin": true,
+      "color": "#418171",
+      "timezone": "America/Los_Angeles"
+    }
+  ],
+  "schedules": [
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-06T21:00:00+00:00",
+      "end_time": "2025-01-07T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-09T21:00:00+00:00",
+      "end_time": "2025-01-10T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-08T10:00:00+00:00",
+      "end_time": "2025-01-08T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-09T10:00:00+00:00",
+      "end_time": "2025-01-09T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-10T10:00:00+00:00",
+      "end_time": "2025-01-10T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-07T16:00:00+00:00",
+      "end_time": "2025-01-07T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-07T21:00:00+00:00",
+      "end_time": "2025-01-08T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-08T21:00:00+00:00",
+      "end_time": "2025-01-09T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-08T16:00:00+00:00",
+      "end_time": "2025-01-08T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-09T16:00:00+00:00",
+      "end_time": "2025-01-09T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-10T15:00:00+00:00",
+      "end_time": "2025-01-11T00:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-08T20:00:00+00:00",
+      "end_time": "2025-01-09T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-11T15:00:00+00:00",
+      "end_time": "2025-01-12T00:00:00+00:00",
+      "description": "ON-CALL\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 4,
+      "start_time": "2025-01-12T16:00:00+00:00",
+      "end_time": "2025-01-12T23:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-11T20:00:00+00:00",
+      "end_time": "2025-01-12T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-10T20:00:00+00:00",
+      "end_time": "2025-01-11T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-23T10:00:00+00:00",
+      "end_time": "2025-01-23T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-23T16:00:00+00:00",
+      "end_time": "2025-01-23T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-22T16:00:00+00:00",
+      "end_time": "2025-01-22T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-25T15:00:00+00:00",
+      "end_time": "2025-01-26T00:00:00+00:00",
+      "description": "ON-CALL\r\n",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-10T01:00:00+00:00",
+      "end_time": "2025-01-10T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-20T21:00:00+00:00",
+      "end_time": "2025-01-21T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-21T16:00:00+00:00",
+      "end_time": "2025-01-21T20:00:00+00:00",
+      "description": "\r\n",
+      "location_id": 4,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-22T10:00:00+00:00",
+      "end_time": "2025-01-22T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-24T10:00:00+00:00",
+      "end_time": "2025-01-24T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-24T15:00:00+00:00",
+      "end_time": "2025-01-25T00:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-11T01:00:00+00:00",
+      "end_time": "2025-01-11T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-25T20:00:00+00:00",
+      "end_time": "2025-01-26T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-20T21:00:00+00:00",
+      "end_time": "2025-01-21T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 4,
+      "start_time": "2025-01-26T16:00:00+00:00",
+      "end_time": "2025-01-26T23:00:00+00:00",
+      "description": "",
+      "location_id": 2,
+      "time_off": true
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-06T21:00:00+00:00",
+      "end_time": "2025-01-07T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-23T21:00:00+00:00",
+      "end_time": "2025-01-24T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-21T21:00:00+00:00",
+      "end_time": "2025-01-22T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-22T21:00:00+00:00",
+      "end_time": "2025-01-23T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-22T20:00:00+00:00",
+      "end_time": "2025-01-23T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-10T21:00:00+00:00",
+      "end_time": "2025-02-11T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-08T21:00:00+00:00",
+      "end_time": "2025-01-09T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-09T20:00:00+00:00",
+      "end_time": "2025-01-10T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-13T21:00:00+00:00",
+      "end_time": "2025-02-14T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-12T10:00:00+00:00",
+      "end_time": "2025-02-12T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-13T10:00:00+00:00",
+      "end_time": "2025-02-13T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-14T10:00:00+00:00",
+      "end_time": "2025-02-14T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-11T16:00:00+00:00",
+      "end_time": "2025-02-11T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-09T01:00:00+00:00",
+      "end_time": "2025-01-09T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-11T21:00:00+00:00",
+      "end_time": "2025-02-12T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-06T10:00:00+00:00",
+      "end_time": "2025-01-06T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-12T21:00:00+00:00",
+      "end_time": "2025-02-13T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-12T16:00:00+00:00",
+      "end_time": "2025-02-12T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-13T16:00:00+00:00",
+      "end_time": "2025-02-13T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-14T15:00:00+00:00",
+      "end_time": "2025-02-15T00:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-07T21:00:00+00:00",
+      "end_time": "2025-01-08T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-08T01:00:00+00:00",
+      "end_time": "2025-01-08T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-12T20:00:00+00:00",
+      "end_time": "2025-02-13T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-15T20:00:00+00:00",
+      "end_time": "2025-02-16T05:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-14T20:00:00+00:00",
+      "end_time": "2025-02-15T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-24T20:00:00+00:00",
+      "end_time": "2025-01-25T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-14T01:00:00+00:00",
+      "end_time": "2025-02-14T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-15T01:00:00+00:00",
+      "end_time": "2025-02-15T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-10T21:00:00+00:00",
+      "end_time": "2025-01-11T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-10T21:00:00+00:00",
+      "end_time": "2025-02-11T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-12T21:00:00+00:00",
+      "end_time": "2025-02-13T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-13T20:00:00+00:00",
+      "end_time": "2025-02-14T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-13T01:00:00+00:00",
+      "end_time": "2025-02-13T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-10T10:00:00+00:00",
+      "end_time": "2025-02-10T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-12T20:00:00+00:00",
+      "end_time": "2025-01-13T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-02-14T21:00:00+00:00",
+      "end_time": "2025-02-15T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 4,
+      "start_time": "2025-02-16T16:00:00+00:00",
+      "end_time": "2025-02-16T23:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-11T21:00:00+00:00",
+      "end_time": "2025-02-12T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-12T01:00:00+00:00",
+      "end_time": "2025-02-12T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-24T01:00:00+00:00",
+      "end_time": "2025-01-24T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-25T01:00:00+00:00",
+      "end_time": "2025-01-25T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-22T21:00:00+00:00",
+      "end_time": "2025-01-23T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-23T20:00:00+00:00",
+      "end_time": "2025-01-24T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-07T10:00:00+00:00",
+      "end_time": "2025-01-07T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-06T21:00:00+00:00",
+      "end_time": "2025-01-07T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-23T01:00:00+00:00",
+      "end_time": "2025-01-23T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-22T01:00:00+00:00",
+      "end_time": "2025-01-22T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-09T21:00:00+00:00",
+      "end_time": "2025-01-10T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-06T16:00:00+00:00",
+      "end_time": "2025-01-06T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-24T21:00:00+00:00",
+      "end_time": "2025-01-25T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-23T21:00:00+00:00",
+      "end_time": "2025-01-24T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-22T21:00:00+00:00",
+      "end_time": "2025-01-23T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-21T10:00:00+00:00",
+      "end_time": "2025-01-21T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-21T20:00:00+00:00",
+      "end_time": "2025-01-22T00:00:00+00:00",
+      "description": "",
+      "location_id": 4,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-20T16:00:00+00:00",
+      "end_time": "2025-01-20T20:00:00+00:00",
+      "description": "\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-20T21:00:00+00:00",
+      "end_time": "2025-01-21T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-21T21:00:00+00:00",
+      "end_time": "2025-01-22T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-26T20:00:00+00:00",
+      "end_time": "2025-01-27T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-21T21:00:00+00:00",
+      "end_time": "2025-01-22T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-20T10:00:00+00:00",
+      "end_time": "2025-01-20T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-16T20:00:00+00:00",
+      "end_time": "2025-02-17T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-15T15:00:00+00:00",
+      "end_time": "2025-02-16T00:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-07T20:00:00+00:00",
+      "end_time": "2025-01-08T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-11T10:00:00+00:00",
+      "end_time": "2025-02-11T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-02-10T21:00:00+00:00",
+      "end_time": "2025-02-11T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-02-13T21:00:00+00:00",
+      "end_time": "2025-02-14T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-10T16:00:00+00:00",
+      "end_time": "2025-02-10T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-11T20:00:00+00:00",
+      "end_time": "2025-02-12T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 4,
+      "start_time": "2025-02-09T16:00:00+00:00",
+      "end_time": "2025-02-09T23:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-06T10:00:00+00:00",
+      "end_time": "2025-02-06T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-06T16:00:00+00:00",
+      "end_time": "2025-02-06T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-05T16:00:00+00:00",
+      "end_time": "2025-02-05T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-08T15:00:00+00:00",
+      "end_time": "2025-02-09T00:00:00+00:00",
+      "description": "ON-CALL\r\n",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-04T16:00:00+00:00",
+      "end_time": "2025-02-04T20:00:00+00:00",
+      "description": "\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-03T21:00:00+00:00",
+      "end_time": "2025-02-04T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-05T10:00:00+00:00",
+      "end_time": "2025-02-05T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-07T10:00:00+00:00",
+      "end_time": "2025-02-07T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-07T15:00:00+00:00",
+      "end_time": "2025-02-08T00:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-08T20:00:00+00:00",
+      "end_time": "2025-02-09T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-03T21:00:00+00:00",
+      "end_time": "2025-02-04T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-06T21:00:00+00:00",
+      "end_time": "2025-02-07T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-04T21:00:00+00:00",
+      "end_time": "2025-02-05T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-05T21:00:00+00:00",
+      "end_time": "2025-02-06T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-05T20:00:00+00:00",
+      "end_time": "2025-02-06T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-07T20:00:00+00:00",
+      "end_time": "2025-02-08T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-07T01:00:00+00:00",
+      "end_time": "2025-02-07T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-08T01:00:00+00:00",
+      "end_time": "2025-02-08T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-05T21:00:00+00:00",
+      "end_time": "2025-02-06T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-06T20:00:00+00:00",
+      "end_time": "2025-02-07T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-06T01:00:00+00:00",
+      "end_time": "2025-02-06T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-05T01:00:00+00:00",
+      "end_time": "2025-02-05T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-02-07T21:00:00+00:00",
+      "end_time": "2025-02-08T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-02-06T21:00:00+00:00",
+      "end_time": "2025-02-07T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-02-05T21:00:00+00:00",
+      "end_time": "2025-02-06T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-04T10:00:00+00:00",
+      "end_time": "2025-02-04T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-04T20:00:00+00:00",
+      "end_time": "2025-02-05T00:00:00+00:00",
+      "description": "",
+      "location_id": 4,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-03T16:00:00+00:00",
+      "end_time": "2025-02-03T20:00:00+00:00",
+      "description": "\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-02-03T21:00:00+00:00",
+      "end_time": "2025-02-04T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-04T21:00:00+00:00",
+      "end_time": "2025-02-05T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-09T20:00:00+00:00",
+      "end_time": "2025-02-10T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-02-04T21:00:00+00:00",
+      "end_time": "2025-02-05T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-03T10:00:00+00:00",
+      "end_time": "2025-02-03T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-07T21:00:00+00:00",
+      "end_time": "2025-01-08T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-08T21:00:00+00:00",
+      "end_time": "2025-01-09T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 4,
+      "start_time": "2025-02-02T16:00:00+00:00",
+      "end_time": "2025-02-02T23:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-30T10:00:00+00:00",
+      "end_time": "2025-01-30T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-30T16:00:00+00:00",
+      "end_time": "2025-01-30T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-29T16:00:00+00:00",
+      "end_time": "2025-01-29T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-01T15:00:00+00:00",
+      "end_time": "2025-02-02T00:00:00+00:00",
+      "description": "ON-CALL\r\n",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-16T10:00:00+00:00",
+      "end_time": "2025-01-16T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-16T16:00:00+00:00",
+      "end_time": "2025-01-16T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-15T16:00:00+00:00",
+      "end_time": "2025-01-15T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-28T16:00:00+00:00",
+      "end_time": "2025-01-28T20:00:00+00:00",
+      "description": "\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-27T21:00:00+00:00",
+      "end_time": "2025-01-28T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-29T10:00:00+00:00",
+      "end_time": "2025-01-29T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-31T10:00:00+00:00",
+      "end_time": "2025-01-31T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-31T15:00:00+00:00",
+      "end_time": "2025-02-01T00:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-01T20:00:00+00:00",
+      "end_time": "2025-02-02T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-27T21:00:00+00:00",
+      "end_time": "2025-01-28T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-30T21:00:00+00:00",
+      "end_time": "2025-01-31T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-28T21:00:00+00:00",
+      "end_time": "2025-01-29T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-29T21:00:00+00:00",
+      "end_time": "2025-01-30T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-29T20:00:00+00:00",
+      "end_time": "2025-01-30T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-31T20:00:00+00:00",
+      "end_time": "2025-02-01T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-31T01:00:00+00:00",
+      "end_time": "2025-01-31T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-01T01:00:00+00:00",
+      "end_time": "2025-02-01T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-29T21:00:00+00:00",
+      "end_time": "2025-01-30T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-30T20:00:00+00:00",
+      "end_time": "2025-01-31T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-30T01:00:00+00:00",
+      "end_time": "2025-01-30T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-29T01:00:00+00:00",
+      "end_time": "2025-01-29T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-31T21:00:00+00:00",
+      "end_time": "2025-02-01T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-30T21:00:00+00:00",
+      "end_time": "2025-01-31T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-29T21:00:00+00:00",
+      "end_time": "2025-01-30T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-28T10:00:00+00:00",
+      "end_time": "2025-01-28T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-28T20:00:00+00:00",
+      "end_time": "2025-01-29T00:00:00+00:00",
+      "description": "",
+      "location_id": 4,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-27T16:00:00+00:00",
+      "end_time": "2025-01-27T20:00:00+00:00",
+      "description": "\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-27T21:00:00+00:00",
+      "end_time": "2025-01-28T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-28T21:00:00+00:00",
+      "end_time": "2025-01-29T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-02T20:00:00+00:00",
+      "end_time": "2025-02-03T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-28T21:00:00+00:00",
+      "end_time": "2025-01-29T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-27T10:00:00+00:00",
+      "end_time": "2025-01-27T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-18T15:00:00+00:00",
+      "end_time": "2025-01-19T00:00:00+00:00",
+      "description": "ON-CALL\r\n",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-13T21:00:00+00:00",
+      "end_time": "2025-01-14T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-14T16:00:00+00:00",
+      "end_time": "2025-01-14T20:00:00+00:00",
+      "description": "\r\n",
+      "location_id": 4,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-15T10:00:00+00:00",
+      "end_time": "2025-01-15T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-17T10:00:00+00:00",
+      "end_time": "2025-01-17T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-17T15:00:00+00:00",
+      "end_time": "2025-01-18T00:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-18T20:00:00+00:00",
+      "end_time": "2025-01-19T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-13T21:00:00+00:00",
+      "end_time": "2025-01-14T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 4,
+      "start_time": "2025-01-19T16:00:00+00:00",
+      "end_time": "2025-01-19T23:00:00+00:00",
+      "description": "",
+      "location_id": 2,
+      "time_off": true
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-16T21:00:00+00:00",
+      "end_time": "2025-01-17T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-14T21:00:00+00:00",
+      "end_time": "2025-01-15T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-15T21:00:00+00:00",
+      "end_time": "2025-01-16T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-15T20:00:00+00:00",
+      "end_time": "2025-01-16T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-17T20:00:00+00:00",
+      "end_time": "2025-01-18T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-17T01:00:00+00:00",
+      "end_time": "2025-01-17T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-18T01:00:00+00:00",
+      "end_time": "2025-01-18T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-15T21:00:00+00:00",
+      "end_time": "2025-01-16T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-16T20:00:00+00:00",
+      "end_time": "2025-01-17T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-17T21:00:00+00:00",
+      "end_time": "2025-02-18T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-20T21:00:00+00:00",
+      "end_time": "2025-02-21T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-19T10:00:00+00:00",
+      "end_time": "2025-02-19T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-20T10:00:00+00:00",
+      "end_time": "2025-02-20T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-21T10:00:00+00:00",
+      "end_time": "2025-02-21T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-18T16:00:00+00:00",
+      "end_time": "2025-02-18T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-18T21:00:00+00:00",
+      "end_time": "2025-02-19T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-19T21:00:00+00:00",
+      "end_time": "2025-02-20T01:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-19T16:00:00+00:00",
+      "end_time": "2025-02-19T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-20T16:00:00+00:00",
+      "end_time": "2025-02-20T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-21T15:00:00+00:00",
+      "end_time": "2025-02-22T00:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-19T20:00:00+00:00",
+      "end_time": "2025-02-20T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-22T20:00:00+00:00",
+      "end_time": "2025-02-23T05:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-21T20:00:00+00:00",
+      "end_time": "2025-02-22T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-21T01:00:00+00:00",
+      "end_time": "2025-02-21T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-22T01:00:00+00:00",
+      "end_time": "2025-02-22T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-17T21:00:00+00:00",
+      "end_time": "2025-02-18T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-19T21:00:00+00:00",
+      "end_time": "2025-02-20T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-20T20:00:00+00:00",
+      "end_time": "2025-02-21T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-20T01:00:00+00:00",
+      "end_time": "2025-02-20T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-17T10:00:00+00:00",
+      "end_time": "2025-02-17T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-02-21T21:00:00+00:00",
+      "end_time": "2025-02-22T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 4,
+      "start_time": "2025-02-23T16:00:00+00:00",
+      "end_time": "2025-02-23T23:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-18T21:00:00+00:00",
+      "end_time": "2025-02-19T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-19T01:00:00+00:00",
+      "end_time": "2025-02-19T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-23T20:00:00+00:00",
+      "end_time": "2025-02-24T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-02-22T15:00:00+00:00",
+      "end_time": "2025-02-23T00:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-02-18T10:00:00+00:00",
+      "end_time": "2025-02-18T19:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-02-17T21:00:00+00:00",
+      "end_time": "2025-02-18T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-02-20T21:00:00+00:00",
+      "end_time": "2025-02-21T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-02-17T16:00:00+00:00",
+      "end_time": "2025-02-17T20:00:00+00:00",
+      "description": "HERITAGE\r\n",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-02-18T20:00:00+00:00",
+      "end_time": "2025-02-19T00:00:00+00:00",
+      "description": "IRVING",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-16T01:00:00+00:00",
+      "end_time": "2025-01-16T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-15T01:00:00+00:00",
+      "end_time": "2025-01-15T05:00:00+00:00",
+      "description": "PLEX",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-17T21:00:00+00:00",
+      "end_time": "2025-01-18T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-16T21:00:00+00:00",
+      "end_time": "2025-01-17T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-15T21:00:00+00:00",
+      "end_time": "2025-01-16T06:00:00+00:00",
+      "description": "",
+      "location_id": null,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-14T10:00:00+00:00",
+      "end_time": "2025-01-14T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 7,
+      "start_time": "2025-01-14T20:00:00+00:00",
+      "end_time": "2025-01-15T00:00:00+00:00",
+      "description": "",
+      "location_id": 4,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-13T16:00:00+00:00",
+      "end_time": "2025-01-13T20:00:00+00:00",
+      "description": "\r\n",
+      "location_id": 2,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-13T21:00:00+00:00",
+      "end_time": "2025-01-14T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 6,
+      "start_time": "2025-01-14T21:00:00+00:00",
+      "end_time": "2025-01-15T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 5,
+      "start_time": "2025-01-19T20:00:00+00:00",
+      "end_time": "2025-01-20T05:00:00+00:00",
+      "description": "ON-CALL",
+      "location_id": 1,
+      "time_off": false
+    },
+    {
+      "technician_id": 3,
+      "start_time": "2025-01-14T21:00:00+00:00",
+      "end_time": "2025-01-15T06:00:00+00:00",
+      "description": "",
+      "location_id": 3,
+      "time_off": false
+    },
+    {
+      "technician_id": 8,
+      "start_time": "2025-01-13T10:00:00+00:00",
+      "end_time": "2025-01-13T19:00:00+00:00",
+      "description": "",
+      "location_id": 1,
+      "time_off": false
+    }
+  ],
+  "locations": [
+    {
+      "name": "Plex",
+      "description": "",
+      "active": true
+    },
+    {
+      "name": "Heritage",
+      "description": "",
+      "active": true
+    },
+    {
+      "name": "Tustin",
+      "description": "",
+      "active": true
+    },
+    {
+      "name": "Irving",
+      "description": "",
+      "active": true
+    },
+    {
+      "name": "Remote",
+      "description": "",
+      "active": true
+    },
+    {
+      "name": "Nashville",
+      "description": "",
+      "active": true
+    }
+  ],
+  "quick_links": [
+    {
+      "title": "Spiceworks",
+      "url": "https://on.spiceworks.com/tickets/open/1?sort=updated_at-desc",
+      "icon": "thermometer",
+      "category": "Tickets",
+      "order": 0
+    },
+    {
+      "title": "SolarWinds",
+      "url": "https://trinitybroadcastingnetworks.samanage.com/login",
+      "icon": "sun",
+      "category": "Tickets",
+      "order": 1
+    },
+    {
+      "title": "Tustin Curator",
+      "url": "https://tust-ipv-web.broadcast.tbn.org/CuratorGateway",
+      "icon": "play-circle",
+      "category": "Curator",
+      "order": 2
+    },
+    {
+      "title": "Plex Curator",
+      "url": "https://plex-curator.meritstreetmedia.com/CuratorGateway",
+      "icon": "play-circle",
+      "category": "Curator",
+      "order": 3
+    },
+    {
+      "title": "Post Support One Note",
+      "url": "https://tbn365-my.sharepoint.com/personal/zmorales_tbn_tv/_layouts/15/Doc.aspx?sourcedoc={4b6da2e8-b567-4c7e-a9d4-c77298a8fbc5}&action=edit&wd=target%28Computer%20and%20Account%20Logins.one%7C77bf0f8b-a5e3-4f3f-ad5b-e7eb95c88b68%2FPC%20Tower%20%20VMs%20Account%20Logins%7C4fce5e5d-7cd3-4e10-860e-c6e09102d8e5%2F%29&wdorigin=NavigationUrl",
+      "icon": "book-open",
+      "category": "Microsoft",
+      "order": 4
+    },
+    {
+      "title": "JumpDesktop Login",
+      "url": "https://app.jumpdesktop.com/user/auth",
+      "icon": "monitor",
+      "category": "TBN Systems",
+      "order": 5
+    },
+    {
+      "title": "DP Post Multiviewer",
+      "url": "http://systems.trinity.local/plex/msm/edit/",
+      "icon": "monitor",
+      "category": "TBN Systems",
+      "order": 6
+    },
+    {
+      "title": "Nashville Post Multiviewer",
+      "url": "http://sys.trinity.local/nash/post/",
+      "icon": "monitor",
+      "category": "TBN Systems",
+      "order": 7
+    },
+    {
+      "title": "Studio Streams",
+      "url": "http://studios.trinity.local/",
+      "icon": "video",
+      "category": "TBN Systems",
+      "order": 8
+    },
+    {
+      "title": "Sys Files",
+      "url": "http://sys.trinity.local/files",
+      "icon": "folder",
+      "category": "TBN Systems",
+      "order": 9
+    },
+    {
+      "title": "ADP Login",
+      "url": "https://online.adp.com/signin/v1/?APPID=WFNPortal&productId=80e309c3-7085-bae1-e053-3505430b5495&returnURL=https://workforcenow.adp.com/&callingAppId=WFN",
+      "icon": "user",
+      "category": "Personel",
+      "order": 10
+    },
+    {
+      "title": "TBN Hub SharePoint",
+      "url": "https://tbn365.sharepoint.com/sites/TBNhub?OR=Teams-HL&CT=1736556291305&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiI0OS8yNDEyMDEwMDIxMyIsIkhhc0ZlZGVyYXRlZFVzZXIiOmZhbHNlfQ%3D%3D",
+      "icon": "compass",
+      "category": "Microsoft",
+      "order": 11
+    }
+  ]
+}

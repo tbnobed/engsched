@@ -1,0 +1,86 @@
+web_1  | ERROR:app:Error saving schedule: (raised as a result of Query-invoked autoflush; consider using a session.no_autoflush block if this flush is occurring prematurely)
+web_1  | (psycopg2.errors.NotNullViolation) null value in column "technician_id" of relation "schedule" violates not-null constraint
+web_1  | DETAIL:  Failing row contains (371, null, 2025-04-01 02:00:00-07, 2025-04-01 03:00:00-07, , 3, 2025-04-01 10:38:13.2892-07, f).
+web_1  |
+web_1  | [SQL: INSERT INTO schedule (technician_id, start_time, end_time, description, location_id, created_at, time_off) VALUES (%(technician_id)s, %(start_time)s, %(end_time)s, %(description)s, %(location_id)s, %(created_at)s, %(time_off)s) RETURNING schedule.id]
+web_1  | [parameters: {'technician_id': None, 'start_time': datetime.datetime(2025, 4, 1, 9, 0, tzinfo=<UTC>), 'end_time': datetime.datetime(2025, 4, 1, 10, 0, tzinfo=<UTC>), 'description': '', 'location_id': 3, 'created_at': datetime.datetime(2025, 4, 1, 17, 38, 13, 289200, tzinfo=<UTC>), 'time_off': False}]
+web_1  | (Background on this error at: https://sqlalche.me/e/20/gkpj)
+web_1  | ERROR:app:Traceback: Traceback (most recent call last):
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+web_1  |     self.dialect.do_execute(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+web_1  |     cursor.execute(statement, parameters)
+web_1  | psycopg2.errors.NotNullViolation: null value in column "technician_id" of relation "schedule" violates not-null constraint
+web_1  | DETAIL:  Failing row contains (371, null, 2025-04-01 02:00:00-07, 2025-04-01 03:00:00-07, , 3, 2025-04-01 10:38:13.2892-07, f).
+web_1  |
+web_1  |
+web_1  | The above exception was the direct cause of the following exception:
+web_1  |
+web_1  | Traceback (most recent call last):
+web_1  |   File "/app/routes.py", line 633, in new_schedule
+web_1  |     overlapping_schedule = overlapping_query.first()
+web_1  |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2759, in first
+web_1  |     return self.limit(1)._iter().first()  # type: ignore
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/query.py", line 2858, in _iter
+web_1  |     result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+web_1  |                                                   ^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+web_1  |     return self._execute_internal(
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 2230, in _execute_internal
+web_1  |     ) = compile_state_cls.orm_pre_session_exec(
+web_1  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/context.py", line 577, in orm_pre_session_exec
+web_1  |     session._autoflush()
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3065, in _autoflush
+web_1  |     raise e.with_traceback(sys.exc_info()[2])
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 3054, in _autoflush
+web_1  |     self.flush()
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4353, in flush
+web_1  |     self._flush(objects)
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4488, in _flush
+web_1  |     with util.safe_reraise():
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 146, in __exit__
+web_1  |     raise exc_value.with_traceback(exc_tb)
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4449, in _flush
+web_1  |     flush_context.execute()
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 466, in execute
+web_1  |     rec.execute(self)
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 642, in execute
+web_1  |     util.preloaded.orm_persistence.save_obj(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
+web_1  |     _emit_insert_statements(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 1233, in _emit_insert_statements
+web_1  |     result = connection.execute(
+web_1  |              ^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1416, in execute
+web_1  |     return meth(
+web_1  |            ^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+web_1  |     return connection._execute_clauseelement(
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+web_1  |     ret = self._execute_context(
+web_1  |           ^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1843, in _execute_context
+web_1  |     return self._exec_single_context(
+web_1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+web_1  |     self._handle_dbapi_exception(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2352, in _handle_dbapi_exception
+web_1  |     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+web_1  |     self.dialect.do_execute(
+web_1  |   File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 945, in do_execute
+web_1  |     cursor.execute(statement, parameters)
+web_1  | sqlalchemy.exc.IntegrityError: (raised as a result of Query-invoked autoflush; consider using a session.no_autoflush block if this flush is occurring prematurely)
+web_1  | (psycopg2.errors.NotNullViolation) null value in column "technician_id" of relation "schedule" violates not-null constraint
+web_1  | DETAIL:  Failing row contains (371, null, 2025-04-01 02:00:00-07, 2025-04-01 03:00:00-07, , 3, 2025-04-01 10:38:13.2892-07, f).
+web_1  |
+web_1  | [SQL: INSERT INTO schedule (technician_id, start_time, end_time, description, location_id, created_at, time_off) VALUES (%(technician_id)s, %(start_time)s, %(end_time)s, %(description)s, %(location_id)s, %(created_at)s, %(time_off)s) RETURNING schedule.id]
+web_1  | [parameters: {'technician_id': None, 'start_time': datetime.datetime(2025, 4, 1, 9, 0, tzinfo=<UTC>), 'end_time': datetime.datetime(2025, 4, 1, 10, 0, tzinfo=<UTC>), 'description': '', 'location_id': 3, 'created_at': datetime.datetime(2025, 4, 1, 17, 38, 13, 289200, tzinfo=<UTC>), 'time_off': False}]
+web_1  | (Background on this error at: https://sqlalche.me/e/20/gkpj)
+web_1  |
+web_1  | ERROR:app:Form data: ImmutableMultiDict([('csrf_token', 'ImQ0ZDNlMmM1MmNiMDU2NzBhNmE4MDQ1NTg0Njc1ZmRjYTdiZWExMGUi.Z-wkbQ.DeUoelnRoFFQb4YV-uin3PagqV4'), ('schedule_id', ''), ('return_to', 'personal_schedule'), ('week_start', '2025-03-31'), ('personal_view', 'true'), ('direct_repeat_days_list', '2025-04-02,2025-04-03,2025-04-04'), ('repeat_days', ''), ('repeat_days', '2025-04-02,2025-04-03,2025-04-04'), ('schedule_date', '2025-04-01'), ('start_hour', '02'), ('end_hour', '03'), ('location_id', '3'), ('description', '')])

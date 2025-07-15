@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="tickets-dashboard">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Archived Tickets</h2>
+            <p class="text-muted mb-0">{{ ticket_count }} archived tickets</p>
+        </div>
+        <div>
+            <a href="{{ url_for('tickets.tickets_dashboard') }}" class="btn btn-outline-primary">
+                <i data-feather="arrow-left"></i> Back to Active Tickets
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            {% if tickets %}
+            <div class="table-responsive">
+                <table class="table ticket-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Assigned To</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in tickets %}
+                        <tr>
+                            <td>{{ ticket['id'] }}</td>
+                            <td>
+                                <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket['id']) }}">
+                                    {{ ticket['title'] }}
+                                </a>
+                            </td>
+                            <td>
+                                {% set status_colors = {
+                                    'open': 'primary',
+                                    'in_progress': 'info',
+                                    'pending': 'warning',
+                                    'resolved': 'success',
+                                    'closed': 'secondary'
+                                } %}
+                                <span class="badge bg-{{ status_colors[ticket['status']] }}">
+                                    {{ ticket['status']|replace('_', ' ')|title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% set priority_colors = {
+                                    0: 'secondary',
+                                    1: 'info',
+                                    2: 'warning',
+                                    3: 'danger'
+                                } %}
+                                {% set priority_labels = {
+                                    0: 'Low',
+                                    1: 'Medium',
+                                    2: 'High',
+                                    3: 'Urgent'
+                                } %}
+                                <span class="badge bg-{{ priority_colors[ticket['priority']] }}">
+                                    {{ priority_labels[ticket['priority']] }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if ticket['assigned_technician'] %}
+                                    {{ ticket['assigned_technician']['username'] }}
+                                {% else %}
+                                    <span class="text-muted">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ ticket['created_at'].strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket['id']) }}" 
+                                       class="btn btn-sm btn-outline-primary" title="View Ticket">
+                                        <i data-feather="eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('tickets.unarchive_ticket', ticket_id=ticket['id']) }}" 
+                                       class="btn btn-sm btn-outline-success" 
+                                       title="Unarchive Ticket"
+                                       onclick="return confirm('Unarchive this ticket? It will be visible in regular views again.');">
+                                        <i data-feather="archive"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i data-feather="archive" class="empty-state-icon"></i>
+                <h4>No Archived Tickets</h4>
+                <p>There are no archived tickets to display.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        feather.replace();
+    });
+</script>
+{% endblock %}

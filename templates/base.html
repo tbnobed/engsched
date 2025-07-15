@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_name }} - {{ site_title }}</title>
+    <link rel="icon" href="{{ url_for('static', filename=site_logo) }}" type="image/webp">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename=site_logo) }}">
+    <link rel="apple-touch-icon" sizes="120x120" href="{{ url_for('static', filename=site_logo) }}">
+    <link rel="apple-touch-icon-precomposed" href="{{ url_for('static', filename=site_logo) }}">
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="{{ url_for('static', filename=site_logo) }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- Page transition styles -->
+    <style>
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .page-transition-logo {
+            width: 60px;
+            height: 60px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            margin-top: -30px;
+            margin-left: -30px;
+            z-index: 9999;
+            animation: rotate 0.8s ease-in-out;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .navbar-brand img {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .navbar-brand:hover img {
+            transform: rotate(20deg);
+        }
+    </style>
+    {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+    <link href="{{ url_for('static', filename='css/light-theme.css') }}?v={{ now.timestamp() | int }}" rel="stylesheet">
+    {% else %}
+    <link href="{{ url_for('static', filename='css/dark-theme.css') }}?v={{ now.timestamp() | int }}" rel="stylesheet">
+    {% endif %}
+    <style>
+        /* Use theme variables for current time display */
+        #current-time-display {
+            background-color: var(--dark-panel);
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--dark-border);
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        #current-time-display:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 20px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        #current-time-display h4 {
+            margin: 0;
+            color: var(--dark-text);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        /* Floating card styles for sidebar */
+        .col-md-3 .card {
+            border-radius: 0.8rem;
+            border: 1px solid var(--dark-border);
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 6px 6px rgba(0,0,0,0.06);
+            margin-bottom: 1.5rem;
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .col-md-3 .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15), 0 10px 10px rgba(0,0,0,0.08);
+        }
+        
+        .col-md-3 .card-header {
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--dark-panel) 0%, var(--dark-accent) 100%);
+            border-bottom: 1px solid var(--dark-border);
+        }
+        
+        .col-md-3 .card-body {
+            padding: 1rem;
+        }
+        
+        /* Style for active users grid layout */
+        .active-users-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+        }
+        
+        .active-user-card {
+            border-radius: 8px;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.3), var(--user-color, rgba(0, 0, 0, 0.5)));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 0.8rem;
+            border-left: 4px solid transparent;
+            position: relative;
+        }
+        
+        .active-user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.4), var(--user-color, rgba(0, 0, 0, 0.6)));
+        }
+        
+        /* Light theme overrides for active user cards */
+        body.light-theme .active-user-card {
+            background: linear-gradient(to right, #ffffff, var(--user-color, #6b7280));
+            border: 1px solid rgba(0, 0, 0, 0.2);
+        }
+        
+        body.light-theme .active-user-card:hover {
+            background: linear-gradient(to right, #f8f9fa, var(--user-color, #4b5563));
+        }
+        
+        .active-user-card .user-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            color: white !important;
+        }
+        
+        /* Light theme override for active user card names */
+        body.light-theme .active-user-card .user-name {
+            color: black !important;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+        }
+        
+        .active-user-card .user-time {
+            font-size: 0.85rem;
+            background: rgba(0, 0, 0, 0.4);
+            color: rgba(255, 255, 255, 0.9);
+            padding: 6px 12px;
+            border-radius: 12px;
+            display: inline-block;
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+        }
+        
+        .active-user-card .user-location {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .active-user-card .card-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.2rem;
+        }
+        
+        /* Time off entry styling */
+        .time-off-entry {
+            padding: 0.5rem;
+            border-left: 4px solid transparent;
+            margin-bottom: 0.5rem;
+            margin-left: 8px;
+        }
+        
+        /* Style for time off sections - compressed */
+        .time-off-entry {
+            border-radius: 4px;
+            background-color: var(--dark-card);
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 0.25rem;
+            overflow: hidden;
+            padding: 0.4rem !important;
+        }
+        
+        .time-off-entry:hover {
+            transform: translateX(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+        
+        .time-off-entry .badge {
+            font-size: 0.65rem;
+            padding: 2px 4px;
+        }
+        
+        .time-off-entry h6 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.1rem;
+        }
+        
+        .time-off-entry .small {
+            font-size: 0.65rem;
+            line-height: 1.2;
+        }
+        
+        /* Quick Links Grid Styling */
+        .quick-link-grid-item a {
+            --quick-link-bg: rgba(0, 0, 0, 0.02);
+            --quick-link-border: rgba(0, 0, 0, 0.08);
+            --quick-link-hover-bg: rgba(0, 123, 255, 0.08);
+            --quick-link-hover-border: rgba(0, 123, 255, 0.2);
+        }
+        
+        .quick-link-grid-item a:hover {
+            background: var(--quick-link-hover-bg) !important;
+            border-color: var(--quick-link-hover-border) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+        }
+        
+        /* Dark theme Quick Links styling */
+        body:not(.light-theme) .quick-link-grid-item a {
+            --quick-link-bg: rgba(255, 255, 255, 0.05);
+            --quick-link-border: rgba(255, 255, 255, 0.1);
+            --quick-link-hover-bg: rgba(0, 123, 255, 0.15);
+            --quick-link-hover-border: rgba(0, 123, 255, 0.3);
+        }
+        
+        /* Light theme Quick Links styling */
+        body.light-theme .quick-link-grid-item a {
+            --quick-link-bg: rgba(0, 0, 0, 0.02);
+            --quick-link-border: rgba(0, 0, 0, 0.08);
+            --quick-link-hover-bg: rgba(0, 123, 255, 0.05);
+            --quick-link-hover-border: rgba(0, 123, 255, 0.2);
+        }
+
+        /* Add CSS for theme toggle in the navbar */
+        .theme-toggle-btn {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin-left: 10px;
+            border-radius: 20px;
+            padding: 5px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle-btn i {
+            margin-right: 5px;
+        }
+        
+        /* Light mode conditional overrides handled by theme CSS files */
+        body.light-theme .dropdown-menu {
+            background-color: #ffffff !important;
+        }
+        
+        body.light-theme .dropdown-item {
+            color: #333333 !important;
+        }
+        
+        body.light-theme .dropdown-menu .form-label {
+            color: #333333 !important;
+        }
+        
+        body.light-theme .dropdown-menu select.form-select {
+            color: #333333 !important;
+            background-color: #f8f9fa !important;
+        }
+        
+        body.light-theme .dropdown-divider {
+            border-top: 1px solid #dee2e6 !important;
+        }
+        
+        /* Dark mode dropdown overrides */
+        body:not(.light-theme) .dropdown-menu {
+            background-color: #111f36 !important;
+        }
+        
+        body:not(.light-theme) .dropdown-item {
+            color: white !important;
+        }
+        
+        body:not(.light-theme) .dropdown-menu .form-label {
+            color: white !important;
+        }
+        
+        body:not(.light-theme) .dropdown-menu select.form-select {
+            color: white !important;
+            background-color: #162439 !important;
+        }
+        
+        body:not(.light-theme) .dropdown-divider {
+            border-top: 1px solid #2c3e50 !important;
+        }
+    </style>
+</head>
+<body {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}class="light-theme"{% endif %}{% if current_user.is_authenticated and current_user.theme_preference == 'dark' %} data-bs-theme="dark"{% endif %}>
+    <nav class="navbar navbar-expand-lg {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}navbar-light{% else %}navbar-dark{% endif %}" 
+         style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;{% else %}background-color: #0F1624; border-bottom: 1px solid #182234;{% endif %}">
+        <div class="container-fluid">
+            <!-- Logo and Brand - Far Left -->
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('calendar') }}" style="position: absolute; left: 15px; z-index: 1000;">
+                <img src="{{ url_for('static', filename=site_logo) }}?v=2" alt="{{ site_name }}" class="me-2" style="height: 36px; width: auto;">
+                <span style="font-weight: 700; letter-spacing: 0.5px; color: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#002744{% else %}#ffffff{% endif %}; font-size: 1.1rem;">{{ site_name.upper() }}</span>
+            </a>
+            
+            <!-- Mobile toggle button -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="margin-left: auto;">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navigation items - Centered -->
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav" style="margin-left: 280px;">
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('dashboard') }}">
+                                <i data-feather="home"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="calendarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i data-feather="calendar"></i> Calendar
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('calendar') }}">
+                                        <i data-feather="users"></i> All Schedules
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('personal_schedule') }}">
+                                        <i data-feather="user"></i> My Schedule
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="ticketDropdown" role="button" data-bs-toggle="dropdown">
+                                <i data-feather="life-buoy"></i> Tickets
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('tickets.tickets_dashboard') }}">
+                                        <i data-feather="list"></i> All Tickets
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('tickets.create_ticket') }}">
+                                        <i data-feather="plus-circle"></i> New Ticket
+                                    </a>
+                                </li>
+                                {% if current_user.is_admin %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('tickets.manage_categories') }}">
+                                        <i data-feather="tag"></i> Manage Categories
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="quickLinksDropdown" role="button" data-bs-toggle="dropdown">
+                                <i data-feather="external-link"></i> Quick Links
+                            </a>
+                            <ul class="dropdown-menu">
+                                {% for link in get_quick_links() %}
+                                <li>
+                                    <a class="dropdown-item" href="{{ link.url }}" target="_blank">
+                                        <i data-feather="{{ link.icon }}"></i> {{ link.title }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                                {% if current_user.is_admin %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('admin_quick_links') }}">
+                                        <i data-feather="settings"></i> Manage Quick Links
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        {% if CHAT_ENABLED %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" onclick="openChatPopup(); return false;">
+                                <i data-feather="message-circle"></i> Team Chat
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <!-- Right side navigation - Fixed position -->
+            <div class="d-flex align-items-center" style="position: absolute; right: 15px; z-index: 1000;">
+                {% if current_user.is_authenticated %}
+                <ul class="navbar-nav d-flex flex-row">
+                    <li class="nav-item me-2">
+                        <form method="POST" action="{{ url_for('toggle_theme') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-link p-0" style="color: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#002744{% else %}#ffffff{% endif %};">
+                                <i data-feather="{% if current_user.theme_preference == 'light' %}moon{% else %}sun{% endif %}" style="width: 20px; height: 20px;"></i>
+                            </button>
+                        </form>
+                    </li>
+                        {% if current_user.is_admin %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                <i data-feather="settings"></i> Admin
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('admin_dashboard') }}">
+                                        <i data-feather="users"></i> User Management
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('admin_locations') }}">
+                                        <i data-feather="map-pin"></i> Manage Locations
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('admin_quick_links') }}">
+                                        <i data-feather="link"></i> Manage Quick Links
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('admin_backup') }}">
+                                        <i data-feather="database"></i> Backup & Restore
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i data-feather="user"></i> {{ current_user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                        <i data-feather="settings"></i> Profile Settings
+                                    </a>
+                                </li>
+                                <li>
+                                    <form method="POST" action="{{ url_for('update_timezone') }}" class="px-3 py-2">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="mb-2">
+                                            <label class="form-label">Timezone</label>
+                                            <select name="timezone" class="form-select form-select-sm" onchange="this.form.submit()">
+                                                <option value="America/Los_Angeles" {% if current_user.timezone == 'America/Los_Angeles' %}selected{% endif %}>PST</option>
+                                                <option value="America/Chicago" {% if current_user.timezone == 'America/Chicago' %}selected{% endif %}>CST</option>
+                                            </select>
+                                        </div>
+                                    </form>
+                                </li>
+                                <li>
+                                    <form method="POST" action="{{ url_for('toggle_theme') }}" class="px-3 py-2">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-sm {% if current_user.theme_preference == 'light' %}btn-dark{% else %}btn-light{% endif %}">
+                                                <i data-feather="{% if current_user.theme_preference == 'light' %}moon{% else %}sun{% endif %}"></i>
+                                                Switch to {% if current_user.theme_preference == 'light' %}Dark{% else %}Light{% endif %} Theme
+                                            </button>
+                                        </div>
+                                    </form>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                            </ul>
+                        </li>
+                </ul>
+                {% else %}
+                <ul class="navbar-nav d-flex flex-row">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid mt-4">
+        <div class="row">
+            {% if current_user.is_authenticated %}
+            <!-- Side Panel for Active Users -->
+            <div class="col-md-2 col-lg-2 mb-4">
+                <!-- Current Time Display -->
+                <div class="mb-3">
+                    <div class="text-center text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 20px; margin: 0; border: 0 !important; outline: 0 !important; box-shadow: none !important;">
+                        <div style="font-size: 1.0rem; opacity: 0.9; margin-bottom: 9px;">
+                            <i data-feather="clock" style="width: 18px; height: 18px;" class="me-1"></i>
+                            Current Time
+                        </div>
+                        <div class="current-datetime" style="font-size: 1.32rem; font-weight: 600; letter-spacing: 0.5px;"></div>
+                    </div>
+                </div>
+
+                <!-- Active Technicians -->
+                <div class="mb-4">
+                    <h5 class="mb-3" style="color: var(--dark-text); font-weight: 600; font-size: 1.21rem;">Active Technicians</h5>
+                    <div id="active-users" style="color: var(--dark-text);">
+                        Loading active users...
+                    </div>
+                </div>
+
+                <!-- Upcoming Time Off -->
+                <div class="mb-4">
+                    <h5 class="mb-3" style="color: var(--dark-text); font-weight: 600; font-size: 1.21rem;">Upcoming Time Off</h5>
+                    <div id="upcoming-time-off" style="color: var(--dark-text);">
+                        Loading time off entries...
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="mb-4">
+                    <h5 class="mb-3" style="color: var(--dark-text); font-weight: 600; font-size: 1.21rem;">Quick Links</h5>
+                    {% set quick_links = get_quick_links() %}
+                    {% if quick_links %}
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                            {% for link in quick_links %}
+                            <div class="quick-link-grid-item" style="min-height: 44px;">
+                                <a href="{{ link.url }}" target="_blank" class="d-flex align-items-center text-decoration-none" style="color: var(--dark-text); padding: 8px; border-radius: 8px; background: var(--quick-link-bg, rgba(0,0,0,0.02)); border: 1px solid var(--quick-link-border, rgba(0,0,0,0.08)); transition: all 0.2s ease; height: 100%; min-height: 44px; box-sizing: border-box;">
+                                    <i data-feather="{{ link.icon }}" class="me-2" style="width: 18px; height: 18px; color: var(--dark-text); flex-shrink: 0;"></i>
+                                    <span style="font-size: 0.95rem; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ link.title }}</span>
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted" style="font-size: 1.0rem;">No quick links available</p>
+                        {% if current_user.is_admin %}
+                        <a href="{{ url_for('admin_quick_links') }}" class="btn btn-sm btn-primary mt-2">
+                            <i data-feather="plus" style="width: 15px; height: 15px;"></i> Add Links
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+            </div>
+            <!-- Main Content -->
+            <div class="col-md-10 col-lg-10">
+            {% endif %}
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-info">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+
+            {% if current_user.is_authenticated %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="{{ url_for('static', filename='js/calendar.js') }}?v={{ now.timestamp() | int }}&refresh=true&grid=2col"></script>
+    
+    <style>
+        /* Modern Quick Links Styling */
+        .quick-link-btn:hover {
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: white !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+        
+        .quick-link-btn:hover i {
+            color: white !important;
+        }
+        
+        .quick-link-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+        
+        /* Smooth scrollbar for quick links */
+        .card-body::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .card-body::-webkit-scrollbar-track {
+            background: var(--dark-bg);
+            border-radius: 2px;
+        }
+        
+        .card-body::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        .card-body::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+    </style>
+    <script>
+        // Initialize Feather icons
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial theme on document element for CSS selectors
+            {% if current_user.is_authenticated %}
+                {% if current_user.theme_preference == 'dark' %}
+                    document.documentElement.setAttribute('data-bs-theme', 'dark');
+                    console.log('Theme initialized: dark mode');
+                {% else %}
+                    document.documentElement.setAttribute('data-bs-theme', 'light');
+                    console.log('Theme initialized: light mode');
+                {% endif %}
+            {% else %}
+                document.documentElement.setAttribute('data-bs-theme', 'dark'); // default
+                console.log('Theme initialized: dark mode (default)');
+            {% endif %}
+            
+            feather.replace();
+
+            // Update current time display
+            function updateCurrentTime() {
+                const timeDisplay = document.querySelector('.current-datetime');
+                if (!timeDisplay) return;
+
+                const now = new Date();
+                const userTimezone = '{{ current_user.timezone }}' || 'America/Los_Angeles';
+
+                const options = {
+                    timeZone: userTimezone,
+                    weekday: 'long',
+                    year: '2-digit',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                };
+
+                const formatter = new Intl.DateTimeFormat('en-US', options);
+                timeDisplay.textContent = formatter.format(now);
+            }
+
+            // Update time immediately and then every second
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            
+            // Function to fetch and update active users
+            function updateActiveUsers() {
+                fetch('/api/active_users')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(users => {
+                        const container = document.getElementById('active-users');
+                        if (!Array.isArray(users) || users.length === 0) {
+                            container.innerHTML = '<p class="text-muted">No active technicians</p>';
+                            return;
+                        }
+
+                        console.log('Building 2-column grid for', users.length, 'users');
+                        
+                        // Detect dark mode
+                        const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                        console.log('Active technicians - dark mode detected:', isDarkMode);
+                        
+                        let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">';
+                        users.forEach((user, index) => {
+                            if (user && user.username) {
+                                const timeRange = user.schedule ? `${user.schedule.start_time}–${user.schedule.end_time}` : '00:00–24:00';
+                                const location = user.location && user.location.name && user.location.name !== 'No Location' ? user.location.name : 'Plex';
+                                
+                                // Create avatar - either profile picture or initials
+                                let avatarHtml = '';
+                                if (user.profile_picture) {
+                                    avatarHtml = `<img src="/static/${user.profile_picture}" alt="${user.username}" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; margin-right: 8px; flex-shrink: 0;">`;
+                                } else {
+                                    const initials = user.username.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                                    avatarHtml = `<div style="width: 35px; height: 35px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.8rem; margin-right: 8px; flex-shrink: 0;">${initials}</div>`;
+                                }
+                                
+                                console.log(`User ${index + 1}: ${user.username} in grid position`);
+                                
+                                html += `
+                                    <div class="grid-item d-flex align-items-center p-2" style="border-radius: 12px; min-height: 70px;">
+                                        ${avatarHtml}
+                                        <div style="flex: 1; min-width: 0;">
+                                            <div class="user-name" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${user.username}</div>
+                                            <div class="user-time" style="font-size: 0.7rem; margin-bottom: 1px;">${timeRange}</div>
+                                            <div class="user-location" style="font-size: 0.65rem;">
+                                                <i data-feather="map-pin" style="width: 8px; height: 8px; margin-right: 2px;"></i> ${location}
+                                            </div>
+                                        </div>
+                                    </div>`;
+                            }
+                        });
+                        html += '</div>';
+                        console.log('Grid HTML generated (CSS classes version):', html.substring(0, 200) + '...');
+                        container.innerHTML = html || `<p class="text-muted">No active technicians</p>`;
+                        feather.replace();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching active users:', error);
+                        document.getElementById('active-users').innerHTML = 
+                            '<p class="text-danger">Error loading active users</p>';
+                    });
+            }
+            
+            // Function to fetch and update upcoming time off
+            function updateUpcomingTimeOff() {
+                fetch('/api/upcoming_time_off')
+                    .then(response => response.json())
+                    .then(entries => {
+                        const timeOffDiv = document.getElementById('upcoming-time-off');
+                        if (!timeOffDiv) return;
+                        
+                        if (entries.length === 0) {
+                            timeOffDiv.innerHTML = '<p class="text-muted">No upcoming time off scheduled</p>';
+                            return;
+                        }
+
+                        // Detect dark mode for time off section
+                        const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                        console.log('Time off section - dark mode detected:', isDarkMode);
+                        
+                        // Clean design matching the image with dark mode support - 10% larger scaling
+                        timeOffDiv.innerHTML = entries.map(entry => {
+                            const barColor = entry.color || '#ffc107';
+                            
+                            return `
+                                <div class="time-off-card d-flex align-items-start mb-3" style="border-radius: 13px; padding: 13px;">
+                                    <div style="width: 4px; height: 100%; background: ${barColor}; border-radius: 2px; margin-right: 13px; min-height: 44px;"></div>
+                                    <div style="flex: 1;">
+                                        <div class="d-flex align-items-center mb-1">
+                                            ${entry.profile_picture ? 
+                                                `<img src="/static/${entry.profile_picture}" alt="${entry.username}" class="rounded-circle" style="width: 22px; height: 22px; margin-right: 9px; object-fit: cover;">` :
+                                                `<div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 22px; height: 22px; margin-right: 9px; background-color: ${entry.color}; color: white; font-size: 11px; font-weight: bold;">${entry.username.charAt(0).toUpperCase()}</div>`
+                                            }
+                                            <span class="time-off-name" style="font-weight: 600; font-size: 1.045rem;">${entry.username}</span>
+                                        </div>
+                                        <div class="time-off-date" style="font-size: 0.935rem; margin-bottom: 4px;">
+                                            ${entry.start_date} to ${entry.end_date}
+                                        </div>
+                                        <div class="time-off-duration" style="font-size: 0.88rem;">
+                                            ${entry.duration}
+                                        </div>
+                                        ${entry.description && entry.description !== 'Time Off' ? `<div class="time-off-desc" style="font-size: 0.88rem; margin-top: 4px;">${entry.description}</div>` : ''}
+                                    </div>
+                                </div>`;
+                        }).join('');
+                        
+                        feather.replace();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching time off entries:', error);
+                        const timeOffDiv = document.getElementById('upcoming-time-off');
+                        if (timeOffDiv) {
+                            timeOffDiv.innerHTML = '<p class="text-danger">Error loading time off entries</p>';
+                        }
+                    });
+            }
+
+            // Function to handle theme changes and update all sections
+            function handleThemeChange() {
+                const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+                console.log('Theme changed to:', currentTheme, '- updating all sections');
+                setTimeout(() => {
+                    updateActiveUsers();
+                    updateUpcomingTimeOff();
+                }, 100); // Small delay to ensure theme attribute is set
+            }
+            
+            // Listen for theme changes on the document element
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'data-bs-theme') {
+                        handleThemeChange();
+                    }
+                });
+            });
+            
+            observer.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['data-bs-theme']
+            });
+            
+            // Also listen for theme toggle events in case mutation observer doesn't catch them
+            document.addEventListener('themeChanged', function() {
+                console.log('Custom theme change event detected');
+                handleThemeChange();
+            });
+            
+            // Update active users and time off immediately and every minute
+            updateActiveUsers();
+            updateUpcomingTimeOff();
+            setInterval(updateActiveUsers, 60000);
+            setInterval(updateUpcomingTimeOff, 60000);
+        });
+    </script>
+    
+    <!-- Page transition logic -->
+    <script>
+        // Add page transition effect
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click event listeners to internal links
+            document.querySelectorAll('a:not([target="_blank"])').forEach(link => {
+                // Skip links that are just anchors or javascript functions
+                if (link.getAttribute('href') && 
+                    !link.getAttribute('href').startsWith('#') && 
+                    !link.getAttribute('href').startsWith('javascript:')) {
+                    
+                    link.addEventListener('click', function(e) {
+                        // Don't add transition for form submissions or dropdown toggles
+                        if (link.classList.contains('dropdown-toggle') || 
+                            link.closest('form') !== null) {
+                            return;
+                        }
+                        
+                        e.preventDefault();
+                        const destUrl = this.getAttribute('href');
+                        
+                        // Create transition logo element
+                        const transitionLogo = document.createElement('img');
+                        transitionLogo.src = "{{ url_for('static', filename='images/tbn_logo.webp') }}";
+                        transitionLogo.className = 'page-transition-logo';
+                        document.body.appendChild(transitionLogo);
+                        
+                        // Create overlay
+                        const overlay = document.createElement('div');
+                        overlay.style.position = 'fixed';
+                        overlay.style.top = '0';
+                        overlay.style.left = '0';
+                        overlay.style.width = '100%';
+                        overlay.style.height = '100%';
+                        overlay.style.backgroundColor = 'rgba(0,0,0,0.2)';
+                        overlay.style.zIndex = '9998';
+                        overlay.style.opacity = '0';
+                        overlay.style.transition = 'opacity 0.3s ease-in-out';
+                        document.body.appendChild(overlay);
+                        
+                        // Trigger animation
+                        setTimeout(() => {
+                            overlay.style.opacity = '1';
+                            
+                            // Navigate after animation completes
+                            setTimeout(() => {
+                                window.location.href = destUrl;
+                            }, 500);
+                        }, 10);
+                    });
+                }
+            });
+        });
+    </script>
+    
+    <!-- Team Chat Management -->
+    {% if CHAT_ENABLED %}
+    <script>
+        (function() {
+            const CHAT_URL = '{{ CHAT_URL }}';
+            let chatWindow = null;
+            
+            // Check if popup window is still open
+            function isPopupOpen() {
+                return chatWindow && !chatWindow.closed;
+            }
+            
+            // Open chat in popup window - make it globally accessible
+            window.openChatPopup = function() {
+                let width = 400;
+                let height = 600;
+                let left, top;
+                
+                // Position relative to the current browser window, not screen
+                const windowLeft = window.screenX || window.screenLeft || 0;
+                const windowTop = window.screenY || window.screenTop || 0;
+                const windowWidth = window.outerWidth || 1200;
+                const windowHeight = window.outerHeight || 800;
+                
+                // Position in bottom-left corner of the application window
+                left = windowLeft + 20; // 20px from left edge of app window
+                top = windowTop + windowHeight - height - 100; // 100px from bottom of app window
+                
+                // Ensure it doesn't go off-screen
+                const screenWidth = window.screen.width || 1920;
+                const screenHeight = window.screen.height || 1080;
+                
+                left = Math.max(0, Math.min(left, screenWidth - width));
+                top = Math.max(0, Math.min(top, screenHeight - height));
+                
+                // Clear any previously saved positions
+                localStorage.removeItem('chatWindowPosition');
+                
+                console.log(`Chat positioning: window at ${windowLeft},${windowTop} (${windowWidth}x${windowHeight}), chat at ${left},${top}`);
+                
+                if (isPopupOpen()) {
+                    chatWindow.focus();
+                    return chatWindow;
+                }
+                
+                try {
+                    chatWindow = window.open(
+                        CHAT_URL,
+                        'TeamChat',
+                        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes,status=no,menubar=no,toolbar=no`
+                    );
+                } catch (e) {
+                    console.log('Error opening popup:', e);
+                    chatWindow = null;
+                }
+                
+                if (chatWindow) {
+                    // Bring chat to top of window stack without changing position
+                    chatWindow.focus();
+                    // Additional methods to ensure it comes to front
+                    if (chatWindow.moveToFront) {
+                        chatWindow.moveToFront();
+                    }
+                    console.log('Team chat opened in popup window');
+                    
+                    // Store the position preference
+                    localStorage.setItem('chatWindowPosition', JSON.stringify({
+                        left: left,
+                        top: top,
+                        width: width,
+                        height: height
+                    }));
+                    
+
+                    
+                    // Enhanced keep-on-top functionality
+                    let keepOnTopInterval = null;
+                    let focusTimeout = null;
+                    
+                    const startKeepOnTop = () => {
+                        // Clear any existing intervals
+                        if (keepOnTopInterval) clearInterval(keepOnTopInterval);
+                        
+                        // Smarter keep-on-top that avoids interfering with user interactions
+                        keepOnTopInterval = setInterval(() => {
+                            if (chatWindow && !chatWindow.closed) {
+                                try {
+                                    // Check if user is actively interacting with main page
+                                    const hasActiveElement = document.activeElement && 
+                                                           document.activeElement !== document.body &&
+                                                           document.activeElement.tagName !== 'HTML';
+                                    
+                                    const openDropdowns = document.querySelectorAll('.dropdown-menu.show, .dropdown.show');
+                                    const hasModals = document.querySelectorAll('.modal.show').length > 0;
+                                    
+                                    // Only focus if no user interaction is happening
+                                    if (!hasActiveElement && openDropdowns.length === 0 && !hasModals) {
+                                        // Bring chat to top of window stack without changing position
+                                        chatWindow.focus();
+                                        // Additional methods to ensure it comes to front
+                                        if (chatWindow.moveToFront) {
+                                            chatWindow.moveToFront();
+                                        }
+                                        console.log('SMART keep-on-top: Chat focused safely');
+                                    } else {
+                                        console.log('SMART keep-on-top: Skipping focus - user interaction detected');
+                                    }
+                                } catch (e) {
+                                    // Permission denied - expected in some browsers
+                                }
+                            } else {
+                                clearInterval(keepOnTopInterval);
+                            }
+                        }, 2000); // Check every 2 seconds
+                    };
+                    
+                    // Start keep-on-top immediately
+                    console.log('SMART keep-on-top system activated with dropdown protection');
+                    startKeepOnTop();
+                    
+                    // Smart focus behavior that respects user interactions
+                    window.addEventListener('focus', () => {
+                        if (focusTimeout) clearTimeout(focusTimeout);
+                        focusTimeout = setTimeout(() => {
+                            if (chatWindow && !chatWindow.closed) {
+                                try {
+                                    // Only focus if user isn't actively using the page
+                                    const hasActiveElement = document.activeElement && 
+                                                           document.activeElement !== document.body &&
+                                                           document.activeElement.tagName !== 'HTML';
+                                    
+                                    const openDropdowns = document.querySelectorAll('.dropdown-menu.show, .dropdown.show');
+                                    
+                                    if (!hasActiveElement && openDropdowns.length === 0) {
+                                        // Bring chat to top of window stack without changing position
+                                        chatWindow.focus();
+                                        // Additional methods to ensure it comes to front
+                                        if (chatWindow.moveToFront) {
+                                            chatWindow.moveToFront();
+                                        }
+                                        console.log('SMART window focus: Chat focused after window focus');
+                                    } else {
+                                        console.log('SMART window focus: Skipping focus - user interaction detected');
+                                    }
+                                } catch (e) {
+                                    // Permission denied - expected
+                                }
+                            }
+                        }, 500); // Shorter delay but with better detection
+                    });
+                    
+                    // Check periodically if popup is closed
+                    const checkClosed = setInterval(() => {
+                        if (chatWindow.closed) {
+                            chatWindow = null;
+                            clearInterval(checkClosed);
+                            if (keepOnTopInterval) clearInterval(keepOnTopInterval);
+                            console.log('Team chat popup closed');
+                        }
+                    }, 1000);
+                }
+                
+                return chatWindow;
+            }
+            
+
+            
+
+            
+            // Auto-launch chat on first visit - with no focus interference
+            function autoLaunchChat() {
+                console.log('autoLaunchChat function called - DROPDOWN FRIENDLY VERSION');
+                // Check if user has a preference stored
+                const chatPreference = localStorage.getItem('teamChatPreference');
+                console.log('Chat preference:', chatPreference);
+                
+                if (!chatPreference) {
+                    // First time user - automatically open popup (no focus control)
+                    console.log('First-time user detected, scheduling auto-launch');
+                    setTimeout(() => {
+                        console.log('Auto-launching team chat for first-time user - NO FOCUS VERSION');
+                        const popup = openChatPopup();
+                        if (popup) {
+                            localStorage.setItem('teamChatPreference', 'popup');
+                            console.log('Team chat popup opened successfully and preference saved - NO FOCUS VERSION');
+                        } else {
+                            console.log('Popup blocked - will show inline notification');
+                            showPopupBlockedNotification();
+                        }
+                    }, 2000); // Wait 2 seconds after page load
+                } else if (chatPreference === 'popup' && !isPopupOpen()) {
+                    // User prefers popup but it's not open - reopen it (no focus control)
+                    console.log('Returning user detected, scheduling popup reopen');
+                    setTimeout(() => {
+                        console.log('Reopening team chat popup based on user preference - NO FOCUS VERSION');
+                        const popup = openChatPopup();
+                        if (!popup) {
+                            console.log('Popup blocked on return visit');
+                            showPopupBlockedNotification();
+                        }
+                    }, 1500); // Shorter delay for returning users
+                } else {
+                    console.log('Chat preference exists and popup might already be open');
+                }
+            }
+            
+            // Show notification when popup is blocked
+            function showPopupBlockedNotification() {
+                // Create a temporary notification
+                const notification = document.createElement('div');
+                notification.className = 'alert alert-warning alert-dismissible fade show position-fixed';
+                notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+                notification.innerHTML = `
+                    <i data-feather="alert-triangle"></i>
+                    <strong>Team Chat Popup Blocked!</strong><br>
+                    Please allow popups for this site, then 
+                    <button class="btn btn-sm btn-outline-primary ms-1" onclick="this.closest('.alert').remove(); window.location.reload();">
+                        Try Again
+                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                document.body.appendChild(notification);
+                feather.replace();
+                
+                // Auto-remove after 10 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 10000);
+            }
+            
+            // Initialize when DOM is ready
+            document.addEventListener('DOMContentLoaded', function() {
+                // Check if popup is already open on page load
+                if (window.name === 'TeamChat') {
+                    // This page IS the popup
+                    document.body.innerHTML = `
+                        <iframe src="${CHAT_URL}" style="width: 100vw; height: 100vh; border: none;" 
+                                allow="camera; microphone; fullscreen; storage-access"
+                                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-storage-access-by-user-activation">
+                        </iframe>
+                    `;
+                } else {
+                    // Only auto-launch chat if user is authenticated (not on login/auth pages)
+                    {% if current_user.is_authenticated %}
+                    console.log('User is authenticated - initializing chat auto-launch');
+                    // Auto-launch chat after a brief delay to ensure DOM is ready
+                    setTimeout(autoLaunchChat, 500);
+                    {% else %}
+                    console.log('User NOT authenticated - skipping chat auto-launch');
+                    {% endif %}
+                }
+            });
+        })();
+    </script>
+    {% endif %}
+</body>
+</html>
