@@ -316,9 +316,11 @@ atexit.register(lambda: scheduler.shutdown())
 # Import and register blueprints
 from routes import *
 from ticket_routes import tickets
+from auth import auth
 # Register health check for container healthchecks
 from health import health_bp
 app.register_blueprint(tickets)
+app.register_blueprint(auth)
 app.register_blueprint(health_bp)
 
 
