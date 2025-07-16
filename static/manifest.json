@@ -8,26 +8,20 @@
   "background_color": "#ffffff",
   "icons": [
     {
-      "src": "/static/favicon.svg",
+      "src": "/static/favicon.png",
       "sizes": "32x32",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/static/icon-192.svg",
+      "src": "/static/apple-touch-icon.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/static/icon-512.svg",
+      "src": "/static/calendar-logo.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/static/scheduler-logo.png",
-      "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any maskable"
     }
