@@ -883,6 +883,7 @@ def calendar():
                             locations=locations,
                             selected_location=location_filter,
                             today=datetime.now(current_user.get_timezone_obj()),
+                            user_timezone=str(current_user.get_timezone_obj()),
                             datetime=datetime,
                             timedelta=timedelta)
     else:
