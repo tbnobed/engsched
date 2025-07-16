@@ -245,7 +245,7 @@ def send_ticket_assigned_notification(
         logger.info(f"Using domain: {domain} for email URLs")
         logger.info(f"Generated ticket URL: {ticket_url}")
         
-        subject = f"[Ticket #{ticket.id}] - {ticket.title} (Assigned)"
+        subject = f"[Ticket #{ticket.id}] - {ticket.title}"
         logger.info(f"Email subject: {subject}")
         
         priority_labels = {
@@ -378,7 +378,7 @@ def send_ticket_comment_notification(
         logger.debug(f"Using domain: {domain} for email URLs")
         logger.debug(f"Generated ticket URL: {ticket_url}")
         
-        subject = f"[Ticket #{ticket.id}] - {ticket.title} (New Comment)"
+        subject = f"[Ticket #{ticket.id}] - {ticket.title}"
         
         html_content = f"""
         <h3>New Comment on Ticket #{ticket.id}</h3>
@@ -491,7 +491,7 @@ def send_ticket_status_notification(
         logger.debug(f"Using domain: {domain} for email URLs")
         logger.debug(f"Generated ticket URL: {ticket_url}")
         
-        subject = f"[Ticket #{ticket.id}] - {ticket.title} (Status: {new_status.replace('_', ' ').title()})"
+        subject = f"[Ticket #{ticket.id}] - {ticket.title}"
         
         html_content = f"""
         <h3>Ticket Status Changed</h3>
