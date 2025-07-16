@@ -248,13 +248,19 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            {{ form.time_off.label(class="form-check-label") }}
-                            {{ form.time_off(class="form-check-input", id="time_off") }}
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-check-label" for="all_day">OOO (Out of Office)</label>
-                            {{ form.all_day(class="form-check-input", id="all_day") }}
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <div class="form-check">
+                                    {{ form.time_off(class="form-check-input", id="time_off") }}
+                                    {{ form.time_off.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check">
+                                    {{ form.all_day(class="form-check-input", id="all_day") }}
+                                    <label class="form-check-label" for="all_day">OOO (Out of Office)</label>
+                                </div>
+                            </div>
                         </div>
                         {{ form.start_time(type="hidden", id="start_time_input") }}
                         {{ form.end_time(type="hidden", id="end_time_input") }}

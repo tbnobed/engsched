@@ -210,14 +210,19 @@
                         </div>
                     </div>
                     
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="time_off" name="time_off">
-                        <label class="form-check-label" for="time_off">{{ form.time_off.label.text }}</label>
-                    </div>
-                    
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="all_day" name="all_day">
-                        <label class="form-check-label" for="all_day">OOO (Out of Office)</label>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="time_off" name="time_off">
+                                <label class="form-check-label" for="time_off">{{ form.time_off.label.text }}</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="all_day" name="all_day">
+                                <label class="form-check-label" for="all_day">OOO (Out of Office)</label>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="mb-3" id="repeat_days_section">

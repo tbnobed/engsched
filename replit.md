@@ -10,6 +10,12 @@ Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
 Recent Updates (July 16, 2025):
+- ✅ COMPLETED: Side-by-Side Checkbox Layout for Schedule Forms
+- Updated all schedule forms to display "Time Off" and "OOO (Out of Office)" checkboxes side by side using Bootstrap columns
+- Applied consistent layout across all templates: calendar.html, personal_schedule.html, mobile_calendar.html, mobile_personal_schedule.html
+- Replaced stacked vertical layout with clean 2-column Bootstrap grid (col-6) for better space utilization
+- Enhanced user experience with more compact form layout while maintaining proper form-check styling
+- Checkboxes now display horizontally for cleaner visual appearance and better use of available space
 - ✅ COMPLETED: Dashboard as Main Homepage with Logo Navigation Update
 - Set dashboard as the primary homepage for authenticated users (already configured in routes.py)
 - Updated logo navigation in all templates (base.html, mobile_base.html, mobile_base_simplified.html) to point to dashboard
