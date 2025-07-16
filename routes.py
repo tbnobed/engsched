@@ -32,6 +32,10 @@ def index():
 @login_required
 def dashboard():
     """New landing page with tickets, studio bookings, and technician schedules"""
+    # Check if user is on mobile device and redirect to mobile calendar
+    if is_mobile_device():
+        return redirect(url_for('calendar'))
+    
     user_tz = pytz.timezone(current_user.get_timezone())
     today = datetime.now(user_tz).date()
     
