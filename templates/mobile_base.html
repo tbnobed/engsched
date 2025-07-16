@@ -147,8 +147,8 @@
                 </div>
                 <div class="card-body p-0" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background-color: #ffffff;{% else %}background-color: #0F1624;{% endif %}">
                     <div class="list-group list-group-flush p-2">
-                        {% if active_sidebar_tickets %}
-                            {% for ticket in active_sidebar_tickets %}
+                        {% if false %}
+                            {# Sidebar tickets functionality removed #}
                                 <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" 
                                    class="list-group-item list-group-item-action p-3 mb-2"
                                    style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); 

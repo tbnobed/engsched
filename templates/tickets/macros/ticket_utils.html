@@ -5,16 +5,8 @@
         It's independent of dashboard filters.
     #}
     
-    {# Check if active_sidebar_tickets is already available in context #}
-    {% if active_sidebar_tickets is defined %}
-        {% set active_tickets = active_sidebar_tickets %}
-    {% elif get_user_tickets is defined %}
-        {# Fall back to get_user_tickets function if available #}
-        {% set active_tickets = get_user_tickets() %}
-    {% else %}
-        {# If neither is available, provide an empty list #}
-        {% set active_tickets = [] %}
-    {% endif %}
+    {# Sidebar ticket functionality has been removed - show empty list #}
+    {% set active_tickets = [] %}
     
     {% if active_tickets %}
         {% for ticket in active_tickets %}

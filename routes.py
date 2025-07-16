@@ -869,10 +869,6 @@ def calendar():
     # Check if user is on a mobile device
     if is_mobile_device():
         print("Using mobile template for calendar")
-        # Get active tickets for the sidebar
-        from ticket_routes import get_active_sidebar_tickets
-        active_sidebar_tickets = get_active_sidebar_tickets()
-        
         return render_template('mobile_calendar.html', 
                             schedules=schedules,
                             week_start=week_start,
@@ -882,8 +878,7 @@ def calendar():
                             selected_location=location_filter,
                             today=datetime.now(current_user.get_timezone_obj()),
                             datetime=datetime,
-                            timedelta=timedelta,
-                            active_sidebar_tickets=active_sidebar_tickets)
+                            timedelta=timedelta)
     else:
         return render_template('calendar.html', 
                             schedules=schedules,
@@ -1940,10 +1935,6 @@ def personal_schedule():
     # Check if user is on a mobile device
     if is_mobile_device():
         print("Using mobile template for personal schedule")
-        # Get active tickets for the sidebar
-        from ticket_routes import get_active_sidebar_tickets
-        active_sidebar_tickets = get_active_sidebar_tickets()
-        
         return render_template('mobile_personal_schedule.html', 
                             schedules=schedules,
                             week_start=week_start,
@@ -1954,8 +1945,7 @@ def personal_schedule():
                             user_timezone=str(current_user.get_timezone_obj()),
                             datetime=datetime,
                             timedelta=timedelta,
-                            personal_view=True,
-                            active_sidebar_tickets=active_sidebar_tickets)
+                            personal_view=True)
     else:
         return render_template('personal_schedule.html', 
                             schedules=schedules,
@@ -2265,34 +2255,9 @@ def inject_quick_links():
         # Always show active tickets in the sidebar regardless of main content filters
         return get_open_tickets(5)  # Limit to 5 tickets
     
-    def get_active_sidebar_tickets():
-        """
-        This function always returns active tickets for the sidebar
-        regardless of any filtering applied in the main dashboard.
-        """
-        from models import Ticket, TicketStatus
-        from app import app
-        
-        app.logger.debug("Getting active tickets for sidebar (independent of dashboard filters)")
-        
-        # Get all active tickets (open, in_progress, pending) for sidebar
-        query = Ticket.query.filter(
-            Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.PENDING])
-        ).order_by(
-            # Order by priority (highest first) and then creation date (newest first)
-            Ticket.priority.desc(),
-            Ticket.created_at.desc()
-        ).limit(5)
-        
-        tickets = query.all()
-        app.logger.debug(f"Found {len(tickets)} active tickets for sidebar")
-        
-        return tickets
-    
     return dict(
         get_quick_links=get_quick_links,
-        get_user_tickets=get_user_tickets,
-        get_active_sidebar_tickets=get_active_sidebar_tickets
+        get_user_tickets=get_user_tickets
     )
 
 @app.route('/api/upcoming_time_off')

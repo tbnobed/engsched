@@ -298,16 +298,13 @@ atexit.register(lambda: scheduler.shutdown())
 
 # Import and register blueprints
 from routes import *
-from ticket_routes import tickets, get_active_sidebar_tickets
+from ticket_routes import tickets
 # Register health check for container healthchecks
 from health import health_bp
 app.register_blueprint(tickets)
 app.register_blueprint(health_bp)
 
-# Register the get_active_sidebar_tickets function with the app context
-@app.context_processor
-def inject_active_sidebar_tickets():
-    return dict(get_active_sidebar_tickets=get_active_sidebar_tickets)
+
 
 @app.context_processor
 def inject_now():

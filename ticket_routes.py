@@ -11,27 +11,7 @@ from email_utils import send_ticket_assigned_notification, send_ticket_comment_n
 # Update Blueprint to use the correct template directory
 tickets = Blueprint('tickets', __name__)
 
-# Create function that will be registered with the main app context
-def get_active_sidebar_tickets():
-    """
-    This function always returns active tickets for the sidebar
-    regardless of any filtering applied in the main dashboard.
-    """
-    app.logger.debug("Getting active tickets for sidebar from global context")
-    
-    # Get all active tickets (open, in_progress, pending) for sidebar
-    query = Ticket.query.filter(
-        Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.PENDING])
-    ).order_by(
-        # Order by priority (highest first) and then creation date (newest first)
-        Ticket.priority.desc(),
-        Ticket.created_at.desc()
-    ).limit(5)
-    
-    tickets = query.all()
-    app.logger.debug(f"Found {len(tickets)} active tickets for sidebar")
-    
-    return tickets
+
 
 @tickets.route('/tickets/standalone_dashboard')
 @login_required
@@ -421,14 +401,6 @@ def tickets_dashboard():
         'timestamp': timestamp
     }
     
-    # Get active tickets for the sidebar
-    active_sidebar_tickets = Ticket.query.filter(
-        Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.PENDING])
-    ).order_by(
-        Ticket.priority.desc(),
-        Ticket.created_at.desc()
-    ).limit(5).all()
-    
     # Get all technicians for the technician filter dropdown
     technicians = User.query.all()
     
@@ -458,7 +430,6 @@ def tickets_dashboard():
                              ticket_count=len(filtered_tickets),
                              filter_info=filter_info,
                              timestamp=timestamp,
-                             active_sidebar_tickets=active_sidebar_tickets,
                              filter_status=status_filter,
                              filter_assigned_to=assigned_to_int,
                              filter_created_by=created_by_int)
@@ -470,21 +441,12 @@ def tickets_dashboard():
                              technicians=technicians,
                              ticket_count=len(filtered_tickets),
                              filter_info=filter_info,
-                             timestamp=timestamp,
-                             active_sidebar_tickets=active_sidebar_tickets)
+                             timestamp=timestamp)
 
 @tickets.route('/tickets/create', methods=['GET', 'POST'])
 @login_required
 def create_ticket():
     """Create a new ticket"""
-    # Get active tickets for the sidebar
-    active_sidebar_tickets = Ticket.query.filter(
-        Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.PENDING])
-    ).order_by(
-        Ticket.priority.desc(),
-        Ticket.created_at.desc()
-    ).limit(5).all()
-    
     form = TicketForm()
 
     # Populate category choices
@@ -589,7 +551,7 @@ def create_ticket():
             if is_mobile_device():
                 return render_template('tickets/mobile_create.html', form=form)
             else:
-                return render_template('tickets/create.html', form=form, active_sidebar_tickets=active_sidebar_tickets)
+                return render_template('tickets/create.html', form=form, )
 
         except Exception as e:
             db.session.rollback()
@@ -600,7 +562,7 @@ def create_ticket():
             if is_mobile_device():
                 return render_template('tickets/mobile_create.html', form=form)
             else:
-                return render_template('tickets/create.html', form=form, active_sidebar_tickets=active_sidebar_tickets)
+                return render_template('tickets/create.html', form=form, )
 
     # Choose template based on device type
     if is_mobile_device():
@@ -608,7 +570,7 @@ def create_ticket():
         return render_template('tickets/mobile_create.html', form=form)
     else:
         app.logger.debug("Using desktop template for ticket creation")
-        return render_template('tickets/create.html', form=form, active_sidebar_tickets=active_sidebar_tickets)
+        return render_template('tickets/create.html', form=form, )
 
 @tickets.route('/tickets/<int:ticket_id>')
 @login_required
@@ -720,14 +682,6 @@ def view_ticket(ticket_id):
         if current_user.is_admin or current_user.id == ticket_obj.created_by:
             form.assigned_to.choices = [(u.id, u.username) for u in technicians]
 
-    # Get active tickets for the sidebar
-    active_sidebar_tickets = Ticket.query.filter(
-        Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.PENDING])
-    ).order_by(
-        Ticket.priority.desc(),
-        Ticket.created_at.desc()
-    ).limit(5).all()
-    
     # Check if user is on a mobile device
     from app import is_mobile_device
     if is_mobile_device():
@@ -742,7 +696,7 @@ def view_ticket(ticket_id):
                              form=form,
                              categories=categories,
                              technicians=technicians,
-                             active_sidebar_tickets=active_sidebar_tickets,
+                             
                              TicketStatus=TicketStatus)
     else:
         return render_template('tickets/view.html', 
@@ -751,7 +705,7 @@ def view_ticket(ticket_id):
                              form=form,
                              categories=categories,
                              technicians=technicians,
-                             active_sidebar_tickets=active_sidebar_tickets,
+                             
                              TicketStatus=TicketStatus)
 
 @tickets.route('/tickets/<int:ticket_id>/comment', methods=['POST'])
@@ -1413,17 +1367,9 @@ def manage_categories():
 
     categories = TicketCategory.query.order_by(TicketCategory.name).all()
     
-    # Get active tickets for the sidebar
-    active_sidebar_tickets = Ticket.query.filter(
-        Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.PENDING])
-    ).order_by(
-        Ticket.priority.desc(),
-        Ticket.created_at.desc()
-    ).limit(5).all()
-    
     return render_template('tickets/manage_categories.html', 
                          categories=categories,
-                         active_sidebar_tickets=active_sidebar_tickets,
+                         
                          form=form)
 
 @tickets.route('/tickets/categories/edit/<int:category_id>', methods=['GET', 'POST'])
@@ -1445,19 +1391,11 @@ def edit_category(category_id):
         db.session.commit()
         flash('Category updated successfully', 'success')
         return redirect(url_for('tickets.manage_categories'))
-        
-    # Get active tickets for the sidebar
-    active_sidebar_tickets = Ticket.query.filter(
-        Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.PENDING])
-    ).order_by(
-        Ticket.priority.desc(),
-        Ticket.created_at.desc()
-    ).limit(5).all()
     
     return render_template('tickets/edit_category.html',
                            category=category,
                            form=form,
-                           active_sidebar_tickets=active_sidebar_tickets)
+                           )
                            
 @tickets.route('/tickets/categories/delete/<int:category_id>')
 @login_required
@@ -1594,18 +1532,10 @@ def archived_tickets():
             
         archived_tickets.append(ticket_dict)
     
-    # Get active tickets for the sidebar
-    active_sidebar_tickets = Ticket.query.filter(
-        Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.PENDING])
-    ).order_by(
-        Ticket.priority.desc(),
-        Ticket.created_at.desc()
-    ).limit(5).all()
-    
     return render_template('tickets/archived.html', 
                          tickets=archived_tickets,
                          ticket_count=len(archived_tickets),
-                         active_sidebar_tickets=active_sidebar_tickets)
+                         )
                          
                          
 @tickets.route('/tickets/batch-archive', methods=['POST'])
@@ -1673,39 +1603,4 @@ def batch_archive_tickets():
     
     return redirect(url_for('tickets.tickets_dashboard'))
 
-@tickets.route("/tickets/api/refresh-sidebar")
-@login_required
-def refresh_sidebar_tickets():
-    """API endpoint to get fresh sidebar ticket data for auto-refresh"""
-    try:
-        # Get active tickets for sidebar
-        active_tickets = Ticket.query.filter(
-            Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.PENDING])
-        ).order_by(
-            Ticket.priority.desc(),
-            Ticket.created_at.desc()
-        ).limit(5).all()
-        
-        # Convert tickets to JSON-serializable format
-        tickets_data = []
-        for ticket in active_tickets:
-            tickets_data.append({
-                "id": ticket.id,
-                "title": ticket.title,
-                "status": ticket.status,
-                "priority": ticket.priority,
-                "has_unread_activity": ticket.has_unread_activity(current_user.id),
-                "created_at": ticket.created_at.strftime("%Y-%m-%d %H:%M")
-            })
-        
-        return jsonify({
-            "success": True,
-            "tickets": tickets_data,
-            "count": len(tickets_data)
-        })
-    except Exception as e:
-        app.logger.error(f"Error refreshing sidebar tickets: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+
