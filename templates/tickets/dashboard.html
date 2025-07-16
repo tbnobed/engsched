@@ -1,5 +1,28 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<style>
+.unread-ticket {
+    border-left: 4px solid #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.table-warning {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.badge.bg-danger.rounded-pill {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="tickets-dashboard">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -123,12 +146,17 @@
                             </thead>
                             <tbody>
                                 {% for ticket in tickets %}
-                                <tr>
+                                <tr class="{% if ticket['has_unread_activity'] %}table-warning{% endif %}">
                                     <td>#{{ ticket['id'] }}</td>
                                     <td>
-                                        <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket['id']) }}" class="text-decoration-none">
-                                            {{ ticket['title'] }}
-                                        </a>
+                                        <div class="d-flex align-items-center">
+                                            <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket['id']) }}" class="text-decoration-none me-2">
+                                                {{ ticket['title'] }}
+                                            </a>
+                                            {% if ticket['has_unread_activity'] %}
+                                                <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.3rem;">NEW</span>
+                                            {% endif %}
+                                        </div>
                                     </td>
                                     <td>
                                         <span class="badge bg-secondary">

@@ -242,6 +242,52 @@ class Ticket(db.Model):
         elif self.creator:
             return self.creator.username
         return "Unknown"
+    
+    def has_unread_activity(self, user_id: int) -> bool:
+        """Check if ticket has activity since user last viewed it"""
+        # Get user's last view time for this ticket
+        ticket_view = TicketView.query.filter_by(
+            user_id=user_id, 
+            ticket_id=self.id
+        ).first()
+        
+        if not ticket_view:
+            # User has never viewed this ticket, so it's "unread"
+            return True
+        
+        # Check for comments after last view
+        recent_comments = self.comments.filter(
+            TicketComment.created_at > ticket_view.last_viewed_at
+        ).count()
+        
+        # Check for history entries after last view
+        recent_history = self.history.filter(
+            TicketHistory.created_at > ticket_view.last_viewed_at
+        ).count()
+        
+        # Check if ticket was updated after last view
+        ticket_updated = self.updated_at > ticket_view.last_viewed_at
+        
+        return recent_comments > 0 or recent_history > 0 or ticket_updated
+    
+    def mark_as_viewed(self, user_id: int):
+        """Mark ticket as viewed by user"""
+        ticket_view = TicketView.query.filter_by(
+            user_id=user_id,
+            ticket_id=self.id
+        ).first()
+        
+        if ticket_view:
+            ticket_view.last_viewed_at = datetime.now(pytz.UTC)
+        else:
+            ticket_view = TicketView(
+                user_id=user_id,
+                ticket_id=self.id,
+                last_viewed_at=datetime.now(pytz.UTC)
+            )
+            db.session.add(ticket_view)
+        
+        return ticket_view
         
     def to_dict(self):
         """Serialize ticket data for backup with reference data"""
@@ -317,6 +363,19 @@ class TicketHistory(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'username': self.user.username if self.user else None
         }
+
+class TicketView(db.Model):
+    """Track when users last viewed tickets to show unread indicators"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
+    last_viewed_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC))
+    
+    # Unique constraint to ensure one view record per user per ticket
+    __table_args__ = (db.UniqueConstraint('user_id', 'ticket_id'),)
+    
+    user = db.relationship('User', backref='ticket_views')
+    ticket = db.relationship('Ticket', backref='ticket_views')
 
 class EmailSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)

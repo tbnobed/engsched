@@ -371,6 +371,7 @@ def tickets_dashboard():
             'created_at': ticket.created_at,
             'updated_at': ticket.updated_at,
             'due_date': ticket.due_date,
+            'has_unread_activity': ticket.has_unread_activity(current_user.id),
             'category': {
                 'id': ticket.category.id,
                 'name': ticket.category.name
@@ -616,6 +617,14 @@ def view_ticket(ticket_id):
     ticket_obj = Ticket.query.get_or_404(ticket_id)
 
     # All users can view all tickets
+
+    # Mark ticket as viewed by current user
+    try:
+        ticket_obj.mark_as_viewed(current_user.id)
+        db.session.commit()
+    except Exception as e:
+        app.logger.warning(f"Failed to mark ticket #{ticket_id} as viewed: {str(e)}")
+        # Don't let this affect the main functionality
 
     # Create forms for comments and editing
     comment_form = TicketCommentForm()
