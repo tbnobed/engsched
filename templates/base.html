@@ -942,9 +942,13 @@
                 if (chatWindow) {
                     // Bring chat to top of window stack without changing position
                     chatWindow.focus();
-                    // Additional methods to ensure it comes to front
-                    if (chatWindow.moveToFront) {
-                        chatWindow.moveToFront();
+                    // Try additional methods but handle security errors
+                    try {
+                        if (chatWindow.moveToFront) {
+                            chatWindow.moveToFront();
+                        }
+                    } catch (securityError) {
+                        // Cross-origin security error - this is expected and normal
                     }
                     console.log('Team chat opened in popup window');
                     
@@ -982,9 +986,13 @@
                                     if (!hasActiveElement && openDropdowns.length === 0 && !hasModals) {
                                         // Bring chat to top of window stack without changing position
                                         chatWindow.focus();
-                                        // Additional methods to ensure it comes to front
-                                        if (chatWindow.moveToFront) {
-                                            chatWindow.moveToFront();
+                                        // Try additional methods but handle security errors
+                                        try {
+                                            if (chatWindow.moveToFront) {
+                                                chatWindow.moveToFront();
+                                            }
+                                        } catch (securityError) {
+                                            // Cross-origin security error - this is expected and normal
                                         }
                                         console.log('SMART keep-on-top: Chat focused safely');
                                     } else {
@@ -996,7 +1004,7 @@
                             } else {
                                 clearInterval(keepOnTopInterval);
                             }
-                        }, 2000); // Check every 2 seconds
+                        }, 1000); // Check every 1 second for better responsiveness
                     };
                     
                     // Start keep-on-top immediately
@@ -1019,9 +1027,13 @@
                                     if (!hasActiveElement && openDropdowns.length === 0) {
                                         // Bring chat to top of window stack without changing position
                                         chatWindow.focus();
-                                        // Additional methods to ensure it comes to front
-                                        if (chatWindow.moveToFront) {
-                                            chatWindow.moveToFront();
+                                        // Try additional methods but handle security errors
+                                        try {
+                                            if (chatWindow.moveToFront) {
+                                                chatWindow.moveToFront();
+                                            }
+                                        } catch (securityError) {
+                                            // Cross-origin security error - this is expected and normal
                                         }
                                         console.log('SMART window focus: Chat focused after window focus');
                                     } else {
@@ -1031,7 +1043,7 @@
                                     // Permission denied - expected
                                 }
                             }
-                        }, 500); // Shorter delay but with better detection
+                        }, 300); // Faster response for better user experience
                     });
                     
                     // Check periodically if popup is closed
