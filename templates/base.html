@@ -952,6 +952,8 @@
                     }
                     console.log('Team chat opened in popup window');
                     
+
+                    
                     // Store the position preference
                     localStorage.setItem('chatWindowPosition', JSON.stringify({
                         left: left,
@@ -970,7 +972,7 @@
                         // Clear any existing intervals
                         if (keepOnTopInterval) clearInterval(keepOnTopInterval);
                         
-                        // Smarter keep-on-top that avoids interfering with user interactions
+                        // Enhanced keep-on-top with aggressive refocusing
                         keepOnTopInterval = setInterval(() => {
                             if (chatWindow && !chatWindow.closed) {
                                 try {
@@ -984,19 +986,13 @@
                                     
                                     // Only focus if no user interaction is happening
                                     if (!hasActiveElement && openDropdowns.length === 0 && !hasModals) {
-                                        // Bring chat to top of window stack without changing position
-                                        chatWindow.focus();
-                                        // Try additional methods but handle security errors
+                                        // Simple focus - browsers will handle security restrictions
                                         try {
-                                            if (chatWindow.moveToFront) {
-                                                chatWindow.moveToFront();
-                                            }
-                                        } catch (securityError) {
-                                            // Cross-origin security error - this is expected and normal
+                                            chatWindow.focus();
+                                        } catch (e) {
+                                            // Browsers may block this for security reasons
                                         }
-                                        console.log('SMART keep-on-top: Chat focused safely');
-                                    } else {
-                                        console.log('SMART keep-on-top: Skipping focus - user interaction detected');
+                                        console.log('Keep-on-top: Chat focus attempted');
                                     }
                                 } catch (e) {
                                     // Permission denied - expected in some browsers
@@ -1004,14 +1000,14 @@
                             } else {
                                 clearInterval(keepOnTopInterval);
                             }
-                        }, 1000); // Check every 1 second for better responsiveness
+                        }, 3000); // Reduced frequency to avoid browser throttling
                     };
                     
                     // Start keep-on-top immediately
-                    console.log('SMART keep-on-top system activated with dropdown protection');
+                    console.log('Chat keep-on-top system activated');
                     startKeepOnTop();
                     
-                    // Smart focus behavior that respects user interactions
+                    // Enhanced window focus behavior with aggressive refocusing
                     window.addEventListener('focus', () => {
                         if (focusTimeout) clearTimeout(focusTimeout);
                         focusTimeout = setTimeout(() => {
@@ -1025,25 +1021,19 @@
                                     const openDropdowns = document.querySelectorAll('.dropdown-menu.show, .dropdown.show');
                                     
                                     if (!hasActiveElement && openDropdowns.length === 0) {
-                                        // Bring chat to top of window stack without changing position
-                                        chatWindow.focus();
-                                        // Try additional methods but handle security errors
+                                        // Simple focus when main window regains focus
                                         try {
-                                            if (chatWindow.moveToFront) {
-                                                chatWindow.moveToFront();
-                                            }
-                                        } catch (securityError) {
-                                            // Cross-origin security error - this is expected and normal
+                                            chatWindow.focus();
+                                        } catch (e) {
+                                            // Browsers may block this for security reasons
                                         }
-                                        console.log('SMART window focus: Chat focused after window focus');
-                                    } else {
-                                        console.log('SMART window focus: Skipping focus - user interaction detected');
+                                        console.log('Window focus: Chat focus attempted');
                                     }
                                 } catch (e) {
                                     // Permission denied - expected
                                 }
                             }
-                        }, 300); // Faster response for better user experience
+                        }, 500); // Reasonable delay
                     });
                     
                     // Check periodically if popup is closed
@@ -1064,6 +1054,8 @@
             
 
             
+
+
             // Auto-launch chat on first visit - with no focus interference
             function autoLaunchChat() {
                 console.log('autoLaunchChat function called - DROPDOWN FRIENDLY VERSION');
