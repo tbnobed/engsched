@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, send_file, make_response
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db, is_mobile_device, csrf
-from models import User, Schedule, QuickLink, Location, EmailSettings, TicketCategory, Ticket, TicketComment, TicketHistory, TicketStatus, RecurringScheduleTemplate
+from models import User, Schedule, QuickLink, Location, EmailSettings, TicketCategory, Ticket, TicketComment, TicketHistory, TicketStatus, RecurringScheduleTemplate, TicketView
 from forms import (
     LoginForm, RegistrationForm, ScheduleForm, AdminUserForm, EditUserForm, 
     ChangePasswordForm, QuickLinkForm, LocationForm, EmailSettingsForm, RecurringScheduleForm
@@ -41,10 +41,35 @@ def dashboard():
     today_start_utc = today_start_local.astimezone(pytz.UTC)
     today_end_utc = today_end_local.astimezone(pytz.UTC)
     
-    # Get relevant ticket information
+    # Get relevant ticket information with unread activity detection
     recent_tickets = Ticket.query.filter(
         Ticket.status.in_(['open', 'in_progress', 'pending'])
     ).order_by(Ticket.priority.desc(), Ticket.created_at.desc()).limit(10).all()
+    
+    # Add unread activity indicators for dashboard tickets
+    for ticket in recent_tickets:
+        # Check if this user has viewed this ticket
+        ticket_view = TicketView.query.filter_by(
+            user_id=current_user.id,
+            ticket_id=ticket.id
+        ).first()
+        
+        if ticket_view:
+            # Check for activity since last view
+            ticket.has_unread_activity = (
+                ticket.updated_at > ticket_view.last_viewed_at or
+                TicketComment.query.filter(
+                    TicketComment.ticket_id == ticket.id,
+                    TicketComment.created_at > ticket_view.last_viewed_at
+                ).count() > 0 or
+                TicketHistory.query.filter(
+                    TicketHistory.ticket_id == ticket.id,
+                    TicketHistory.created_at > ticket_view.last_viewed_at
+                ).count() > 0
+            )
+        else:
+            # User has never viewed this ticket - it's new to them
+            ticket.has_unread_activity = True
     
     # Get today's technician schedules using overlap logic
     today_schedules = Schedule.query.filter(

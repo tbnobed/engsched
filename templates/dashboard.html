@@ -32,7 +32,7 @@
                                         </thead>
                                         <tbody>
                                             {% for ticket in recent_tickets %}
-                                            <tr onclick="location.href='{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}'" style="cursor: pointer;">
+                                            <tr onclick="location.href='{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}'" style="cursor: pointer; {% if ticket.has_unread_activity %}background-color: rgba(255, 215, 0, 0.1); border-left: 4px solid #ffc107;{% endif %}">
                                                 <td>
                                                     <span class="badge badge-priority-{{ ticket.priority }}">
                                                         {% if ticket.priority == 0 %}Low
@@ -41,7 +41,12 @@
                                                         {% else %}Urgent{% endif %}
                                                     </span>
                                                 </td>
-                                                <td>{{ ticket.title[:50] }}{% if ticket.title|length > 50 %}...{% endif %}</td>
+                                                <td>
+                                                    {{ ticket.title[:50] }}{% if ticket.title|length > 50 %}...{% endif %}
+                                                    {% if ticket.has_unread_activity %}
+                                                        <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.6rem; padding: 0.15rem 0.3rem; animation: pulse 2s infinite;">NEW</span>
+                                                    {% endif %}
+                                                </td>
                                                 <td>
                                                     <span class="badge badge-status-{{ ticket.status }}">
                                                         {{ ticket.status.replace('_', ' ').title() }}
@@ -334,6 +339,13 @@
     to { transform: rotate(360deg); }
 }
 
+/* Pulse animation for NEW badges */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .col-md-8, .col-md-4 {
@@ -363,6 +375,11 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Auto-refreshing studio bookings...');
         loadStudioBookings();
     }, 180000);
+    
+    // Set up auto-refresh for dashboard tickets every 60 seconds
+    setInterval(function() {
+        refreshDashboardTickets();
+    }, 60000);
     
     // Initialize Feather icons
     feather.replace();
@@ -472,6 +489,43 @@ function loadStudioBookings() {
             
             feather.replace();
         });
+}
+
+function refreshDashboardTickets() {
+    // Don't refresh if the tab is hidden to save resources
+    if (document.hidden) {
+        return;
+    }
+    
+    console.log('Auto-refreshing dashboard tickets...');
+    
+    fetch('/dashboard', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Create a temporary DOM to parse the response
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Extract the Active Tickets table body
+        const newTicketsBody = doc.querySelector('.table tbody');
+        const currentTicketsBody = document.querySelector('.table tbody');
+        
+        if (newTicketsBody && currentTicketsBody) {
+            currentTicketsBody.innerHTML = newTicketsBody.innerHTML;
+            console.log('Dashboard tickets refreshed successfully');
+        }
+        
+        // Re-initialize Feather icons
+        feather.replace();
+    })
+    .catch(error => {
+        console.error('Error refreshing dashboard tickets:', error);
+    });
 }
 
 // Position schedule events in the timeline - Using working main calendar logic
