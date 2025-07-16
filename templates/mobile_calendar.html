@@ -461,15 +461,12 @@
     border-radius: 12px !important;
     box-shadow: 0 4px 12px rgba(204, 85, 0, 0.3) !important;
     position: relative;
+    padding: 15px 20px 15px 20px !important; /* More padding to prevent overlap */
 }
 
+/* Remove the vacation icon to prevent overlap with badge */
 .mobile-schedule-card.all-day-time-off::before {
-    content: '🏖️';
-    position: absolute;
-    top: 8px;
-    right: 12px;
-    font-size: 16px;
-    opacity: 0.8;
+    display: none !important; /* Hide the vacation emoji to prevent overlap */
 }
 
 .mobile-schedule-card.all-day-time-off .time-off-badge {
@@ -478,17 +475,44 @@
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    padding: 4px 8px;
-    font-size: 0.8rem;
-    box-shadow: 0 2px 4px rgba(204, 85, 0, 0.3);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    padding: 6px 12px !important; /* Larger padding for better visibility */
+    font-size: 0.9rem !important; /* Slightly larger font */
+    border-radius: 6px !important;
+    box-shadow: 0 3px 6px rgba(204, 85, 0, 0.4) !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4) !important;
+    margin-right: 10px !important; /* More spacing */
+    display: inline-block;
+    vertical-align: top;
 }
 
 .mobile-schedule-card.all-day-time-off .schedule-tech {
     font-weight: bold !important;
-    color: white !important;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    color: #2d2d2d !important; /* Dark text for better contrast on light background */
+    text-shadow: none !important; /* Remove text shadow for better readability */
+    margin-top: 8px !important; /* Add spacing below badge */
+    font-size: 1.1rem !important; /* Larger text for better readability */
 }
+
+.mobile-schedule-card.all-day-time-off .schedule-location,
+.mobile-schedule-card.all-day-time-off .schedule-desc {
+    color: #333333 !important; /* Dark text for better contrast */
+    text-shadow: none !important;
+    font-weight: 500 !important;
+}
+
+/* Dark mode adjustments for all-day time-off */
+{% if current_user.is_authenticated and current_user.theme_preference == 'dark' %}
+.mobile-schedule-card.all-day-time-off {
+    background: linear-gradient(135deg, #4a3b1a 0%, #5c4722 100%) !important;
+}
+
+.mobile-schedule-card.all-day-time-off .schedule-tech,
+.mobile-schedule-card.all-day-time-off .schedule-location,
+.mobile-schedule-card.all-day-time-off .schedule-desc {
+    color: #ffffff !important; /* White text for dark theme */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+{% endif %}
 
 /* Repeat days styling */
 .repeat-days-grid {
