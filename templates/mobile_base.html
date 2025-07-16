@@ -147,9 +147,37 @@
                 </div>
                 <div class="card-body p-0" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background-color: #ffffff;{% else %}background-color: #0F1624;{% endif %}">
                     <div class="list-group list-group-flush p-2">
-                        <div class="p-3 text-center text-muted">
-                            <p>No active tickets</p>
-                        </div>
+                        {% set active_tickets = get_user_tickets() %}
+                        {% if active_tickets %}
+                            {% for ticket in active_tickets %}
+                                <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" 
+                                   class="list-group-item list-group-item-action p-3 mb-2"
+                                   style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
+                                   {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+                                   background: linear-gradient(to right, #ffffff, #f8f9fa);
+                                   {% else %}
+                                   background: linear-gradient(to right, #141B2D, #1A2332);
+                                   {% endif %}
+                                   transform: translateY(0); transition: transform 0.3s ease, box-shadow 0.3s ease;"
+                                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.15)';"
+                                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge {% if ticket.priority >= 3 %}bg-danger{% elif ticket.priority == 2 %}bg-warning{% elif ticket.priority == 1 %}bg-info{% else %}bg-secondary{% endif %} me-1">
+                                                {{ {0: 'Low', 1: 'Medium', 2: 'High', 3: 'Urgent'}.get(ticket.priority, 'Unknown') }}
+                                            </span>
+                                            <small class="text-muted">#{{ ticket.id }}</small>
+                                        </div>
+                                        <small class="text-muted">{{ ticket.status }}</small>
+                                    </div>
+                                    <div class="mt-1 fw-bold">{{ ticket.title }}</div>
+                                </a>
+                            {% endfor %}
+                        {% else %}
+                            <div class="p-3 text-center text-muted">
+                                <p>No active tickets</p>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
