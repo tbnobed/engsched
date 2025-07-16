@@ -1672,3 +1672,40 @@ def batch_archive_tickets():
         flash(f'Error archiving tickets: {str(e)}', 'error')
     
     return redirect(url_for('tickets.tickets_dashboard'))
+
+@tickets.route("/tickets/api/refresh-sidebar")
+@login_required
+def refresh_sidebar_tickets():
+    """API endpoint to get fresh sidebar ticket data for auto-refresh"""
+    try:
+        # Get active tickets for sidebar
+        active_tickets = Ticket.query.filter(
+            Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.PENDING])
+        ).order_by(
+            Ticket.priority.desc(),
+            Ticket.created_at.desc()
+        ).limit(5).all()
+        
+        # Convert tickets to JSON-serializable format
+        tickets_data = []
+        for ticket in active_tickets:
+            tickets_data.append({
+                "id": ticket.id,
+                "title": ticket.title,
+                "status": ticket.status,
+                "priority": ticket.priority,
+                "has_unread_activity": ticket.has_unread_activity(current_user.id),
+                "created_at": ticket.created_at.strftime("%Y-%m-%d %H:%M")
+            })
+        
+        return jsonify({
+            "success": True,
+            "tickets": tickets_data,
+            "count": len(tickets_data)
+        })
+    except Exception as e:
+        app.logger.error(f"Error refreshing sidebar tickets: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500

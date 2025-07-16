@@ -18,6 +18,34 @@
     50% { opacity: 0.7; }
     100% { opacity: 1; }
 }
+
+.auto-refresh-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 123, 255, 0.1);
+    border: 1px solid #007bff;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: #007bff;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.auto-refresh-indicator.visible {
+    opacity: 1;
+}
+
+.refresh-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 </style>
 {% endblock %}
 
@@ -193,4 +221,115 @@
     color: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#6c757d{% else %}#a0aec0{% endif %} !important;
 }
 </style>
+
+<!-- Auto-refresh indicator -->
+<div id="auto-refresh-indicator" class="auto-refresh-indicator">
+    <i data-feather="refresh-cw" class="refresh-icon" style="width: 14px; height: 14px;"></i>
+    <span>Refreshing...</span>
+</div>
+
+<!-- Auto-refresh JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const refreshInterval = 30000; // 30 seconds
+    const indicator = document.getElementById('auto-refresh-indicator');
+    let autoRefreshTimer;
+    
+    // Show refresh indicator
+    function showRefreshIndicator() {
+        indicator.classList.add('visible');
+        // Re-initialize feather icons for the refresh icon
+        if (window.feather) {
+            feather.replace();
+        }
+    }
+    
+    // Hide refresh indicator
+    function hideRefreshIndicator() {
+        indicator.classList.remove('visible');
+    }
+    
+    // Auto-refresh function
+    function autoRefreshTickets() {
+        console.log('Auto-refreshing mobile tickets dashboard...');
+        showRefreshIndicator();
+        
+        // Get current filter parameters
+        const currentUrl = new URL(window.location.href);
+        const params = new URLSearchParams(currentUrl.search);
+        
+        // Add timestamp to prevent caching
+        params.set('timestamp', Date.now());
+        
+        // Build refresh URL with current filters
+        const refreshUrl = `${currentUrl.pathname}?${params.toString()}`;
+        
+        // Perform the refresh
+        fetch(refreshUrl, {
+            method: 'GET',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Parse the response and update the tickets container
+            const parser = new DOMParser();
+            const newDoc = parser.parseFromString(html, 'text/html');
+            const newTicketsContainer = newDoc.querySelector('.container-fluid');
+            const currentTicketsContainer = document.querySelector('.container-fluid');
+            
+            if (newTicketsContainer && currentTicketsContainer) {
+                // Update the entire container content (preserves mobile layout)
+                currentTicketsContainer.innerHTML = newTicketsContainer.innerHTML;
+                
+                // Re-initialize feather icons
+                if (window.feather) {
+                    feather.replace();
+                }
+                
+                console.log('Mobile tickets dashboard refreshed successfully');
+            }
+            
+            hideRefreshIndicator();
+        })
+        .catch(error => {
+            console.error('Error auto-refreshing mobile tickets:', error);
+            hideRefreshIndicator();
+        });
+    }
+    
+    // Start auto-refresh timer
+    function startAutoRefresh() {
+        autoRefreshTimer = setInterval(autoRefreshTickets, refreshInterval);
+        console.log(`Mobile auto-refresh started - updating every ${refreshInterval/1000} seconds`);
+    }
+    
+    // Stop auto-refresh timer
+    function stopAutoRefresh() {
+        if (autoRefreshTimer) {
+            clearInterval(autoRefreshTimer);
+            autoRefreshTimer = null;
+            console.log('Mobile auto-refresh stopped');
+        }
+    }
+    
+    // Page visibility API to pause/resume auto-refresh when tab is not visible
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopAutoRefresh();
+        } else {
+            startAutoRefresh();
+        }
+    });
+    
+    // Start auto-refresh when page loads
+    startAutoRefresh();
+    
+    // Stop auto-refresh when user navigates away
+    window.addEventListener('beforeunload', stopAutoRefresh);
+});
+</script>
+
 {% endblock %}

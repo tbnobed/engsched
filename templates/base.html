@@ -533,6 +533,52 @@
                     </div>
                 </div>
 
+                <!-- Active Tickets -->
+                <div class="mb-4">
+                    <h5 class="mb-3" style="color: var(--dark-text); font-weight: 600; font-size: 1.21rem;">Active Tickets</h5>
+                    <div id="active-tickets-list" style="color: var(--dark-text);">
+                        {% if get_user_tickets() %}
+                            {% for ticket in get_user_tickets() %}
+                            <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" 
+                               class="list-group-item list-group-item-action d-flex align-items-center mb-2 p-3 {% if ticket.has_unread_activity(current_user.id) %}unread-ticket{% endif %}"
+                               style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); border: 1px solid var(--dark-border); transform: translateY(0); transition: transform 0.3s ease, box-shadow 0.3s ease; background: var(--dark-card);"
+                               onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.12)';"
+                               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.08)';">
+                                {% if ticket.priority >= 3 %}
+                                    <i data-feather="alert-triangle" class="me-2 text-danger" style="width: 18px; height: 18px;"></i>
+                                {% elif ticket.priority == 2 %}
+                                    <i data-feather="alert-circle" class="me-2 text-warning" style="width: 18px; height: 18px;"></i>
+                                {% else %}
+                                    <i data-feather="info" class="me-2 text-info" style="width: 18px; height: 18px;"></i>
+                                {% endif %}
+                                <div class="d-flex flex-column flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="fw-bold text-truncate" style="max-width: 160px;">{{ ticket.title }}</div>
+                                        {% if ticket.has_unread_activity(current_user.id) %}
+                                            <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.3rem;">NEW</span>
+                                        {% endif %}
+                                    </div>
+                                    <small>
+                                        {% if ticket.status == 'open' %}
+                                            <i data-feather="inbox" class="me-1" style="width: 12px; height: 12px;"></i>New
+                                        {% elif ticket.status == 'in_progress' %}
+                                            <i data-feather="tool" class="me-1" style="width: 12px; height: 12px;"></i>In Progress
+                                        {% elif ticket.status == 'pending' %}
+                                            <i data-feather="clock" class="me-1" style="width: 12px; height: 12px;"></i>Pending
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted" style="padding: 16px; border-radius: 8px; border: 1px dashed var(--dark-border); background: var(--dark-card);">
+                                <i data-feather="check-circle" style="width: 24px; height: 24px; margin-bottom: 8px;"></i><br>
+                                No active tickets
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
                 <!-- Quick Links -->
                 <div class="mb-4">
                     <h5 class="mb-3" style="color: var(--dark-text); font-weight: 600; font-size: 1.21rem;">Quick Links</h5>
@@ -1137,5 +1183,147 @@
         })();
     </script>
     {% endif %}
+    
+    <!-- Sidebar Auto-refresh for Active Tickets -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebarRefreshInterval = 60000; // 60 seconds for sidebar
+        let sidebarRefreshTimer;
+        
+        // Function to refresh sidebar active tickets
+        function refreshSidebarTickets() {
+            console.log('Auto-refreshing sidebar active tickets...');
+            
+            fetch('/tickets/api/refresh-sidebar', {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateSidebarTickets(data.tickets);
+                    console.log(`Sidebar tickets refreshed - ${data.count} active tickets`);
+                } else {
+                    console.error('Error refreshing sidebar tickets:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Network error refreshing sidebar tickets:', error);
+            });
+        }
+        
+        // Function to update sidebar tickets display
+        function updateSidebarTickets(tickets) {
+            const ticketContainer = document.querySelector('#active-tickets-list');
+            if (!ticketContainer) return;
+            
+            // Clear existing tickets
+            ticketContainer.innerHTML = '';
+            
+            if (tickets.length === 0) {
+                ticketContainer.innerHTML = '<div class="list-group-item text-center text-muted">No active tickets</div>';
+                return;
+            }
+            
+            // Add updated tickets
+            tickets.forEach(ticket => {
+                const ticketElement = createTicketElement(ticket);
+                ticketContainer.appendChild(ticketElement);
+            });
+            
+            // Re-initialize feather icons
+            if (window.feather) {
+                feather.replace();
+            }
+        }
+        
+        // Function to create a ticket element
+        function createTicketElement(ticket) {
+            const div = document.createElement('a');
+            div.href = `/tickets/${ticket.id}`;
+            div.className = `list-group-item list-group-item-action d-flex align-items-center mb-2 p-3 ${ticket.has_unread_activity ? 'unread-ticket' : ''}`;
+            div.style.cssText = 'border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); border: 1px solid var(--dark-border); transform: translateY(0); transition: transform 0.3s ease, box-shadow 0.3s ease;';
+            
+            // Priority icon
+            let priorityIcon = 'info';
+            let priorityColor = 'text-info';
+            if (ticket.priority >= 3) {
+                priorityIcon = 'alert-triangle';
+                priorityColor = 'text-danger';
+            } else if (ticket.priority === 2) {
+                priorityIcon = 'alert-circle';
+                priorityColor = 'text-warning';
+            }
+            
+            // Status icon
+            let statusIcon = 'inbox';
+            if (ticket.status === 'in_progress') {
+                statusIcon = 'tool';
+            } else if (ticket.status === 'pending') {
+                statusIcon = 'clock';
+            }
+            
+            div.innerHTML = `
+                <i data-feather="${priorityIcon}" class="me-2 ${priorityColor}" style="width: 18px; height: 18px;"></i>
+                <div class="d-flex flex-column flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="fw-bold text-truncate" style="max-width: 160px;">${ticket.title}</div>
+                        ${ticket.has_unread_activity ? '<span class="badge bg-danger rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.3rem;">NEW</span>' : ''}
+                    </div>
+                    <small>
+                        <i data-feather="${statusIcon}" class="me-1" style="width: 12px; height: 12px;"></i>
+                        ${ticket.status === 'open' ? 'New' : ticket.status === 'in_progress' ? 'In Progress' : 'Pending'}
+                    </small>
+                </div>
+            `;
+            
+            // Add hover effects
+            div.addEventListener('mouseover', function() {
+                this.style.transform = 'translateY(-3px)';
+                this.style.boxShadow = '0 6px 12px rgba(0,0,0,0.12)';
+            });
+            
+            div.addEventListener('mouseout', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.08)';
+            });
+            
+            return div;
+        }
+        
+        // Start sidebar auto-refresh timer
+        function startSidebarAutoRefresh() {
+            sidebarRefreshTimer = setInterval(refreshSidebarTickets, sidebarRefreshInterval);
+            console.log(`Sidebar auto-refresh started - updating every ${sidebarRefreshInterval/1000} seconds`);
+        }
+        
+        // Stop sidebar auto-refresh timer
+        function stopSidebarAutoRefresh() {
+            if (sidebarRefreshTimer) {
+                clearInterval(sidebarRefreshTimer);
+                sidebarRefreshTimer = null;
+                console.log('Sidebar auto-refresh stopped');
+            }
+        }
+        
+        // Page visibility API to pause/resume auto-refresh when tab is not visible
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopSidebarAutoRefresh();
+            } else {
+                startSidebarAutoRefresh();
+            }
+        });
+        
+        // Start sidebar auto-refresh when page loads
+        startSidebarAutoRefresh();
+        
+        // Stop sidebar auto-refresh when user navigates away
+        window.addEventListener('beforeunload', stopSidebarAutoRefresh);
+    });
+    </script>
 </body>
 </html>
