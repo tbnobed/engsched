@@ -2229,10 +2229,10 @@ def get_open_tickets(limit=5):
     if not current_user.is_authenticated:
         return []
     
-    app.logger.debug(f"Fetching up to {limit} active tickets for sidebar display")
+    app.logger.debug(f"Fetching up to {limit} active tickets for dashboard display")
     
     # Get all active tickets (open, in progress, pending)
-    # This is SEPARATE from the main ticket dashboard filtering
+    # This is for the dashboard Active Tickets section
     query = Ticket.query.filter(
         Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.PENDING])
     ).order_by(
@@ -2242,7 +2242,7 @@ def get_open_tickets(limit=5):
     ).limit(limit)
     
     tickets = query.all()
-    app.logger.debug(f"Found {len(tickets)} active tickets for sidebar display")
+    app.logger.debug(f"Found {len(tickets)} active tickets for dashboard display")
     
     return tickets
 
@@ -2252,7 +2252,7 @@ def inject_quick_links():
         return QuickLink.query.order_by(QuickLink.order.asc(), QuickLink.category).all()
     
     def get_user_tickets():
-        # Always show active tickets in the sidebar regardless of main content filters
+        # Always show active tickets in the dashboard regardless of main content filters
         return get_open_tickets(5)  # Limit to 5 tickets
     
     return dict(

@@ -1,11 +1,11 @@
 {% macro display_active_tickets() %}
     {# 
         This macro gets ALL active tickets (open, in_progress, pending) 
-        for the sidebar, regardless of the main content filters.
+        for the dashboard, regardless of the main content filters.
         It's independent of dashboard filters.
     #}
     
-    {# Sidebar ticket functionality has been removed - show empty list #}
+    {# Dashboard ticket functionality preserved - show empty list for now #}
     {% set active_tickets = [] %}
     
     {% if active_tickets %}
