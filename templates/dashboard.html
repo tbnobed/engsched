@@ -418,26 +418,76 @@ function loadStudioBookings() {
                         timeZone: '{{ current_user.get_timezone() }}'
                     });
                     
+                    // Determine status badge color and icon
+                    let statusColor = 'secondary';
+                    let statusIcon = 'calendar';
+                    if (booking.status === 'confirmed') {
+                        statusColor = 'success';
+                        statusIcon = 'check-circle';
+                    } else if (booking.status === 'cancelled') {
+                        statusColor = 'danger';
+                        statusIcon = 'x-circle';
+                    } else if (booking.status === 'pending') {
+                        statusColor = 'warning';
+                        statusIcon = 'clock';
+                    }
+
                     html += `
-                        <div class="booking-item p-3 mb-2 rounded">
-                            <div class="d-flex justify-content-between align-items-start">
+                        <div class="booking-item p-3 mb-3 rounded border" style="background-color: var(--bs-light); border-left: 4px solid ${booking.color || '#007bff'} !important;">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div class="flex-grow-1">
-                                    <div class="booking-title font-weight-bold">
+                                    <div class="booking-title font-weight-bold text-dark mb-1">
                                         ${booking.title || 'Studio Booking'}
                                     </div>
-                                    <div class="booking-time text-primary">
+                                    <div class="booking-time text-primary mb-2">
                                         <i data-feather="clock" style="width: 14px; height: 14px;"></i>
                                         ${startTime} - ${endTime}
                                     </div>
-                                    ${booking.client ? `<div class="booking-client text-muted small">
-                                        <i data-feather="user" style="width: 12px; height: 12px;"></i>
-                                        ${booking.client}
-                                    </div>` : ''}
-                                    ${booking.studio ? `<div class="booking-studio small">
-                                        <i data-feather="home" style="width: 12px; height: 12px;"></i>
-                                        ${booking.studio}
-                                    </div>` : ''}
                                 </div>
+                                <span class="badge bg-${statusColor} ms-2">
+                                    <i data-feather="${statusIcon}" style="width: 12px; height: 12px;"></i>
+                                    ${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                                </span>
+                            </div>
+                            
+                            <div class="row g-2 text-sm">
+                                ${booking.description ? `
+                                <div class="col-12">
+                                    <div class="booking-description text-muted small">
+                                        <i data-feather="file-text" style="width: 12px; height: 12px;"></i>
+                                        ${booking.description}
+                                    </div>
+                                </div>` : ''}
+                                
+                                <div class="col-md-6">
+                                    <div class="booking-studio small">
+                                        <i data-feather="home" style="width: 12px; height: 12px;"></i>
+                                        <strong>Studio ${booking.studioId}</strong>
+                                    </div>
+                                </div>
+                                
+                                ${booking.pcrRoomId ? `
+                                <div class="col-md-6">
+                                    <div class="booking-pcr small text-muted">
+                                        <i data-feather="monitor" style="width: 12px; height: 12px;"></i>
+                                        PCR Room ${booking.pcrRoomId}
+                                    </div>
+                                </div>` : ''}
+                                
+                                <div class="col-md-6">
+                                    <div class="booking-type small text-muted">
+                                        <i data-feather="tag" style="width: 12px; height: 12px;"></i>
+                                        ${booking.type.charAt(0).toUpperCase() + booking.type.slice(1)}
+                                    </div>
+                                </div>
+                                
+                                ${booking.severity ? `
+                                <div class="col-md-6">
+                                    <div class="booking-severity small text-warning">
+                                        <i data-feather="alert-triangle" style="width: 12px; height: 12px;"></i>
+                                        ${booking.severity}
+                                    </div>
+                                </div>` : ''}
                             </div>
                         </div>
                     `;
