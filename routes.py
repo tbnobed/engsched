@@ -86,10 +86,51 @@ def dashboard():
             ticket.has_unread_activity = True
     
     # Get today's technician schedules using overlap logic
-    today_schedules = Schedule.query.filter(
+    raw_schedules = Schedule.query.filter(
         Schedule.start_time <= today_end_utc,
         Schedule.end_time >= today_start_utc
     ).order_by(Schedule.start_time).all()
+    
+    # Apply timezone-aware filtering for all-day OOO entries to prevent date shifting
+    today_schedules = []
+    for schedule in raw_schedules:
+        # Special handling for all-day time-off events to prevent timezone date shifting
+        if schedule.time_off and schedule.all_day:
+            # For all-day events, we need to determine the intended calendar date
+            # Since existing entries were created in Chicago time, we reverse-engineer the date
+            utc_time = schedule.start_time.astimezone(pytz.UTC)
+            
+            # Try to determine the original calendar date by checking common US timezones
+            chicago_tz = pytz.timezone('America/Chicago')
+            pacific_tz = pytz.timezone('America/Los_Angeles')
+            
+            chicago_display = utc_time.astimezone(chicago_tz)
+            pacific_display = utc_time.astimezone(pacific_tz)
+            
+            # If the UTC time matches Chicago midnight conversion pattern, use Chicago date
+            chicago_midnight = chicago_tz.localize(datetime.combine(chicago_display.date(), time(0, 0)))
+            if utc_time == chicago_midnight.astimezone(pytz.UTC):
+                intended_date = chicago_display.date()
+                app.logger.debug(f"Dashboard all-day OOO {schedule.id}: Detected Chicago-created entry for {intended_date}")
+            else:
+                # Otherwise, use the current user's timezone date
+                intended_date = utc_time.astimezone(user_tz).date()
+                app.logger.debug(f"Dashboard all-day OOO {schedule.id}: Using user timezone date {intended_date}")
+            
+            # Only include if the intended date matches today's date
+            if intended_date == today:
+                # Apply timezone-aware display time conversion
+                schedule.start_time = user_tz.localize(datetime.combine(intended_date, time(0, 0)))
+                schedule.end_time = user_tz.localize(datetime.combine(intended_date, time(23, 59)))
+                today_schedules.append(schedule)
+                app.logger.debug(f"Dashboard all-day OOO {schedule.id}: Included for {intended_date}")
+            else:
+                app.logger.debug(f"Dashboard all-day OOO {schedule.id}: Filtered out - intended date {intended_date} != today {today}")
+        else:
+            # Regular schedules - include normally with timezone conversion
+            schedule.start_time = schedule.start_time.astimezone(user_tz)
+            schedule.end_time = schedule.end_time.astimezone(user_tz)
+            today_schedules.append(schedule)
     
     # Organize schedules by technician  
     schedules_by_tech = {}
