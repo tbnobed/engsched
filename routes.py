@@ -48,27 +48,32 @@ def dashboard():
     
     # Add unread activity indicators for dashboard tickets
     for ticket in recent_tickets:
-        # Check if this user has viewed this ticket
-        ticket_view = TicketView.query.filter_by(
-            user_id=current_user.id,
-            ticket_id=ticket.id
-        ).first()
-        
-        if ticket_view:
-            # Check for activity since last view
-            ticket.has_unread_activity = (
-                ticket.updated_at > ticket_view.last_viewed_at or
-                TicketComment.query.filter(
-                    TicketComment.ticket_id == ticket.id,
-                    TicketComment.created_at > ticket_view.last_viewed_at
-                ).count() > 0 or
-                TicketHistory.query.filter(
-                    TicketHistory.ticket_id == ticket.id,
-                    TicketHistory.created_at > ticket_view.last_viewed_at
-                ).count() > 0
-            )
-        else:
-            # User has never viewed this ticket - it's new to them
+        try:
+            # Check if this user has viewed this ticket
+            ticket_view = TicketView.query.filter_by(
+                user_id=current_user.id,
+                ticket_id=ticket.id
+            ).first()
+            
+            if ticket_view:
+                # Check for activity since last view
+                ticket.has_unread_activity = (
+                    ticket.updated_at > ticket_view.last_viewed_at or
+                    TicketComment.query.filter(
+                        TicketComment.ticket_id == ticket.id,
+                        TicketComment.created_at > ticket_view.last_viewed_at
+                    ).count() > 0 or
+                    TicketHistory.query.filter(
+                        TicketHistory.ticket_id == ticket.id,
+                        TicketHistory.created_at > ticket_view.last_viewed_at
+                    ).count() > 0
+                )
+            else:
+                # User has never viewed this ticket - it's new to them
+                ticket.has_unread_activity = True
+        except Exception as e:
+            app.logger.error(f"Error checking unread activity for ticket {ticket.id}: {e}")
+            # Default to showing as unread if there's an error
             ticket.has_unread_activity = True
     
     # Get today's technician schedules using overlap logic
@@ -77,66 +82,7 @@ def dashboard():
         Schedule.end_time >= today_start_utc
     ).order_by(Schedule.start_time).all()
     
-    # Convert schedule times to user's timezone and apply timezone fix
-    user_tz = current_user.get_timezone_obj()
-    filtered_schedules = []
-    
-    for schedule in today_schedules:
-        if schedule.start_time.tzinfo is None:
-            schedule.start_time = pytz.UTC.localize(schedule.start_time)
-        if schedule.end_time.tzinfo is None:
-            schedule.end_time = pytz.UTC.localize(schedule.end_time)
-
-        # Special handling for all-day time-off events to prevent timezone date shifting
-        if schedule.time_off and schedule.all_day:
-            # For all-day events, we need to determine the intended calendar date
-            # Since existing entries were created in Chicago time, we reverse-engineer the date
-            utc_time = schedule.start_time.astimezone(pytz.UTC)
-            
-            # Try to determine the original calendar date by checking common US timezones
-            chicago_tz = pytz.timezone('America/Chicago')
-            chicago_display = utc_time.astimezone(chicago_tz)
-            
-            # If the UTC time matches Chicago midnight conversion pattern, use Chicago date
-            chicago_midnight = chicago_tz.localize(datetime.combine(chicago_display.date(), time(0, 0)))
-            if utc_time == chicago_midnight.astimezone(pytz.UTC):
-                intended_date = chicago_display.date()
-                app.logger.debug(f"Dashboard all-day OOO {schedule.id} ({schedule.technician.username}): Detected Chicago-created entry for {intended_date}")
-            else:
-                # Otherwise, use the current user's timezone date
-                intended_date = utc_time.astimezone(user_tz).date()
-                app.logger.debug(f"Dashboard all-day OOO {schedule.id} ({schedule.technician.username}): Using user timezone date {intended_date}")
-            
-            # Only include this schedule if the intended date matches today's date
-            if intended_date == today:
-                # Display as all-day in user's timezone for the intended date
-                schedule.start_time = user_tz.localize(datetime.combine(intended_date, time(0, 0)))
-                schedule.end_time = user_tz.localize(datetime.combine(intended_date, time(23, 59)))
-                app.logger.debug(f"Dashboard all-day display fix for schedule {schedule.id} ({schedule.technician.username}): {intended_date} → {schedule.start_time} to {schedule.end_time}")
-                filtered_schedules.append(schedule)
-            else:
-                app.logger.debug(f"Dashboard filtering out OOO {schedule.id} - intended date {intended_date} != today {today}")
-        else:
-            # Convert regular schedules to user timezone
-            schedule.start_time = schedule.start_time.astimezone(user_tz)
-            schedule.end_time = schedule.end_time.astimezone(user_tz)
-            
-            # Only include if schedule actually falls on today's date
-            if schedule.start_time.date() == today or schedule.end_time.date() == today:
-                filtered_schedules.append(schedule)
-            else:
-                app.logger.debug(f"Dashboard filtering out regular schedule {schedule.id} - dates {schedule.start_time.date()}/{schedule.end_time.date()} != today {today}")
-    
-    # Replace the original list with filtered results
-    today_schedules = filtered_schedules
-
-    # Debug: check if testuser schedule is in the dashboard list
-    testuser_schedules = [s for s in today_schedules if s.technician.username == 'testuser']
-    app.logger.debug(f"Dashboard found {len(testuser_schedules)} testuser schedules")
-    for ts in testuser_schedules:
-        app.logger.debug(f"  Dashboard testuser schedule {ts.id}: {ts.start_time} to {ts.end_time}, time_off={ts.time_off}, all_day={ts.all_day}")
-
-    # Organize schedules by technician
+    # Organize schedules by technician  
     schedules_by_tech = {}
     for schedule in today_schedules:
         tech_name = schedule.technician.username
