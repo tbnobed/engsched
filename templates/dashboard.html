@@ -460,21 +460,6 @@ function loadStudioBookings() {
                                 </div>` : ''}
                                 
                                 <div class="col-md-6">
-                                    <div class="booking-studio small">
-                                        <i data-feather="home" style="width: 12px; height: 12px;"></i>
-                                        <strong>Studio ${booking.studioId}</strong>
-                                    </div>
-                                </div>
-                                
-                                ${booking.pcrRoomId ? `
-                                <div class="col-md-6">
-                                    <div class="booking-pcr small text-muted">
-                                        <i data-feather="monitor" style="width: 12px; height: 12px;"></i>
-                                        PCR Room ${booking.pcrRoomId}
-                                    </div>
-                                </div>` : ''}
-                                
-                                <div class="col-md-6">
                                     <div class="booking-type small text-muted">
                                         <i data-feather="tag" style="width: 12px; height: 12px;"></i>
                                         ${booking.type.charAt(0).toUpperCase() + booking.type.slice(1)}
