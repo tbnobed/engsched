@@ -34,8 +34,10 @@ def dashboard():
     """New landing page with tickets, studio bookings, and technician schedules"""
     # Check if user is on mobile device and redirect to mobile calendar
     if is_mobile_device():
+        app.logger.debug("Mobile device detected in dashboard - redirecting to calendar")
         return redirect(url_for('calendar'))
     
+    app.logger.debug("Desktop device detected in dashboard - serving desktop template")
     user_tz = pytz.timezone(current_user.get_timezone())
     today = datetime.now(user_tz).date()
     
