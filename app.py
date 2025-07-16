@@ -55,12 +55,29 @@ def is_mobile_device():
     import re
     
     user_agent = request.headers.get('User-Agent', '').lower()
-    # Pattern to match common mobile devices
+    # Pattern to match common mobile devices and Chrome DevTools device emulation
     pattern = r"android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile"
+    
+    # Check for Chrome DevTools mobile emulation indicators
+    sec_ch_ua_mobile = request.headers.get('Sec-CH-UA-Mobile', '')
+    
+    # Also check for viewport width as an additional indicator for Chrome DevTools
+    viewport_width = request.headers.get('Viewport-Width', '')
+    
+    # Check for specific mobile device strings that Chrome DevTools might use
+    mobile_device_patterns = r"iphone|ipad|android|samsung|pixel|nexus|lg-|sony|htc"
     
     # Debug the detection logic
     app.logger.debug(f"User-Agent: {user_agent}")
-    is_mobile = bool(re.search(pattern, user_agent))
+    app.logger.debug(f"Sec-CH-UA-Mobile header: {sec_ch_ua_mobile}")
+    app.logger.debug(f"Viewport-Width header: {viewport_width}")
+    app.logger.debug(f"All headers: {dict(request.headers)}")
+    
+    # Check multiple indicators for mobile device
+    is_mobile = (bool(re.search(pattern, user_agent)) or 
+                 sec_ch_ua_mobile == '?1' or
+                 bool(re.search(mobile_device_patterns, user_agent)))
+    
     app.logger.debug(f"is_mobile_device detection result: {is_mobile}")
     
     return is_mobile

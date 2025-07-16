@@ -32,10 +32,13 @@ def index():
 @login_required
 def dashboard():
     """New landing page with tickets, studio bookings, and technician schedules"""
+    # Check for force mobile parameter for testing
+    force_mobile = request.args.get('mobile') == 'true'
+    
     # Check if user is on mobile device and redirect to mobile calendar
-    if is_mobile_device():
+    if is_mobile_device() or force_mobile:
         app.logger.debug("Mobile device detected in dashboard - redirecting to calendar")
-        return redirect(url_for('calendar'))
+        return redirect(url_for('calendar', mobile='true' if force_mobile else None))
     
     app.logger.debug("Desktop device detected in dashboard - serving desktop template")
     user_tz = pytz.timezone(current_user.get_timezone())
@@ -872,8 +875,11 @@ def calendar():
     is_mobile = is_mobile_device()  # Force evaluation
     print(f"is_mobile value: {is_mobile}")
     
+    # Check for force mobile parameter for testing
+    force_mobile = request.args.get('mobile') == 'true'
+    
     # Check if user is on a mobile device
-    if is_mobile_device():
+    if is_mobile_device() or force_mobile:
         print("Using mobile template for calendar")
         return render_template('mobile_calendar.html', 
                             schedules=schedules,
