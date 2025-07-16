@@ -432,11 +432,17 @@ function loadStudioBookings() {
                         statusIcon = 'clock';
                     }
 
+                    // Detect dark mode for booking styling
+                    const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                    const bgColor = isDarkMode ? '#2d2d2d' : 'var(--bs-light)';
+                    const titleColor = isDarkMode ? '#ffffff' : '#000000';
+                    const borderColor = isDarkMode ? '#3a3a3a' : '#dee2e6';
+
                     html += `
-                        <div class="booking-item p-3 mb-3 rounded border" style="background-color: var(--bs-light); border-left: 4px solid ${booking.color || '#007bff'} !important;">
+                        <div class="booking-item p-3 mb-3 rounded border" style="background-color: ${bgColor}; border: 1px solid ${borderColor}; border-left: 4px solid ${booking.color || '#007bff'} !important;">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div class="flex-grow-1">
-                                    <div class="booking-title font-weight-bold text-dark mb-1">
+                                    <div class="booking-title font-weight-bold mb-1" style="color: ${titleColor};">
                                         ${booking.title || 'Studio Booking'}
                                     </div>
                                     <div class="booking-time text-primary mb-2">
@@ -453,14 +459,14 @@ function loadStudioBookings() {
                             <div class="row g-2 text-sm">
                                 ${booking.description ? `
                                 <div class="col-12">
-                                    <div class="booking-description text-muted small">
+                                    <div class="booking-description small" style="color: ${isDarkMode ? '#b0b0b0' : '#6c757d'};">
                                         <i data-feather="file-text" style="width: 12px; height: 12px;"></i>
                                         ${booking.description}
                                     </div>
                                 </div>` : ''}
                                 
                                 <div class="col-md-6">
-                                    <div class="booking-type small text-muted">
+                                    <div class="booking-type small" style="color: ${isDarkMode ? '#b0b0b0' : '#6c757d'};">
                                         <i data-feather="tag" style="width: 12px; height: 12px;"></i>
                                         ${booking.type.charAt(0).toUpperCase() + booking.type.slice(1)}
                                     </div>
