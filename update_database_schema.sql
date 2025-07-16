@@ -1,38 +1,22 @@
--- Database schema update for External User Support (Option 3)
--- This script adds the necessary columns and indexes for email-only communication
+-- Update database schema for unread activity indicators feature
+-- This script adds the ticket_view table if it doesn't exist
 
--- Add external user columns to ticket table (with IF NOT EXISTS to avoid errors)
+-- Create ticket_view table for tracking when users last viewed tickets
+CREATE TABLE IF NOT EXISTS ticket_view (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    ticket_id INTEGER NOT NULL REFERENCES ticket(id) ON DELETE CASCADE,
+    last_viewed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, ticket_id)
+);
+
+-- Create indexes for performance (only if they don't exist)
+CREATE INDEX IF NOT EXISTS idx_ticket_view_user_id ON ticket_view(user_id);
+CREATE INDEX IF NOT EXISTS idx_ticket_view_ticket_id ON ticket_view(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_ticket_view_last_viewed ON ticket_view(last_viewed_at);
+
+-- Log the update
 DO $$
 BEGIN
-    -- Add external_email column
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'ticket' AND column_name = 'external_email') THEN
-        ALTER TABLE ticket ADD COLUMN external_email VARCHAR(255);
-    END IF;
-    
-    -- Add external_name column
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'ticket' AND column_name = 'external_name') THEN
-        ALTER TABLE ticket ADD COLUMN external_name VARCHAR(255);
-    END IF;
-    
-    -- Add email_notifications column
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'ticket' AND column_name = 'email_notifications') THEN
-        ALTER TABLE ticket ADD COLUMN email_notifications BOOLEAN DEFAULT TRUE;
-    END IF;
-    
-    -- Add email_thread_id column
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'ticket' AND column_name = 'email_thread_id') THEN
-        ALTER TABLE ticket ADD COLUMN email_thread_id VARCHAR(100);
-    END IF;
+    RAISE NOTICE 'TicketView table and indexes created successfully for unread activity indicators';
 END $$;
-
--- Create indexes for external user support (with IF NOT EXISTS to avoid errors)
-CREATE INDEX IF NOT EXISTS idx_ticket_external_email ON ticket(external_email);
-CREATE INDEX IF NOT EXISTS idx_ticket_email_thread_id ON ticket(email_thread_id);
-CREATE INDEX IF NOT EXISTS idx_ticket_external_notifications ON ticket(email_notifications) WHERE external_email IS NOT NULL;
-
--- Update any existing tickets to have email_notifications = TRUE if they don't have a value
-UPDATE ticket SET email_notifications = TRUE WHERE email_notifications IS NULL;

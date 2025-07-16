@@ -74,6 +74,15 @@ CREATE TABLE ticket (
     email_thread_id VARCHAR(100)
 );
 
+-- Ticket view tracking table for unread activity indicators
+CREATE TABLE ticket_view (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    ticket_id INTEGER NOT NULL REFERENCES ticket(id) ON DELETE CASCADE,
+    last_viewed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, ticket_id)
+);
+
 CREATE TABLE ticket_comment (
     id SERIAL PRIMARY KEY,
     ticket_id INTEGER REFERENCES ticket(id) ON DELETE CASCADE,
@@ -143,6 +152,11 @@ CREATE INDEX idx_quick_link_order ON quick_link("order");
 CREATE INDEX idx_ticket_status ON ticket(status);
 CREATE INDEX idx_ticket_assigned_to ON ticket(assigned_to);
 CREATE INDEX idx_ticket_category ON ticket(category_id);
+
+-- Ticket view indexes for performance
+CREATE INDEX idx_ticket_view_user_id ON ticket_view(user_id);
+CREATE INDEX idx_ticket_view_ticket_id ON ticket_view(ticket_id);
+CREATE INDEX idx_ticket_view_last_viewed ON ticket_view(last_viewed_at);
 CREATE INDEX idx_ticket_created_by ON ticket(created_by);
 CREATE INDEX idx_ticket_comment_ticket ON ticket_comment(ticket_id);
 CREATE INDEX idx_ticket_history_ticket ON ticket_history(ticket_id);

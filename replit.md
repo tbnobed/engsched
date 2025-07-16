@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
 Recent Updates (July 16, 2025):
+- ✅ COMPLETED: Unread Activity Indicator System for Tickets
+- Implemented comprehensive ticket viewing tracking with TicketView database model
+- Added visual "NEW" badges with pulsing animation for tickets with unread activity since last view
+- Enhanced dashboard with row highlighting and unread indicators in both desktop and mobile templates
+- Updated sidebar Active Tickets section to show unread status with conditional styling
+- Automatic read marking when users view tickets - seamless UX without manual actions
+- Created database migration scripts and updated Docker files for production deployment
+- System tracks last viewed timestamp per user/ticket and detects new comments, status changes, and updates
+- Database includes proper indexing (user_id, ticket_id, last_viewed_at) for optimal performance
+- All templates updated with responsive styling for light/dark theme compatibility
 - ✅ COMPLETED: CRITICAL Email Threading Fix - Perfect Conversation Continuity
 - Fixed critical threading issue where status update and assignment emails broke conversation threads
 - ALL email notifications now use identical subject line format: "[Ticket #ID] - {ticket.title}"
@@ -308,7 +318,9 @@ Recent Updates (July 13, 2025):
 - Enhanced docker-compose.yml with volume mapping for uploads and SESSION_SECRET environment variable
 - Updated .env.example with all necessary configuration variables
 - Created comprehensive deploy.sh script with health checks and deployment automation
-- All Docker files now support the complete application feature set
+- Added TicketView table creation to init.sql and update_database_schema.sql for unread indicators
+- Docker entrypoint script automatically applies database schema updates during container startup
+- All Docker files now support the complete application feature set including unread activity tracking
 
 Previous Updates (July 12, 2025):
 - Updated all logos with new TBN logo while maintaining "PLEX ENGINEERING" text branding
