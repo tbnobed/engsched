@@ -9,6 +9,15 @@ This is a comprehensive web application for managing technician schedules and ti
 Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
+Recent Updates (July 17, 2025):
+- ✅ COMPLETED: Timezone-Aware Export System for Admin Schedule Exports
+- Updated export_schedules function to respect individual user timezone settings instead of hardcoded Chicago time
+- Each user's schedule export now displays times in their personal timezone (CST, PST, etc.)
+- Added timezone information header to each Excel worksheet showing user's timezone setting
+- Export now uses admin user's timezone for date range selection and each technician's timezone for their schedule data
+- Enhanced export headers with clear timezone identification: "Timezone: America/Chicago (America/Chicago)"
+- All exported times (Clock In, Clock Out) now show in user's local timezone for accurate timesheet reporting
+
 Recent Updates (July 16, 2025):
 - ✅ COMPLETED: Side-by-Side Checkbox Layout for Schedule Forms
 - Updated all schedule forms to display "Time Off" and "OOO (Out of Office)" checkboxes side by side using Bootstrap columns

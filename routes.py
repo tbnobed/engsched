@@ -2023,11 +2023,12 @@ def export_schedules():
             flash('Please select both start and end dates.')
             return redirect(url_for('admin_dashboard'))
 
-        # Convert dates to UTC datetime objects
-        start_datetime = pytz.timezone('America/Chicago').localize(
+        # Convert dates to UTC datetime objects using admin user's timezone for date range
+        admin_tz = pytz.timezone(current_user.get_timezone())
+        start_datetime = admin_tz.localize(
             datetime.strptime(start_date, '%Y-%m-%d')
         ).astimezone(pytz.UTC)
-        end_datetime = (pytz.timezone('America/Chicago').localize(
+        end_datetime = (admin_tz.localize(
             datetime.strptime(end_date, '%Y-%m-%d')
         ) + timedelta(days=1)).astimezone(pytz.UTC)
 
@@ -2056,12 +2057,13 @@ def export_schedules():
             # Create a new worksheet for each user
             ws = wb.create_sheet(title=user.username[:31])  # Excel limits sheet names to 31 chars
 
-            # Write header
+            # Write header with timezone information
             ws['A1'] = f'Schedule Export - {user.username}'
             ws['A2'] = f'Period: {start_date} to {end_date}'
+            ws['A3'] = f'Timezone: {user.get_timezone()} ({user_tz.zone})'
 
-            # Calculate total hours
-            user_tz = pytz.timezone('America/Chicago')
+            # Calculate total hours using the user's individual timezone
+            user_tz = pytz.timezone(user.get_timezone())
             total_minutes = 0
 
             for schedule in schedules:
@@ -2071,18 +2073,18 @@ def export_schedules():
                 total_minutes += duration
 
             total_hours = total_minutes // 60
-            ws['A4'] = 'Total Hours:'
-            ws['B4'] = f"{total_hours:.0f}:00:00"
+            ws['A5'] = 'Total Hours:'
+            ws['B5'] = f"{total_hours:.0f}:00:00"
 
             # Write column headers
             headers = ['Day', 'Date', 'Clock In', 'Clock Out', 'Total', 'Type', 'Notes']
             for col, header in enumerate(headers, 1):
-                cell = ws.cell(row=6, column=col)
+                cell = ws.cell(row=7, column=col)
                 cell.value = header
                 cell.font = header_font
                 cell.fill = header_fill
 
-            row = 7
+            row = 8
             date_cursor = start_datetime.astimezone(user_tz)
             end_date = end_datetime.astimezone(user_tz)
 
