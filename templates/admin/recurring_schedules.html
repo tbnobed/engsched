@@ -24,52 +24,27 @@
             </div>
 
             <!-- Backup/Export and Import Section -->
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <div class="card" style="max-height: 120px;">
-                        <div class="card-header py-1 px-2">
-                            <small class="mb-0 fw-bold">
-                                <i data-feather="download" style="width: 14px; height: 14px;" class="me-1"></i>
-                                Export Templates
-                            </small>
-                        </div>
-                        <div class="card-body py-2 px-2">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <small class="text-muted me-2">Export as backup file</small>
-                                <div>
-                                    <a href="{{ url_for('export_recurring_templates') }}" class="btn btn-outline-primary btn-sm py-1 px-2" id="export-btn" onclick="showExportLoading()">
-                                        <i data-feather="download" style="width: 12px; height: 12px;" class="me-1"></i>
-                                        Export
-                                    </a>
-                                    <div id="export-loading" class="text-center mt-1" style="display: none;">
-                                        <div class="spinner-border spinner-border-sm" role="status" style="width: 1rem; height: 1rem;"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="text-center mb-2">
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('export_recurring_templates') }}" class="btn btn-outline-primary btn-sm" id="export-btn" onclick="showExportLoading()">
+                        <i data-feather="download" style="width: 12px; height: 12px;" class="me-1"></i>
+                        Export Templates
+                    </a>
+                    <label class="btn btn-outline-success btn-sm" for="template-file-input">
+                        <i data-feather="upload" style="width: 12px; height: 12px;" class="me-1"></i>
+                        Import Templates
+                    </label>
                 </div>
-                <div class="col-md-6">
-                    <div class="card" style="max-height: 120px;">
-                        <div class="card-header py-1 px-2">
-                            <small class="mb-0 fw-bold">
-                                <i data-feather="upload" style="width: 14px; height: 14px;" class="me-1"></i>
-                                Import Templates
-                            </small>
-                        </div>
-                        <div class="card-body py-2 px-2">
-                            <form method="POST" action="{{ url_for('import_recurring_templates') }}" enctype="multipart/form-data" class="d-flex align-items-center">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="file" class="form-control form-control-sm me-2" name="template_file" accept=".json" required style="font-size: 0.75rem;">
-                                <button type="submit" class="btn btn-outline-success btn-sm py-1 px-2 flex-shrink-0" 
-                                        onclick="return confirm('Import templates?')">
-                                    <i data-feather="upload" style="width: 12px; height: 12px;" class="me-1"></i>
-                                    Import
-                                </button>
-                            </form>
-                        </div>
-                    </div>
+                <div id="export-loading" class="mt-1" style="display: none;">
+                    <small class="text-muted">
+                        <div class="spinner-border spinner-border-sm me-1" role="status" style="width: 0.8rem; height: 0.8rem;"></div>
+                        Exporting...
+                    </small>
                 </div>
+                <form method="POST" action="{{ url_for('import_recurring_templates') }}" enctype="multipart/form-data" style="display: none;" id="import-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="file" id="template-file-input" name="template_file" accept=".json" onchange="this.form.submit()">
+                </form>
             </div>
 
             <!-- Templates Table -->
