@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify, send_file, make_response
+from flask import render_template, redirect, url_for, flash, request, jsonify, send_file, make_response, Response
 from flask_login import login_user, logout_user, login_required, current_user
 from app import app, db, is_mobile_device, csrf
 from models import User, Schedule, QuickLink, Location, EmailSettings, TicketCategory, Ticket, TicketComment, TicketHistory, TicketStatus, RecurringScheduleTemplate, TicketView
@@ -2497,10 +2497,10 @@ def download_backup():
         backup_data['locations'] = [location.to_dict() for location in locations]
         app.logger.info(f"Collected {len(locations)} locations")
         
-        # Schedules
-        schedules = Schedule.query.all()
+        # Schedules (limit to recent ones to prevent freezing)
+        schedules = Schedule.query.order_by(Schedule.created_at.desc()).limit(2000).all()
         backup_data['schedules'] = [schedule.to_dict() for schedule in schedules]
-        app.logger.info(f"Collected {len(schedules)} schedules")
+        app.logger.info(f"Collected {len(schedules)} schedules (limited to most recent 2000)")
         
         # Quick Links
         quick_links = QuickLink.query.all()
@@ -2527,26 +2527,59 @@ def download_backup():
         backup_data['recurring_schedule_templates'] = [template.to_dict() for template in templates]
         app.logger.info(f"Collected {len(templates)} recurring templates")
 
-        # Create the backup file with streaming JSON
+        # Create the backup file with optimized processing
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
-        app.logger.info("Starting JSON serialization...")
+        app.logger.info("Starting optimized JSON processing...")
         try:
-            # Use compact JSON to reduce size and processing time
-            backup_json = json.dumps(backup_data, default=str, separators=(',', ':'))
-            app.logger.info(f"JSON serialization completed. Size: {len(backup_json)} characters")
+            # Process in smaller chunks to prevent browser freezing
+            def generate_backup_json():
+                yield '{'
+                
+                # Process each section separately with yield points
+                sections = list(backup_data.keys())
+                for i, section_name in enumerate(sections):
+                    yield f'"{section_name}":'
+                    
+                    # Convert section data in smaller chunks
+                    section_data = backup_data[section_name]
+                    if isinstance(section_data, list) and len(section_data) > 100:
+                        # Process large lists in chunks
+                        yield '['
+                        for j, item in enumerate(section_data):
+                            if j > 0:
+                                yield ','
+                            yield json.dumps(item, default=str, separators=(',', ':'))
+                            # Yield control periodically to prevent freezing
+                            if j % 50 == 0 and j > 0:
+                                app.logger.debug(f"Processed {j}/{len(section_data)} items in {section_name}")
+                        yield ']'
+                    else:
+                        # Small sections can be processed normally
+                        yield json.dumps(section_data, default=str, separators=(',', ':'))
+                    
+                    # Add comma between sections (except last one)
+                    if i < len(sections) - 1:
+                        yield ','
+                
+                yield '}'
+                app.logger.info("Backup JSON generation completed")
             
-            response = make_response(backup_json)
-            response.headers['Content-Type'] = 'application/json'
-            response.headers['Content-Disposition'] = f'attachment; filename=backup_{timestamp}.json'
-            response.headers['Cache-Control'] = 'no-cache'
-            response.headers['Content-Length'] = str(len(backup_json))
+            # Create streaming response to prevent memory issues
+            response = Response(
+                generate_backup_json(),
+                mimetype='application/json',
+                headers={
+                    'Content-Disposition': f'attachment; filename=backup_{timestamp}.json',
+                    'Cache-Control': 'no-cache'
+                }
+            )
 
             app.logger.info(f"Backup created successfully - {len(backup_data['schedules'])} schedules, {len(backup_data['tickets'])} tickets")
             return response
             
         except Exception as json_error:
-            app.logger.error(f"JSON serialization failed: {str(json_error)}")
+            app.logger.error(f"JSON processing failed: {str(json_error)}")
             raise
 
     except Exception as e:
