@@ -23,9 +23,13 @@
                         <li>Email settings</li>
                     </ul>
                     <div class="d-grid">
-                        <a href="{{ url_for('download_backup') }}" class="btn btn-primary">
+                        <a href="{{ url_for('download_backup') }}" class="btn btn-primary" id="backup-btn" onclick="showBackupLoading()">
                             <i data-feather="download"></i> Download Backup
                         </a>
+                        <div id="backup-loading" class="text-center mt-2" style="display: none;">
+                            <div class="spinner-border spinner-border-sm" role="status"></div>
+                            <small class="text-muted d-block">Creating backup...</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -82,4 +86,25 @@
         </div>
     </div>
 </div>
+
+<script>
+function showBackupLoading() {
+    document.getElementById('backup-btn').style.display = 'none';
+    document.getElementById('backup-loading').style.display = 'block';
+    
+    // Hide loading after reasonable timeout even if download fails
+    setTimeout(function() {
+        document.getElementById('backup-loading').style.display = 'none';
+        document.getElementById('backup-btn').style.display = 'block';
+    }, 30000); // 30 seconds timeout
+}
+
+// Auto-hide loading on page focus (when download completes)
+window.addEventListener('focus', function() {
+    setTimeout(function() {
+        document.getElementById('backup-loading').style.display = 'none';
+        document.getElementById('backup-btn').style.display = 'block';
+    }, 1000);
+});
+</script>
 {% endblock %}

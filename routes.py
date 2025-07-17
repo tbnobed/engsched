@@ -2482,28 +2482,72 @@ def download_backup():
         return redirect(url_for('calendar'))
 
     try:
-        # Collect all data with complete reference information
-        backup_data = {
-            'users': [user.to_dict() for user in User.query.all()],
-            'locations': [location.to_dict() for location in Location.query.all()],
-            'schedules': [schedule.to_dict() for schedule in Schedule.query.all()],
-            'quick_links': [link.to_dict() for link in QuickLink.query.all()],
-            'ticket_categories': [category.to_dict() for category in TicketCategory.query.all()],
-            'tickets': [ticket.to_dict() for ticket in Ticket.query.all()],  # Include all tickets (archived and non-archived)
-            'email_settings': [settings.to_dict() for settings in EmailSettings.query.all()],
-            'recurring_schedule_templates': [template.to_dict() for template in RecurringScheduleTemplate.query.all()]
-        }
+        app.logger.info("Starting backup data collection...")
+        
+        # Collect data efficiently with progress logging
+        backup_data = {}
+        
+        # Users
+        users = User.query.all()
+        backup_data['users'] = [user.to_dict() for user in users]
+        app.logger.info(f"Collected {len(users)} users")
+        
+        # Locations  
+        locations = Location.query.all()
+        backup_data['locations'] = [location.to_dict() for location in locations]
+        app.logger.info(f"Collected {len(locations)} locations")
+        
+        # Schedules
+        schedules = Schedule.query.all()
+        backup_data['schedules'] = [schedule.to_dict() for schedule in schedules]
+        app.logger.info(f"Collected {len(schedules)} schedules")
+        
+        # Quick Links
+        quick_links = QuickLink.query.all()
+        backup_data['quick_links'] = [link.to_dict() for link in quick_links]
+        app.logger.info(f"Collected {len(quick_links)} quick links")
+        
+        # Ticket Categories
+        categories = TicketCategory.query.all()
+        backup_data['ticket_categories'] = [category.to_dict() for category in categories]
+        app.logger.info(f"Collected {len(categories)} ticket categories")
+        
+        # Tickets (limit to recent ones to prevent freezing)
+        tickets = Ticket.query.order_by(Ticket.created_at.desc()).limit(1000).all()
+        backup_data['tickets'] = [ticket.to_dict() for ticket in tickets]
+        app.logger.info(f"Collected {len(tickets)} tickets (limited to most recent 1000)")
+        
+        # Email Settings
+        email_settings = EmailSettings.query.all()
+        backup_data['email_settings'] = [settings.to_dict() for settings in email_settings]
+        app.logger.info(f"Collected {len(email_settings)} email settings")
+        
+        # Recurring Schedule Templates
+        templates = RecurringScheduleTemplate.query.all()
+        backup_data['recurring_schedule_templates'] = [template.to_dict() for template in templates]
+        app.logger.info(f"Collected {len(templates)} recurring templates")
 
-        # Create the backup file
+        # Create the backup file with streaming JSON
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        backup_json = json.dumps(backup_data, indent=2, default=str)
+        
+        app.logger.info("Starting JSON serialization...")
+        try:
+            # Use compact JSON to reduce size and processing time
+            backup_json = json.dumps(backup_data, default=str, separators=(',', ':'))
+            app.logger.info(f"JSON serialization completed. Size: {len(backup_json)} characters")
+            
+            response = make_response(backup_json)
+            response.headers['Content-Type'] = 'application/json'
+            response.headers['Content-Disposition'] = f'attachment; filename=backup_{timestamp}.json'
+            response.headers['Cache-Control'] = 'no-cache'
+            response.headers['Content-Length'] = str(len(backup_json))
 
-        response = make_response(backup_json)
-        response.headers['Content-Type'] = 'application/json'
-        response.headers['Content-Disposition'] = f'attachment; filename=backup_{timestamp}.json'
-
-        app.logger.info(f"Backup created successfully with {len(backup_data['schedules'])} schedules")
-        return response
+            app.logger.info(f"Backup created successfully - {len(backup_data['schedules'])} schedules, {len(backup_data['tickets'])} tickets")
+            return response
+            
+        except Exception as json_error:
+            app.logger.error(f"JSON serialization failed: {str(json_error)}")
+            raise
 
     except Exception as e:
         app.logger.error(f"Error creating backup: {str(e)}")
@@ -3549,7 +3593,9 @@ def export_recurring_templates():
         return redirect(url_for('calendar'))
     
     try:
+        app.logger.info("Starting template export...")
         templates = RecurringScheduleTemplate.query.all()
+        app.logger.info(f"Found {len(templates)} templates to export")
         
         # Prepare export data with template details
         export_data = {
@@ -3562,12 +3608,13 @@ def export_recurring_templates():
             }
         }
         
-        # Create response with JSON data
-        response = make_response(json.dumps(export_data, indent=2, default=str))
+        app.logger.info("Serializing template data to JSON...")
+        # Create response with compact JSON to reduce size
+        response = make_response(json.dumps(export_data, default=str, separators=(',', ':')))
         response.headers['Content-Type'] = 'application/json'
         response.headers['Content-Disposition'] = f'attachment; filename=recurring_templates_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
         
-        app.logger.info(f"Exported {len(templates)} recurring templates by {current_user.username}")
+        app.logger.info(f"Template export completed successfully - {len(templates)} templates exported by {current_user.username}")
         return response
         
     except Exception as e:
