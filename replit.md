@@ -16,6 +16,7 @@ Recent Updates (July 17, 2025):
 - Backup now includes all critical data: users, schedules, recurring templates, locations, quick links, tickets, and email settings
 - Restore process handles template conflicts by skipping duplicates and provides detailed feedback on restored/skipped items
 - Updated backup interface to clearly show all included data types for transparency
+- Added dedicated export/import section to recurring schedules admin page for template-specific backup management
 - ✅ COMPLETED: Timezone-Aware Export System for Admin Schedule Exports
 - Updated export_schedules function to respect individual user timezone settings instead of hardcoded Chicago time
 - Each user's schedule export now displays times in their personal timezone (CST, PST, etc.)

@@ -23,6 +23,55 @@
                 </div>
             </div>
 
+            <!-- Backup/Export and Import Section -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i data-feather="download" class="me-2"></i>
+                                Export Templates
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">Export all recurring schedule templates as a backup file.</p>
+                            <div class="d-grid">
+                                <a href="{{ url_for('export_recurring_templates') }}" class="btn btn-outline-primary">
+                                    <i data-feather="download" class="me-2"></i>
+                                    Export Templates
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i data-feather="upload" class="me-2"></i>
+                                Import Templates
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="{{ url_for('import_recurring_templates') }}" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <p class="text-muted mb-3">Import recurring templates from a backup file.</p>
+                                <div class="mb-3">
+                                    <input type="file" class="form-control" name="template_file" accept=".json" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-outline-success" 
+                                            onclick="return confirm('This will import templates. Existing templates with the same name will be skipped. Continue?')">
+                                        <i data-feather="upload" class="me-2"></i>
+                                        Import Templates
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Templates Table -->
             <div class="card">
                 <div class="card-body">

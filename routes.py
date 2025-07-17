@@ -3539,3 +3539,162 @@ def auto_generate_recurring_schedules():
         db.session.rollback()
         app.logger.error(f"Error in auto-generate recurring schedules: {str(e)}")
         return jsonify({'error': 'Error generating schedules'}), 500
+
+@app.route('/admin/recurring-schedules/export')
+@login_required
+def export_recurring_templates():
+    """Export all recurring schedule templates to JSON file"""
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('calendar'))
+    
+    try:
+        templates = RecurringScheduleTemplate.query.all()
+        
+        # Prepare export data with template details
+        export_data = {
+            'recurring_schedule_templates': [template.to_dict() for template in templates],
+            'export_info': {
+                'exported_at': datetime.now(pytz.UTC).isoformat(),
+                'exported_by': current_user.username,
+                'total_templates': len(templates),
+                'format_version': '1.0'
+            }
+        }
+        
+        # Create response with JSON data
+        response = make_response(json.dumps(export_data, indent=2, default=str))
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Content-Disposition'] = f'attachment; filename=recurring_templates_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+        
+        app.logger.info(f"Exported {len(templates)} recurring templates by {current_user.username}")
+        return response
+        
+    except Exception as e:
+        app.logger.error(f"Error exporting recurring templates: {str(e)}")
+        flash('Error exporting templates.')
+        return redirect(url_for('recurring_schedules'))
+
+@app.route('/admin/recurring-schedules/import', methods=['POST'])
+@login_required
+def import_recurring_templates():
+    """Import recurring schedule templates from JSON file"""
+    if not current_user.is_admin:
+        flash('Access denied.')
+        return redirect(url_for('calendar'))
+    
+    if 'template_file' not in request.files:
+        flash('No file selected.')
+        return redirect(url_for('recurring_schedules'))
+    
+    file = request.files['template_file']
+    if file.filename == '':
+        flash('No file selected.')
+        return redirect(url_for('recurring_schedules'))
+    
+    try:
+        # Read and parse JSON file
+        file_content = file.read().decode('utf-8')
+        import_data = json.loads(file_content)
+        
+        # Extract templates data
+        templates_data = import_data.get('recurring_schedule_templates', [])
+        if not templates_data:
+            flash('No recurring templates found in the file.')
+            return redirect(url_for('recurring_schedules'))
+        
+        # Get current users and locations for reference
+        users_by_username = {user.username: user for user in User.query.all()}
+        locations_by_name = {loc.name: loc for loc in Location.query.all()}
+        
+        templates_imported = 0
+        templates_skipped = 0
+        
+        for template_data in templates_data:
+            try:
+                template_name = template_data.get('template_name')
+                technician_username = template_data.get('technician_username')
+                
+                if not template_name or not technician_username:
+                    app.logger.warning("Template missing name or technician")
+                    templates_skipped += 1
+                    continue
+                
+                # Find technician by username
+                if technician_username not in users_by_username:
+                    app.logger.warning(f"Technician {technician_username} not found for template {template_name}")
+                    templates_skipped += 1
+                    continue
+                
+                technician = users_by_username[technician_username]
+                
+                # Check if template already exists for this technician
+                existing_template = RecurringScheduleTemplate.query.filter_by(
+                    technician_id=technician.id,
+                    template_name=template_name
+                ).first()
+                
+                if existing_template:
+                    app.logger.info(f"Template '{template_name}' for {technician_username} already exists - skipping")
+                    templates_skipped += 1
+                    continue
+                
+                # Find location if specified
+                location = None
+                location_name = template_data.get('location_name')
+                if location_name and location_name in locations_by_name:
+                    location = locations_by_name[location_name]
+                
+                # Create new template
+                template = RecurringScheduleTemplate(
+                    technician_id=technician.id,
+                    template_name=template_name,
+                    location_id=location.id if location else None,
+                    active=template_data.get('active', True),
+                    monday_start=template_data.get('monday_start'),
+                    monday_end=template_data.get('monday_end'),
+                    tuesday_start=template_data.get('tuesday_start'),
+                    tuesday_end=template_data.get('tuesday_end'),
+                    wednesday_start=template_data.get('wednesday_start'),
+                    wednesday_end=template_data.get('wednesday_end'),
+                    thursday_start=template_data.get('thursday_start'),
+                    thursday_end=template_data.get('thursday_end'),
+                    friday_start=template_data.get('friday_start'),
+                    friday_end=template_data.get('friday_end'),
+                    saturday_start=template_data.get('saturday_start'),
+                    saturday_end=template_data.get('saturday_end'),
+                    sunday_start=template_data.get('sunday_start'),
+                    sunday_end=template_data.get('sunday_end'),
+                    auto_generate=template_data.get('auto_generate', True),
+                    weeks_ahead=template_data.get('weeks_ahead', 2)
+                )
+                
+                # Set timestamps if available
+                if 'last_generated' in template_data and template_data['last_generated']:
+                    try:
+                        template.last_generated = datetime.fromisoformat(template_data['last_generated'].replace('Z', '+00:00'))
+                    except:
+                        pass
+                
+                db.session.add(template)
+                app.logger.info(f"Imported template '{template_name}' for {technician_username}")
+                templates_imported += 1
+                
+            except Exception as e:
+                app.logger.error(f"Error processing template: {str(e)}")
+                templates_skipped += 1
+                continue
+        
+        db.session.commit()
+        
+        flash(f'Import completed! {templates_imported} templates imported, {templates_skipped} skipped.')
+        app.logger.info(f"Template import completed by {current_user.username}: {templates_imported} imported, {templates_skipped} skipped")
+        
+    except json.JSONDecodeError:
+        flash('Invalid file format. Please upload a valid JSON file.')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error importing templates: {str(e)}")
+        flash('Error importing templates. Please check the file format.')
+    
+    return redirect(url_for('recurring_schedules'))
