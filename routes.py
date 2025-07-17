@@ -2057,13 +2057,13 @@ def export_schedules():
             # Create a new worksheet for each user
             ws = wb.create_sheet(title=user.username[:31])  # Excel limits sheet names to 31 chars
 
+            # Calculate total hours using the user's individual timezone
+            user_tz = pytz.timezone(user.get_timezone())
+            
             # Write header with timezone information
             ws['A1'] = f'Schedule Export - {user.username}'
             ws['A2'] = f'Period: {start_date} to {end_date}'
             ws['A3'] = f'Timezone: {user.get_timezone()} ({user_tz.zone})'
-
-            # Calculate total hours using the user's individual timezone
-            user_tz = pytz.timezone(user.get_timezone())
             total_minutes = 0
 
             for schedule in schedules:
