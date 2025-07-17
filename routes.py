@@ -2490,7 +2490,8 @@ def download_backup():
             'quick_links': [link.to_dict() for link in QuickLink.query.all()],
             'ticket_categories': [category.to_dict() for category in TicketCategory.query.all()],
             'tickets': [ticket.to_dict() for ticket in Ticket.query.all()],  # Include all tickets (archived and non-archived)
-            'email_settings': [settings.to_dict() for settings in EmailSettings.query.all()]
+            'email_settings': [settings.to_dict() for settings in EmailSettings.query.all()],
+            'recurring_schedule_templates': [template.to_dict() for template in RecurringScheduleTemplate.query.all()]
         }
 
         # Create the backup file
@@ -2952,8 +2953,97 @@ def restore_backup():
                     app.logger.info("Email settings restored successfully")
                 except Exception as e:
                     app.logger.error(f"Error restoring email settings: {str(e)}")
+                    
+            # Process recurring schedule templates if present
+            templates_restored = 0
+            templates_skipped = 0
+            
+            if 'recurring_schedule_templates' in backup_data:
+                app.logger.info("Starting recurring schedule templates restoration...")
+                
+                # Refresh user and location data after commits
+                users_by_username = {user.username: user for user in User.query.all()}
+                locations_by_name = {loc.name: loc for loc in Location.query.all()}
+                
+                for template_data in backup_data['recurring_schedule_templates']:
+                    try:
+                        template_name = template_data.get('template_name')
+                        technician_username = template_data.get('technician_username')
+                        
+                        if not template_name or not technician_username:
+                            app.logger.warning("Template missing name or technician")
+                            templates_skipped += 1
+                            continue
+                            
+                        # Find technician by username
+                        if technician_username not in users_by_username:
+                            app.logger.warning(f"Technician {technician_username} not found for template {template_name}")
+                            templates_skipped += 1
+                            continue
+                            
+                        technician = users_by_username[technician_username]
+                        
+                        # Check if template already exists for this technician
+                        existing_template = RecurringScheduleTemplate.query.filter_by(
+                            technician_id=technician.id,
+                            template_name=template_name
+                        ).first()
+                        
+                        if existing_template:
+                            app.logger.info(f"Recurring template '{template_name}' for {technician_username} already exists")
+                            templates_skipped += 1
+                            continue
+                            
+                        # Find location if specified
+                        location = None
+                        location_name = template_data.get('location_name')
+                        if location_name and location_name in locations_by_name:
+                            location = locations_by_name[location_name]
+                        
+                        # Create new recurring template
+                        template = RecurringScheduleTemplate(
+                            technician_id=technician.id,
+                            template_name=template_name,
+                            location_id=location.id if location else None,
+                            active=template_data.get('active', True),
+                            monday_start=template_data.get('monday_start'),
+                            monday_end=template_data.get('monday_end'),
+                            tuesday_start=template_data.get('tuesday_start'),
+                            tuesday_end=template_data.get('tuesday_end'),
+                            wednesday_start=template_data.get('wednesday_start'),
+                            wednesday_end=template_data.get('wednesday_end'),
+                            thursday_start=template_data.get('thursday_start'),
+                            thursday_end=template_data.get('thursday_end'),
+                            friday_start=template_data.get('friday_start'),
+                            friday_end=template_data.get('friday_end'),
+                            saturday_start=template_data.get('saturday_start'),
+                            saturday_end=template_data.get('saturday_end'),
+                            sunday_start=template_data.get('sunday_start'),
+                            sunday_end=template_data.get('sunday_end'),
+                            auto_generate=template_data.get('auto_generate', True),
+                            weeks_ahead=template_data.get('weeks_ahead', 2)
+                        )
+                        
+                        # Set timestamps if available
+                        if 'last_generated' in template_data and template_data['last_generated']:
+                            try:
+                                template.last_generated = datetime.fromisoformat(template_data['last_generated'].replace('Z', '+00:00'))
+                            except:
+                                pass
+                                
+                        db.session.add(template)
+                        app.logger.info(f"Created recurring template '{template_name}' for {technician_username}")
+                        templates_restored += 1
+                        
+                    except Exception as e:
+                        app.logger.error(f"Error processing recurring template: {str(e)}")
+                        templates_skipped += 1
+                        continue
+                        
+                db.session.commit()
+                app.logger.info(f"Recurring templates committed successfully. Restored: {templates_restored}, Skipped: {templates_skipped}")
 
-            flash(f'Backup restored successfully! {restored_count} schedules restored, {skipped_count} skipped. {tickets_restored} tickets restored, {tickets_skipped} skipped.')
+            flash(f'Backup restored successfully! {restored_count} schedules restored, {skipped_count} skipped. {tickets_restored} tickets restored, {tickets_skipped} skipped. {templates_restored} recurring templates restored, {templates_skipped} skipped.')
             app.logger.info("Backup restore completed successfully")
 
         except Exception as e:

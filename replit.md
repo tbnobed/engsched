@@ -10,6 +10,12 @@ Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
 Recent Updates (July 17, 2025):
+- ✅ COMPLETED: Recurring Schedule Templates Added to Backup and Restore System
+- Enhanced backup functionality to include recurring schedule templates in all backup files
+- Updated restore process to properly recreate recurring templates with technician and location references
+- Backup now includes all critical data: users, schedules, recurring templates, locations, quick links, tickets, and email settings
+- Restore process handles template conflicts by skipping duplicates and provides detailed feedback on restored/skipped items
+- Updated backup interface to clearly show all included data types for transparency
 - ✅ COMPLETED: Timezone-Aware Export System for Admin Schedule Exports
 - Updated export_schedules function to respect individual user timezone settings instead of hardcoded Chicago time
 - Each user's schedule export now displays times in their personal timezone (CST, PST, etc.)
