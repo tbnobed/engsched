@@ -320,7 +320,7 @@
         <div class="container-fluid">
             <!-- Logo and Brand - Far Left -->
             <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}" style="position: absolute; left: 15px; z-index: 1000;">
-                <img src="{{ url_for('static', filename=site_logo) }}?v=2" alt="{{ site_name }}" class="me-2" style="height: 36px; width: auto;">
+                <img src="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}{{ url_for('static', filename=site_logo) }}{% else %}{{ url_for('static', filename='tbn_logo_dark.png') }}{% endif %}?v=2" alt="{{ site_name }}" class="me-2" style="height: 36px; width: auto;">
                 <span style="font-weight: 700; letter-spacing: 0.5px; color: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#002744{% else %}#ffffff{% endif %}; font-size: 1.1rem;">{{ site_name.upper() }}</span>
             </a>
             
