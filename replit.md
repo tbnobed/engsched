@@ -9,6 +9,18 @@ This is a comprehensive web application for managing technician schedules and ti
 Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
+Recent Updates (July 18, 2025):
+- ✅ COMPLETED: TBN Logo Replacement for Dark Mode Navigation and Auth Page
+- Updated all navigation templates (base.html, mobile_base.html, mobile_base_simplified.html) to show new TBN logo in dark mode only
+- Original site logo still displays in light mode for consistent branding
+- Updated login/auth page (login.html) to use new TBN logo with 30% larger size (156px vs 120px)
+- New logo file stored as static/tbn_logo_dark.png for reliable access
+- ✅ COMPLETED: Export Page Freezing Issue Resolved - Streaming JSON Implementation
+- Limited backup schedules to 2000 most recent entries to prevent data overload
+- Implemented streaming JSON response with chunked processing (50-item batches)
+- Added periodic yield points to prevent browser freezing during large exports
+- Enhanced backup system with memory-efficient processing and progress logging
+
 Recent Updates (July 17, 2025):
 - ✅ COMPLETED: Export/Import Template Window Sizing Fixed - Ultra-Compact Design
 - Fixed oversized export/import template cards that were taking excessive vertical space
