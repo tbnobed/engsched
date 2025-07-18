@@ -5,13 +5,13 @@
 <style>
 /* Dashboard-specific gradient headers - override base.html styles */
 .dashboard .card-header.gradient-blue {
-    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(55, 48, 163, 0.25) 50%, rgba(67, 56, 202, 0.25) 100%){% else %}linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(99, 102, 241, 0.25) 50%, rgba(139, 92, 246, 0.25) 100%){% endif %} !important;
+    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(30, 58, 138, 0.5) 0%, rgba(55, 48, 163, 0.5) 50%, rgba(67, 56, 202, 0.5) 100%){% else %}linear-gradient(135deg, rgba(59, 130, 246, 0.5) 0%, rgba(99, 102, 241, 0.5) 50%, rgba(139, 92, 246, 0.5) 100%){% endif %} !important;
 }
 .dashboard .card-header.gradient-green {
-    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(6, 78, 59, 0.25) 0%, rgba(4, 120, 87, 0.25) 50%, rgba(5, 150, 105, 0.25) 100%){% else %}linear-gradient(135deg, rgba(52, 211, 153, 0.25) 0%, rgba(16, 185, 129, 0.25) 50%, rgba(5, 150, 105, 0.25) 100%){% endif %} !important;
+    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(6, 78, 59, 0.5) 0%, rgba(4, 120, 87, 0.5) 50%, rgba(5, 150, 105, 0.5) 100%){% else %}linear-gradient(135deg, rgba(52, 211, 153, 0.5) 0%, rgba(16, 185, 129, 0.5) 50%, rgba(5, 150, 105, 0.5) 100%){% endif %} !important;
 }
 .dashboard .card-header.gradient-teal {
-    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(21, 94, 117, 0.25) 0%, rgba(14, 116, 144, 0.25) 50%, rgba(8, 145, 178, 0.25) 100%){% else %}linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.25) 50%, rgba(6, 182, 212, 0.25) 100%){% endif %} !important;
+    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(21, 94, 117, 0.5) 0%, rgba(14, 116, 144, 0.5) 50%, rgba(8, 145, 178, 0.5) 100%){% else %}linear-gradient(135deg, rgba(56, 189, 248, 0.5) 0%, rgba(14, 165, 233, 0.5) 50%, rgba(6, 182, 212, 0.5) 100%){% endif %} !important;
 }
 </style>
 <div class="dashboard">
