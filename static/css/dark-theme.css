@@ -167,6 +167,20 @@ div[style*="gradient"] {
   border-color: #e74c3c !important;
 }
 
+/* Dark theme table hover styles - light gray instead of dark gray to prevent text disappearing */
+.table-hover tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Additional override for any other table hover styles */
+tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.sortable-row:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
 .form-control, .form-select {
   background-color: var(--dark-input-bg);
   border: 1px solid var(--dark-border);

@@ -19,6 +19,11 @@ Recent Updates (July 18, 2025):
 - Studio Bookings: Green/emerald gradient adapting to light/dark theme preferences  
 - Today's Schedule: Teal/cyan gradient providing optimal contrast in both themes
 - Creates elegant visual distinction while maintaining readability across all theme preferences
+- ✅ COMPLETED: Dark Mode Table Hover Fix - Text Visibility Restored
+- Fixed dark gray hover backgrounds that were making text disappear in dark mode
+- Applied light gray hover effect (rgba(255, 255, 255, 0.1)) for better contrast in dark theme
+- Updated table-hover, tbody hover, and sortable-row hover styles for consistent behavior
+- Dark mode table interactions now maintain text visibility while providing visual feedback
 - ✅ COMPLETED: TBN Logo Replacement for Dark Mode Navigation and Auth Page
 - Updated all navigation templates (base.html, mobile_base.html, mobile_base_simplified.html) to show new TBN logo in dark mode only
 - Original site logo still displays in light mode for consistent branding
