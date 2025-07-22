@@ -119,6 +119,9 @@
                          data-all-day="{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}"
                          data-toggle="tooltip"
                          data-html="true"
+                         data-bs-toggle="modal"
+                         data-bs-target="#scheduleModal"
+                         onclick="editSchedule('{{ schedule.id }}', '{{ schedule.start_time.strftime('%Y-%m-%d %H:%M:%S') }}', '{{ schedule.end_time.strftime('%Y-%m-%d %H:%M:%S') }}', '{{ 'true' if schedule.time_off else 'false' }}', '{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}', '{{ schedule.description|e }}', '{{ schedule.location.name if schedule.location else '' }}')"
                          title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.strftime('%H:%M') }}-{{ schedule.end_time.strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br><i data-feather='map-pin'></i> {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
                         <div class="schedule-header">
                             <div class="schedule-title">
@@ -482,99 +485,62 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Store schedule data for modal population
-    let currentScheduleData = null;
-    
-    // Handle schedule event clicks to store data and show modal
-    document.querySelectorAll('.schedule-event').forEach(event => {
-        event.addEventListener('click', function(e) {
-            // Prevent event bubbling that might interfere
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const scheduleId = this.getAttribute('data-schedule-id');
-            const startTime = new Date(this.getAttribute('data-start-time'));
-            const endTime = new Date(this.getAttribute('data-end-time'));
-            const timeOff = this.getAttribute('data-time-off') === 'true';
-            const allDay = this.getAttribute('data-all-day') === 'true';
-            const description = this.querySelector('.schedule-desc')?.textContent?.trim() || '';
-            const locationName = this.querySelector('.schedule-location')?.textContent?.trim().replace('map-pin', '').trim() || '';
-            
-            // Store the schedule data for use when modal opens
-            currentScheduleData = {
-                scheduleId,
-                startTime,
-                endTime,
-                timeOff,
-                allDay,
-                description,
-                locationName
-            };
-            
-            console.log('Schedule clicked, data stored:', currentScheduleData);
-        });
-    });
-    
-    // Populate form when modal is actually shown
-    const scheduleModal = document.getElementById('scheduleModal');
-    if (scheduleModal) {
-        scheduleModal.addEventListener('shown.bs.modal', function() {
-            if (currentScheduleData) {
-                console.log('Modal shown, populating with stored data:', currentScheduleData);
-                
-                // Populate basic fields
-                document.getElementById('schedule_id').value = currentScheduleData.scheduleId;
-                document.getElementById('schedule_date').value = currentScheduleData.startTime.toISOString().split('T')[0];
-                document.getElementById('description').value = currentScheduleData.description;
-                
-                // Set time fields - format as HH:MM with 30-minute precision
-                const formatTime = (date) => {
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    return `${hours}:${minutes}`;
-                };
-                
-                const startTimeFormatted = formatTime(currentScheduleData.startTime);
-                const endTimeFormatted = formatTime(currentScheduleData.endTime);
-                
-                console.log('Setting times in modal:', { startTimeFormatted, endTimeFormatted });
-                
-                const startHourSelect = document.getElementById('start_hour');
-                const endHourSelect = document.getElementById('end_hour');
-                
-                if (startHourSelect) {
-                    startHourSelect.value = startTimeFormatted;
-                    console.log('Modal: Start hour set to:', startHourSelect.value, 'Selected index:', startHourSelect.selectedIndex);
+    // Function to populate modal with schedule data
+    window.editSchedule = function(scheduleId, startTime, endTime, timeOff, allDay, description, locationName) {
+        console.log('EDIT SCHEDULE CALLED:', {scheduleId, startTime, endTime, timeOff, allDay, description, locationName});
+        
+        // Populate basic fields  
+        document.getElementById('schedule_id').value = scheduleId;
+        document.getElementById('schedule_date').value = new Date(startTime).toISOString().split('T')[0];
+        document.getElementById('description').value = description || '';
+        
+        // Set time fields
+        const formatTime = (dateStr) => {
+            const date = new Date(dateStr);
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        };
+        
+        const startTimeFormatted = formatTime(startTime);
+        const endTimeFormatted = formatTime(endTime);
+        
+        console.log('FORMATTED TIMES:', {startTimeFormatted, endTimeFormatted});
+        
+        const startHourSelect = document.getElementById('start_hour');
+        const endHourSelect = document.getElementById('end_hour');
+        
+        if (startHourSelect) {
+            startHourSelect.value = startTimeFormatted;
+            console.log('START HOUR SET:', startHourSelect.value, 'SELECTED INDEX:', startHourSelect.selectedIndex);
+        }
+        
+        if (endHourSelect) {
+            endHourSelect.value = endTimeFormatted;
+            console.log('END HOUR SET:', endHourSelect.value, 'SELECTED INDEX:', endHourSelect.selectedIndex);
+        }
+        
+        // Set checkboxes
+        document.getElementById('time_off').checked = timeOff === 'true';
+        document.getElementById('all_day').checked = allDay === 'true';
+        
+        // Set location dropdown
+        const locationSelect = document.getElementById('location_id');
+        if (locationSelect && locationName) {
+            for (let option of locationSelect.options) {
+                if (option.text.trim() === locationName) {
+                    option.selected = true;
+                    break;
                 }
-                
-                if (endHourSelect) {
-                    endHourSelect.value = endTimeFormatted;
-                    console.log('Modal: End hour set to:', endHourSelect.value, 'Selected index:', endHourSelect.selectedIndex);
-                }
-                
-                // Set checkboxes
-                document.getElementById('time_off').checked = currentScheduleData.timeOff;
-                document.getElementById('all_day').checked = currentScheduleData.allDay;
-                
-                // Set location dropdown
-                const locationSelect = document.getElementById('location_id');
-                if (locationSelect && currentScheduleData.locationName) {
-                    for (let option of locationSelect.options) {
-                        if (option.text.trim() === currentScheduleData.locationName) {
-                            option.selected = true;
-                            break;
-                        }
-                    }
-                }
-                
-                // Update modal title and show delete/copy buttons
-                document.querySelector('#scheduleModal .modal-title').textContent = 'Edit Schedule';
-                document.getElementById('delete_button').style.display = 'inline-block';
-                document.getElementById('copy_button').style.display = 'inline-block';
-                document.querySelector('#scheduleModal .btn-primary').textContent = 'Update Schedule';
             }
-        });
-    }
+        }
+        
+        // Update modal title and buttons
+        document.querySelector('#scheduleModal .modal-title').textContent = 'Edit Schedule';
+        document.getElementById('delete_button').style.display = 'inline-block';
+        document.getElementById('copy_button').style.display = 'inline-block';
+        document.querySelector('#scheduleModal .btn-primary').textContent = 'Update Schedule';
+    };
     
     // Handle modal close to reset form
     document.getElementById('scheduleModal').addEventListener('hidden.bs.modal', function() {
