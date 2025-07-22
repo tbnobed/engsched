@@ -965,17 +965,21 @@ def new_schedule():
     if not locations:
         form.location_id.choices = [(0, 'No locations available')]
 
-    # Check if we're dealing with a mobile form submission (check both mobile formats)
-    schedule_date = request.form.get('schedule_date') or request.form.get('date')
-    start_hour = request.form.get('start_hour') or request.form.get('startHour')
-    end_hour = request.form.get('end_hour') or request.form.get('endHour')
-    
     # Debug log to see what's being submitted
     app.logger.debug(f"Form submission: {dict(request.form)}")
-    app.logger.debug(f"Parsed values: schedule_date={schedule_date}, start_hour={start_hour}, end_hour={end_hour}")
     
-    is_mobile_submission = schedule_date and start_hour and end_hour
-    app.logger.debug(f"is_mobile_submission: {is_mobile_submission}")
+    # Check for mobile vs desktop submission - mobile won't have the WTF form fields
+    has_wtf_form = 'csrf_token' in request.form and (request.form.get('start_time') or request.form.get('end_time'))
+    schedule_date = request.form.get('schedule_date')
+    start_hour = request.form.get('start_hour') 
+    end_hour = request.form.get('end_hour')
+    
+    # If we have WTF form data, use that (desktop), otherwise use mobile field approach
+    is_desktop_submission = has_wtf_form
+    is_mobile_submission = not has_wtf_form and schedule_date and start_hour and end_hour
+    
+    app.logger.debug(f"Submission type: desktop={is_desktop_submission}, mobile={is_mobile_submission}")
+    app.logger.debug(f"Parsed values: schedule_date={schedule_date}, start_hour={start_hour}, end_hour={end_hour}")
     
     if is_mobile_submission:
         # We're getting data from the mobile form
@@ -1051,12 +1055,15 @@ def new_schedule():
             flash('Invalid date or time format. Please try again.')
             return redirect(url_for('calendar', week_start=week_start))
 
-    # Force debug for desktop forms too
-    if not is_mobile_submission:
+    # Force debug for both desktop and mobile forms
+    if is_desktop_submission:
         app.logger.debug(f"Desktop form submission detected")
         app.logger.debug(f"Form validation errors: {form.errors if hasattr(form, 'errors') else 'No errors available'}")
+    elif is_mobile_submission:
+        app.logger.debug(f"Mobile form submission detected")
     
-    if form.validate_on_submit() or is_mobile_submission:
+    # Use standard validation for desktop, manual processing for mobile
+    if (form.validate_on_submit() and is_desktop_submission) or is_mobile_submission:
         try:
             app.logger.debug(f"Processing form data: {request.form}")
             app.logger.debug(f"Form validation status: form.validate_on_submit()={form.validate_on_submit()}, is_mobile_submission={is_mobile_submission}")

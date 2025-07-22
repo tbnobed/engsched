@@ -10,6 +10,13 @@ Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
 Recent Updates (July 22, 2025):
+- ✅ COMPLETED: Desktop Calendar Schedule Creation CRITICAL BUG FIX
+- Fixed missing name attributes on desktop form fields that were preventing ALL schedule creation
+- Added name="schedule_date", name="start_hour", name="end_hour" to both calendar.html and personal_schedule.html templates
+- Enhanced backend form detection logic to properly distinguish between desktop (WTF forms) and mobile submissions
+- Desktop forms now properly submit field values to server instead of empty strings
+- Resolved copy schedule function that was broken by form submission detection logic
+- 30-minute time increments now work correctly with fixed form field submission
 - ✅ COMPLETED: 30-Minute Time Increments System Implementation
 - Updated all schedule form templates (calendar.html, personal_schedule.html, mobile_calendar.html, mobile_personal_schedule.html) to use 30-minute time increments instead of 1-hour increments
 - Fixed critical backend time parsing bug in routes.py that was preventing schedule creation with new time format
