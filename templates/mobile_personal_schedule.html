@@ -1115,13 +1115,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Default to 9 AM start time for new entries
                 const startHour = document.getElementById('start_hour');
                 if (startHour) {
-                    startHour.value = '09';
+                    startHour.value = '09:00';
                 }
                 
                 // Default to 5 PM end time for new entries
                 const endHour = document.getElementById('end_hour');
                 if (endHour) {
-                    endHour.value = '17';
+                    endHour.value = '17:00';
                 }
                 
                 // Update modal title and buttons
@@ -1157,16 +1157,17 @@ document.addEventListener('DOMContentLoaded', function() {
             
             document.getElementById('schedule_date').value = startTimeStr;
             
-            // Set start and end times
+            // Set start and end times with proper HH:MM format
             const startHour = document.getElementById('start_hour');
             if (startHour) {
-                startHour.value = String(startTime.getHours()).padStart(2, '0');
+                const startTimeFormatted = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+                startHour.value = startTimeFormatted;
             }
             
             const endHour = document.getElementById('end_hour');
             if (endHour) {
-                const displayEndHour = endTime.getHours() === 0 ? '00' : String(endTime.getHours()).padStart(2, '0');
-                endHour.value = displayEndHour;
+                const endTimeFormatted = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+                endHour.value = endTimeFormatted;
             }
             
             // Set time off checkbox and handle associated visibility

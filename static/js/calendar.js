@@ -241,8 +241,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const startTimeStr = this.dataset.startTime.split(' ')[0]; // Get YYYY-MM-DD portion
             
             document.getElementById('schedule_date').value = startTimeStr;
-            document.getElementById('start_hour').value = startTime.getHours().toString().padStart(2, '0');
-            document.getElementById('end_hour').value = endTime.getHours().toString().padStart(2, '0');
+            // Format time as HH:MM for 30-minute increment support
+            const startTimeFormatted = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+            const endTimeFormatted = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+            document.getElementById('start_hour').value = startTimeFormatted;
+            document.getElementById('end_hour').value = endTimeFormatted;
             document.getElementById('description').value = description;
             
             // Handle time off checkbox if it exists
@@ -342,9 +345,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (timeOffCheckbox) timeOffCheckbox.checked = false;
             if (allDayCheckbox) allDayCheckbox.checked = false;
 
-            // Set the date and initial times
+            // Set the date and initial times with proper HH:MM format
             document.getElementById('schedule_date').value = date;
-            document.getElementById('start_hour').value = hour;
+            document.getElementById('start_hour').value = `${hour}:00`;
             
             // Set default location to Plex
             const locationSelect = document.getElementById('location_id');
