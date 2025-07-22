@@ -971,9 +971,11 @@ def new_schedule():
     end_hour = request.form.get('end_hour') or request.form.get('endHour')
     
     # Debug log to see what's being submitted
-    app.logger.debug(f"Form submission: {request.form}")
+    app.logger.debug(f"Form submission: {dict(request.form)}")
+    app.logger.debug(f"Parsed values: schedule_date={schedule_date}, start_hour={start_hour}, end_hour={end_hour}")
     
     is_mobile_submission = schedule_date and start_hour and end_hour
+    app.logger.debug(f"is_mobile_submission: {is_mobile_submission}")
     
     if is_mobile_submission:
         # We're getting data from the mobile form
