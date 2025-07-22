@@ -482,6 +482,70 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Handle schedule event clicks to populate modal for editing/copying
+    document.querySelectorAll('.schedule-event').forEach(event => {
+        event.addEventListener('click', function() {
+            const scheduleId = this.getAttribute('data-schedule-id');
+            const startTime = new Date(this.getAttribute('data-start-time'));
+            const endTime = new Date(this.getAttribute('data-end-time'));
+            const timeOff = this.getAttribute('data-time-off') === 'true';
+            const allDay = this.getAttribute('data-all-day') === 'true';
+            const description = this.querySelector('.schedule-desc')?.textContent?.trim() || '';
+            const locationName = this.querySelector('.schedule-location')?.textContent?.trim().replace('map-pin', '').trim() || '';
+            
+            // Populate form fields
+            document.getElementById('schedule_id').value = scheduleId;
+            document.getElementById('schedule_date').value = startTime.toISOString().split('T')[0];
+            document.getElementById('description').value = description;
+            
+            // Set time fields - format as HH:MM with 30-minute precision
+            const formatTime = (date) => {
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${hours}:${minutes}`;
+            };
+            
+            document.getElementById('start_hour').value = formatTime(startTime);
+            document.getElementById('end_hour').value = formatTime(endTime);
+            
+            // Set checkboxes
+            document.getElementById('time_off').checked = timeOff;
+            document.getElementById('all_day').checked = allDay;
+            
+            // Set location dropdown
+            const locationSelect = document.getElementById('location_id');
+            if (locationSelect && locationName) {
+                for (let option of locationSelect.options) {
+                    if (option.text.trim() === locationName) {
+                        option.selected = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Update modal title and show delete/copy buttons
+            document.querySelector('#scheduleModal .modal-title').textContent = 'Edit Schedule';
+            document.getElementById('delete_button').style.display = 'inline-block';
+            document.getElementById('copy_button').style.display = 'inline-block';
+            document.querySelector('#scheduleModal .btn-primary').textContent = 'Update Schedule';
+        });
+    });
+    
+    // Handle modal close to reset form
+    document.getElementById('scheduleModal').addEventListener('hidden.bs.modal', function() {
+        document.getElementById('schedule_id').value = '';
+        document.getElementById('schedule_date').value = '';
+        document.getElementById('description').value = '';
+        document.getElementById('start_hour').value = '08:00';
+        document.getElementById('end_hour').value = '17:00';
+        document.getElementById('time_off').checked = false;
+        document.getElementById('all_day').checked = false;
+        document.querySelector('#scheduleModal .modal-title').textContent = 'Add New Schedule';
+        document.getElementById('delete_button').style.display = 'none';
+        document.getElementById('copy_button').style.display = 'none';
+        document.querySelector('#scheduleModal .btn-primary').textContent = 'Add Schedule';
+    });
+
     // Auto-check "Time Off" when "OOO (Out of Office)" is checked
     const allDayCheckbox = document.getElementById('all_day');
     const timeOffCheckbox = document.getElementById('time_off');
@@ -493,8 +557,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.checked) {
                 timeOffCheckbox.checked = true;
                 // Automatically set times to cover the full day
-                startHourSelect.value = '00';
-                endHourSelect.value = '23';
+                startHourSelect.value = '00:00';
+                endHourSelect.value = '23:00';
                 console.log('OOO checked: automatically set times to 00:00-23:00');
             }
         });
