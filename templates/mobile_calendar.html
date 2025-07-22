@@ -23,6 +23,18 @@
                 </h2>
             </div>
         </div>
+        
+        <!-- Timezone Switching Buttons -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="btn-group w-100" role="group" aria-label="Timezone Selection">
+                    <button type="button" class="btn {% if viewing_tz_param == 'cst' %}btn-primary{% else %}btn-outline-primary{% endif %}" onclick="switchTimezone('cst')">CST</button>
+                    <button type="button" class="btn {% if viewing_tz_param == 'pst' %}btn-primary{% else %}btn-outline-primary{% endif %}" onclick="switchTimezone('pst')">PST</button>
+                    <button type="button" class="btn {% if viewing_tz_param == 'profile' %}btn-primary{% else %}btn-outline-primary{% endif %}" onclick="switchTimezone('profile')">Profile</button>
+                </div>
+            </div>
+        </div>
+        
         <div class="day-selector mb-3">
             <ul class="nav nav-pills nav-fill">
                 {% for day in range(7) %}
@@ -678,6 +690,14 @@ function previousWeek() {
 
 function nextWeek() {
     window.location.href = "{{ url_for('calendar', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d')) }}";
+}
+
+function switchTimezone(timezone) {
+    const currentWeekStart = "{{ week_start.strftime('%Y-%m-%d') }}";
+    const currentParams = new URLSearchParams(window.location.search);
+    currentParams.set('viewing_tz', timezone);
+    currentParams.set('week_start', currentWeekStart);
+    window.location.href = "{{ url_for('calendar') }}?" + currentParams.toString();
 }
 
 // Mini Calendar Variables

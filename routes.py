@@ -819,11 +819,11 @@ def calendar():
     
     if week_start:
         week_start = datetime.strptime(week_start, '%Y-%m-%d')
-        week_start = current_user.get_timezone_obj().localize(
+        week_start = viewing_tz.localize(
             week_start.replace(hour=0, minute=0, second=0, microsecond=0)
         )
     else:
-        week_start = datetime.now(current_user.get_timezone_obj())
+        week_start = datetime.now(viewing_tz)
         week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
         week_start -= timedelta(days=week_start.weekday())
 
@@ -864,8 +864,7 @@ def calendar():
     
 
 
-    # Convert schedule times to user's timezone
-    user_tz = current_user.get_timezone_obj()
+    # Convert schedule times to viewing timezone
     for schedule in schedules:
         if schedule.start_time.tzinfo is None:
             schedule.start_time = pytz.UTC.localize(schedule.start_time)
@@ -891,17 +890,17 @@ def calendar():
                 intended_date = chicago_display.date()
                 app.logger.debug(f"All-day OOO {schedule.id}: Detected Chicago-created entry for {intended_date}")
             else:
-                # Otherwise, use the current user's timezone date
-                intended_date = utc_time.astimezone(user_tz).date()
-                app.logger.debug(f"All-day OOO {schedule.id}: Using user timezone date {intended_date}")
+                # Otherwise, use the viewing timezone date
+                intended_date = utc_time.astimezone(viewing_tz).date()
+                app.logger.debug(f"All-day OOO {schedule.id}: Using viewing timezone date {intended_date}")
             
-            # Display as all-day in user's timezone for the intended date
-            schedule.start_time = user_tz.localize(datetime.combine(intended_date, time(0, 0)))
-            schedule.end_time = user_tz.localize(datetime.combine(intended_date, time(23, 59)))
+            # Display as all-day in viewing timezone for the intended date
+            schedule.start_time = viewing_tz.localize(datetime.combine(intended_date, time(0, 0)))
+            schedule.end_time = viewing_tz.localize(datetime.combine(intended_date, time(23, 59)))
             app.logger.debug(f"All-day display fix for schedule {schedule.id}: {intended_date} → {schedule.start_time} to {schedule.end_time}")
         else:
-            schedule.start_time = schedule.start_time.astimezone(user_tz)
-            schedule.end_time = schedule.end_time.astimezone(user_tz)
+            schedule.start_time = schedule.start_time.astimezone(viewing_tz)
+            schedule.end_time = schedule.end_time.astimezone(viewing_tz)
 
     form = ScheduleForm()
     if current_user.is_admin:
@@ -934,8 +933,9 @@ def calendar():
                             form=form,
                             locations=locations,
                             selected_location=location_filter,
-                            today=datetime.now(current_user.get_timezone_obj()),
-                            user_timezone=str(current_user.get_timezone_obj()),
+                            today=datetime.now(viewing_tz),
+                            user_timezone=str(viewing_tz),
+                            viewing_tz_param=viewing_tz_param,
                             datetime=datetime,
                             timedelta=timedelta)
     else:
@@ -946,8 +946,9 @@ def calendar():
                             form=form,
                             locations=locations,
                             selected_location=location_filter,
-                            today=datetime.now(current_user.get_timezone_obj()),
-                            user_timezone=str(current_user.get_timezone_obj()),
+                            today=datetime.now(viewing_tz),
+                            user_timezone=str(viewing_tz),
+                            viewing_tz_param=viewing_tz_param,
                             datetime=datetime,
                             timedelta=timedelta)
 
