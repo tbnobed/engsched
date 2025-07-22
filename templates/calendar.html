@@ -493,6 +493,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const description = this.querySelector('.schedule-desc')?.textContent?.trim() || '';
             const locationName = this.querySelector('.schedule-location')?.textContent?.trim().replace('map-pin', '').trim() || '';
             
+            console.log('Schedule clicked:', {
+                scheduleId, 
+                startTime: startTime.toString(), 
+                endTime: endTime.toString(), 
+                timeOff, 
+                allDay, 
+                description, 
+                locationName
+            });
+            
             // Populate form fields
             document.getElementById('schedule_id').value = scheduleId;
             document.getElementById('schedule_date').value = startTime.toISOString().split('T')[0];
@@ -505,8 +515,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 return `${hours}:${minutes}`;
             };
             
-            document.getElementById('start_hour').value = formatTime(startTime);
-            document.getElementById('end_hour').value = formatTime(endTime);
+            const startTimeFormatted = formatTime(startTime);
+            const endTimeFormatted = formatTime(endTime);
+            
+            console.log('Setting times:', { startTimeFormatted, endTimeFormatted });
+            
+            const startHourSelect = document.getElementById('start_hour');
+            const endHourSelect = document.getElementById('end_hour');
+            
+            if (startHourSelect) {
+                startHourSelect.value = startTimeFormatted;
+                console.log('Start hour set to:', startHourSelect.value, 'Available options:', Array.from(startHourSelect.options).map(o => o.value));
+            } else {
+                console.error('start_hour element not found');
+            }
+            
+            if (endHourSelect) {
+                endHourSelect.value = endTimeFormatted;
+                console.log('End hour set to:', endHourSelect.value, 'Available options:', Array.from(endHourSelect.options).map(o => o.value));
+            } else {
+                console.error('end_hour element not found');
+            }
             
             // Set checkboxes
             document.getElementById('time_off').checked = timeOff;

@@ -442,6 +442,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const description = this.querySelector('.schedule-desc')?.textContent?.trim() || '';
             const locationName = this.querySelector('.schedule-location')?.textContent?.trim().replace('map-pin', '').trim() || '';
             
+            console.log('Personal schedule clicked:', {
+                scheduleId, 
+                startTime: startTime.toString(), 
+                endTime: endTime.toString(), 
+                timeOff, 
+                allDay, 
+                description, 
+                locationName
+            });
+            
             // Populate form fields
             document.getElementById('schedule_id').value = scheduleId;
             document.getElementById('schedule_date').value = startTime.toISOString().split('T')[0];
@@ -454,8 +464,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 return `${hours}:${minutes}`;
             };
             
-            document.getElementById('start_hour').value = formatTime(startTime);
-            document.getElementById('end_hour').value = formatTime(endTime);
+            const startTimeFormatted = formatTime(startTime);
+            const endTimeFormatted = formatTime(endTime);
+            
+            console.log('Personal schedule setting times:', { startTimeFormatted, endTimeFormatted });
+            
+            const startHourSelect = document.getElementById('start_hour');
+            const endHourSelect = document.getElementById('end_hour');
+            
+            if (startHourSelect) {
+                startHourSelect.value = startTimeFormatted;
+                console.log('Personal schedule start hour set to:', startHourSelect.value);
+            }
+            
+            if (endHourSelect) {
+                endHourSelect.value = endTimeFormatted;
+                console.log('Personal schedule end hour set to:', endHourSelect.value);
+            }
             
             // Set checkboxes
             document.getElementById('time_off').checked = timeOff;
