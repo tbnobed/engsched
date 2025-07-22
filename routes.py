@@ -982,18 +982,22 @@ def new_schedule():
             # Parse the date
             date_obj = datetime.strptime(schedule_date, '%Y-%m-%d').date()
             
-            # Create start_time combining date and start_hour
-            start_hour_int = int(start_hour)
-            start_time_obj = datetime.combine(date_obj, time(hour=start_hour_int, minute=0))
+            # Parse time values (format: "HH:MM")
+            start_hour_parts = start_hour.split(':')
+            start_hour_int = int(start_hour_parts[0])
+            start_minute_int = int(start_hour_parts[1]) if len(start_hour_parts) > 1 else 0
+            start_time_obj = datetime.combine(date_obj, time(hour=start_hour_int, minute=start_minute_int))
             
-            # Create end_time combining date and end_hour
-            end_hour_int = int(end_hour)
+            end_hour_parts = end_hour.split(':')
+            end_hour_int = int(end_hour_parts[0])
+            end_minute_int = int(end_hour_parts[1]) if len(end_hour_parts) > 1 else 0
+            
             # If end hour is 0 (midnight), it should be the next day
             if end_hour_int == 0:
                 # Set to midnight of the same day, will add a day later for UTC
                 end_time_obj = datetime.combine(date_obj, time(hour=0, minute=0))
             else:
-                end_time_obj = datetime.combine(date_obj, time(hour=end_hour_int, minute=0))
+                end_time_obj = datetime.combine(date_obj, time(hour=end_hour_int, minute=end_minute_int))
             
             # Assign to form
             form.start_time.data = start_time_obj

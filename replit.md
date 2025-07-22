@@ -9,6 +9,15 @@ This is a comprehensive web application for managing technician schedules and ti
 Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
+Recent Updates (July 22, 2025):
+- ✅ COMPLETED: 30-Minute Time Increments System Implementation
+- Updated all schedule form templates (calendar.html, personal_schedule.html, mobile_calendar.html, mobile_personal_schedule.html) to use 30-minute time increments instead of 1-hour increments
+- Fixed critical backend time parsing bug in routes.py that was preventing schedule creation with new time format
+- Enhanced time parsing logic to handle "HH:MM" format (01:30, 02:30, etc.) instead of just integer hours
+- All schedule forms now offer time selections every 30 minutes (00:00, 00:30, 01:00, 01:30, etc.) providing much more scheduling flexibility
+- Recurring schedule templates already supported 30-minute increments and remain fully functional
+- Schedule creation, editing, and mobile forms all work seamlessly with new time format
+
 Recent Updates (July 18, 2025):
 - ✅ COMPLETED: Dashboard Section Headers Enhanced with Conditional Dark Mode Gradient Colors
 - Applied 50% opacity gradient backgrounds to all three dashboard section headers with theme-aware styling
