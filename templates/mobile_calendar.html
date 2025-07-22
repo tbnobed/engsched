@@ -1180,12 +1180,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const startHour = document.getElementById('start_hour');
             if (startHour) {
                 const startTimeFormatted = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+                console.log("Setting start time:", startTimeFormatted, "from date:", startTime.toString());
                 startHour.value = startTimeFormatted;
             }
             
             const endHour = document.getElementById('end_hour');
             if (endHour) {
                 const endTimeFormatted = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+                console.log("Setting end time:", endTimeFormatted, "from date:", endTime.toString());
                 endHour.value = endTimeFormatted;
             }
             
