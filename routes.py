@@ -965,10 +965,10 @@ def new_schedule():
     if not locations:
         form.location_id.choices = [(0, 'No locations available')]
 
-    # Check if we're dealing with a mobile form submission (with schedule_date, start_hour, end_hour)
-    schedule_date = request.form.get('schedule_date')
-    start_hour = request.form.get('start_hour')
-    end_hour = request.form.get('end_hour')
+    # Check if we're dealing with a mobile form submission (check both mobile formats)
+    schedule_date = request.form.get('schedule_date') or request.form.get('date')
+    start_hour = request.form.get('start_hour') or request.form.get('startHour')
+    end_hour = request.form.get('end_hour') or request.form.get('endHour')
     
     # Debug log to see what's being submitted
     app.logger.debug(f"Form submission: {request.form}")
@@ -1052,6 +1052,10 @@ def new_schedule():
     if form.validate_on_submit() or is_mobile_submission:
         try:
             app.logger.debug(f"Processing form data: {request.form}")
+            app.logger.debug(f"Form validation status: form.validate_on_submit()={form.validate_on_submit()}, is_mobile_submission={is_mobile_submission}")
+            if hasattr(form, 'errors') and form.errors:
+                app.logger.debug(f"Form validation errors: {form.errors}")
+            
             schedule_id = request.form.get('schedule_id')
             technician_id = form.technician.data if current_user.is_admin else current_user.id
             
