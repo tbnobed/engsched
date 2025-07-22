@@ -807,7 +807,7 @@ def admin_locations():
 def calendar():
     week_start = request.args.get('week_start')
     location_filter = request.args.get('location_id', type=int)
-
+    
     if week_start:
         week_start = datetime.strptime(week_start, '%Y-%m-%d')
         week_start = current_user.get_timezone_obj().localize(
