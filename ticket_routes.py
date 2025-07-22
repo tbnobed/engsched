@@ -1166,10 +1166,8 @@ def edit_ticket(ticket_id):
     ticket = Ticket.query.get_or_404(ticket_id)
     app.logger.debug(f"Editing ticket #{ticket_id}")
 
-    # Check if user has permission to edit
-    if not (current_user.is_admin or ticket.created_by == current_user.id):
-        flash('You do not have permission to edit this ticket', 'error')
-        return redirect(url_for('tickets.tickets_dashboard'))
+    # Allow all authenticated users to edit tickets
+    # Removed admin/creator restriction to enable collaborative ticket management
 
     if request.method == 'POST':
         # Log all form data for debugging
@@ -1430,10 +1428,8 @@ def archive_ticket(ticket_id):
     """Archive a ticket (mark it as archived)"""
     ticket = Ticket.query.get_or_404(ticket_id)
     
-    # Check if the user is allowed to archive the ticket
-    if not current_user.is_admin and current_user.id != ticket.created_by and current_user.id != ticket.assigned_to:
-        flash('You do not have permission to archive this ticket', 'error')
-        return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+    # Allow all authenticated users to archive tickets
+    # Removed admin/creator/assignee restriction to enable collaborative ticket management
     
     try:
         # Mark the ticket as archived
@@ -1466,10 +1462,8 @@ def unarchive_ticket(ticket_id):
     """Unarchive a ticket (mark it as not archived)"""
     ticket = Ticket.query.get_or_404(ticket_id)
     
-    # Check if the user is allowed to unarchive the ticket
-    if not current_user.is_admin and current_user.id != ticket.created_by and current_user.id != ticket.assigned_to:
-        flash('You do not have permission to unarchive this ticket', 'error')
-        return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+    # Allow all authenticated users to unarchive tickets
+    # Removed admin/creator/assignee restriction to enable collaborative ticket management
     
     try:
         # Mark the ticket as not archived

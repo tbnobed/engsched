@@ -10,7 +10,6 @@
             </p>
         </div>
         <div class="d-flex gap-2">
-            {% if current_user.is_admin or current_user.id == ticket['assigned_to'] or current_user.id == ticket['created_by'] %}
             <div class="dropdown">
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                     <i data-feather="more-vertical"></i> Actions
@@ -26,20 +25,20 @@
                             <i data-feather="refresh-cw"></i> Update Status
                         </a>
                     </li>
-                    {% if current_user.is_admin %}
                     <li>
                         <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editTicketModal">
                             <i data-feather="edit"></i> Edit Ticket
                         </a>
                     </li>
                     <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li>
                         <a class="dropdown-item" href="{{ url_for('tickets.archive_ticket', ticket_id=ticket['id']) }}" 
                            onclick="return confirm('Are you sure you want to archive this ticket? It will be hidden from regular views.');">
                             <i data-feather="archive"></i> Archive Ticket
                         </a>
+                    </li>
+                    {% if current_user.is_admin %}
+                    <li>
+                        <hr class="dropdown-divider">
                     </li>
                     <li>
                         <a class="dropdown-item text-danger" href="#" onclick="deleteTicket({{ ticket['id'] }})">
@@ -49,7 +48,6 @@
                     {% endif %}
                 </ul>
             </div>
-            {% endif %}
             <a href="{{ url_for('tickets.tickets_dashboard') }}" class="btn btn-outline-primary">
                 <i data-feather="arrow-left"></i> Back to List
             </a>
