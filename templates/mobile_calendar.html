@@ -1164,8 +1164,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.mobile-schedule-card').forEach(card => {
         card.addEventListener('click', function() {
             const scheduleId = this.getAttribute('data-schedule-id');
-            const startTime = new Date(this.getAttribute('data-start-time'));
-            const endTime = new Date(this.getAttribute('data-end-time'));
+            const startTimeStr = this.getAttribute('data-start-time');
+            const endTimeStr = this.getAttribute('data-end-time');
+            console.log("Raw start time from data attribute:", startTimeStr);
+            console.log("Raw end time from data attribute:", endTimeStr);
+            
+            const startTime = new Date(startTimeStr);
+            const endTime = new Date(endTimeStr);
             const timeOff = this.getAttribute('data-time-off') === 'true';
             
             // Populate the modal with schedule data
