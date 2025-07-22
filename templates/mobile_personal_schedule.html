@@ -61,8 +61,8 @@
                          data-bs-toggle="modal" 
                          data-bs-target="#scheduleModal"
                          data-schedule-id="{{ schedule.id }}"
-                         data-start-time="{{ schedule.start_time }}"
-                         data-end-time="{{ schedule.end_time }}"
+                         data-start-time="{{ schedule.start_time.astimezone(current_user.get_timezone_obj()) }}"
+                         data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()) }}"
                          data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
                          data-all-day="{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}">
                         <div class="schedule-time">
@@ -78,7 +78,7 @@
                                     });
                                 </script>
                             {% else %}
-                                {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
+                                {{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }} - {{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}
                             {% endif %}
                         </div>
                         {% if schedule.location %}
