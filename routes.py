@@ -1051,6 +1051,11 @@ def new_schedule():
             flash('Invalid date or time format. Please try again.')
             return redirect(url_for('calendar', week_start=week_start))
 
+    # Force debug for desktop forms too
+    if not is_mobile_submission:
+        app.logger.debug(f"Desktop form submission detected")
+        app.logger.debug(f"Form validation errors: {form.errors if hasattr(form, 'errors') else 'No errors available'}")
+    
     if form.validate_on_submit() or is_mobile_submission:
         try:
             app.logger.debug(f"Processing form data: {request.form}")

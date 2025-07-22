@@ -177,7 +177,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Date</label>
-                            <input type="date" id="schedule_date" class="form-control">
+                            <input type="date" id="schedule_date" name="schedule_date" class="form-control">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Repeat Schedule</label>
@@ -232,7 +232,7 @@
                         <div class="row mb-3">
                             <div class="col">
                                 <label class="form-label">Start Time</label>
-                                <select id="start_hour" class="form-control" onchange="updateEndTimeOptions()">
+                                <select id="start_hour" name="start_hour" class="form-control" onchange="updateEndTimeOptions()">
                                     {% for hour in range(24) %}
                                         <option value="{{ '%02d:00'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
                                         <option value="{{ '%02d:30'|format(hour) }}">{{ '%02d:30'|format(hour) }}</option>
@@ -241,7 +241,7 @@
                             </div>
                             <div class="col">
                                 <label class="form-label">End Time</label>
-                                <select id="end_hour" class="form-control">
+                                <select id="end_hour" name="end_hour" class="form-control">
                                     {% for hour in range(24) %}
                                         <option value="{{ '%02d:00'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
                                         <option value="{{ '%02d:30'|format(hour) }}">{{ '%02d:30'|format(hour) }}</option>
