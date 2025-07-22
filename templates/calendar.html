@@ -119,9 +119,6 @@
                          data-all-day="{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}"
                          data-toggle="tooltip"
                          data-html="true"
-                         data-bs-toggle="modal"
-                         data-bs-target="#scheduleModal"
-                         onclick="editSchedule('{{ schedule.id }}', '{{ schedule.start_time.strftime('%Y-%m-%d %H:%M:%S') }}', '{{ schedule.end_time.strftime('%Y-%m-%d %H:%M:%S') }}', '{{ 'true' if schedule.time_off else 'false' }}', '{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}', '{{ schedule.description|e }}', '{{ schedule.location.name if schedule.location else '' }}')"
                          title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.strftime('%H:%M') }}-{{ schedule.end_time.strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br><i data-feather='map-pin'></i> {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
                         <div class="schedule-header">
                             <div class="schedule-title">
@@ -180,7 +177,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Date</label>
-                            <input type="date" id="schedule_date" name="schedule_date" class="form-control">
+                            <input type="date" id="schedule_date" class="form-control">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Repeat Schedule</label>
@@ -235,20 +232,19 @@
                         <div class="row mb-3">
                             <div class="col">
                                 <label class="form-label">Start Time</label>
-                                <select id="start_hour" name="start_hour" class="form-control" onchange="updateEndTimeOptions()">
+                                <select id="start_hour" class="form-control" onchange="updateEndTimeOptions()">
                                     {% for hour in range(24) %}
-                                        <option value="{{ '%02d:00'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
-                                        <option value="{{ '%02d:30'|format(hour) }}">{{ '%02d:30'|format(hour) }}</option>
+                                        <option value="{{ '%02d'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <div class="col">
                                 <label class="form-label">End Time</label>
-                                <select id="end_hour" name="end_hour" class="form-control">
-                                    {% for hour in range(24) %}
-                                        <option value="{{ '%02d:00'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
-                                        <option value="{{ '%02d:30'|format(hour) }}">{{ '%02d:30'|format(hour) }}</option>
+                                <select id="end_hour" class="form-control">
+                                    {% for hour in range(1, 24) %}
+                                        <option value="{{ '%02d'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
                                     {% endfor %}
+                                    <option value="00">00:00</option>
                                 </select>
                             </div>
                         </div>
@@ -485,78 +481,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Function to populate modal with schedule data
-    window.editSchedule = function(scheduleId, startTime, endTime, timeOff, allDay, description, locationName) {
-        console.log('EDIT SCHEDULE CALLED:', {scheduleId, startTime, endTime, timeOff, allDay, description, locationName});
-        
-        // Populate basic fields  
-        document.getElementById('schedule_id').value = scheduleId;
-        document.getElementById('schedule_date').value = new Date(startTime).toISOString().split('T')[0];
-        document.getElementById('description').value = description || '';
-        
-        // Set time fields
-        const formatTime = (dateStr) => {
-            const date = new Date(dateStr);
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            return `${hours}:${minutes}`;
-        };
-        
-        const startTimeFormatted = formatTime(startTime);
-        const endTimeFormatted = formatTime(endTime);
-        
-        console.log('FORMATTED TIMES:', {startTimeFormatted, endTimeFormatted});
-        
-        const startHourSelect = document.getElementById('start_hour');
-        const endHourSelect = document.getElementById('end_hour');
-        
-        if (startHourSelect) {
-            startHourSelect.value = startTimeFormatted;
-            console.log('START HOUR SET:', startHourSelect.value, 'SELECTED INDEX:', startHourSelect.selectedIndex);
-        }
-        
-        if (endHourSelect) {
-            endHourSelect.value = endTimeFormatted;
-            console.log('END HOUR SET:', endHourSelect.value, 'SELECTED INDEX:', endHourSelect.selectedIndex);
-        }
-        
-        // Set checkboxes
-        document.getElementById('time_off').checked = timeOff === 'true';
-        document.getElementById('all_day').checked = allDay === 'true';
-        
-        // Set location dropdown
-        const locationSelect = document.getElementById('location_id');
-        if (locationSelect && locationName) {
-            for (let option of locationSelect.options) {
-                if (option.text.trim() === locationName) {
-                    option.selected = true;
-                    break;
-                }
-            }
-        }
-        
-        // Update modal title and buttons
-        document.querySelector('#scheduleModal .modal-title').textContent = 'Edit Schedule';
-        document.getElementById('delete_button').style.display = 'inline-block';
-        document.getElementById('copy_button').style.display = 'inline-block';
-        document.querySelector('#scheduleModal .btn-primary').textContent = 'Update Schedule';
-    };
-    
-    // Handle modal close to reset form
-    document.getElementById('scheduleModal').addEventListener('hidden.bs.modal', function() {
-        document.getElementById('schedule_id').value = '';
-        document.getElementById('schedule_date').value = '';
-        document.getElementById('description').value = '';
-        document.getElementById('start_hour').value = '08:00';
-        document.getElementById('end_hour').value = '17:00';
-        document.getElementById('time_off').checked = false;
-        document.getElementById('all_day').checked = false;
-        document.querySelector('#scheduleModal .modal-title').textContent = 'Add New Schedule';
-        document.getElementById('delete_button').style.display = 'none';
-        document.getElementById('copy_button').style.display = 'none';
-        document.querySelector('#scheduleModal .btn-primary').textContent = 'Add Schedule';
-    });
-
     // Auto-check "Time Off" when "OOO (Out of Office)" is checked
     const allDayCheckbox = document.getElementById('all_day');
     const timeOffCheckbox = document.getElementById('time_off');
@@ -568,8 +492,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.checked) {
                 timeOffCheckbox.checked = true;
                 // Automatically set times to cover the full day
-                startHourSelect.value = '00:00';
-                endHourSelect.value = '23:00';
+                startHourSelect.value = '00';
+                endHourSelect.value = '23';
                 console.log('OOO checked: automatically set times to 00:00-23:00');
             }
         });

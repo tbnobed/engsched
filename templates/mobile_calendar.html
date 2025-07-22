@@ -196,8 +196,7 @@
                             <label class="form-label">Start Time</label>
                             <select class="form-control" id="start_hour" name="start_hour">
                                 {% for hour in range(24) %}
-                                <option value="{{ '%02d:00'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
-                                <option value="{{ '%02d:30'|format(hour) }}">{{ '%02d:30'|format(hour) }}</option>
+                                <option value="{{ '%02d'|format(hour) }}">{{ '%02d'|format(hour) }}:00</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -205,8 +204,7 @@
                             <label class="form-label">End Time</label>
                             <select class="form-control" id="end_hour" name="end_hour">
                                 {% for hour in range(24) %}
-                                <option value="{{ '%02d:00'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
-                                <option value="{{ '%02d:30'|format(hour) }}">{{ '%02d:30'|format(hour) }}</option>
+                                <option value="{{ '%02d'|format(hour) }}">{{ '%02d'|format(hour) }}:00</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -287,7 +285,7 @@
             <div class="modal-footer">
                 <button type="button" id="delete_button" class="btn btn-danger" style="display: none;">Delete</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitScheduleForm();">Add Schedule</button>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('schedule_form').submit();">Add Schedule</button>
             </div>
         </div>
     </div>

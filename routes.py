@@ -965,21 +965,15 @@ def new_schedule():
     if not locations:
         form.location_id.choices = [(0, 'No locations available')]
 
-    # Debug log to see what's being submitted
-    app.logger.debug(f"Form submission: {dict(request.form)}")
-    
-    # Check for mobile vs desktop submission - mobile won't have the WTF form fields
-    has_wtf_form = 'csrf_token' in request.form and (request.form.get('start_time') or request.form.get('end_time'))
+    # Check if we're dealing with a mobile form submission (with schedule_date, start_hour, end_hour)
     schedule_date = request.form.get('schedule_date')
-    start_hour = request.form.get('start_hour') 
+    start_hour = request.form.get('start_hour')
     end_hour = request.form.get('end_hour')
     
-    # If we have WTF form data, use that (desktop), otherwise use mobile field approach
-    is_desktop_submission = has_wtf_form
-    is_mobile_submission = not has_wtf_form and schedule_date and start_hour and end_hour
+    # Debug log to see what's being submitted
+    app.logger.debug(f"Form submission: {request.form}")
     
-    app.logger.debug(f"Submission type: desktop={is_desktop_submission}, mobile={is_mobile_submission}")
-    app.logger.debug(f"Parsed values: schedule_date={schedule_date}, start_hour={start_hour}, end_hour={end_hour}")
+    is_mobile_submission = schedule_date and start_hour and end_hour
     
     if is_mobile_submission:
         # We're getting data from the mobile form
@@ -988,22 +982,18 @@ def new_schedule():
             # Parse the date
             date_obj = datetime.strptime(schedule_date, '%Y-%m-%d').date()
             
-            # Parse time values (format: "HH:MM")
-            start_hour_parts = start_hour.split(':')
-            start_hour_int = int(start_hour_parts[0])
-            start_minute_int = int(start_hour_parts[1]) if len(start_hour_parts) > 1 else 0
-            start_time_obj = datetime.combine(date_obj, time(hour=start_hour_int, minute=start_minute_int))
+            # Create start_time combining date and start_hour
+            start_hour_int = int(start_hour)
+            start_time_obj = datetime.combine(date_obj, time(hour=start_hour_int, minute=0))
             
-            end_hour_parts = end_hour.split(':')
-            end_hour_int = int(end_hour_parts[0])
-            end_minute_int = int(end_hour_parts[1]) if len(end_hour_parts) > 1 else 0
-            
+            # Create end_time combining date and end_hour
+            end_hour_int = int(end_hour)
             # If end hour is 0 (midnight), it should be the next day
             if end_hour_int == 0:
                 # Set to midnight of the same day, will add a day later for UTC
                 end_time_obj = datetime.combine(date_obj, time(hour=0, minute=0))
             else:
-                end_time_obj = datetime.combine(date_obj, time(hour=end_hour_int, minute=end_minute_int))
+                end_time_obj = datetime.combine(date_obj, time(hour=end_hour_int, minute=0))
             
             # Assign to form
             form.start_time.data = start_time_obj
@@ -1055,21 +1045,9 @@ def new_schedule():
             flash('Invalid date or time format. Please try again.')
             return redirect(url_for('calendar', week_start=week_start))
 
-    # Force debug for both desktop and mobile forms
-    if is_desktop_submission:
-        app.logger.debug(f"Desktop form submission detected")
-        app.logger.debug(f"Form validation errors: {form.errors if hasattr(form, 'errors') else 'No errors available'}")
-    elif is_mobile_submission:
-        app.logger.debug(f"Mobile form submission detected")
-    
-    # Use standard validation for desktop, manual processing for mobile
-    if (form.validate_on_submit() and is_desktop_submission) or is_mobile_submission:
+    if form.validate_on_submit() or is_mobile_submission:
         try:
             app.logger.debug(f"Processing form data: {request.form}")
-            app.logger.debug(f"Form validation status: form.validate_on_submit()={form.validate_on_submit()}, is_mobile_submission={is_mobile_submission}")
-            if hasattr(form, 'errors') and form.errors:
-                app.logger.debug(f"Form validation errors: {form.errors}")
-            
             schedule_id = request.form.get('schedule_id')
             technician_id = form.technician.data if current_user.is_admin else current_user.id
             
