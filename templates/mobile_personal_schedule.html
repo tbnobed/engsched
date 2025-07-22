@@ -1145,28 +1145,30 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.mobile-schedule-card').forEach(card => {
         card.addEventListener('click', function() {
             const scheduleId = this.getAttribute('data-schedule-id');
-            const startTime = new Date(this.getAttribute('data-start-time'));
-            const endTime = new Date(this.getAttribute('data-end-time'));
+            const startTimeStr = this.getAttribute('data-start-time');
+            const endTimeStr = this.getAttribute('data-end-time');
             const timeOff = this.getAttribute('data-time-off') === 'true';
             
             // Populate the modal with schedule data
             document.getElementById('schedule_id').value = scheduleId;
             
-            // Fix for date display - extract date directly from data attribute
-            const startTimeStr = this.getAttribute('data-start-time').split(' ')[0]; // Get YYYY-MM-DD portion
+            // Extract date and time components from the viewing timezone strings
+            const startParts = startTimeStr.split(' ');
+            const endParts = endTimeStr.split(' ');
             
-            document.getElementById('schedule_date').value = startTimeStr;
+            // Set the date (YYYY-MM-DD portion)
+            document.getElementById('schedule_date').value = startParts[0];
             
-            // Set start and end times with proper HH:MM format
+            // Set start and end times with proper HH:MM format (already in viewing timezone)
             const startHour = document.getElementById('start_hour');
-            if (startHour) {
-                const startTimeFormatted = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
+            if (startHour && startParts[1]) {
+                const startTimeFormatted = startParts[1].substring(0, 5); // Get HH:MM portion
                 startHour.value = startTimeFormatted;
             }
             
             const endHour = document.getElementById('end_hour');
-            if (endHour) {
-                const endTimeFormatted = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
+            if (endHour && endParts[1]) {
+                const endTimeFormatted = endParts[1].substring(0, 5); // Get HH:MM portion
                 endHour.value = endTimeFormatted;
             }
             
