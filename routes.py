@@ -808,6 +808,15 @@ def calendar():
     week_start = request.args.get('week_start')
     location_filter = request.args.get('location_id', type=int)
     
+    # Get viewing timezone preference (CST, PST, or user's profile timezone)
+    viewing_tz_param = request.args.get('viewing_tz', 'profile')
+    if viewing_tz_param == 'cst':
+        viewing_tz = pytz.timezone('America/Chicago')
+    elif viewing_tz_param == 'pst':
+        viewing_tz = pytz.timezone('America/Los_Angeles')
+    else:
+        viewing_tz = current_user.get_timezone_obj()
+    
     if week_start:
         week_start = datetime.strptime(week_start, '%Y-%m-%d')
         week_start = current_user.get_timezone_obj().localize(
