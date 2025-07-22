@@ -24,6 +24,15 @@ Recent Updates (July 18, 2025):
 - Applied light gray hover effect (rgba(255, 255, 255, 0.1)) for better contrast in dark theme
 - Updated table-hover, tbody hover, and sortable-row hover styles for consistent behavior
 - Dark mode table interactions now maintain text visibility while providing visual feedback
+- ✅ COMPLETED: Template Import Issue Fixed - Multiple Technician Lookup Methods
+- Fixed critical template import bug where backup files used different data format than import function expected
+- Enhanced import logic to handle multiple technician identification methods:
+  * Method 1: Direct username match (technician_username)
+  * Method 2: Database ID lookup (technician_id) 
+  * Method 3: Smart name matching (technician_name like "Blake G" → username starting with "blake")
+- Fixed weekly schedule parsing to handle nested structure from backup files
+- Updated import function to properly extract working days and time ranges from weekly_schedule object
+- Template imports now work seamlessly with existing backup files
 - ✅ COMPLETED: TBN Logo Replacement for Dark Mode Navigation and Auth Page
 - Updated all navigation templates (base.html, mobile_base.html, mobile_base_simplified.html) to show new TBN logo in dark mode only
 - Original site logo still displays in light mode for consistent branding

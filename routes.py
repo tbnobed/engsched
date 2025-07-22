@@ -3694,19 +3694,38 @@ def import_recurring_templates():
             try:
                 template_name = template_data.get('template_name')
                 technician_username = template_data.get('technician_username')
+                technician_name = template_data.get('technician_name')
+                technician_id = template_data.get('technician_id')
                 
-                if not template_name or not technician_username:
-                    app.logger.warning("Template missing name or technician")
+                if not template_name:
+                    app.logger.warning("Template missing name")
                     templates_skipped += 1
                     continue
                 
-                # Find technician by username
-                if technician_username not in users_by_username:
-                    app.logger.warning(f"Technician {technician_username} not found for template {template_name}")
+                # Find technician by multiple methods
+                technician = None
+                
+                # Method 1: Try by username first
+                if technician_username and technician_username in users_by_username:
+                    technician = users_by_username[technician_username]
+                
+                # Method 2: Try by technician_id if username didn't work
+                if not technician and technician_id:
+                    technician = User.query.get(technician_id)
+                
+                # Method 3: Try to find by display name (like "Blake G")
+                if not technician and technician_name:
+                    # Look for users whose username might match the first name
+                    first_name = technician_name.split()[0].lower()
+                    for user in User.query.all():
+                        if user.username.lower().startswith(first_name):
+                            technician = user
+                            break
+                
+                if not technician:
+                    app.logger.warning(f"Technician not found for template {template_name} (tried: username={technician_username}, name={technician_name}, id={technician_id})")
                     templates_skipped += 1
                     continue
-                
-                technician = users_by_username[technician_username]
                 
                 # Check if template already exists for this technician
                 existing_template = RecurringScheduleTemplate.query.filter_by(
@@ -3725,26 +3744,29 @@ def import_recurring_templates():
                 if location_name and location_name in locations_by_name:
                     location = locations_by_name[location_name]
                 
+                # Extract weekly schedule data
+                weekly_schedule = template_data.get('weekly_schedule', {})
+                
                 # Create new template
                 template = RecurringScheduleTemplate(
                     technician_id=technician.id,
                     template_name=template_name,
                     location_id=location.id if location else None,
                     active=template_data.get('active', True),
-                    monday_start=template_data.get('monday_start'),
-                    monday_end=template_data.get('monday_end'),
-                    tuesday_start=template_data.get('tuesday_start'),
-                    tuesday_end=template_data.get('tuesday_end'),
-                    wednesday_start=template_data.get('wednesday_start'),
-                    wednesday_end=template_data.get('wednesday_end'),
-                    thursday_start=template_data.get('thursday_start'),
-                    thursday_end=template_data.get('thursday_end'),
-                    friday_start=template_data.get('friday_start'),
-                    friday_end=template_data.get('friday_end'),
-                    saturday_start=template_data.get('saturday_start'),
-                    saturday_end=template_data.get('saturday_end'),
-                    sunday_start=template_data.get('sunday_start'),
-                    sunday_end=template_data.get('sunday_end'),
+                    monday_start=weekly_schedule.get('monday', {}).get('start') if weekly_schedule.get('monday', {}).get('working') else None,
+                    monday_end=weekly_schedule.get('monday', {}).get('end') if weekly_schedule.get('monday', {}).get('working') else None,
+                    tuesday_start=weekly_schedule.get('tuesday', {}).get('start') if weekly_schedule.get('tuesday', {}).get('working') else None,
+                    tuesday_end=weekly_schedule.get('tuesday', {}).get('end') if weekly_schedule.get('tuesday', {}).get('working') else None,
+                    wednesday_start=weekly_schedule.get('wednesday', {}).get('start') if weekly_schedule.get('wednesday', {}).get('working') else None,
+                    wednesday_end=weekly_schedule.get('wednesday', {}).get('end') if weekly_schedule.get('wednesday', {}).get('working') else None,
+                    thursday_start=weekly_schedule.get('thursday', {}).get('start') if weekly_schedule.get('thursday', {}).get('working') else None,
+                    thursday_end=weekly_schedule.get('thursday', {}).get('end') if weekly_schedule.get('thursday', {}).get('working') else None,
+                    friday_start=weekly_schedule.get('friday', {}).get('start') if weekly_schedule.get('friday', {}).get('working') else None,
+                    friday_end=weekly_schedule.get('friday', {}).get('end') if weekly_schedule.get('friday', {}).get('working') else None,
+                    saturday_start=weekly_schedule.get('saturday', {}).get('start') if weekly_schedule.get('saturday', {}).get('working') else None,
+                    saturday_end=weekly_schedule.get('saturday', {}).get('end') if weekly_schedule.get('saturday', {}).get('working') else None,
+                    sunday_start=weekly_schedule.get('sunday', {}).get('start') if weekly_schedule.get('sunday', {}).get('working') else None,
+                    sunday_end=weekly_schedule.get('sunday', {}).get('end') if weekly_schedule.get('sunday', {}).get('working') else None,
                     auto_generate=template_data.get('auto_generate', True),
                     weeks_ahead=template_data.get('weeks_ahead', 2)
                 )
@@ -3757,7 +3779,7 @@ def import_recurring_templates():
                         pass
                 
                 db.session.add(template)
-                app.logger.info(f"Imported template '{template_name}' for {technician_username}")
+                app.logger.info(f"Imported template '{template_name}' for {technician.username} ({technician_name or 'N/A'})")
                 templates_imported += 1
                 
             except Exception as e:
