@@ -78,7 +78,7 @@
                                     });
                                 </script>
                             {% else %}
-                                {{ schedule.start_time.strftime('%I:%M %p') }} - {{ schedule.end_time.strftime('%I:%M %p') }}
+                                {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
                             {% endif %}
                         </div>
                         {% if schedule.location %}

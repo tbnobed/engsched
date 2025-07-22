@@ -83,10 +83,10 @@
                                     </script>
                                 {% else %}
                                     <span class="time-off-badge">Time Off</span>
-                                    {{ schedule.start_time.strftime('%I:%M %p') }} - {{ schedule.end_time.strftime('%I:%M %p') }}
+                                    {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
                                 {% endif %}
                             {% else %}
-                                {{ schedule.start_time.strftime('%I:%M %p') }} - {{ schedule.end_time.strftime('%I:%M %p') }}
+                                {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
                             {% endif %}
                         </div>
                         <div class="schedule-tech">
