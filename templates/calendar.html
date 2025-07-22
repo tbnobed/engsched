@@ -482,9 +482,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Handle schedule event clicks to populate modal for editing/copying
+    // Store schedule data for modal population
+    let currentScheduleData = null;
+    
+    // Handle schedule event clicks to store data and show modal
     document.querySelectorAll('.schedule-event').forEach(event => {
-        event.addEventListener('click', function() {
+        event.addEventListener('click', function(e) {
+            // Prevent event bubbling that might interfere
+            e.preventDefault();
+            e.stopPropagation();
+            
             const scheduleId = this.getAttribute('data-schedule-id');
             const startTime = new Date(this.getAttribute('data-start-time'));
             const endTime = new Date(this.getAttribute('data-end-time'));
@@ -493,72 +500,81 @@ document.addEventListener('DOMContentLoaded', function() {
             const description = this.querySelector('.schedule-desc')?.textContent?.trim() || '';
             const locationName = this.querySelector('.schedule-location')?.textContent?.trim().replace('map-pin', '').trim() || '';
             
-            console.log('Schedule clicked:', {
-                scheduleId, 
-                startTime: startTime.toString(), 
-                endTime: endTime.toString(), 
-                timeOff, 
-                allDay, 
-                description, 
+            // Store the schedule data for use when modal opens
+            currentScheduleData = {
+                scheduleId,
+                startTime,
+                endTime,
+                timeOff,
+                allDay,
+                description,
                 locationName
-            });
-            
-            // Populate form fields
-            document.getElementById('schedule_id').value = scheduleId;
-            document.getElementById('schedule_date').value = startTime.toISOString().split('T')[0];
-            document.getElementById('description').value = description;
-            
-            // Set time fields - format as HH:MM with 30-minute precision
-            const formatTime = (date) => {
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                return `${hours}:${minutes}`;
             };
             
-            const startTimeFormatted = formatTime(startTime);
-            const endTimeFormatted = formatTime(endTime);
-            
-            console.log('Setting times:', { startTimeFormatted, endTimeFormatted });
-            
-            const startHourSelect = document.getElementById('start_hour');
-            const endHourSelect = document.getElementById('end_hour');
-            
-            if (startHourSelect) {
-                startHourSelect.value = startTimeFormatted;
-                console.log('Start hour set to:', startHourSelect.value, 'Available options:', Array.from(startHourSelect.options).map(o => o.value));
-            } else {
-                console.error('start_hour element not found');
-            }
-            
-            if (endHourSelect) {
-                endHourSelect.value = endTimeFormatted;
-                console.log('End hour set to:', endHourSelect.value, 'Available options:', Array.from(endHourSelect.options).map(o => o.value));
-            } else {
-                console.error('end_hour element not found');
-            }
-            
-            // Set checkboxes
-            document.getElementById('time_off').checked = timeOff;
-            document.getElementById('all_day').checked = allDay;
-            
-            // Set location dropdown
-            const locationSelect = document.getElementById('location_id');
-            if (locationSelect && locationName) {
-                for (let option of locationSelect.options) {
-                    if (option.text.trim() === locationName) {
-                        option.selected = true;
-                        break;
-                    }
-                }
-            }
-            
-            // Update modal title and show delete/copy buttons
-            document.querySelector('#scheduleModal .modal-title').textContent = 'Edit Schedule';
-            document.getElementById('delete_button').style.display = 'inline-block';
-            document.getElementById('copy_button').style.display = 'inline-block';
-            document.querySelector('#scheduleModal .btn-primary').textContent = 'Update Schedule';
+            console.log('Schedule clicked, data stored:', currentScheduleData);
         });
     });
+    
+    // Populate form when modal is actually shown
+    const scheduleModal = document.getElementById('scheduleModal');
+    if (scheduleModal) {
+        scheduleModal.addEventListener('shown.bs.modal', function() {
+            if (currentScheduleData) {
+                console.log('Modal shown, populating with stored data:', currentScheduleData);
+                
+                // Populate basic fields
+                document.getElementById('schedule_id').value = currentScheduleData.scheduleId;
+                document.getElementById('schedule_date').value = currentScheduleData.startTime.toISOString().split('T')[0];
+                document.getElementById('description').value = currentScheduleData.description;
+                
+                // Set time fields - format as HH:MM with 30-minute precision
+                const formatTime = (date) => {
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    return `${hours}:${minutes}`;
+                };
+                
+                const startTimeFormatted = formatTime(currentScheduleData.startTime);
+                const endTimeFormatted = formatTime(currentScheduleData.endTime);
+                
+                console.log('Setting times in modal:', { startTimeFormatted, endTimeFormatted });
+                
+                const startHourSelect = document.getElementById('start_hour');
+                const endHourSelect = document.getElementById('end_hour');
+                
+                if (startHourSelect) {
+                    startHourSelect.value = startTimeFormatted;
+                    console.log('Modal: Start hour set to:', startHourSelect.value, 'Selected index:', startHourSelect.selectedIndex);
+                }
+                
+                if (endHourSelect) {
+                    endHourSelect.value = endTimeFormatted;
+                    console.log('Modal: End hour set to:', endHourSelect.value, 'Selected index:', endHourSelect.selectedIndex);
+                }
+                
+                // Set checkboxes
+                document.getElementById('time_off').checked = currentScheduleData.timeOff;
+                document.getElementById('all_day').checked = currentScheduleData.allDay;
+                
+                // Set location dropdown
+                const locationSelect = document.getElementById('location_id');
+                if (locationSelect && currentScheduleData.locationName) {
+                    for (let option of locationSelect.options) {
+                        if (option.text.trim() === currentScheduleData.locationName) {
+                            option.selected = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // Update modal title and show delete/copy buttons
+                document.querySelector('#scheduleModal .modal-title').textContent = 'Edit Schedule';
+                document.getElementById('delete_button').style.display = 'inline-block';
+                document.getElementById('copy_button').style.display = 'inline-block';
+                document.querySelector('#scheduleModal .btn-primary').textContent = 'Update Schedule';
+            }
+        });
+    }
     
     // Handle modal close to reset form
     document.getElementById('scheduleModal').addEventListener('hidden.bs.modal', function() {
