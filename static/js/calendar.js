@@ -699,8 +699,8 @@ document.addEventListener('DOMContentLoaded', function() {
         primaryDate = date;
         
         // Set the hidden datetime inputs for the first/main date
-        document.getElementById('start_time_input').value = `${date} ${startHour}:00`;
-        document.getElementById('end_time_input').value = `${date} ${endHour}:00`;
+        document.getElementById('start_time_input').value = `${date} ${startHour}`;
+        document.getElementById('end_time_input').value = `${date} ${endHour}`;
         
         // Handle repeat days if enabled
         if (isRepeatEnabled) {
