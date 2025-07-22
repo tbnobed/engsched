@@ -223,8 +223,14 @@ def tickets_dashboard():
     raw_status_filter = status_filter
     
     if status_filter != 'all':
-        query = query.filter(Ticket.status == status_filter)
-        app.logger.debug(f"After status filter ({status_filter}): {str(query.statement.compile(compile_kwargs={'literal_binds': True}))}")
+        if status_filter == 'open':
+            # Include open, in_progress, and pending tickets for the "open" filter
+            query = query.filter(Ticket.status.in_(['open', 'in_progress', 'pending']))
+            app.logger.debug(f"After 'open' status filter (includes open/in_progress/pending): {str(query.statement.compile(compile_kwargs={'literal_binds': True}))}")
+        else:
+            # For other specific statuses, filter exactly
+            query = query.filter(Ticket.status == status_filter)
+            app.logger.debug(f"After status filter ({status_filter}): {str(query.statement.compile(compile_kwargs={'literal_binds': True}))}")
     if category_filter != 'all':
         try:
             category_id = int(category_filter)
