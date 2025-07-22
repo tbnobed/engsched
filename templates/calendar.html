@@ -234,17 +234,22 @@
                                 <label class="form-label">Start Time</label>
                                 <select id="start_hour" class="form-control" onchange="updateEndTimeOptions()">
                                     {% for hour in range(24) %}
-                                        <option value="{{ '%02d'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
+                                        <option value="{{ '%02d:00'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
+                                        <option value="{{ '%02d:30'|format(hour) }}">{{ '%02d:30'|format(hour) }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <div class="col">
                                 <label class="form-label">End Time</label>
                                 <select id="end_hour" class="form-control">
-                                    {% for hour in range(1, 24) %}
-                                        <option value="{{ '%02d'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
+                                    {% for hour in range(24) %}
+                                        {% if hour > 0 %}
+                                        <option value="{{ '%02d:00'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
+                                        <option value="{{ '%02d:30'|format(hour) }}">{{ '%02d:30'|format(hour) }}</option>
+                                        {% endif %}
                                     {% endfor %}
-                                    <option value="00">00:00</option>
+                                    <option value="00:00">00:00 (+1)</option>
+                                    <option value="00:30">00:30 (+1)</option>
                                 </select>
                             </div>
                         </div>
@@ -492,12 +497,55 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.checked) {
                 timeOffCheckbox.checked = true;
                 // Automatically set times to cover the full day
-                startHourSelect.value = '00';
-                endHourSelect.value = '23';
-                console.log('OOO checked: automatically set times to 00:00-23:00');
+                startHourSelect.value = '00:00';
+                endHourSelect.value = '23:30';
+                console.log('OOO checked: automatically set times to 00:00-23:30');
             }
         });
     }
 });
+
+// Update end time options based on start time selection
+function updateEndTimeOptions() {
+    const startHour = document.getElementById('start_hour');
+    const endHour = document.getElementById('end_hour');
+    
+    if (!startHour || !endHour) return;
+    
+    const startValue = startHour.value;
+    const currentEndValue = endHour.value;
+    
+    // Clear end options
+    endHour.innerHTML = '';
+    
+    // Parse start time
+    const [startH, startM] = startValue.split(':').map(Number);
+    const startMinutes = startH * 60 + startM;
+    
+    // Generate end time options (30 minutes after start time)
+    for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+            const totalMinutes = hour * 60 + minute;
+            
+            // Only show times after start time
+            if (totalMinutes > startMinutes) {
+                const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                const option = new Option(timeStr, timeStr);
+                if (timeStr === currentEndValue) {
+                    option.selected = true;
+                }
+                endHour.appendChild(option);
+            }
+        }
+    }
+    
+    // Add next day options (00:00 and 00:30)
+    const option1 = new Option('00:00 (+1)', '00:00');
+    const option2 = new Option('00:30 (+1)', '00:30');
+    if ('00:00' === currentEndValue) option1.selected = true;
+    if ('00:30' === currentEndValue) option2.selected = true;
+    endHour.appendChild(option1);
+    endHour.appendChild(option2);
+}
 </script>
 {% endblock %}
