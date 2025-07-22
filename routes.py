@@ -2653,20 +2653,31 @@ def restore_backup():
                         # Check if user exists (case-insensitive)
                         existing_user = existing_users.get(username.lower())
                         if existing_user:
-                            app.logger.info(f"User {username} already exists")
-                            continue
-
-                        # Create new user
-                        user = User(
-                            username=username,
-                            email=email,
-                            password_hash=user_data['password_hash'],
-                            color=user_data.get('color', '#3498db'),
-                            is_admin=user_data.get('is_admin', False),
-                            timezone=user_data.get('timezone', 'America/Los_Angeles')
-                        )
-                        db.session.add(user)
-                        app.logger.info(f"Created new user {username}")
+                            # Update existing user with backup data including password
+                            existing_user.email = email
+                            existing_user.password_hash = user_data['password_hash']
+                            existing_user.color = user_data.get('color', existing_user.color)
+                            existing_user.is_admin = user_data.get('is_admin', existing_user.is_admin)
+                            existing_user.timezone = user_data.get('timezone', existing_user.timezone)
+                            # Update profile picture if present in backup
+                            if 'profile_picture' in user_data:
+                                existing_user.profile_picture = user_data.get('profile_picture')
+                            app.logger.info(f"Updated existing user {username} with backup data including password")
+                        else:
+                            # Create new user
+                            user = User(
+                                username=username,
+                                email=email,
+                                password_hash=user_data['password_hash'],
+                                color=user_data.get('color', '#3498db'),
+                                is_admin=user_data.get('is_admin', False),
+                                timezone=user_data.get('timezone', 'America/Los_Angeles')
+                            )
+                            # Set profile picture if present in backup
+                            if 'profile_picture' in user_data:
+                                user.profile_picture = user_data.get('profile_picture')
+                            db.session.add(user)
+                            app.logger.info(f"Created new user {username}")
 
                     except Exception as e:
                         app.logger.error(f"Error processing user {username}: {str(e)}")

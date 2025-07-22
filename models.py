@@ -112,6 +112,7 @@ class User(UserMixin, db.Model):
             'color': self.color,
             'timezone': self.timezone,
             'theme_preference': self.theme_preference,
+            'profile_picture': self.profile_picture,
             'created_schedules': [schedule.id for schedule in self.schedules]
         }
 
