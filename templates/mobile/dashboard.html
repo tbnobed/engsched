@@ -129,9 +129,11 @@
             <h6 class="mb-1">{{ booking.title }}</h6>
             <small class="text-muted">
                 <i data-feather="clock" style="width: 14px; height: 14px;"></i>
-                {{ booking.start_time[:5] }} - {{ booking.end_time[:5] }}
-                {% if booking.production_type %}
-                • {{ booking.production_type }}
+                {% if booking.start %}{{ booking.start[:16] }}{% endif %}
+                {% if booking.start and booking.end %} - {% endif %}
+                {% if booking.end %}{{ booking.end[:16] }}{% endif %}
+                {% if booking.type %}
+                • {{ booking.type }}
                 {% endif %}
             </small>
             {% if booking.description %}
@@ -139,9 +141,11 @@
             {% endif %}
         </div>
         <div class="ms-2">
+            {% if booking.status %}
             <span class="badge {% if booking.status == 'confirmed' %}bg-success{% elif booking.status == 'cancelled' %}bg-danger{% else %}bg-warning{% endif %}">
                 {{ booking.status.title() }}
             </span>
+            {% endif %}
         </div>
     </div>
     {% endfor %}
