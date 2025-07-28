@@ -179,7 +179,7 @@ setInterval(function() {
 <script>
 // Function to load active users
 function loadActiveUsers() {
-    fetch('/api/active-users')
+    fetch('/api/active_users')
         .then(response => response.json())
         .then(data => {
             const container = document.getElementById('activeUsers');
@@ -201,7 +201,8 @@ function loadActiveUsers() {
                             <div class="fw-semibold">${user.username}</div>
                             <small class="text-muted">
                                 <i data-feather="clock" style="width: 12px; height: 12px;"></i>
-                                ${user.schedule_description || 'On duty'}
+                                ${user.schedule.start_time} - ${user.schedule.end_time}
+                                ${user.location ? ' • ' + user.location.name : ''}
                             </small>
                         </div>
                     `;
@@ -232,13 +233,13 @@ function loadActiveUsers() {
 
 // Function to load upcoming time off
 function loadUpcomingTimeOff() {
-    fetch('/api/upcoming-time-off')
+    fetch('/api/upcoming_time_off')
         .then(response => response.json())
         .then(data => {
             const container = document.getElementById('upcomingTimeOff');
-            if (data.time_off && data.time_off.length > 0) {
+            if (data.upcoming_time_off && data.upcoming_time_off.length > 0) {
                 container.innerHTML = '';
-                data.time_off.forEach(timeOff => {
+                data.upcoming_time_off.forEach(timeOff => {
                     const timeOffCard = document.createElement('div');
                     timeOffCard.className = 'd-flex align-items-center p-3 mb-2 rounded';
                     timeOffCard.style = `{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %}`;
@@ -254,7 +255,7 @@ function loadUpcomingTimeOff() {
                             <div class="fw-semibold">${timeOff.username}</div>
                             <small class="text-muted">
                                 <i data-feather="calendar" style="width: 12px; height: 12px;"></i>
-                                ${timeOff.date_display}
+                                ${timeOff.start_date} - ${timeOff.end_date} (${timeOff.duration})
                             </small>
                         </div>
                     `;

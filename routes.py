@@ -694,11 +694,11 @@ def get_active_users():
                 # Continue processing other users
 
         app.logger.debug(f"Returning {len(result)} active users")
-        return jsonify(result)
+        return jsonify({'active_users': result})
     except Exception as e:
         app.logger.error(f"Error in get_active_users: {str(e)}")
         app.logger.exception("Detailed exception information:")
-        return jsonify([]), 200  # Return empty array instead of error
+        return jsonify({'active_users': []}), 200  # Return empty array instead of error
 
 @app.route('/profile')
 @login_required
@@ -2484,12 +2484,12 @@ def get_upcoming_time_off(for_template=False):
                     'profile_picture': user.profile_picture if user and user.profile_picture else None
                 })
 
-        return jsonify(formatted_entries)
+        return jsonify({'upcoming_time_off': formatted_entries})
     except Exception as e:
         app.logger.error(f"Error in get_upcoming_time_off: {str(e)}")
         if for_template:
             return []
-        return jsonify([])
+        return jsonify({'upcoming_time_off': []})
 
 @app.route('/admin/backup')
 @login_required
