@@ -6,7 +6,7 @@ from forms import (
     LoginForm, RegistrationForm, ScheduleForm, AdminUserForm, EditUserForm, 
     ChangePasswordForm, QuickLinkForm, LocationForm, EmailSettingsForm, RecurringScheduleForm
 )
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, date, time
 import pytz
 import csv
 import random
@@ -4054,9 +4054,9 @@ def mobile_calendar():
         try:
             current_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
-            current_date = datetime.now().date()
+            current_date = date.today()
     else:
-        current_date = datetime.now().date()
+        current_date = date.today()
     
     # Get user timezone
     user_tz = current_user.get_timezone_obj()
@@ -4099,10 +4099,10 @@ def mobile_personal_schedule():
         try:
             week_start = datetime.strptime(week_start_str, '%Y-%m-%d').date()
         except ValueError:
-            today = datetime.now().date()
+            today = date.today()
             week_start = today - timedelta(days=today.weekday())
     else:
-        today = datetime.now().date()
+        today = date.today()
         week_start = today - timedelta(days=today.weekday())
     
     week_end = week_start + timedelta(days=6)
