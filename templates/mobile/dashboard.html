@@ -186,6 +186,159 @@ setInterval(function() {
     location.reload();
 }, 120000);
 </script>
+
+<!-- Currently Active Section -->
+<div class="mobile-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i data-feather="users" style="width: 20px; height: 20px; color: #28a745;"></i>
+            Currently Active
+        </h5>
+    </div>
+    
+    <div id="activeUsers">
+        <div class="text-center py-4 text-muted">
+            <i data-feather="clock" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+            <p class="mt-2 mb-0">Loading active technicians...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Time Off Section -->
+<div class="mobile-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i data-feather="calendar-x" style="width: 20px; height: 20px; color: #ffc107;"></i>
+            Upcoming Time Off
+        </h5>
+    </div>
+    
+    <div id="upcomingTimeOff">
+        <div class="text-center py-4 text-muted">
+            <i data-feather="clock" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+            <p class="mt-2 mb-0">Loading time off...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Function to load active users
+function loadActiveUsers() {
+    fetch('/api/active-users')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('activeUsers');
+            if (data.active_users && data.active_users.length > 0) {
+                container.innerHTML = '';
+                data.active_users.forEach(user => {
+                    const userCard = document.createElement('div');
+                    userCard.className = 'd-flex align-items-center p-3 mb-2 rounded';
+                    userCard.style = `{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %}`;
+                    
+                    userCard.innerHTML = `
+                        <div class="me-3">
+                            ${user.profile_picture ? 
+                                `<img src="${user.profile_picture}" alt="${user.username}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">` :
+                                `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px; background-color: ${user.color || '#6c757d'}; font-size: 14px;">${user.username.charAt(0).toUpperCase()}</div>`
+                            }
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">${user.username}</div>
+                            <small class="text-muted">
+                                <i data-feather="clock" style="width: 12px; height: 12px;"></i>
+                                ${user.schedule_description || 'On duty'}
+                            </small>
+                        </div>
+                    `;
+                    container.appendChild(userCard);
+                });
+                feather.replace();
+            } else {
+                container.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i data-feather="users" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+                        <p class="mt-2 mb-0">No one currently active</p>
+                    </div>
+                `;
+                feather.replace();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading active users:', error);
+            document.getElementById('activeUsers').innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i data-feather="alert-circle" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+                    <p class="mt-2 mb-0">Error loading data</p>
+                </div>
+            `;
+            feather.replace();
+        });
+}
+
+// Function to load upcoming time off
+function loadUpcomingTimeOff() {
+    fetch('/api/upcoming-time-off')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('upcomingTimeOff');
+            if (data.time_off && data.time_off.length > 0) {
+                container.innerHTML = '';
+                data.time_off.forEach(timeOff => {
+                    const timeOffCard = document.createElement('div');
+                    timeOffCard.className = 'd-flex align-items-center p-3 mb-2 rounded';
+                    timeOffCard.style = `{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %}`;
+                    
+                    timeOffCard.innerHTML = `
+                        <div class="me-3">
+                            ${timeOff.profile_picture ? 
+                                `<img src="${timeOff.profile_picture}" alt="${timeOff.username}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">` :
+                                `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px; background-color: ${timeOff.color || '#6c757d'}; font-size: 14px;">${timeOff.username.charAt(0).toUpperCase()}</div>`
+                            }
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">${timeOff.username}</div>
+                            <small class="text-muted">
+                                <i data-feather="calendar" style="width: 12px; height: 12px;"></i>
+                                ${timeOff.date_display}
+                            </small>
+                        </div>
+                    `;
+                    container.appendChild(timeOffCard);
+                });
+                feather.replace();
+            } else {
+                container.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i data-feather="check-circle" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+                        <p class="mt-2 mb-0">No upcoming time off</p>
+                    </div>
+                `;
+                feather.replace();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading time off:', error);
+            document.getElementById('upcomingTimeOff').innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i data-feather="alert-circle" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+                    <p class="mt-2 mb-0">Error loading data</p>
+                </div>
+            `;
+            feather.replace();
+        });
+}
+
+// Load data when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadActiveUsers();
+    loadUpcomingTimeOff();
+    
+    // Auto-refresh every 60 seconds
+    setInterval(loadActiveUsers, 60000);
+    setInterval(loadUpcomingTimeOff, 60000);
+});
+</script>
+
 {% endblock %}
 
 {% block scripts %}
