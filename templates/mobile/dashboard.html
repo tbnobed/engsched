@@ -55,42 +55,42 @@
     </div>
     
     {% if today_schedules %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
         {% for schedule in today_schedules %}
-        <div class="d-flex align-items-center p-3 mb-2 rounded"
-             style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %}">
-            <div class="me-3">
+        <div class="d-flex flex-column align-items-center p-2 rounded text-center"
+             style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %} min-height: 80px;">
+            <div class="mb-2">
                 {% if schedule.technician.profile_picture %}
-                <img src="{{ url_for('static', filename='uploads/profile_pictures/' + schedule.technician.profile_picture) }}" 
+                <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}" 
                      alt="{{ schedule.technician.username }}" 
                      class="rounded-circle" 
-                     style="width: 40px; height: 40px; object-fit: cover;">
+                     style="width: 28px; height: 28px; object-fit: cover;">
                 {% else %}
-                <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
-                     style="width: 40px; height: 40px; background-color: {{ schedule.technician.color or '#6c757d' }}; font-weight: bold;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold mx-auto"
+                     style="width: 28px; height: 28px; background-color: {{ schedule.technician.color or '#6c757d' }}; font-size: 12px;">
                     {{ schedule.technician.username[:2].upper() }}
                 </div>
                 {% endif %}
             </div>
-            <div class="flex-grow-1">
-                <h6 class="mb-1">{{ schedule.technician.username }}</h6>
-                <small class="text-muted">
-                    <i data-feather="clock" style="width: 14px; height: 14px;"></i>
-                    {{ schedule.start_time_local.strftime('%H:%M') }} - {{ schedule.end_time_local.strftime('%H:%M') }}
+            <div class="flex-grow-1" style="min-width: 0;">
+                <div class="fw-semibold" style="font-size: 0.8rem; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ schedule.technician.username }}</div>
+                <small class="text-muted" style="font-size: 0.65rem; line-height: 1.1;">
+                    <div>{{ schedule.start_time_local.strftime('%H:%M') }} - {{ schedule.end_time_local.strftime('%H:%M') }}</div>
                     {% if schedule.location %}
-                    • <i data-feather="map-pin" style="width: 14px; height: 14px;"></i>
-                    {{ schedule.location.name }}
+                    <div style="margin-top: 1px;">{{ schedule.location.name }}</div>
                     {% endif %}
                 </small>
                 {% if schedule.time_off %}
                 <div class="mt-1">
-                    <span class="badge bg-warning">
-                        {% if schedule.all_day %}OOO All Day{% else %}Time Off{% endif %}
+                    <span class="badge bg-warning" style="font-size: 0.6rem; padding: 1px 4px;">
+                        {% if schedule.all_day %}OOO{% else %}Time Off{% endif %}
                     </span>
                 </div>
                 {% endif %}
             </div>
         </div>
         {% endfor %}
+        </div>
     {% else %}
         <div class="text-center py-4 text-muted">
             <i data-feather="calendar-x" style="width: 48px; height: 48px; opacity: 0.5;"></i>
@@ -109,33 +109,32 @@
         </h5>
     </div>
     
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
     {% for booking in studio_bookings %}
-    <div class="d-flex align-items-start p-3 mb-2 rounded"
-         style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %}">
-        <div class="flex-grow-1">
-            <h6 class="mb-1">{{ booking.title }}</h6>
-            <small class="text-muted">
-                <i data-feather="clock" style="width: 14px; height: 14px;"></i>
-                {% if booking.start %}{{ booking.start[:16] }}{% endif %}
-                {% if booking.start and booking.end %} - {% endif %}
-                {% if booking.end %}{{ booking.end[:16] }}{% endif %}
+    <div class="d-flex flex-column p-2 rounded text-center"
+         style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %} min-height: 80px;">
+        <div class="flex-grow-1" style="min-width: 0;">
+            <div class="fw-semibold" style="font-size: 0.8rem; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ booking.title }}</div>
+            <small class="text-muted" style="font-size: 0.65rem; line-height: 1.1;">
+                <div>{% if booking.start %}{{ booking.start[11:16] }}{% endif %}{% if booking.start and booking.end %} - {% endif %}{% if booking.end %}{{ booking.end[11:16] }}{% endif %}</div>
                 {% if booking.type %}
-                • {{ booking.type }}
+                <div style="margin-top: 1px;">{{ booking.type }}</div>
                 {% endif %}
             </small>
             {% if booking.description %}
-            <p class="small mt-1 mb-0">{{ booking.description[:50] }}{% if booking.description|length > 50 %}...{% endif %}</p>
+            <p class="small mt-1 mb-1" style="font-size: 0.6rem; line-height: 1.1;">{{ booking.description[:30] }}{% if booking.description|length > 30 %}...{% endif %}</p>
             {% endif %}
         </div>
-        <div class="ms-2">
-            {% if booking.status %}
-            <span class="badge {% if booking.status == 'confirmed' %}bg-success{% elif booking.status == 'cancelled' %}bg-danger{% else %}bg-warning{% endif %}">
+        {% if booking.status %}
+        <div class="mt-1">
+            <span class="badge {% if booking.status == 'confirmed' %}bg-success{% elif booking.status == 'cancelled' %}bg-danger{% else %}bg-warning{% endif %}" style="font-size: 0.6rem; padding: 1px 4px;">
                 {{ booking.status.title() }}
             </span>
-            {% endif %}
         </div>
+        {% endif %}
     </div>
     {% endfor %}
+    </div>
 </div>
 {% endif %}
 
@@ -184,30 +183,34 @@ function loadActiveUsers() {
         .then(data => {
             const container = document.getElementById('activeUsers');
             if (data.active_users && data.active_users.length > 0) {
-                container.innerHTML = '';
+                // Create 2-column grid container
+                const gridContainer = document.createElement('div');
+                gridContainer.style = 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px;';
+                
                 data.active_users.forEach(user => {
                     const userCard = document.createElement('div');
-                    userCard.className = 'd-flex align-items-center p-3 mb-2 rounded';
-                    userCard.style = `{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %}`;
+                    userCard.className = 'd-flex flex-column align-items-center p-2 rounded text-center';
+                    userCard.style = `{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %} min-height: 80px;`;
                     
                     userCard.innerHTML = `
-                        <div class="me-3">
+                        <div class="mb-2">
                             ${user.profile_picture ? 
-                                `<img src="/static/${user.profile_picture}" alt="${user.username}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">` :
-                                `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px; background-color: ${user.color || '#6c757d'}; font-size: 14px;">${user.username.charAt(0).toUpperCase()}</div>`
+                                `<img src="/static/${user.profile_picture}" alt="${user.username}" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">` :
+                                `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold mx-auto" style="width: 28px; height: 28px; background-color: ${user.color || '#6c757d'}; font-size: 12px;">${user.username.charAt(0).toUpperCase()}</div>`
                             }
                         </div>
-                        <div class="flex-grow-1">
-                            <div class="fw-semibold">${user.username}</div>
-                            <small class="text-muted">
-                                <i data-feather="clock" style="width: 12px; height: 12px;"></i>
-                                ${user.schedule.start_time} - ${user.schedule.end_time}
-                                ${user.location ? ' • ' + user.location.name : ''}
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="fw-semibold" style="font-size: 0.8rem; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.username}</div>
+                            <small class="text-muted" style="font-size: 0.65rem; line-height: 1.1;">
+                                <div>${user.schedule.start_time} - ${user.schedule.end_time}</div>
+                                ${user.location ? `<div style="margin-top: 1px;">${user.location.name}</div>` : ''}
                             </small>
                         </div>
                     `;
-                    container.appendChild(userCard);
+                    gridContainer.appendChild(userCard);
                 });
+                container.innerHTML = '';
+                container.appendChild(gridContainer);
                 feather.replace();
             } else {
                 container.innerHTML = `
@@ -238,29 +241,34 @@ function loadUpcomingTimeOff() {
         .then(data => {
             const container = document.getElementById('upcomingTimeOff');
             if (data.upcoming_time_off && data.upcoming_time_off.length > 0) {
-                container.innerHTML = '';
+                // Create 2-column grid container
+                const gridContainer = document.createElement('div');
+                gridContainer.style = 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px;';
+                
                 data.upcoming_time_off.forEach(timeOff => {
                     const timeOffCard = document.createElement('div');
-                    timeOffCard.className = 'd-flex align-items-center p-3 mb-2 rounded';
-                    timeOffCard.style = `{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %}`;
+                    timeOffCard.className = 'd-flex flex-column align-items-center p-2 rounded text-center';
+                    timeOffCard.style = `{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %} min-height: 80px;`;
                     
                     timeOffCard.innerHTML = `
-                        <div class="me-3">
+                        <div class="mb-2">
                             ${timeOff.profile_picture ? 
-                                `<img src="/static/${timeOff.profile_picture}" alt="${timeOff.username}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">` :
-                                `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px; background-color: ${timeOff.color || '#6c757d'}; font-size: 14px;">${timeOff.username.charAt(0).toUpperCase()}</div>`
+                                `<img src="/static/${timeOff.profile_picture}" alt="${timeOff.username}" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">` :
+                                `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold mx-auto" style="width: 28px; height: 28px; background-color: ${timeOff.color || '#6c757d'}; font-size: 12px;">${timeOff.username.charAt(0).toUpperCase()}</div>`
                             }
                         </div>
-                        <div class="flex-grow-1">
-                            <div class="fw-semibold">${timeOff.username}</div>
-                            <small class="text-muted">
-                                <i data-feather="calendar" style="width: 12px; height: 12px;"></i>
-                                ${timeOff.start_date} - ${timeOff.end_date} (${timeOff.duration})
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="fw-semibold" style="font-size: 0.8rem; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${timeOff.username}</div>
+                            <small class="text-muted" style="font-size: 0.65rem; line-height: 1.1;">
+                                <div>${timeOff.start_date} - ${timeOff.end_date}</div>
+                                <div style="margin-top: 1px;">(${timeOff.duration})</div>
                             </small>
                         </div>
                     `;
-                    container.appendChild(timeOffCard);
+                    gridContainer.appendChild(timeOffCard);
                 });
+                container.innerHTML = '';
+                container.appendChild(gridContainer);
                 feather.replace();
             } else {
                 container.innerHTML = `
