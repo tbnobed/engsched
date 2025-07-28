@@ -193,7 +193,7 @@ function loadActiveUsers() {
                     userCard.innerHTML = `
                         <div class="me-3">
                             ${user.profile_picture ? 
-                                `<img src="${user.profile_picture}" alt="${user.username}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">` :
+                                `<img src="/static/${user.profile_picture}" alt="${user.username}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">` :
                                 `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px; background-color: ${user.color || '#6c757d'}; font-size: 14px;">${user.username.charAt(0).toUpperCase()}</div>`
                             }
                         </div>
@@ -247,7 +247,7 @@ function loadUpcomingTimeOff() {
                     timeOffCard.innerHTML = `
                         <div class="me-3">
                             ${timeOff.profile_picture ? 
-                                `<img src="${timeOff.profile_picture}" alt="${timeOff.username}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">` :
+                                `<img src="/static/${timeOff.profile_picture}" alt="${timeOff.username}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">` :
                                 `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px; background-color: ${timeOff.color || '#6c757d'}; font-size: 14px;">${timeOff.username.charAt(0).toUpperCase()}</div>`
                             }
                         </div>
