@@ -4054,9 +4054,9 @@ def mobile_calendar():
         try:
             current_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
-            current_date = date.today()
+            current_date = datetime.now().date()
     else:
-        current_date = date.today()
+        current_date = datetime.now().date()
     
     # Get user timezone
     user_tz = current_user.get_timezone_obj()
@@ -4099,9 +4099,11 @@ def mobile_personal_schedule():
         try:
             week_start = datetime.strptime(week_start_str, '%Y-%m-%d').date()
         except ValueError:
-            week_start = date.today() - timedelta(days=date.today().weekday())
+            today = datetime.now().date()
+            week_start = today - timedelta(days=today.weekday())
     else:
-        week_start = date.today() - timedelta(days=date.today().weekday())
+        today = datetime.now().date()
+        week_start = today - timedelta(days=today.weekday())
     
     week_end = week_start + timedelta(days=6)
     

@@ -91,7 +91,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="addScheduleForm" method="POST" action="{{ url_for('new_schedule') }}">
-                {{ csrf_token() }}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-body">
                     <input type="hidden" name="schedule_date" id="modalScheduleDate" value="{{ current_date.strftime('%Y-%m-%d') }}">
                     
@@ -307,7 +307,7 @@ function deleteSchedule(scheduleId) {
         fetch(`/schedule/delete/${scheduleId}`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': '{{ csrf_token() }}'
+                'X-CSRFToken': document.querySelector('[name=csrf_token]').value
             }
         }).then(() => {
             location.reload();
