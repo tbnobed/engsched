@@ -4042,3 +4042,129 @@ def update_ticket_status_api(ticket_id):
         app.logger.error(f"Error updating ticket status: {str(e)}")
         db.session.rollback()
         return jsonify({'success': False, 'error': 'Internal error'})
+
+
+@app.route('/mobile/calendar')
+@login_required
+def mobile_calendar():
+    """Mobile calendar view - daily schedule view"""
+    # Get the date parameter, default to today
+    date_str = request.args.get('date')
+    if date_str:
+        try:
+            current_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            current_date = date.today()
+    else:
+        current_date = date.today()
+    
+    # Get user timezone
+    user_tz = current_user.get_timezone_obj()
+    
+    # Calculate day boundaries in user timezone
+    start_of_day = user_tz.localize(datetime.combine(current_date, datetime.min.time()))
+    end_of_day = user_tz.localize(datetime.combine(current_date, datetime.max.time()))
+    
+    # Convert to UTC for database query
+    start_utc = start_of_day.astimezone(pytz.UTC)
+    end_utc = end_of_day.astimezone(pytz.UTC)
+    
+    # Query schedules for the day
+    schedules = Schedule.query.filter(
+        Schedule.start_time >= start_utc,
+        Schedule.start_time <= end_utc
+    ).join(User).outerjoin(Location).order_by(Schedule.start_time).all()
+    
+    # Convert times back to user timezone for display
+    for schedule in schedules:
+        schedule.start_time = schedule.start_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
+        schedule.end_time = schedule.end_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
+    
+    # Get locations for the add form
+    locations = Location.query.filter_by(active=True).all()
+    
+    return render_template('mobile/calendar.html',
+                         schedules=schedules,
+                         current_date=current_date,
+                         locations=locations)
+
+
+@app.route('/mobile/personal_schedule')
+@login_required
+def mobile_personal_schedule():
+    """Mobile personal schedule view - weekly view for current user"""
+    # Get week start parameter, default to current week
+    week_start_str = request.args.get('week_start')
+    if week_start_str:
+        try:
+            week_start = datetime.strptime(week_start_str, '%Y-%m-%d').date()
+        except ValueError:
+            week_start = date.today() - timedelta(days=date.today().weekday())
+    else:
+        week_start = date.today() - timedelta(days=date.today().weekday())
+    
+    week_end = week_start + timedelta(days=6)
+    
+    # Get user timezone
+    user_tz = current_user.get_timezone_obj()
+    
+    # Calculate week boundaries in user timezone
+    start_of_week = user_tz.localize(datetime.combine(week_start, datetime.min.time()))
+    end_of_week = user_tz.localize(datetime.combine(week_end, datetime.max.time()))
+    
+    # Convert to UTC for database query
+    start_utc = start_of_week.astimezone(pytz.UTC)
+    end_utc = end_of_week.astimezone(pytz.UTC)
+    
+    # Query user's schedules for the week
+    schedules = Schedule.query.filter(
+        Schedule.technician_id == current_user.id,
+        Schedule.start_time >= start_utc,
+        Schedule.start_time <= end_utc
+    ).outerjoin(Location).order_by(Schedule.start_time).all()
+    
+    # Convert times back to user timezone for display
+    for schedule in schedules:
+        schedule.start_time = schedule.start_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
+        schedule.end_time = schedule.end_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
+    
+    # Organize schedules by day
+    week_data = []
+    total_hours = 0
+    schedule_count = len(schedules)
+    
+    for i in range(7):
+        day_date = week_start + timedelta(days=i)
+        day_name = day_date.strftime('%A')
+        
+        # Filter schedules for this day
+        day_schedules = [s for s in schedules if s.start_time.date() == day_date]
+        
+        # Calculate hours for non-time-off schedules
+        for schedule in day_schedules:
+            if not schedule.time_off:
+                duration = schedule.end_time - schedule.start_time
+                total_hours += duration.total_seconds() / 3600
+        
+        week_data.append((day_name, day_date, day_schedules))
+    
+    # Get locations for the add form
+    locations = Location.query.filter_by(active=True).all()
+    
+    return render_template('mobile/personal_schedule.html',
+                         week_data=week_data,
+                         week_start=week_start,
+                         week_end=week_end,
+                         total_hours=round(total_hours, 1),
+                         schedule_count=schedule_count,
+                         locations=locations)
+
+
+@app.route('/mobile/quick_links')
+@login_required
+def mobile_quick_links():
+    """Mobile quick links view"""
+    quick_links = QuickLink.query.filter_by(active=True).order_by(QuickLink.title).all()
+    
+    return render_template('mobile/quick_links.html',
+                         quick_links=quick_links)

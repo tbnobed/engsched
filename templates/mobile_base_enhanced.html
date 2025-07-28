@@ -281,20 +281,20 @@
     <!-- Bottom Navigation -->
     {% if current_user.is_authenticated %}
     <nav class="bottom-nav">
-        <a href="{{ url_for('dashboard') }}" class="nav-item">
+        <a href="{{ url_for('mobile_dashboard') }}" class="nav-item">
             <i data-feather="home" class="nav-icon"></i>
             <span class="nav-label">Dashboard</span>
         </a>
-        <a href="{{ url_for('calendar') }}" class="nav-item">
+        <a href="{{ url_for('mobile_personal_schedule') }}" class="nav-item">
             <i data-feather="calendar" class="nav-icon"></i>
             <span class="nav-label">Schedule</span>
         </a>
-        <a href="{{ url_for('tickets.tickets_dashboard') }}" class="nav-item">
+        <a href="{{ url_for('mobile_tickets') }}" class="nav-item">
             <i data-feather="life-buoy" class="nav-icon"></i>
             <span class="nav-label">Tickets</span>
             <span class="nav-badge" id="ticket-badge" style="display: none;">0</span>
         </a>
-        <a href="#" onclick="showQuickLinks(); return false;" class="nav-item">
+        <a href="{{ url_for('mobile_quick_links') }}" class="nav-item">
             <i data-feather="grid" class="nav-icon"></i>
             <span class="nav-label">Quick Links</span>
         </a>

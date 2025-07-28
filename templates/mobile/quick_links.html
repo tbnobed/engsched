@@ -1,0 +1,337 @@
+{% extends "mobile_base_enhanced.html" %}
+
+{% block title %}Quick Links - Mobile{% endblock %}
+
+{% block content %}
+<div class="mobile-quick-links">
+    <!-- Header -->
+    <div class="page-header">
+        <h4 class="page-title">
+            <i data-feather="link"></i>
+            Quick Links
+        </h4>
+        {% if current_user.is_admin %}
+        <button class="btn btn-primary btn-sm" onclick="showAddLinkModal()">
+            <i data-feather="plus"></i>
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Quick Links Grid -->
+    <div class="quick-links-grid">
+        {% for link in quick_links %}
+        <div class="quick-link-card" onclick="openLink('{{ link.url }}')">
+            <div class="link-icon">
+                <i data-feather="{{ link.icon or 'external-link' }}"></i>
+            </div>
+            <div class="link-content">
+                <div class="link-title">{{ link.title }}</div>
+                {% if link.description %}
+                <div class="link-description">{{ link.description }}</div>
+                {% endif %}
+            </div>
+            {% if current_user.is_admin %}
+            <div class="link-actions">
+                <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); editLink({{ link.id }})">
+                    <i data-feather="edit-2"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteLink({{ link.id }})">
+                    <i data-feather="trash-2"></i>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="no-links">
+            <i data-feather="link-2"></i>
+            <p>No quick links available</p>
+            {% if current_user.is_admin %}
+            <button class="btn btn-primary" onclick="showAddLinkModal()">
+                <i data-feather="plus"></i> Add First Link
+            </button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add/Edit Link Modal -->
+<div class="modal fade" id="linkModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="linkModalTitle">Add Quick Link</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="linkForm" method="POST">
+                {{ csrf_token() }}
+                <div class="modal-body">
+                    <input type="hidden" id="linkId" name="link_id">
+                    
+                    <div class="mb-3">
+                        <label for="linkTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="linkTitle" name="title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="linkUrl" class="form-label">URL</label>
+                        <input type="url" class="form-control" id="linkUrl" name="url" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="linkDescription" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="linkDescription" name="description" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="linkIcon" class="form-label">Icon</label>
+                        <select class="form-select" id="linkIcon" name="icon">
+                            <option value="external-link">🔗 External Link</option>
+                            <option value="link">🔗 Link</option>
+                            <option value="globe">🌐 Website</option>
+                            <option value="mail">📧 Email</option>
+                            <option value="phone">📞 Phone</option>
+                            <option value="calendar">📅 Calendar</option>
+                            <option value="file-text">📄 Document</option>
+                            <option value="folder">📁 Folder</option>
+                            <option value="camera">📷 Camera</option>
+                            <option value="video">📹 Video</option>
+                            <option value="music">🎵 Music</option>
+                            <option value="tool">🔧 Tool</option>
+                            <option value="settings">⚙️ Settings</option>
+                            <option value="help-circle">❓ Help</option>
+                            <option value="info">ℹ️ Info</option>
+                            <option value="bookmark">🔖 Bookmark</option>
+                            <option value="star">⭐ Star</option>
+                            <option value="heart">❤️ Heart</option>
+                            <option value="home">🏠 Home</option>
+                            <option value="users">👥 Users</option>
+                            <option value="user">👤 User</option>
+                            <option value="shield">🛡️ Security</option>
+                            <option value="key">🔑 Key</option>
+                            <option value="database">💾 Database</option>
+                            <option value="server">🖥️ Server</option>
+                            <option value="monitor">📺 Monitor</option>
+                            <option value="smartphone">📱 Mobile</option>
+                            <option value="tablet">📱 Tablet</option>
+                            <option value="headphones">🎧 Audio</option>
+                            <option value="mic">🎤 Microphone</option>
+                            <option value="radio">📻 Radio</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="linkSubmitBtn">Add Link</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.mobile-quick-links {
+    padding: 1rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-weight: 600;
+    color: var(--bs-body-color);
+}
+
+.quick-links-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.quick-link-card {
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.quick-link-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: var(--bs-primary);
+}
+
+.quick-link-card:active {
+    transform: scale(0.98);
+}
+
+.link-icon {
+    background: var(--bs-primary);
+    color: white;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.link-icon i {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.link-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.link-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--bs-body-color);
+    margin-bottom: 0.25rem;
+    word-wrap: break-word;
+}
+
+.link-description {
+    color: var(--bs-secondary);
+    font-size: 0.9rem;
+    line-height: 1.3;
+    word-wrap: break-word;
+}
+
+.link-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.no-links {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--bs-secondary);
+}
+
+.no-links i {
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.no-links p {
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+/* Dark mode adjustments */
+[data-bs-theme="dark"] .quick-link-card {
+    background: #2d2d2d;
+    border-color: #3a3a3a;
+}
+
+[data-bs-theme="dark"] .quick-link-card:hover {
+    box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+}
+
+/* Responsive adjustments */
+@media (min-width: 576px) {
+    .quick-links-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 768px) {
+    .quick-links-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+</style>
+
+<script>
+function openLink(url) {
+    // Open in new tab/window
+    window.open(url, '_blank');
+}
+
+function showAddLinkModal() {
+    document.getElementById('linkModalTitle').textContent = 'Add Quick Link';
+    document.getElementById('linkSubmitBtn').textContent = 'Add Link';
+    document.getElementById('linkForm').action = '{{ url_for("add_quick_link") }}';
+    document.getElementById('linkId').value = '';
+    document.getElementById('linkTitle').value = '';
+    document.getElementById('linkUrl').value = '';
+    document.getElementById('linkDescription').value = '';
+    document.getElementById('linkIcon').value = 'external-link';
+    
+    new bootstrap.Modal(document.getElementById('linkModal')).show();
+}
+
+function editLink(linkId) {
+    // Find the link data from the page
+    const linkCard = document.querySelector(`[onclick*="${linkId}"]`);
+    const title = linkCard.querySelector('.link-title').textContent;
+    const description = linkCard.querySelector('.link-description')?.textContent || '';
+    
+    // Get the URL from the onclick attribute
+    const onclickAttr = linkCard.getAttribute('onclick');
+    const urlMatch = onclickAttr.match(/openLink\('([^']+)'\)/);
+    const url = urlMatch ? urlMatch[1] : '';
+    
+    // Get the icon from the icon element
+    const iconElement = linkCard.querySelector('.link-icon i');
+    const iconAttr = iconElement.getAttribute('data-feather');
+    
+    document.getElementById('linkModalTitle').textContent = 'Edit Quick Link';
+    document.getElementById('linkSubmitBtn').textContent = 'Update Link';
+    document.getElementById('linkForm').action = '{{ url_for("edit_quick_link") }}';
+    document.getElementById('linkId').value = linkId;
+    document.getElementById('linkTitle').value = title;
+    document.getElementById('linkUrl').value = url;
+    document.getElementById('linkDescription').value = description;
+    document.getElementById('linkIcon').value = iconAttr;
+    
+    new bootstrap.Modal(document.getElementById('linkModal')).show();
+}
+
+function deleteLink(linkId) {
+    if (confirm('Are you sure you want to delete this quick link?')) {
+        fetch(`{{ url_for("delete_quick_link") }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: `link_id=${linkId}`
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error deleting link');
+            }
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+});
+</script>
+{% endblock %}

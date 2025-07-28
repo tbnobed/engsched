@@ -1,0 +1,369 @@
+{% extends "mobile_base_enhanced.html" %}
+
+{% block title %}My Schedule - Mobile{% endblock %}
+
+{% block content %}
+<div class="mobile-personal-schedule">
+    <!-- Week Navigation -->
+    <div class="week-navigation">
+        <button class="btn btn-outline-primary btn-sm" onclick="changeWeek(-1)">
+            <i data-feather="chevron-left"></i>
+        </button>
+        <h4 class="week-title mb-0">{{ week_start.strftime('%b %d') }} - {{ week_end.strftime('%b %d, %Y') }}</h4>
+        <button class="btn btn-outline-primary btn-sm" onclick="changeWeek(1)">
+            <i data-feather="chevron-right"></i>
+        </button>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats mb-3">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_hours }}</div>
+            <div class="stat-label">Hours This Week</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ schedule_count }}</div>
+            <div class="stat-label">Schedule Entries</div>
+        </div>
+    </div>
+
+    <!-- Daily Schedule -->
+    {% for day_name, day_date, day_schedules in week_data %}
+    <div class="day-section">
+        <div class="day-header">
+            <h5 class="day-title">
+                {{ day_name }}
+                <span class="day-date">{{ day_date.strftime('%m/%d') }}</span>
+            </h5>
+            <button class="btn btn-sm btn-outline-primary" onclick="addScheduleForDay('{{ day_date.strftime('%Y-%m-%d') }}')">
+                <i data-feather="plus"></i>
+            </button>
+        </div>
+        
+        <div class="day-schedules">
+            {% if day_schedules %}
+                {% for schedule in day_schedules %}
+                <div class="schedule-item {% if schedule.time_off %}time-off{% endif %}">
+                    <div class="schedule-time">
+                        {% if schedule.all_day and schedule.time_off %}
+                        <span class="all-day-indicator">All Day - OOO</span>
+                        {% else %}
+                        {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="schedule-details">
+                        {% if schedule.location %}
+                        <div class="schedule-location">
+                            <i data-feather="map-pin"></i>
+                            {{ schedule.location.name }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if schedule.description %}
+                        <div class="schedule-description">{{ schedule.description }}</div>
+                        {% endif %}
+                        
+                        {% if schedule.time_off %}
+                        <div class="time-off-badge">
+                            <i data-feather="coffee"></i>
+                            {% if schedule.all_day %}Out of Office{% else %}Time Off{% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="schedule-actions">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editSchedule({{ schedule.id }})">
+                            <i data-feather="edit-2"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="no-schedule">
+                <i data-feather="calendar-x"></i>
+                <span>No schedule</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Schedule Modal -->
+<div class="modal fade" id="addScheduleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Schedule Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addScheduleForm" method="POST" action="{{ url_for('new_schedule') }}">
+                {{ csrf_token() }}
+                <div class="modal-body">
+                    <input type="hidden" name="schedule_date" id="modalScheduleDate">
+                    <input type="hidden" name="personal_view" value="true">
+                    
+                    <div class="mb-3">
+                        <label for="startTime" class="form-label">Start Time</label>
+                        <input type="time" class="form-control" id="startTime" name="start_time" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="endTime" class="form-label">End Time</label>
+                        <input type="time" class="form-control" id="endTime" name="end_time" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <select class="form-select" id="location" name="location_id">
+                            <option value="">Select Location</option>
+                            {% for location in locations %}
+                            <option value="{{ location.id }}">{{ location.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="timeOff" name="time_off">
+                                <label class="form-check-label" for="timeOff">Time Off</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="allDay" name="all_day">
+                                <label class="form-check-label" for="allDay">All Day</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Schedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.mobile-personal-schedule {
+    padding: 1rem;
+}
+
+.week-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: var(--bs-body-bg);
+    border-radius: 0.5rem;
+    border: 1px solid var(--bs-border-color);
+}
+
+.week-title {
+    font-weight: 600;
+    color: var(--bs-body-color);
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.stat-card {
+    background: var(--bs-primary);
+    color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.day-section {
+    margin-bottom: 1.5rem;
+}
+
+.day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.day-title {
+    margin: 0;
+    font-weight: 600;
+    color: var(--bs-body-color);
+}
+
+.day-date {
+    font-weight: normal;
+    color: var(--bs-secondary);
+    font-size: 0.9rem;
+}
+
+.day-schedules {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.schedule-item {
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.schedule-item.time-off {
+    background: rgba(var(--bs-warning-rgb), 0.1);
+    border-color: var(--bs-warning);
+}
+
+.schedule-time {
+    font-weight: 600;
+    color: var(--bs-primary);
+    min-width: 100px;
+    font-size: 0.9rem;
+}
+
+.all-day-indicator {
+    background: var(--bs-warning);
+    color: var(--bs-dark);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.7rem;
+    white-space: nowrap;
+}
+
+.schedule-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.schedule-location {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--bs-secondary);
+    font-size: 0.8rem;
+}
+
+.schedule-description {
+    color: var(--bs-body-color);
+    font-size: 0.9rem;
+}
+
+.time-off-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--bs-warning);
+    font-weight: 500;
+    font-size: 0.8rem;
+}
+
+.schedule-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.no-schedule {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--bs-secondary);
+    font-style: italic;
+    padding: 1rem;
+    text-align: center;
+    justify-content: center;
+}
+
+/* Dark mode adjustments */
+[data-bs-theme="dark"] .schedule-item {
+    background: #2d2d2d;
+    border-color: #3a3a3a;
+}
+
+[data-bs-theme="dark"] .week-navigation {
+    background: #2d2d2d;
+    border-color: #3a3a3a;
+}
+
+[data-bs-theme="dark"] .schedule-item.time-off {
+    background: rgba(255, 193, 7, 0.1);
+}
+</style>
+
+<script>
+function changeWeek(direction) {
+    const currentUrl = new URL(window.location);
+    const weekStart = currentUrl.searchParams.get('week_start') || '{{ week_start.strftime('%Y-%m-%d') }}';
+    
+    const date = new Date(weekStart);
+    date.setDate(date.getDate() + (direction * 7));
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    window.location.href = `/mobile/personal_schedule?week_start=${year}-${month}-${day}`;
+}
+
+function addScheduleForDay(dateStr) {
+    document.getElementById('modalScheduleDate').value = dateStr;
+    new bootstrap.Modal(document.getElementById('addScheduleModal')).show();
+}
+
+function editSchedule(scheduleId) {
+    window.location.href = `/schedule/edit/${scheduleId}?personal_view=true`;
+}
+
+// Auto-set end time when start time changes
+document.getElementById('startTime').addEventListener('change', function() {
+    const startTime = this.value;
+    if (startTime && !document.getElementById('endTime').value) {
+        const [hours, minutes] = startTime.split(':');
+        const endHours = String(parseInt(hours) + 1).padStart(2, '0');
+        document.getElementById('endTime').value = `${endHours}:${minutes}`;
+    }
+});
+
+// All day checkbox handling
+document.getElementById('allDay').addEventListener('change', function() {
+    if (this.checked) {
+        document.getElementById('timeOff').checked = true;
+        document.getElementById('startTime').value = '00:00';
+        document.getElementById('endTime').value = '23:59';
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+});
+</script>
+{% endblock %}
