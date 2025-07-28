@@ -681,8 +681,10 @@
                         }
                         return response.json();
                     })
-                    .then(users => {
+                    .then(data => {
                         const container = document.getElementById('active-users');
+                        // Handle both old format (direct array) and new format (object with key)
+                        const users = data.active_users || data;
                         if (!Array.isArray(users) || users.length === 0) {
                             container.innerHTML = '<p class="text-muted">No active technicians</p>';
                             return;
@@ -740,9 +742,12 @@
             function updateUpcomingTimeOff() {
                 fetch('/api/upcoming_time_off')
                     .then(response => response.json())
-                    .then(entries => {
+                    .then(data => {
                         const timeOffDiv = document.getElementById('upcoming-time-off');
                         if (!timeOffDiv) return;
+                        
+                        // Handle both old format (direct array) and new format (object with key)
+                        const entries = data.upcoming_time_off || data;
                         
                         if (entries.length === 0) {
                             timeOffDiv.innerHTML = '<p class="text-muted">No upcoming time off scheduled</p>';
