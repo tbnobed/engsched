@@ -19,12 +19,44 @@
         </h5>
     </div>
     
-    <div id="activeUsers">
-        <div class="text-center py-4 text-muted">
-            <i data-feather="clock" style="width: 24px; height: 24px; opacity: 0.5;"></i>
-            <p class="mt-2 mb-0">Loading active technicians...</p>
+    <!-- Currently Active - Static Section -->
+    {% set active_users = get_active_users_data() %}
+    {% if active_users %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        {% for user_data in active_users %}
+        <div class="d-flex flex-column align-items-center p-2 rounded text-center"
+             style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %} min-height: 80px;">
+            <div class="mb-2">
+                {% if user_data.user.profile_picture %}
+                <img src="{{ url_for('static', filename=user_data.user.profile_picture) }}" 
+                     alt="{{ user_data.user.username }}" 
+                     class="rounded-circle" 
+                     style="width: 28px; height: 28px; object-fit: cover;">
+                {% else %}
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold mx-auto"
+                     style="width: 28px; height: 28px; background-color: {{ user_data.user.color or '#6c757d' }}; font-size: 12px;">
+                    {{ user_data.user.username[:2].upper() }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="flex-grow-1" style="min-width: 0;">
+                <div class="fw-semibold" style="font-size: 0.9rem; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ user_data.user.username }}</div>
+                <small class="text-muted" style="font-size: 0.75rem; line-height: 1.2;">
+                    <div>{{ user_data.schedule.start_time_local.strftime('%H:%M') }} - {{ user_data.schedule.end_time_local.strftime('%H:%M') }}</div>
+                    {% if user_data.location %}
+                    <div style="margin-top: 2px;">{{ user_data.location.name }}</div>
+                    {% endif %}
+                </small>
+            </div>
         </div>
-    </div>
+        {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-4 text-muted">
+            <i data-feather="users" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+            <p class="mt-2 mb-0">No one currently active</p>
+        </div>
+    {% endif %}
 </div>
 
 <!-- Upcoming Time Off Section -->
