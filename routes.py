@@ -3887,33 +3887,7 @@ def mobile_dashboard():
     today_start_utc = today_start_local.astimezone(pytz.UTC)
     today_end_utc = today_end_local.astimezone(pytz.UTC)
     
-    # Get active tickets with unread indicators
-    active_tickets = Ticket.query.filter(
-        Ticket.status.in_(['open', 'in_progress', 'pending']),
-        Ticket.archived == False
-    ).order_by(Ticket.priority.desc(), Ticket.created_at.desc()).limit(5).all()
-    
-    # Add unread activity indicators
-    for ticket in active_tickets:
-        try:
-            ticket_view = TicketView.query.filter_by(
-                user_id=current_user.id,
-                ticket_id=ticket.id
-            ).first()
-            
-            if ticket_view:
-                ticket.has_unread_activity = (
-                    ticket.updated_at > ticket_view.last_viewed_at or
-                    TicketComment.query.filter(
-                        TicketComment.ticket_id == ticket.id,
-                        TicketComment.created_at > ticket_view.last_viewed_at
-                    ).count() > 0
-                )
-            else:
-                ticket.has_unread_activity = True
-        except Exception as e:
-            app.logger.error(f"Error checking unread activity for ticket {ticket.id}: {str(e)}")
-            ticket.has_unread_activity = False
+    # No need for active tickets since we have a dedicated tickets page
     
     # Get today's schedules
     today_schedules = Schedule.query.filter(
@@ -3947,7 +3921,6 @@ def mobile_dashboard():
         app.logger.debug(f"Could not fetch studio bookings: {str(e)}")
     
     return render_template('mobile/dashboard.html', 
-                         active_tickets=active_tickets,
                          today_schedules=today_schedules,
                          studio_bookings=studio_bookings,
                          user_timezone=user_tz)

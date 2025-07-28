@@ -10,51 +10,38 @@
     </div>
 </div>
 
-<!-- Active Tickets Section -->
+<!-- Currently Active Section -->
 <div class="mobile-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">
-            <i data-feather="alert-circle" style="width: 20px; height: 20px; color: #dc3545;"></i>
-            Active Tickets
+            <i data-feather="users" style="width: 20px; height: 20px; color: #28a745;"></i>
+            Currently Active
         </h5>
-        <a href="{{ url_for('mobile_tickets') }}" class="btn btn-sm btn-outline-primary">View All</a>
     </div>
     
-    {% if active_tickets %}
-        {% for ticket in active_tickets %}
-        <div class="d-flex align-items-start p-3 mb-2 rounded" 
-             style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa; border-left: 4px solid {% if ticket.priority == 4 %}#dc3545{% elif ticket.priority == 3 %}#fd7e14{% elif ticket.priority == 2 %}#ffc107{% else %}#28a745{% endif %};{% else %}background: #3a3a3a; border-left: 4px solid {% if ticket.priority == 4 %}#dc3545{% elif ticket.priority == 3 %}#fd7e14{% elif ticket.priority == 2 %}#ffc107{% else %}#28a745{% endif %};{% endif %}">
-            <div class="flex-grow-1">
-                <div class="d-flex justify-content-between align-items-start mb-1">
-                    <h6 class="mb-0">
-                        <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" 
-                           class="text-decoration-none">
-                            #{{ ticket.id }} - {{ ticket.title[:30] }}{% if ticket.title|length > 30 %}...{% endif %}
-                        </a>
-                        {% if ticket.has_unread_activity %}
-                        <span class="badge bg-danger ms-1">NEW</span>
-                        {% endif %}
-                    </h6>
-                    <span class="badge {% if ticket.status == 'open' %}bg-primary{% elif ticket.status == 'in_progress' %}bg-warning{% elif ticket.status == 'pending' %}bg-info{% else %}bg-secondary{% endif %}">
-                        {{ ticket.status.replace('_', ' ').title() }}
-                    </span>
-                </div>
-                <small class="text-muted">
-                    <i data-feather="user" style="width: 14px; height: 14px;"></i>
-                    {% if ticket.assigned_technician %}{{ ticket.assigned_technician.username }}{% else %}Unassigned{% endif %}
-                    •
-                    <i data-feather="calendar" style="width: 14px; height: 14px;"></i>
-                    {{ ticket.created_at.strftime('%m/%d') }}
-                </small>
-            </div>
-        </div>
-        {% endfor %}
-    {% else %}
+    <div id="activeUsers">
         <div class="text-center py-4 text-muted">
-            <i data-feather="check-circle" style="width: 48px; height: 48px; opacity: 0.5;"></i>
-            <p class="mt-2">No active tickets</p>
+            <i data-feather="clock" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+            <p class="mt-2 mb-0">Loading active technicians...</p>
         </div>
-    {% endif %}
+    </div>
+</div>
+
+<!-- Upcoming Time Off Section -->
+<div class="mobile-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i data-feather="calendar" style="width: 20px; height: 20px; color: #ffc107;"></i>
+            Upcoming Time Off
+        </h5>
+    </div>
+    
+    <div id="upcomingTimeOff">
+        <div class="text-center py-4 text-muted">
+            <i data-feather="clock" style="width: 24px; height: 24px; opacity: 0.5;"></i>
+            <p class="mt-2 mb-0">Loading time off...</p>
+        </div>
+    </div>
 </div>
 
 <!-- Today's Schedule Section -->
@@ -187,39 +174,7 @@ setInterval(function() {
 }, 120000);
 </script>
 
-<!-- Currently Active Section -->
-<div class="mobile-card">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">
-            <i data-feather="users" style="width: 20px; height: 20px; color: #28a745;"></i>
-            Currently Active
-        </h5>
-    </div>
-    
-    <div id="activeUsers">
-        <div class="text-center py-4 text-muted">
-            <i data-feather="clock" style="width: 24px; height: 24px; opacity: 0.5;"></i>
-            <p class="mt-2 mb-0">Loading active technicians...</p>
-        </div>
-    </div>
-</div>
 
-<!-- Upcoming Time Off Section -->
-<div class="mobile-card">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">
-            <i data-feather="calendar-x" style="width: 20px; height: 20px; color: #ffc107;"></i>
-            Upcoming Time Off
-        </h5>
-    </div>
-    
-    <div id="upcomingTimeOff">
-        <div class="text-center py-4 text-muted">
-            <i data-feather="clock" style="width: 24px; height: 24px; opacity: 0.5;"></i>
-            <p class="mt-2 mb-0">Loading time off...</p>
-        </div>
-    </div>
-</div>
 
 <script>
 // Function to load active users
