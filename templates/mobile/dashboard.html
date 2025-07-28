@@ -73,16 +73,16 @@
                 {% endif %}
             </div>
             <div class="flex-grow-1" style="min-width: 0;">
-                <div class="fw-semibold" style="font-size: 0.8rem; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ schedule.technician.username }}</div>
-                <small class="text-muted" style="font-size: 0.65rem; line-height: 1.1;">
+                <div class="fw-semibold" style="font-size: 0.9rem; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ schedule.technician.username }}</div>
+                <small class="text-muted" style="font-size: 0.75rem; line-height: 1.2;">
                     <div>{{ schedule.start_time_local.strftime('%H:%M') }} - {{ schedule.end_time_local.strftime('%H:%M') }}</div>
                     {% if schedule.location %}
-                    <div style="margin-top: 1px;">{{ schedule.location.name }}</div>
+                    <div style="margin-top: 2px;">{{ schedule.location.name }}</div>
                     {% endif %}
                 </small>
                 {% if schedule.time_off %}
                 <div class="mt-1">
-                    <span class="badge bg-warning" style="font-size: 0.6rem; padding: 1px 4px;">
+                    <span class="badge bg-warning" style="font-size: 0.7rem; padding: 2px 6px;">
                         {% if schedule.all_day %}OOO{% else %}Time Off{% endif %}
                     </span>
                 </div>
@@ -114,20 +114,20 @@
     <div class="d-flex flex-column p-2 rounded text-center"
          style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %} min-height: 80px;">
         <div class="flex-grow-1" style="min-width: 0;">
-            <div class="fw-semibold" style="font-size: 0.8rem; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ booking.title }}</div>
-            <small class="text-muted" style="font-size: 0.65rem; line-height: 1.1;">
+            <div class="fw-semibold" style="font-size: 0.9rem; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ booking.title }}</div>
+            <small class="text-muted" style="font-size: 0.75rem; line-height: 1.2;">
                 <div>{% if booking.start %}{{ booking.start[11:16] }}{% endif %}{% if booking.start and booking.end %} - {% endif %}{% if booking.end %}{{ booking.end[11:16] }}{% endif %}</div>
                 {% if booking.type %}
-                <div style="margin-top: 1px;">{{ booking.type }}</div>
+                <div style="margin-top: 2px;">{{ booking.type }}</div>
                 {% endif %}
             </small>
             {% if booking.description %}
-            <p class="small mt-1 mb-1" style="font-size: 0.6rem; line-height: 1.1;">{{ booking.description[:30] }}{% if booking.description|length > 30 %}...{% endif %}</p>
+            <p class="small mt-1 mb-1" style="font-size: 0.7rem; line-height: 1.2;">{{ booking.description[:25] }}{% if booking.description|length > 25 %}...{% endif %}</p>
             {% endif %}
         </div>
         {% if booking.status %}
         <div class="mt-1">
-            <span class="badge {% if booking.status == 'confirmed' %}bg-success{% elif booking.status == 'cancelled' %}bg-danger{% else %}bg-warning{% endif %}" style="font-size: 0.6rem; padding: 1px 4px;">
+            <span class="badge {% if booking.status == 'confirmed' %}bg-success{% elif booking.status == 'cancelled' %}bg-danger{% else %}bg-warning{% endif %}" style="font-size: 0.7rem; padding: 2px 6px;">
                 {{ booking.status.title() }}
             </span>
         </div>
@@ -200,10 +200,10 @@ function loadActiveUsers() {
                             }
                         </div>
                         <div class="flex-grow-1" style="min-width: 0;">
-                            <div class="fw-semibold" style="font-size: 0.8rem; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.username}</div>
-                            <small class="text-muted" style="font-size: 0.65rem; line-height: 1.1;">
+                            <div class="fw-semibold" style="font-size: 0.9rem; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.username}</div>
+                            <small class="text-muted" style="font-size: 0.75rem; line-height: 1.2;">
                                 <div>${user.schedule.start_time} - ${user.schedule.end_time}</div>
-                                ${user.location ? `<div style="margin-top: 1px;">${user.location.name}</div>` : ''}
+                                ${user.location ? `<div style="margin-top: 2px;">${user.location.name}</div>` : ''}
                             </small>
                         </div>
                     `;
@@ -258,10 +258,10 @@ function loadUpcomingTimeOff() {
                             }
                         </div>
                         <div class="flex-grow-1" style="min-width: 0;">
-                            <div class="fw-semibold" style="font-size: 0.8rem; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${timeOff.username}</div>
-                            <small class="text-muted" style="font-size: 0.65rem; line-height: 1.1;">
+                            <div class="fw-semibold" style="font-size: 0.9rem; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${timeOff.username}</div>
+                            <small class="text-muted" style="font-size: 0.75rem; line-height: 1.2;">
                                 <div>${timeOff.start_date} - ${timeOff.end_date}</div>
-                                <div style="margin-top: 1px;">(${timeOff.duration})</div>
+                                <div style="margin-top: 2px;">(${timeOff.duration})</div>
                             </small>
                         </div>
                     `;

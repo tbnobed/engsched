@@ -33,6 +33,13 @@ Recent Updates (July 28, 2025):
 - Added "Upcoming Time Off" section displaying scheduled time off with user profiles and dates
 - Implemented auto-refresh functionality for real-time data updates every 60 seconds
 - Mobile dashboard now matches desktop functionality with all essential information sections
+- ✅ COMPLETED: Mobile Dashboard 2-Column Grid Layout with Optimized Readability
+- Converted all mobile dashboard sections (Currently Active, Upcoming Time Off, Today's Schedule, Studio Bookings) to 2-column grid layouts
+- Implemented smaller, compact cards with 8px gaps for efficient space utilization
+- Enhanced readability with optimized font sizes: usernames 0.9rem, details 0.75rem, improved line height 1.2
+- Fixed profile picture display issues - now shows actual user photos with proper /static/ paths
+- All sections use consistent 28px profile pictures, center-aligned content, and 80px minimum card height
+- Maintained real profile picture support and proper dark/light theme compatibility
 
 Recent Updates (July 22, 2025):
 - ✅ COMPLETED: Enhanced "Open" Status Filter - Active Ticket Grouping
