@@ -4081,7 +4081,7 @@ def mobile_calendar():
         schedule.end_time = schedule.end_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
     
     # Get locations for the add form
-    locations = Location.query.filter_by(active=True).all()
+    locations = Location.query.all()
     
     return render_template('mobile/calendar.html',
                          schedules=schedules,
@@ -4151,7 +4151,7 @@ def mobile_personal_schedule():
         week_data.append((day_name, day_date, day_schedules))
     
     # Get locations for the add form
-    locations = Location.query.filter_by(active=True).all()
+    locations = Location.query.all()
     
     return render_template('mobile/personal_schedule.html',
                          week_data=week_data,
@@ -4166,7 +4166,7 @@ def mobile_personal_schedule():
 @login_required
 def mobile_quick_links():
     """Mobile quick links view"""
-    quick_links = QuickLink.query.filter_by(active=True).order_by(QuickLink.title).all()
+    quick_links = QuickLink.query.order_by(QuickLink.title).all()
     
     return render_template('mobile/quick_links.html',
                          quick_links=quick_links)
