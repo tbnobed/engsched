@@ -1,0 +1,222 @@
+{% extends "mobile_base_enhanced.html" %}
+
+{% block title %}Tickets - {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Tickets</h1>
+    <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary">
+        <i data-feather="plus" style="width: 18px; height: 18px;"></i>
+        New
+    </a>
+</div>
+
+<!-- Filter Controls -->
+<div class="mobile-card mb-3">
+    <div class="row g-3">
+        <div class="col-6">
+            <label class="form-label small">Status</label>
+            <select class="form-select form-select-sm" id="statusFilter" onchange="updateFilters()">
+                <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open/Active</option>
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="resolved" {% if status_filter == 'resolved' %}selected{% endif %}>Resolved</option>
+                <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+        </div>
+        <div class="col-6">
+            <label class="form-label small">Priority</label>
+            <select class="form-select form-select-sm" id="priorityFilter" onchange="updateFilters()">
+                <option value="all" {% if priority_filter == 'all' %}selected{% endif %}>All</option>
+                <option value="4" {% if priority_filter == '4' %}selected{% endif %}>Urgent</option>
+                <option value="3" {% if priority_filter == '3' %}selected{% endif %}>High</option>
+                <option value="2" {% if priority_filter == '2' %}selected{% endif %}>Medium</option>
+                <option value="1" {% if priority_filter == '1' %}selected{% endif %}>Low</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Tickets List -->
+<div id="ticketsList">
+    {% if tickets %}
+        {% for ticket in tickets %}
+        <div class="mobile-card mb-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="flex-grow-1">
+                    <h6 class="mb-1">
+                        <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" 
+                           class="text-decoration-none">
+                            #{{ ticket.id }} - {{ ticket.title }}
+                        </a>
+                        {% if ticket.has_unread_activity %}
+                        <span class="badge bg-danger ms-1 pulsing-badge">NEW</span>
+                        {% endif %}
+                    </h6>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge {% if ticket.status == 'open' %}bg-primary{% elif ticket.status == 'in_progress' %}bg-warning{% elif ticket.status == 'pending' %}bg-info{% elif ticket.status == 'resolved' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ ticket.status.replace('_', ' ').title() }}
+                        </span>
+                        <span class="badge {% if ticket.priority == 4 %}bg-danger{% elif ticket.priority == 3 %}bg-warning{% elif ticket.priority == 2 %}bg-info{% else %}bg-light text-dark{% endif %}">
+                            {% if ticket.priority == 4 %}Urgent{% elif ticket.priority == 3 %}High{% elif ticket.priority == 2 %}Medium{% else %}Low{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                        <i data-feather="more-vertical" style="width: 16px; height: 16px;"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}">
+                            <i data-feather="eye" style="width: 16px; height: 16px;"></i> View
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('tickets.edit_ticket', ticket_id=ticket.id) }}">
+                            <i data-feather="edit" style="width: 16px; height: 16px;"></i> Edit
+                        </a></li>
+                        {% if ticket.status != 'in_progress' %}
+                        <li><button class="dropdown-item" onclick="quickUpdateStatus({{ ticket.id }}, 'in_progress')">
+                            <i data-feather="play" style="width: 16px; height: 16px;"></i> Start Work
+                        </button></li>
+                        {% endif %}
+                        {% if ticket.status in ['open', 'in_progress', 'pending'] %}
+                        <li><button class="dropdown-item" onclick="quickUpdateStatus({{ ticket.id }}, 'resolved')">
+                            <i data-feather="check" style="width: 16px; height: 16px;"></i> Mark Resolved
+                        </button></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            
+            <p class="small text-muted mb-2">{{ ticket.description[:100] }}{% if ticket.description|length > 100 %}...{% endif %}</p>
+            
+            <div class="d-flex justify-content-between align-items-center small text-muted">
+                <div>
+                    <i data-feather="user" style="width: 14px; height: 14px;"></i>
+                    {% if ticket.assigned_technician %}{{ ticket.assigned_technician.username }}{% else %}Unassigned{% endif %}
+                </div>
+                <div>
+                    <i data-feather="calendar" style="width: 14px; height: 14px;"></i>
+                    {{ ticket.created_at.strftime('%m/%d/%Y') }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="mobile-card text-center py-5">
+            <i data-feather="inbox" style="width: 64px; height: 64px; opacity: 0.5;"></i>
+            <h5 class="mt-3 text-muted">No tickets found</h5>
+            <p class="text-muted">Try adjusting your filters or create a new ticket.</p>
+            <a href="{{ url_for('tickets.create_ticket') }}" class="quick-action-btn mt-3">
+                <i data-feather="plus-circle"></i>
+                Create New Ticket
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Set body class for navigation highlighting
+document.body.classList.add('page-tickets');
+
+// Filter update function
+function updateFilters() {
+    const status = document.getElementById('statusFilter').value;
+    const priority = document.getElementById('priorityFilter').value;
+    
+    const params = new URLSearchParams();
+    if (status !== 'open') params.set('status', status);
+    if (priority !== 'all') params.set('priority', priority);
+    
+    const newUrl = '/mobile/tickets' + (params.toString() ? '?' + params.toString() : '');
+    window.location.href = newUrl;
+}
+
+// Quick status update function
+function quickUpdateStatus(ticketId, newStatus) {
+    if (confirm(`Update ticket #${ticketId} to ${newStatus.replace('_', ' ')}?`)) {
+        const formData = new FormData();
+        formData.append('csrf_token', '{{ csrf_token() }}');
+        formData.append('status', newStatus);
+        
+        fetch(`/tickets/${ticketId}/update_status`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating ticket status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating ticket status');
+        });
+    }
+}
+
+// Auto-refresh tickets every 30 seconds
+setInterval(function() {
+    // Only refresh if no modals are open
+    if (!document.querySelector('.modal.show')) {
+        location.reload();
+    }
+}, 30000);
+</script>
+
+<style>
+/* Pulsing animation for NEW badges */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.pulsing-badge {
+    animation: pulse 2s infinite;
+}
+
+/* Ensure dropdowns work properly on mobile */
+.dropdown-menu {
+    border: none;
+    {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    {% else %}
+    background: #2d2d2d;
+    box-shadow: 0 4px 15px rgba(255,255,255,0.1);
+    {% endif %}
+}
+
+.dropdown-item {
+    {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+    color: #212529;
+    {% else %}
+    color: #ffffff;
+    {% endif %}
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-item:hover {
+    {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+    background: #f8f9fa;
+    color: #212529;
+    {% else %}
+    background: #3a3a3a;
+    color: #ffffff;
+    {% endif %}
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize feather icons
+feather.replace();
+</script>
+{% endblock %}

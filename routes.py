@@ -35,10 +35,10 @@ def dashboard():
     # Check for force mobile parameter for testing
     force_mobile = request.args.get('mobile') == 'true'
     
-    # Check if user is on mobile device and redirect to mobile calendar
+    # Check if user is on mobile device and redirect to enhanced mobile dashboard
     if is_mobile_device() or force_mobile:
-        app.logger.debug("Mobile device detected in dashboard - redirecting to calendar")
-        return redirect(url_for('calendar', mobile='true' if force_mobile else None))
+        app.logger.debug("Mobile device detected in dashboard - redirecting to mobile dashboard")
+        return redirect(url_for('mobile_dashboard'))
     
     app.logger.debug("Desktop device detected in dashboard - serving desktop template")
     user_tz = pytz.timezone(current_user.get_timezone())
@@ -3836,3 +3836,209 @@ def import_recurring_templates():
         flash('Error importing templates. Please check the file format.')
     
     return redirect(url_for('recurring_schedules'))
+
+
+# Mobile API Endpoints for Enhanced Mobile Interface
+@app.route('/api/active-tickets-count')
+@login_required
+def api_active_tickets_count():
+    """API endpoint to get count of active tickets for mobile badge"""
+    try:
+        count = Ticket.query.filter(
+            Ticket.status.in_(['open', 'in_progress', 'pending']),
+            Ticket.archived == False
+        ).count()
+        return jsonify({'count': count})
+    except Exception as e:
+        app.logger.error(f"Error getting active tickets count: {str(e)}")
+        return jsonify({'count': 0})
+
+
+@app.route('/api/quick-links')
+@login_required
+def api_quick_links():
+    """API endpoint to get quick links for mobile interface"""
+    try:
+        quick_links = QuickLink.query.filter_by(active=True).order_by(QuickLink.title).all()
+        links_data = []
+        for link in quick_links:
+            links_data.append({
+                'id': link.id,
+                'title': link.title,
+                'url': link.url,
+                'icon': link.icon or 'link'
+            })
+        return jsonify({'quick_links': links_data})
+    except Exception as e:
+        app.logger.error(f"Error getting quick links: {str(e)}")
+        return jsonify({'quick_links': []})
+
+
+@app.route('/mobile/dashboard')
+@login_required
+def mobile_dashboard():
+    """Enhanced mobile dashboard with bottom navigation"""
+    user_tz = pytz.timezone(current_user.get_timezone())
+    today = datetime.now(user_tz).date()
+    
+    # Get today's date range in UTC for database queries
+    today_start_local = user_tz.localize(datetime.combine(today, time.min))
+    today_end_local = user_tz.localize(datetime.combine(today, time.max))
+    today_start_utc = today_start_local.astimezone(pytz.UTC)
+    today_end_utc = today_end_local.astimezone(pytz.UTC)
+    
+    # Get active tickets with unread indicators
+    active_tickets = Ticket.query.filter(
+        Ticket.status.in_(['open', 'in_progress', 'pending']),
+        Ticket.archived == False
+    ).order_by(Ticket.priority.desc(), Ticket.created_at.desc()).limit(5).all()
+    
+    # Add unread activity indicators
+    for ticket in active_tickets:
+        try:
+            ticket_view = TicketView.query.filter_by(
+                user_id=current_user.id,
+                ticket_id=ticket.id
+            ).first()
+            
+            if ticket_view:
+                ticket.has_unread_activity = (
+                    ticket.updated_at > ticket_view.last_viewed_at or
+                    TicketComment.query.filter(
+                        TicketComment.ticket_id == ticket.id,
+                        TicketComment.created_at > ticket_view.last_viewed_at
+                    ).count() > 0
+                )
+            else:
+                ticket.has_unread_activity = True
+        except Exception as e:
+            app.logger.error(f"Error checking unread activity for ticket {ticket.id}: {str(e)}")
+            ticket.has_unread_activity = False
+    
+    # Get today's schedules
+    today_schedules = Schedule.query.filter(
+        Schedule.start_time < today_end_utc,
+        Schedule.end_time > today_start_utc
+    ).order_by(Schedule.start_time).all()
+    
+    # Convert schedule times to user timezone
+    for schedule in today_schedules:
+        if schedule.start_time.tzinfo is None:
+            schedule.start_time = pytz.UTC.localize(schedule.start_time)
+        if schedule.end_time.tzinfo is None:
+            schedule.end_time = pytz.UTC.localize(schedule.end_time)
+        
+        schedule.start_time_local = schedule.start_time.astimezone(user_tz)
+        schedule.end_time_local = schedule.end_time.astimezone(user_tz)
+    
+    # Get studio bookings (if API is available)
+    studio_bookings = []
+    try:
+        studio_api_url = os.environ.get('STUDIO_BOOKING_API_URL', 'https://plex.bookstud.io')
+        if studio_api_url:
+            api_start = today_start_utc.strftime('%Y-%m-%dT%H:%M:%SZ')
+            api_end = today_end_utc.strftime('%Y-%m-%dT%H:%M:%S.%fZ')[:-3] + 'Z'
+            api_url = f"{studio_api_url}/api/public/bookings?start={api_start}&end={api_end}"
+            
+            response = requests.get(api_url, timeout=10)
+            if response.status_code == 200:
+                studio_bookings = response.json()
+    except Exception as e:
+        app.logger.debug(f"Could not fetch studio bookings: {str(e)}")
+    
+    return render_template('mobile/dashboard.html', 
+                         active_tickets=active_tickets,
+                         today_schedules=today_schedules,
+                         studio_bookings=studio_bookings,
+                         user_timezone=user_tz)
+
+
+@app.route('/mobile/tickets')
+@login_required
+def mobile_tickets():
+    """Mobile tickets view with enhanced interface"""
+    # Get filter parameters
+    status_filter = request.args.get('status', 'open')
+    priority_filter = request.args.get('priority', 'all')
+    
+    # Base query
+    query = Ticket.query.filter(Ticket.archived == False)
+    
+    # Apply status filter with enhanced "open" grouping
+    if status_filter != 'all':
+        if status_filter == 'open':
+            query = query.filter(Ticket.status.in_(['open', 'in_progress', 'pending']))
+        else:
+            query = query.filter(Ticket.status == status_filter)
+    
+    # Apply priority filter
+    if priority_filter != 'all':
+        try:
+            priority_value = int(priority_filter)
+            query = query.filter(Ticket.priority == priority_value)
+        except (ValueError, TypeError):
+            pass
+    
+    # Get tickets ordered by priority and creation date
+    tickets = query.order_by(Ticket.priority.desc(), Ticket.created_at.desc()).all()
+    
+    # Add unread activity indicators
+    for ticket in tickets:
+        try:
+            ticket_view = TicketView.query.filter_by(
+                user_id=current_user.id,
+                ticket_id=ticket.id
+            ).first()
+            
+            if ticket_view:
+                ticket.has_unread_activity = (
+                    ticket.updated_at > ticket_view.last_viewed_at or
+                    TicketComment.query.filter(
+                        TicketComment.ticket_id == ticket.id,
+                        TicketComment.created_at > ticket_view.last_viewed_at
+                    ).count() > 0
+                )
+            else:
+                ticket.has_unread_activity = True
+        except Exception as e:
+            app.logger.error(f"Error checking unread activity for ticket {ticket.id}: {str(e)}")
+            ticket.has_unread_activity = False
+    
+    return render_template('mobile/tickets.html', 
+                         tickets=tickets,
+                         status_filter=status_filter,
+                         priority_filter=priority_filter)
+
+
+@app.route('/tickets/<int:ticket_id>/update_status', methods=['POST'])
+@login_required  
+def update_ticket_status_api(ticket_id):
+    """Quick status update API for mobile interface"""
+    try:
+        ticket = Ticket.query.get_or_404(ticket_id)
+        new_status = request.form.get('status')
+        
+        if new_status not in ['open', 'in_progress', 'pending', 'resolved', 'closed']:
+            return jsonify({'success': False, 'error': 'Invalid status'})
+            
+        # Update ticket status
+        old_status = ticket.status
+        ticket.status = new_status
+        ticket.updated_at = datetime.utcnow()
+        
+        # Add history entry
+        history = TicketHistory(
+            ticket_id=ticket.id,
+            user_id=current_user.id,
+            action=f'Status changed from {old_status} to {new_status}',
+            created_at=datetime.utcnow()
+        )
+        db.session.add(history)
+        db.session.commit()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        app.logger.error(f"Error updating ticket status: {str(e)}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': 'Internal error'})

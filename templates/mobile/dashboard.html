@@ -1,0 +1,197 @@
+{% extends "mobile_base_enhanced.html" %}
+
+{% block title %}Dashboard - {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Dashboard</h1>
+    <div class="text-muted">
+        <script>document.write(new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));</script>
+    </div>
+</div>
+
+<!-- Active Tickets Section -->
+<div class="mobile-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i data-feather="alert-circle" style="width: 20px; height: 20px; color: #dc3545;"></i>
+            Active Tickets
+        </h5>
+        <a href="{{ url_for('mobile_tickets') }}" class="btn btn-sm btn-outline-primary">View All</a>
+    </div>
+    
+    {% if active_tickets %}
+        {% for ticket in active_tickets %}
+        <div class="d-flex align-items-start p-3 mb-2 rounded" 
+             style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa; border-left: 4px solid {% if ticket.priority == 4 %}#dc3545{% elif ticket.priority == 3 %}#fd7e14{% elif ticket.priority == 2 %}#ffc107{% else %}#28a745{% endif %};{% else %}background: #3a3a3a; border-left: 4px solid {% if ticket.priority == 4 %}#dc3545{% elif ticket.priority == 3 %}#fd7e14{% elif ticket.priority == 2 %}#ffc107{% else %}#28a745{% endif %};{% endif %}">
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <h6 class="mb-0">
+                        <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" 
+                           class="text-decoration-none">
+                            #{{ ticket.id }} - {{ ticket.title[:30] }}{% if ticket.title|length > 30 %}...{% endif %}
+                        </a>
+                        {% if ticket.has_unread_activity %}
+                        <span class="badge bg-danger ms-1">NEW</span>
+                        {% endif %}
+                    </h6>
+                    <span class="badge {% if ticket.status == 'open' %}bg-primary{% elif ticket.status == 'in_progress' %}bg-warning{% elif ticket.status == 'pending' %}bg-info{% else %}bg-secondary{% endif %}">
+                        {{ ticket.status.replace('_', ' ').title() }}
+                    </span>
+                </div>
+                <small class="text-muted">
+                    <i data-feather="user" style="width: 14px; height: 14px;"></i>
+                    {% if ticket.assigned_technician %}{{ ticket.assigned_technician.username }}{% else %}Unassigned{% endif %}
+                    •
+                    <i data-feather="calendar" style="width: 14px; height: 14px;"></i>
+                    {{ ticket.created_at.strftime('%m/%d') }}
+                </small>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-4 text-muted">
+            <i data-feather="check-circle" style="width: 48px; height: 48px; opacity: 0.5;"></i>
+            <p class="mt-2">No active tickets</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Today's Schedule Section -->
+<div class="mobile-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i data-feather="clock" style="width: 20px; height: 20px; color: #007bff;"></i>
+            Today's Schedule
+        </h5>
+        <a href="{{ url_for('calendar') }}" class="btn btn-sm btn-outline-primary">View Calendar</a>
+    </div>
+    
+    {% if today_schedules %}
+        {% for schedule in today_schedules %}
+        <div class="d-flex align-items-center p-3 mb-2 rounded"
+             style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %}">
+            <div class="me-3">
+                {% if schedule.technician.profile_picture %}
+                <img src="{{ url_for('static', filename='uploads/profile_pictures/' + schedule.technician.profile_picture) }}" 
+                     alt="{{ schedule.technician.username }}" 
+                     class="rounded-circle" 
+                     style="width: 40px; height: 40px; object-fit: cover;">
+                {% else %}
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
+                     style="width: 40px; height: 40px; background-color: {{ schedule.technician.color or '#6c757d' }}; font-weight: bold;">
+                    {{ schedule.technician.username[:2].upper() }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="mb-1">{{ schedule.technician.username }}</h6>
+                <small class="text-muted">
+                    <i data-feather="clock" style="width: 14px; height: 14px;"></i>
+                    {{ schedule.start_time_local.strftime('%H:%M') }} - {{ schedule.end_time_local.strftime('%H:%M') }}
+                    {% if schedule.location %}
+                    • <i data-feather="map-pin" style="width: 14px; height: 14px;"></i>
+                    {{ schedule.location.name }}
+                    {% endif %}
+                </small>
+                {% if schedule.time_off %}
+                <div class="mt-1">
+                    <span class="badge bg-warning">
+                        {% if schedule.all_day %}OOO All Day{% else %}Time Off{% endif %}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-4 text-muted">
+            <i data-feather="calendar-x" style="width: 48px; height: 48px; opacity: 0.5;"></i>
+            <p class="mt-2">No schedules for today</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Studio Bookings Section -->
+{% if studio_bookings %}
+<div class="mobile-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i data-feather="video" style="width: 20px; height: 20px; color: #28a745;"></i>
+            Studio Bookings
+        </h5>
+    </div>
+    
+    {% for booking in studio_bookings %}
+    <div class="d-flex align-items-start p-3 mb-2 rounded"
+         style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %}">
+        <div class="flex-grow-1">
+            <h6 class="mb-1">{{ booking.title }}</h6>
+            <small class="text-muted">
+                <i data-feather="clock" style="width: 14px; height: 14px;"></i>
+                {{ booking.start_time[:5] }} - {{ booking.end_time[:5] }}
+                {% if booking.production_type %}
+                • {{ booking.production_type }}
+                {% endif %}
+            </small>
+            {% if booking.description %}
+            <p class="small mt-1 mb-0">{{ booking.description[:50] }}{% if booking.description|length > 50 %}...{% endif %}</p>
+            {% endif %}
+        </div>
+        <div class="ms-2">
+            <span class="badge {% if booking.status == 'confirmed' %}bg-success{% elif booking.status == 'cancelled' %}bg-danger{% else %}bg-warning{% endif %}">
+                {{ booking.status.title() }}
+            </span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="mobile-card">
+    <h5 class="mb-3">
+        <i data-feather="zap" style="width: 20px; height: 20px; color: #ffc107;"></i>
+        Quick Actions
+    </h5>
+    
+    <div class="d-grid gap-2">
+        <a href="{{ url_for('tickets.create_ticket') }}" class="quick-action-btn">
+            <i data-feather="plus-circle"></i>
+            Create New Ticket
+        </a>
+        
+        <a href="{{ url_for('create_schedule') }}" class="quick-action-btn">
+            <i data-feather="calendar-plus"></i>
+            Add Schedule Entry
+        </a>
+        
+        <a href="{{ url_for('personal_schedule') }}" class="quick-action-btn">
+            <i data-feather="user"></i>
+            My Personal Schedule
+        </a>
+    </div>
+</div>
+
+<script>
+// Set body class for navigation highlighting
+document.body.classList.add('page-dashboard');
+
+// Auto-refresh dashboard data every 2 minutes
+setInterval(function() {
+    location.reload();
+}, 120000);
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize feather icons
+feather.replace();
+
+// Handle time formatting
+document.addEventListener('DOMContentLoaded', function() {
+    // Any additional dashboard-specific initialization
+});
+</script>
+{% endblock %}
