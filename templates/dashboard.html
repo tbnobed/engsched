@@ -501,7 +501,7 @@ function loadStudioBookings() {
             } else if (data.success && (!data.bookings || data.bookings.length === 0)) {
                 container.innerHTML = `
                     <div class="text-center text-muted py-4">
-                        <i data-feather="calendar" class="mb-2" style="width: 48px; height: 48px;"></i>
+                        <i data-feather="calendar-x" class="mb-2" style="width: 48px; height: 48px;"></i>
                         <p>No studio bookings for today</p>
                     </div>
                 `;

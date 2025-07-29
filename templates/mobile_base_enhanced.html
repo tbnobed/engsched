@@ -22,22 +22,6 @@
     {% endif %}
     
     <style>
-        /* Remove dropdown arrows completely */
-        select.form-select {
-            -webkit-appearance: none !important;
-            -moz-appearance: none !important;
-            appearance: none !important;
-            background-image: none !important;
-            background-repeat: no-repeat !important;
-            background-position: right !important;
-            padding-right: 12px !important;
-        }
-        
-        /* Remove any pseudo-elements that might add arrows */
-        select.form-select::-ms-expand {
-            display: none !important;
-        }
-        
         /* Mobile-first design with bottom navigation */
         body {
             padding-bottom: 80px; /* Space for bottom nav */
@@ -328,6 +312,7 @@
                     <!-- Timezone Settings -->
                     <li>
                         <a class="dropdown-item" href="#" onclick="showTimezoneModal()" style="{% if current_user.theme_preference != 'light' %}color: #ffffff; background: transparent;{% endif %}">
+                            <i data-feather="clock" style="width: 16px; height: 16px; margin-right: 8px;"></i>
                             Timezone ({{ current_user.timezone }})
                         </a>
                     </li>
@@ -406,6 +391,7 @@
             <div class="modal-content" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #ffffff; color: #212529;{% else %}background: #2d2d2d; color: #ffffff; border: 1px solid #3a3a3a;{% endif %}">
                 <div class="modal-header" style="border-bottom: 1px solid {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#e9ecef{% else %}#3a3a3a{% endif %};">
                     <h5 class="modal-title">
+                        <i data-feather="clock" style="width: 20px; height: 20px; margin-right: 8px;"></i>
                         Change Timezone
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" {% if current_user.is_authenticated and current_user.theme_preference != 'light' %}style="filter: invert(1);"{% endif %}></button>
@@ -425,6 +411,7 @@
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">
+                                <i data-feather="check" style="width: 16px; height: 16px; margin-right: 8px;"></i>
                                 Update Timezone
                             </button>
                         </div>
