@@ -9,7 +9,12 @@ auth = Blueprint('auth', __name__)
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('tickets.tickets_dashboard'))
+        # Check if user is on mobile device and redirect appropriately
+        from app import is_mobile_device
+        if is_mobile_device():
+            return redirect(url_for('mobile_dashboard'))
+        else:
+            return redirect(url_for('tickets.tickets_dashboard'))
     
     # Add debug logging for the session
     from app import app
@@ -81,8 +86,18 @@ def login():
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get('next')
             app.logger.debug(f"Session after login: {session}")
-            app.logger.debug(f"Redirecting to: {next_page if next_page else 'calendar'}")
-            return redirect(next_page if next_page else url_for('tickets.tickets_dashboard'))
+            
+            # Check if user is on mobile device and redirect appropriately
+            from app import is_mobile_device
+            if next_page:
+                app.logger.debug(f"Redirecting to next page: {next_page}")
+                return redirect(next_page)
+            elif is_mobile_device():
+                app.logger.debug("Mobile device detected after login - redirecting to mobile dashboard")
+                return redirect(url_for('mobile_dashboard'))
+            else:
+                app.logger.debug("Desktop device detected after login - redirecting to tickets dashboard")
+                return redirect(url_for('tickets.tickets_dashboard'))
             
         app.logger.warning(f"Invalid credentials for login input: {login_input}")
         flash('Invalid username/email or password')
