@@ -309,17 +309,60 @@
             display: none !important;
         }
         
-        /* Bootstrap override for mobile */
-        @media (max-width: 768px) {
-            .form-select {
-                -webkit-appearance: none !important;
-                background-image: none !important;
-            }
-            
-            .modal .form-select {
-                -webkit-appearance: none !important;
-                background-image: none !important;
-            }
+        /* Custom timezone selector styling */
+        .custom-timezone-selector {
+            border: 1px solid {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#ced4da{% else %}#3a3a3a{% endif %};
+            border-radius: 0.375rem;
+            {% if current_user.is_authenticated and current_user.theme_preference != 'light' %}
+            background: #1a1a1a;
+            {% else %}
+            background: #ffffff;
+            {% endif %}
+        }
+        
+        .timezone-option {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#f8f9fa{% else %}#2a2a2a{% endif %};
+            {% if current_user.is_authenticated and current_user.theme_preference != 'light' %}
+            color: #ffffff;
+            {% else %}
+            color: #212529;
+            {% endif %}
+        }
+        
+        .timezone-option:last-child {
+            border-bottom: none;
+        }
+        
+        .timezone-option:hover {
+            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+            background: #f8f9fa;
+            {% else %}
+            background: #2a2a2a;
+            {% endif %}
+        }
+        
+        .timezone-option.selected {
+            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+            background: #e3f2fd;
+            color: #1976d2;
+            {% else %}
+            background: #1a4480;
+            color: #66d9ef;
+            {% endif %}
+            font-weight: 500;
+        }
+        
+        .timezone-option.selected:hover {
+            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+            background: #e3f2fd;
+            {% else %}
+            background: #1a4480;
+            {% endif %}
         }
         
         /* Page-specific active states */
@@ -446,17 +489,37 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" {% if current_user.is_authenticated and current_user.theme_preference != 'light' %}style="filter: invert(1);"{% endif %}></button>
                 </div>
                 <div class="modal-body">
-                    <form method="POST" action="{{ url_for('update_timezone') }}">
+                    <form method="POST" action="{{ url_for('update_timezone') }}" id="timezoneForm">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="timezone" id="selectedTimezone" value="{{ current_user.timezone }}">
                         <div class="mb-3">
                             <label class="form-label" style="{% if current_user.theme_preference != 'light' %}color: #ffffff;{% endif %}">Select Your Timezone:</label>
-                            <select class="form-select" name="timezone" required style="{% if current_user.theme_preference != 'light' %}background: #1a1a1a; color: #ffffff; border: 1px solid #3a3a3a;{% endif %}">
-                                <option value="America/Chicago" {% if current_user.timezone == 'America/Chicago' %}selected{% endif %}>Central Time (CST/CDT)</option>
-                                <option value="America/Los_Angeles" {% if current_user.timezone == 'America/Los_Angeles' %}selected{% endif %}>Pacific Time (PST/PDT)</option>
-                                <option value="America/New_York" {% if current_user.timezone == 'America/New_York' %}selected{% endif %}>Eastern Time (EST/EDT)</option>
-                                <option value="America/Denver" {% if current_user.timezone == 'America/Denver' %}selected{% endif %}>Mountain Time (MST/MDT)</option>
-                                <option value="UTC" {% if current_user.timezone == 'UTC' %}selected{% endif %}>UTC</option>
-                            </select>
+                            
+                            <!-- Custom dropdown without arrows -->
+                            <div class="custom-timezone-selector">
+                                <div class="timezone-options">
+                                    <div class="timezone-option {% if current_user.timezone == 'America/Chicago' %}selected{% endif %}" data-value="America/Chicago">
+                                        <i data-feather="clock" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                                        Central Time (CST/CDT)
+                                    </div>
+                                    <div class="timezone-option {% if current_user.timezone == 'America/Los_Angeles' %}selected{% endif %}" data-value="America/Los_Angeles">
+                                        <i data-feather="clock" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                                        Pacific Time (PST/PDT)
+                                    </div>
+                                    <div class="timezone-option {% if current_user.timezone == 'America/New_York' %}selected{% endif %}" data-value="America/New_York">
+                                        <i data-feather="clock" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                                        Eastern Time (EST/EDT)
+                                    </div>
+                                    <div class="timezone-option {% if current_user.timezone == 'America/Denver' %}selected{% endif %}" data-value="America/Denver">
+                                        <i data-feather="clock" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                                        Mountain Time (MST/MDT)
+                                    </div>
+                                    <div class="timezone-option {% if current_user.timezone == 'UTC' %}selected{% endif %}" data-value="UTC">
+                                        <i data-feather="clock" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                                        UTC
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">
@@ -521,6 +584,20 @@
             modal.show();
             // Re-initialize icons after modal shows
             setTimeout(() => feather.replace(), 100);
+            
+            // Add click handlers for timezone options
+            document.querySelectorAll('.timezone-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    document.querySelectorAll('.timezone-option').forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    
+                    // Update hidden input value
+                    document.getElementById('selectedTimezone').value = this.getAttribute('data-value');
+                });
+            });
         }
         
         // Show quick links modal
