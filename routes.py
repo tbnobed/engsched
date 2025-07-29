@@ -4062,6 +4062,47 @@ def mobile_calendar():
                          locations=locations)
 
 
+@app.route('/mobile/calendar_test')
+@login_required
+def mobile_calendar_test():
+    """Test mobile calendar with forced text visibility"""
+    # Get date parameter
+    date_str = request.args.get('date')
+    if date_str:
+        try:
+            current_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            current_date = date.today()
+    else:
+        current_date = date.today()
+    
+    # Get user timezone
+    user_tz = current_user.get_timezone_obj()
+    
+    # Calculate day boundaries in user timezone
+    start_of_day = user_tz.localize(datetime.combine(current_date, datetime.min.time()))
+    end_of_day = user_tz.localize(datetime.combine(current_date, datetime.max.time()))
+    
+    # Convert to UTC for database query
+    start_utc = start_of_day.astimezone(pytz.UTC)
+    end_utc = end_of_day.astimezone(pytz.UTC)
+    
+    # Query schedules for the day
+    schedules = Schedule.query.filter(
+        Schedule.start_time >= start_utc,
+        Schedule.start_time <= end_utc
+    ).join(User).outerjoin(Location).order_by(Schedule.start_time).all()
+    
+    # Convert times back to user timezone for display
+    for schedule in schedules:
+        schedule.start_time = schedule.start_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
+        schedule.end_time = schedule.end_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
+    
+    return render_template('mobile/calendar_test.html',
+                         schedules=schedules,
+                         current_date=current_date)
+
+
 @app.route('/mobile/personal_schedule')
 @login_required
 def mobile_personal_schedule():

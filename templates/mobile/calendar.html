@@ -35,13 +35,13 @@
         <div id="schedulesList" class="schedules-list">
             {% for schedule in schedules %}
             <div class="schedule-card mb-3 p-4 rounded" 
-                 style="background: #ffffff; border: 1px solid #dee2e6;"
+                 style="background: #ffffff !important; border: 1px solid #dee2e6 !important; color: #000000 !important;"
                  data-schedule-id="{{ schedule.id }}">
                 
                 <!-- Top Row: Time and Actions -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="schedule-time">
-                        <span style="font-size: 1.5rem; font-weight: 600; color: #000000 !important;">
+                    <div class="schedule-time" style="color: #000000 !important;">
+                        <span style="font-size: 1.5rem; font-weight: 600; color: #000000 !important; text-shadow: none !important;">
                             {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
                         </span>
                     </div>
@@ -299,16 +299,22 @@
     margin-bottom: 1rem;
 }
 
-/* FORCE BLACK TEXT FOR SCHEDULE CARDS - LIGHT MODE */
-.schedule-card * {
+/* FORCE BLACK TEXT FOR SCHEDULE CARDS - NUCLEAR OPTION */
+.mobile-calendar-container .schedule-card,
+.mobile-calendar-container .schedule-card *,
+.mobile-calendar-container .schedule-card span,
+.mobile-calendar-container .schedule-card div,
+.mobile-calendar-container .schedule-card .schedule-time,
+.mobile-calendar-container .schedule-card .schedule-time span {
     color: #000000 !important;
+    background: inherit !important;
 }
 
-.schedule-card span {
-    color: #000000 !important;
-}
-
-.schedule-card div {
+/* Override any Bootstrap or theme interference */
+[data-bs-theme="light"] .schedule-card,
+[data-bs-theme="light"] .schedule-card *,
+[data-bs-theme="light"] .schedule-card span,
+[data-bs-theme="light"] .schedule-card div {
     color: #000000 !important;
 }
 
