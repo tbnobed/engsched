@@ -25,6 +25,12 @@ Recent Updates (July 29, 2025):
 - Updated mobile template to display converted local times (start_local, end_local) instead of raw UTC times
 - Studio booking times in mobile view now respect user timezone settings (CST, PST, EST, MST, UTC)
 - Mobile users now see studio bookings in their configured timezone instead of UTC server time
+- ✅ COMPLETED: Personal Schedule Timezone Fix - Robust Timezone Handling for All Schedule Views
+- Enhanced timezone conversion logic for both desktop and mobile personal schedule views
+- Fixed potential timezone handling issues by ensuring datetime objects are properly timezone-aware before conversion
+- Added comprehensive all-day time-off timezone handling to mobile personal schedule matching desktop functionality
+- Personal schedule times now display correctly in user's selected timezone across all views (desktop and mobile)
+- Improved robustness with null timezone checks and proper UTC localization before timezone conversion
 - ✅ COMPLETED: Mobile Navigation System Cleanup - Unified Mobile Dashboard Architecture  
 - Removed old conflicting mobile templates (mobile_calendar.html, mobile_calendar_simplified.html, etc.)
 - Fixed calendar and personal schedule routes to redirect mobile users to /mobile/dashboard instead of old templates

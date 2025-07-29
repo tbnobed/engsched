@@ -2078,6 +2078,12 @@ def personal_schedule():
             schedule.end_time = user_tz.localize(datetime.combine(intended_date, time(23, 59)))
             app.logger.debug(f"Mobile personal schedule all-day display fix for schedule {schedule.id}: {intended_date} → {schedule.start_time} to {schedule.end_time}")
         else:
+            # Ensure times are timezone-aware in UTC before converting
+            if schedule.start_time.tzinfo is None:
+                schedule.start_time = pytz.UTC.localize(schedule.start_time)
+            if schedule.end_time.tzinfo is None:
+                schedule.end_time = pytz.UTC.localize(schedule.end_time)
+            
             schedule.start_time = schedule.start_time.astimezone(user_tz)
             schedule.end_time = schedule.end_time.astimezone(user_tz)
 
@@ -4200,8 +4206,14 @@ def mobile_calendar():
     
     # Convert times back to user timezone for display
     for schedule in schedules:
-        schedule.start_time = schedule.start_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
-        schedule.end_time = schedule.end_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
+        # Ensure times are timezone-aware in UTC before converting
+        if schedule.start_time.tzinfo is None:
+            schedule.start_time = pytz.UTC.localize(schedule.start_time)
+        if schedule.end_time.tzinfo is None:
+            schedule.end_time = pytz.UTC.localize(schedule.end_time)
+            
+        schedule.start_time = schedule.start_time.astimezone(user_tz)
+        schedule.end_time = schedule.end_time.astimezone(user_tz)
     
     # Get locations for the add form
     locations = Location.query.all()
@@ -4330,8 +4342,30 @@ def mobile_personal_schedule():
     
     # Convert times back to user timezone for display
     for schedule in schedules:
-        schedule.start_time = schedule.start_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
-        schedule.end_time = schedule.end_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
+        # Ensure times are timezone-aware in UTC before converting
+        if schedule.start_time.tzinfo is None:
+            schedule.start_time = pytz.UTC.localize(schedule.start_time)
+        if schedule.end_time.tzinfo is None:
+            schedule.end_time = pytz.UTC.localize(schedule.end_time)
+        
+        # Handle all-day time-off events special case
+        if schedule.time_off and schedule.all_day:
+            # For all-day events, display in user's timezone for the intended date
+            utc_time = schedule.start_time.astimezone(pytz.UTC)
+            chicago_tz = pytz.timezone('America/Chicago')
+            chicago_display = utc_time.astimezone(chicago_tz)
+            chicago_midnight = chicago_tz.localize(datetime.combine(chicago_display.date(), time(0, 0)))
+            
+            if utc_time == chicago_midnight.astimezone(pytz.UTC):
+                intended_date = chicago_display.date()
+            else:
+                intended_date = utc_time.astimezone(user_tz).date()
+            
+            schedule.start_time = user_tz.localize(datetime.combine(intended_date, time(0, 0)))
+            schedule.end_time = user_tz.localize(datetime.combine(intended_date, time(23, 59)))
+        else:
+            schedule.start_time = schedule.start_time.astimezone(user_tz)
+            schedule.end_time = schedule.end_time.astimezone(user_tz)
     
     # Organize schedules by day
     week_data = []
