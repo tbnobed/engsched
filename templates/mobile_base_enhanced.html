@@ -27,19 +27,23 @@
             padding-bottom: 80px; /* Space for bottom nav */
             overflow-x: hidden;
             {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
-            background-color: #f8f9fa !important;
+            background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 30%, #e9ecef 100%) !important;
+            background-attachment: fixed !important;
             color: #212529 !important;
             {% else %}
-            background-color: #1c1c1e !important;
+            background: linear-gradient(180deg, #1c1c1e 0%, #2d2d2d 30%, #1a1a1a 100%) !important;
+            background-attachment: fixed !important;
             color: #ffffff !important;
             {% endif %}
         }
         
         html {
             {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
-            background-color: #f8f9fa !important;
+            background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 30%, #e9ecef 100%) !important;
+            background-attachment: fixed !important;
             {% else %}
-            background-color: #1c1c1e !important;
+            background: linear-gradient(180deg, #1c1c1e 0%, #2d2d2d 30%, #1a1a1a 100%) !important;
+            background-attachment: fixed !important;
             {% endif %}
         }
         
