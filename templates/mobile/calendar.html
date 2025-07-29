@@ -5,77 +5,108 @@
 {% block content %}
 <div class="mobile-calendar-container">
     <!-- Date Navigation -->
-    <div class="date-navigation">
-        <button class="btn btn-outline-primary btn-sm" onclick="changeDate(-1)">
-            <i data-feather="chevron-left"></i>
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded" 
+         style="{% if current_user.theme_preference == 'light' %}background: #f8f9fa; border: 1px solid #dee2e6;{% else %}background: #2d2d2d; border: 1px solid #3a3a3a;{% endif %}">
+        <button class="btn btn-outline-primary" style="padding: 12px 16px;" onclick="changeDate(-1)">
+            <i data-feather="chevron-left" style="width: 20px; height: 20px;"></i>
         </button>
-        <h4 class="current-date mb-0" id="currentDate">{{ current_date.strftime('%A, %B %d, %Y') }}</h4>
-        <button class="btn btn-outline-primary btn-sm" onclick="changeDate(1)">
-            <i data-feather="chevron-right"></i>
+        <h4 class="mb-0 text-center" id="currentDate" style="font-size: 1.3rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #212529;{% else %}color: #ffffff;{% endif %}">
+            {{ current_date.strftime('%A, %B %d, %Y') }}
+        </h4>
+        <button class="btn btn-outline-primary" style="padding: 12px 16px;" onclick="changeDate(1)">
+            <i data-feather="chevron-right" style="width: 20px; height: 20px;"></i>
         </button>
     </div>
 
     <!-- Add Schedule Button -->
-    <div class="quick-actions mb-3">
-        <button class="btn btn-primary w-100" onclick="showAddScheduleModal()">
-            <i data-feather="plus"></i> Add Schedule Entry
+    <div class="mb-4">
+        <button class="btn btn-primary w-100" style="padding: 15px; font-size: 1.1rem; font-weight: 600;" onclick="showAddScheduleModal()">
+            <i data-feather="plus" style="width: 20px; height: 20px;"></i> Add Schedule Entry
         </button>
     </div>
 
     <!-- Today's Schedules -->
     <div class="schedules-container">
-        <h5 class="section-header">
-            <i data-feather="calendar"></i>
+        <h5 class="d-flex align-items-center mb-3" style="font-size: 1.25rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #212529;{% else %}color: #ffffff;{% endif %}">
+            <i data-feather="calendar" style="width: 22px; height: 22px; margin-right: 8px;"></i>
             Today's Schedule
         </h5>
         
         <div id="schedulesList" class="schedules-list">
             {% for schedule in schedules %}
-            <div class="schedule-card" data-schedule-id="{{ schedule.id }}">
-                <div class="schedule-header">
+            <div class="schedule-card mb-3 p-4 rounded" 
+                 style="{% if current_user.theme_preference == 'light' %}background: #ffffff; border: 1px solid #dee2e6;{% else %}background: #2d2d2d; border: 1px solid #3a3a3a;{% endif %}"
+                 data-schedule-id="{{ schedule.id }}">
+                
+                <!-- Top Row: Time and Actions -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="schedule-time">
-                        {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
+                        <span style="font-size: 1.5rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #212529;{% else %}color: #ffffff;{% endif %}">
+                            {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
+                        </span>
                     </div>
                     <div class="schedule-actions">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="editSchedule({{ schedule.id }})">
-                            <i data-feather="edit-2"></i>
+                        <button class="btn btn-outline-secondary me-2" style="padding: 8px 12px;" onclick="editSchedule({{ schedule.id }})">
+                            <i data-feather="edit-2" style="width: 18px; height: 18px;"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteSchedule({{ schedule.id }})">
-                            <i data-feather="trash-2"></i>
+                        <button class="btn btn-outline-danger" style="padding: 8px 12px;" onclick="deleteSchedule({{ schedule.id }})">
+                            <i data-feather="trash-2" style="width: 18px; height: 18px;"></i>
                         </button>
                     </div>
                 </div>
                 
-                <div class="schedule-content">
-                    <div class="technician-info">
-                        <span class="technician-name" style="color: {{ schedule.technician.color }}">
-                            {{ schedule.technician.username }}
-                        </span>
-                        {% if schedule.location %}
-                        <span class="location-badge">{{ schedule.location.name }}</span>
+                <!-- User Info -->
+                <div class="mb-2">
+                    <div class="d-flex align-items-center">
+                        {% if schedule.technician.profile_picture %}
+                        <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}" 
+                             alt="{{ schedule.technician.username }}" 
+                             class="rounded-circle me-3" 
+                             style="width: 40px; height: 40px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold me-3"
+                             style="width: 40px; height: 40px; background-color: {{ schedule.technician.color or '#6c757d' }}; font-size: 16px;">
+                            {{ schedule.technician.username[:2].upper() }}
+                        </div>
                         {% endif %}
+                        
+                        <div>
+                            <div style="font-size: 1.2rem; font-weight: 600; color: {{ schedule.technician.color or '#007bff' }};">
+                                {{ schedule.technician.username }}
+                            </div>
+                            {% if schedule.location %}
+                            <div style="font-size: 1rem; {% if current_user.theme_preference == 'light' %}color: #6c757d;{% else %}color: #adb5bd;{% endif %}">
+                                <i data-feather="map-pin" style="width: 14px; height: 14px;"></i> {{ schedule.location.name }}
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
-                    
-                    {% if schedule.description %}
-                    <div class="schedule-description">
+                </div>
+                
+                <!-- Description -->
+                {% if schedule.description %}
+                <div class="mb-2">
+                    <div style="font-size: 1rem; {% if current_user.theme_preference == 'light' %}color: #495057;{% else %}color: #ced4da;{% endif %}">
                         {{ schedule.description }}
                     </div>
-                    {% endif %}
-                    
-                    {% if schedule.time_off %}
-                    <div class="time-off-indicator">
-                        <i data-feather="coffee"></i> Time Off
-                        {% if schedule.all_day %}
-                        <span class="all-day-badge">All Day</span>
-                        {% endif %}
-                    </div>
-                    {% endif %}
                 </div>
+                {% endif %}
+                
+                <!-- Time Off Badge -->
+                {% if schedule.time_off %}
+                <div class="mt-2">
+                    <span class="badge" style="font-size: 0.9rem; padding: 6px 12px; {% if schedule.all_day %}background-color: #fd7e14;{% else %}background-color: #ffc107;{% endif %} color: #000;">
+                        <i data-feather="coffee" style="width: 14px; height: 14px;"></i>
+                        {% if schedule.all_day %}Out of Office{% else %}Time Off{% endif %}
+                        {% if schedule.all_day %}<span class="ms-1">All Day</span>{% endif %}
+                    </span>
+                </div>
+                {% endif %}
             </div>
             {% else %}
-            <div class="no-schedules">
-                <i data-feather="calendar-x"></i>
-                <p>No schedules for this date</p>
+            <div class="text-center py-5" style="{% if current_user.theme_preference == 'light' %}color: #6c757d;{% else %}color: #adb5bd;{% endif %}">
+                <i data-feather="calendar" style="width: 48px; height: 48px; opacity: 0.5;"></i>
+                <p class="mt-3 mb-0" style="font-size: 1.1rem;">No schedules for this date</p>
             </div>
             {% endfor %}
         </div>
