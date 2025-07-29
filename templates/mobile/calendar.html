@@ -35,13 +35,13 @@
         <div id="schedulesList" class="schedules-list">
             {% for schedule in schedules %}
             <div class="schedule-card mb-3 p-4 rounded" 
-                 style="{% if current_user.theme_preference == 'light' %}background: #ffffff; border: 1px solid #dee2e6;{% else %}background: #2d2d2d; border: 1px solid #3a3a3a;{% endif %}"
+                 style="background: #ffffff; border: 1px solid #dee2e6;"
                  data-schedule-id="{{ schedule.id }}">
                 
                 <!-- Top Row: Time and Actions -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="schedule-time">
-                        <span style="font-size: 1.5rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
+                        <span style="font-size: 1.5rem; font-weight: 600; color: #000000;">
                             {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
                         </span>
                     </div>
@@ -71,11 +71,11 @@
                         {% endif %}
                         
                         <div>
-                            <div style="font-size: 1.2rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
+                            <div style="font-size: 1.2rem; font-weight: 600; color: #000000;">
                                 {{ schedule.technician.username }}
                             </div>
                             {% if schedule.location %}
-                            <div style="font-size: 1rem; {% if current_user.theme_preference == 'light' %}color: #333333;{% else %}color: #ffffff;{% endif %}">
+                            <div style="font-size: 1rem; color: #333333;">
                                 <i data-feather="map-pin" style="width: 14px; height: 14px;"></i> {{ schedule.location.name }}
                             </div>
                             {% endif %}
@@ -86,7 +86,7 @@
                 <!-- Description -->
                 {% if schedule.description %}
                 <div class="mb-2">
-                    <div style="font-size: 1rem; {% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
+                    <div style="font-size: 1rem; color: #000000;">
                         {{ schedule.description }}
                     </div>
                 </div>
@@ -104,7 +104,7 @@
                 {% endif %}
             </div>
             {% else %}
-            <div class="text-center py-5" style="{% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
+            <div class="text-center py-5" style="color: #000000;">
                 <i data-feather="calendar" style="width: 48px; height: 48px;"></i>
                 <p class="mt-3 mb-0" style="font-size: 1.1rem;">No schedules for this date</p>
             </div>
@@ -300,8 +300,13 @@
 
 /* Dark mode adjustments */
 [data-bs-theme="dark"] .schedule-card {
-    background: #2d2d2d;
-    border-color: #3a3a3a;
+    background: #2d2d2d !important;
+    border-color: #3a3a3a !important;
+}
+
+[data-bs-theme="dark"] .schedule-card span,
+[data-bs-theme="dark"] .schedule-card div {
+    color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] .date-navigation {
