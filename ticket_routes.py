@@ -9,15 +9,30 @@ from app import app, is_mobile_device  # Import app for logging and mobile detec
 from email_utils import send_ticket_assigned_notification, send_ticket_comment_notification, send_ticket_status_notification
 
 def mobile_aware_redirect(endpoint, **kwargs):
-    """Helper function to redirect based on mobile device detection"""
-    if is_mobile_device():
-        # For mobile devices, redirect to mobile-specific routes or views
+    """Helper function to redirect based on mobile context"""
+    # Check if we're in mobile context by examining referrer
+    is_mobile_context = False
+    if request.referrer:
+        is_mobile_context = '/mobile/' in request.referrer
+    
+    # Also check current path
+    current_path = request.path
+    if '/mobile/' in current_path:
+        is_mobile_context = True
+    
+    # Or if explicit mobile parameter is passed
+    if request.args.get('mobile') == '1' or request.form.get('mobile') == '1':
+        is_mobile_context = True
+    
+    if is_mobile_context:
+        # For mobile context, redirect to mobile-specific routes or views
         if endpoint == 'tickets.view_ticket':
-            return redirect(url_for('tickets.view_ticket', **kwargs))  # view_ticket already handles mobile
+            # Force mobile view with mobile parameter
+            return redirect(url_for('tickets.view_ticket', mobile=1, **kwargs))
         elif endpoint == 'tickets.tickets_dashboard':
             return redirect(url_for('mobile_tickets'))  # mobile tickets dashboard
         else:
-            # For other endpoints, use the original endpoint but could be extended
+            # For other endpoints, use the original endpoint
             return redirect(url_for(endpoint, **kwargs))
     else:
         # For desktop, use original endpoints
@@ -703,9 +718,10 @@ def view_ticket(ticket_id):
         if current_user.is_admin or current_user.id == ticket_obj.created_by:
             form.assigned_to.choices = [(u.id, u.username) for u in technicians]
 
-    # Check if user is on a mobile device
+    # Check if user is on a mobile device or mobile parameter is passed
     from app import is_mobile_device
-    if is_mobile_device():
+    force_mobile = request.args.get('mobile') == '1'
+    if is_mobile_device() or force_mobile:
         # Debug current user and ticket permissions
         app.logger.debug(f"Rendering mobile ticket view for user: {current_user.id} (admin: {current_user.is_admin})")
         app.logger.debug(f"Ticket assigned to: {ticket['assigned_to']}, created by: {ticket['created_by']}")
