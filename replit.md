@@ -10,6 +10,18 @@ Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
 Recent Updates (July 29, 2025):
+- ✅ COMPLETED: Mobile Studio Bookings Timezone Fix - User Timezone Awareness for Mobile View
+- Fixed mobile dashboard to properly convert studio booking times from UTC to user's selected timezone
+- Enhanced mobile_dashboard route to parse UTC timestamps from studio booking API and convert to local time
+- Updated mobile template to display converted local times (start_local, end_local) instead of raw UTC times
+- Studio booking times in mobile view now respect user timezone settings (CST, PST, EST, MST, UTC)
+- Mobile users now see studio bookings in their configured timezone instead of UTC server time
+- ✅ COMPLETED: Mobile Navigation System Cleanup - Unified Mobile Dashboard Architecture  
+- Removed old conflicting mobile templates (mobile_calendar.html, mobile_calendar_simplified.html, etc.)
+- Fixed calendar and personal schedule routes to redirect mobile users to /mobile/dashboard instead of old templates
+- Replaced all mobile_calendar redirects throughout routes.py to point to unified mobile dashboard
+- Streamlined mobile routing to use modern mobile dashboard system with bottom navigation
+- Mobile users now consistently use unified /mobile/dashboard interface with proper bottom navigation
 - ✅ COMPLETED: Mobile Login Redirect Fix - Proper Mobile Navigation After Authentication
 - Fixed auth.py login function to detect mobile devices and redirect appropriately after successful login
 - Mobile users now automatically redirect to mobile dashboard (/mobile/dashboard) after login instead of desktop ticket dashboard

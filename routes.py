@@ -3994,7 +3994,29 @@ def mobile_dashboard():
             
             response = requests.get(api_url, timeout=10)
             if response.status_code == 200:
-                studio_bookings = response.json()
+                raw_bookings = response.json()
+                
+                # Convert booking times to user timezone
+                for booking in raw_bookings:
+                    if booking.get('start'):
+                        try:
+                            # Parse UTC time from API
+                            start_utc = datetime.fromisoformat(booking['start'].replace('Z', '+00:00'))
+                            start_local = start_utc.astimezone(user_tz)
+                            booking['start_local'] = start_local.strftime('%H:%M')
+                        except (ValueError, KeyError):
+                            booking['start_local'] = ''
+                    
+                    if booking.get('end'):
+                        try:
+                            # Parse UTC time from API
+                            end_utc = datetime.fromisoformat(booking['end'].replace('Z', '+00:00'))
+                            end_local = end_utc.astimezone(user_tz)
+                            booking['end_local'] = end_local.strftime('%H:%M')
+                        except (ValueError, KeyError):
+                            booking['end_local'] = ''
+                
+                studio_bookings = raw_bookings
     except Exception as e:
         app.logger.debug(f"Could not fetch studio bookings: {str(e)}")
     

@@ -116,7 +116,7 @@
         <div class="flex-grow-1" style="min-width: 0; width: 100%; overflow: hidden;">
             <div class="fw-semibold" style="font-size: 0.9rem; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;">{{ booking.title }}</div>
             <small class="text-muted" style="font-size: 0.75rem; line-height: 1.2;">
-                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{% if booking.start %}{{ booking.start[11:16] }}{% endif %}{% if booking.start and booking.end %} - {% endif %}{% if booking.end %}{{ booking.end[11:16] }}{% endif %}</div>
+                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{% if booking.start_local %}{{ booking.start_local }}{% endif %}{% if booking.start_local and booking.end_local %} - {% endif %}{% if booking.end_local %}{{ booking.end_local }}{% endif %}</div>
                 {% if booking.type %}
                 <div style="margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ booking.type[:15] }}{% if booking.type|length > 15 %}...{% endif %}</div>
                 {% endif %}
