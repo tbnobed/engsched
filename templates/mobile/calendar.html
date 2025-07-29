@@ -175,6 +175,12 @@
 </div>
 
 <style>
+/* Critical background overrides - must be first */
+body, html {
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 30%, #e9ecef 100%) !important;
+    background-attachment: fixed !important;
+}
+
 /* Modern Mobile Calendar Styles */
 .modern-mobile-calendar {
     min-height: 100vh;
@@ -182,13 +188,15 @@
     margin-top: -20px; /* Offset the mobile-content padding */
 }
 
-/* Override body background for calendar page */
-body {
+/* Force override body background for calendar page - highest specificity */
+body, html, body.light-theme, html[data-bs-theme="light"] body {
     background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%) !important;
+    background-color: #f8f9fa !important;
 }
 
-html[data-bs-theme="dark"] body {
+html[data-bs-theme="dark"] body, body.dark-theme {
     background: linear-gradient(180deg, #1c1c1e 0%, #2d2d2d 50%, #1a1a1a 100%) !important;
+    background-color: #1c1c1e !important;
 }
 
 /* Default light theme styles with gradient background */
