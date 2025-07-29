@@ -243,6 +243,28 @@
     display: flex;
     gap: 0.5rem;
     flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+}
+
+.link-actions .btn {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #333 !important;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
+}
+
+.link-actions .btn:hover {
+    background: rgba(255, 255, 255, 1) !important;
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.link-actions .btn-outline-danger:hover {
+    background: #dc3545 !important;
+    color: white !important;
+    border-color: #dc3545 !important;
 }
 
 .no-links {
