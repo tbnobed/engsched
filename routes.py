@@ -4209,3 +4209,112 @@ def mobile_quick_links():
     
     return render_template('mobile/quick_links.html',
                          quick_links=quick_links)
+
+
+@app.route('/api/schedule/<int:schedule_id>')
+@login_required
+def get_schedule_api(schedule_id):
+    """Get schedule data for editing"""
+    schedule = Schedule.query.get_or_404(schedule_id)
+    
+    # Only allow users to edit their own schedules or admins to edit any
+    if schedule.technician_id != current_user.id and not current_user.is_admin:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+    
+    # Get user timezone for proper display
+    user_tz = current_user.get_timezone_obj()
+    
+    # Convert times to user timezone
+    local_start = schedule.start_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
+    local_end = schedule.end_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
+    
+    return jsonify({
+        'success': True,
+        'schedule': {
+            'id': schedule.id,
+            'date': local_start.strftime('%Y-%m-%d'),
+            'start_time': local_start.strftime('%H:%M'),
+            'end_time': local_end.strftime('%H:%M'),
+            'description': schedule.description or '',
+            'location_id': schedule.location_id,
+            'time_off': schedule.time_off,
+            'all_day': schedule.all_day
+        }
+    })
+
+
+@app.route('/schedule/update', methods=['POST'])
+@login_required
+def update_schedule():
+    """Update an existing schedule"""
+    schedule_id = request.form.get('schedule_id')
+    schedule = Schedule.query.get_or_404(schedule_id)
+    
+    # Only allow users to edit their own schedules or admins to edit any
+    if schedule.technician_id != current_user.id and not current_user.is_admin:
+        flash('You can only edit your own schedules', 'error')
+        return redirect(url_for('mobile_personal_schedule'))
+    
+    try:
+        # Get form data
+        schedule_date = datetime.strptime(request.form['schedule_date'], '%Y-%m-%d').date()
+        start_time_str = request.form['start_time']
+        end_time_str = request.form['end_time']
+        description = request.form.get('description', '').strip()
+        location_id = request.form.get('location_id')
+        time_off = 'time_off' in request.form
+        all_day = 'all_day' in request.form
+        
+        # Get user timezone
+        user_tz = current_user.get_timezone_obj()
+        
+        # Parse times and create datetime objects in user timezone
+        start_time = datetime.strptime(start_time_str, '%H:%M').time()
+        end_time = datetime.strptime(end_time_str, '%H:%M').time()
+        
+        start_datetime = user_tz.localize(datetime.combine(schedule_date, start_time))
+        end_datetime = user_tz.localize(datetime.combine(schedule_date, end_time))
+        
+        # Handle overnight shifts
+        if end_time < start_time:
+            end_datetime += timedelta(days=1)
+        
+        # Convert to UTC for storage
+        start_utc = start_datetime.astimezone(pytz.UTC)
+        end_utc = end_datetime.astimezone(pytz.UTC)
+        
+        # Update schedule
+        schedule.start_time = start_utc
+        schedule.end_time = end_utc
+        schedule.description = description if description else None
+        schedule.location_id = int(location_id) if location_id else None
+        schedule.time_off = time_off
+        schedule.all_day = all_day
+        
+        db.session.commit()
+        flash('Schedule updated successfully', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating schedule: {str(e)}', 'error')
+    
+    return redirect(url_for('mobile_personal_schedule'))
+
+
+@app.route('/schedule/delete/<int:schedule_id>', methods=['POST'])
+@login_required
+def api_delete_schedule(schedule_id):
+    """Delete a schedule entry via API"""
+    schedule = Schedule.query.get_or_404(schedule_id)
+    
+    # Only allow users to delete their own schedules or admins to delete any
+    if schedule.technician_id != current_user.id and not current_user.is_admin:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+    
+    try:
+        db.session.delete(schedule)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
