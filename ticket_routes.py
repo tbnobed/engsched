@@ -834,7 +834,8 @@ def update_status(ticket_id):
     
     # Allow any authenticated user to update status regardless of ownership
     
-    if new_status not in vars(TicketStatus).values():
+    valid_statuses = ['open', 'in_progress', 'pending', 'resolved', 'closed']
+    if new_status not in valid_statuses:
         flash('Invalid ticket status', 'error')
         return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
     
@@ -960,7 +961,8 @@ def mobile_update_status(ticket_id):
     app.logger.debug(f"Form data: {request.form}")
     
     # Validate new status
-    if new_status not in vars(TicketStatus).values():
+    valid_statuses = ['open', 'in_progress', 'pending', 'resolved', 'closed']
+    if new_status not in valid_statuses:
         flash('Invalid ticket status', 'error')
         return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
     
