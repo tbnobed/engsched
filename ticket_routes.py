@@ -24,6 +24,12 @@ def mobile_aware_redirect(endpoint, **kwargs):
     if request.args.get('mobile') == '1' or request.form.get('mobile') == '1':
         is_mobile_context = True
     
+    # Also check if user is on a mobile device
+    if is_mobile_device():
+        is_mobile_context = True
+    
+    app.logger.debug(f"Mobile context check - referrer: {request.referrer}, path: {current_path}, mobile param: {request.args.get('mobile')}, is_mobile_device: {is_mobile_device()}, final decision: {is_mobile_context}")
+    
     if is_mobile_context:
         # For mobile context, redirect to mobile-specific routes or views
         if endpoint == 'tickets.view_ticket':
