@@ -273,6 +273,19 @@
             {% endif %}
         }
         
+        /* Hide dropdown arrows from select elements in modals */
+        .modal select.form-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: none;
+        }
+        
+        /* Remove default select arrow for better mobile UX */
+        .modal select.form-select::-ms-expand {
+            display: none;
+        }
+        
         /* Page-specific active states */
         body.page-dashboard .nav-item[href*="dashboard"] { {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}color: #007bff; background: rgba(0, 123, 255, 0.1);{% else %}color: #66d9ef; background: rgba(102, 217, 239, 0.1);{% endif %} }
         body.page-schedule .nav-item[href*="calendar"] { {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}color: #007bff; background: rgba(0, 123, 255, 0.1);{% else %}color: #66d9ef; background: rgba(102, 217, 239, 0.1);{% endif %} }
