@@ -178,7 +178,7 @@
 </div>
 
 <style>
-/* Modern iOS/Android-inspired design - Updated 17:27 */
+/* Modern iOS/Android-inspired design - SOLID DARK BACKGROUND v1.4 */
 .modern-schedule-container {
     background: #f5f5f7;
     min-height: 100vh;
@@ -189,10 +189,11 @@
     background: #1c1c1e;
 }
 
-/* Header Section */
+/* Header Section - DARK BLUE BACKGROUND */
 .schedule-header {
-    background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
-    color: white;
+    background-color: #1e40af !important;
+    background-image: none !important;
+    color: #ffffff !important;
     padding: 24px 20px 28px 20px;
     border-radius: 0 0 24px 24px;
     margin-bottom: 20px;
@@ -200,7 +201,9 @@
 }
 
 [data-bs-theme="dark"] .schedule-header {
-    background: linear-gradient(135deg, #1e1b4b 0%, #581c87 100%);
+    background-color: #1e1b4b !important;
+    background-image: none !important;
+    color: #ffffff !important;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
@@ -261,7 +264,7 @@
 }
 
 .stat-pill {
-    background: rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.3) !important;
     backdrop-filter: blur(20px);
     border-radius: 20px;
     padding: 12px 16px;
@@ -269,9 +272,9 @@
     align-items: center;
     gap: 8px;
     min-width: 80px;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3) !important;
     color: white !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .stat-icon {
@@ -553,24 +556,21 @@
     }
 }
 
-/* Force visibility overrides */
-.schedule-header * {
-    color: white !important;
-}
-
+/* Force ALL header elements to be white text */
+.schedule-header,
+.schedule-header *,
 .schedule-header .week-title,
-.schedule-header .year-subtitle {
-    color: white !important;
-}
-
+.schedule-header .year-subtitle,
 .schedule-header .stat-pill,
-.schedule-header .stat-pill * {
-    color: white !important;
-}
-
+.schedule-header .stat-pill *,
 .schedule-header .nav-btn,
-.schedule-header .nav-btn * {
-    color: white !important;
+.schedule-header .nav-btn *,
+.schedule-header h1,
+.schedule-header h2,
+.schedule-header h3,
+.schedule-header span,
+.schedule-header div {
+    color: #ffffff !important;
 }
 </style>
 
