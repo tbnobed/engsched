@@ -93,7 +93,7 @@
         </div>
     {% else %}
         <div class="text-center py-4 text-muted">
-            <i data-feather="calendar-x" style="width: 48px; height: 48px; opacity: 0.5;"></i>
+            <i data-feather="calendar" style="width: 48px; height: 48px; opacity: 0.5;"></i>
             <p class="mt-2">No schedules for today</p>
         </div>
     {% endif %}
@@ -138,30 +138,7 @@
 </div>
 {% endif %}
 
-<!-- Quick Actions -->
-<div class="mobile-card">
-    <h5 class="mb-3">
-        <i data-feather="zap" style="width: 20px; height: 20px; color: #ffc107;"></i>
-        Quick Actions
-    </h5>
-    
-    <div class="d-grid gap-2">
-        <a href="{{ url_for('tickets.create_ticket') }}" class="quick-action-btn">
-            <i data-feather="plus-circle"></i>
-            Create New Ticket
-        </a>
-        
-        <a href="{{ url_for('new_schedule') }}" class="quick-action-btn">
-            <i data-feather="calendar"></i>
-            Add Schedule Entry
-        </a>
-        
-        <a href="{{ url_for('personal_schedule') }}" class="quick-action-btn">
-            <i data-feather="user"></i>
-            My Personal Schedule
-        </a>
-    </div>
-</div>
+
 
 <script>
 // Set body class for navigation highlighting
