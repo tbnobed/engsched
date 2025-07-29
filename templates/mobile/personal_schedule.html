@@ -235,6 +235,7 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    color: var(--bs-body-color) !important;
 }
 
 .schedule-item.time-off {
@@ -274,7 +275,7 @@
 }
 
 .schedule-description {
-    color: var(--bs-body-color);
+    color: var(--bs-body-color) !important;
     font-size: 0.9rem;
 }
 
@@ -307,6 +308,7 @@
 [data-bs-theme="dark"] .schedule-item {
     background: #2d2d2d;
     border-color: #3a3a3a;
+    color: #ffffff !important;
 }
 
 [data-bs-theme="dark"] .week-navigation {
@@ -316,6 +318,29 @@
 
 [data-bs-theme="dark"] .schedule-item.time-off {
     background: rgba(255, 193, 7, 0.1);
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .schedule-description {
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .schedule-location {
+    color: #cccccc !important;
+}
+
+/* Light mode adjustments to ensure visibility */
+[data-bs-theme="light"] .schedule-item {
+    background: #ffffff;
+    color: #000000 !important;
+}
+
+[data-bs-theme="light"] .schedule-description {
+    color: #000000 !important;
+}
+
+[data-bs-theme="light"] .schedule-location {
+    color: #666666 !important;
 }
 </style>
 
