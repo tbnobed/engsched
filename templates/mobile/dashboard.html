@@ -55,19 +55,19 @@
     </div>
     
     {% if today_schedules %}
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
         {% for schedule in today_schedules %}
-        <div class="d-flex flex-column align-items-center p-2 rounded text-center"
-             style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %} min-height: 80px;">
+        <div class="d-flex flex-column align-items-center p-3 rounded text-center shadow-sm"
+             style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #ffffff; border: 1px solid #e0e4e7;{% else %}background: #2d2d2d; border: 1px solid #4a4a4a;{% endif %} min-height: 100px;">
             <div class="mb-2">
                 {% if schedule.technician.profile_picture %}
                 <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}" 
                      alt="{{ schedule.technician.username }}" 
                      class="rounded-circle" 
-                     style="width: 28px; height: 28px; object-fit: cover;">
+                     style="width: 42px; height: 42px; object-fit: cover;">
                 {% else %}
                 <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold mx-auto"
-                     style="width: 28px; height: 28px; background-color: {{ schedule.technician.color or '#6c757d' }}; font-size: 12px;">
+                     style="width: 42px; height: 42px; background-color: {{ schedule.technician.color or '#6c757d' }}; font-size: 16px;">
                     {{ schedule.technician.username[:2].upper() }}
                 </div>
                 {% endif %}
@@ -162,18 +162,18 @@ function loadActiveUsers() {
             if (data.active_users && data.active_users.length > 0) {
                 // Create 2-column grid container
                 const gridContainer = document.createElement('div');
-                gridContainer.style = 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px;';
+                gridContainer.style = 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px;';
                 
                 data.active_users.forEach(user => {
                     const userCard = document.createElement('div');
-                    userCard.className = 'd-flex flex-column align-items-center p-2 rounded text-center';
-                    userCard.style = `{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %} min-height: 80px;`;
+                    userCard.className = 'd-flex flex-column align-items-center p-3 rounded text-center shadow-sm';
+                    userCard.style = `{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #ffffff; border: 1px solid #e0e4e7;{% else %}background: #2d2d2d; border: 1px solid #4a4a4a;{% endif %} min-height: 100px;`;
                     
                     userCard.innerHTML = `
                         <div class="mb-2">
                             ${user.profile_picture ? 
-                                `<img src="/static/${user.profile_picture}" alt="${user.username}" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">` :
-                                `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold mx-auto" style="width: 28px; height: 28px; background-color: ${user.color || '#6c757d'}; font-size: 12px;">${user.username.charAt(0).toUpperCase()}</div>`
+                                `<img src="/static/${user.profile_picture}" alt="${user.username}" class="rounded-circle" style="width: 42px; height: 42px; object-fit: cover;">` :
+                                `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold mx-auto" style="width: 42px; height: 42px; background-color: ${user.color || '#6c757d'}; font-size: 16px;">${user.username.charAt(0).toUpperCase()}</div>`
                             }
                         </div>
                         <div class="flex-grow-1" style="min-width: 0;">
@@ -220,18 +220,18 @@ function loadUpcomingTimeOff() {
             if (data.upcoming_time_off && data.upcoming_time_off.length > 0) {
                 // Create 2-column grid container
                 const gridContainer = document.createElement('div');
-                gridContainer.style = 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px;';
+                gridContainer.style = 'display: grid; grid-template-columns: 1fr 1fr; gap: 12px;';
                 
                 data.upcoming_time_off.forEach(timeOff => {
                     const timeOffCard = document.createElement('div');
-                    timeOffCard.className = 'd-flex flex-column align-items-center p-2 rounded text-center';
-                    timeOffCard.style = `{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #f8f9fa;{% else %}background: #3a3a3a;{% endif %} min-height: 80px;`;
+                    timeOffCard.className = 'd-flex flex-column align-items-center p-3 rounded text-center shadow-sm';
+                    timeOffCard.style = `{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #ffffff; border: 1px solid #e0e4e7;{% else %}background: #2d2d2d; border: 1px solid #4a4a4a;{% endif %} min-height: 100px;`;
                     
                     timeOffCard.innerHTML = `
                         <div class="mb-2">
                             ${timeOff.profile_picture ? 
-                                `<img src="/static/${timeOff.profile_picture}" alt="${timeOff.username}" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">` :
-                                `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold mx-auto" style="width: 28px; height: 28px; background-color: ${timeOff.color || '#6c757d'}; font-size: 12px;">${timeOff.username.charAt(0).toUpperCase()}</div>`
+                                `<img src="/static/${timeOff.profile_picture}" alt="${timeOff.username}" class="rounded-circle" style="width: 42px; height: 42px; object-fit: cover;">` :
+                                `<div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold mx-auto" style="width: 42px; height: 42px; background-color: ${timeOff.color || '#6c757d'}; font-size: 16px;">${timeOff.username.charAt(0).toUpperCase()}</div>`
                             }
                         </div>
                         <div class="flex-grow-1" style="min-width: 0;">
