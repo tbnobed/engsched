@@ -1,6 +1,6 @@
 /* Light Theme CSS */
 :root {
-  --light-bg: #f8f9fa;
+  --light-bg: #e9ecef;
   --light-panel: #ffffff;
   --light-card: #ffffff;
   --light-accent: #6366f1;
@@ -28,7 +28,8 @@
 }
 
 body {
-  background-color: var(--light-bg);
+  background-color: #e9ecef !important;
+  background: #e9ecef !important;
   color: var(--light-text);
 }
 
