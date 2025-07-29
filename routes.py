@@ -177,11 +177,46 @@ def api_studio_bookings():
         response = requests.get(api_url, timeout=10)
         response.raise_for_status()
         
-        bookings_data = response.json()
+        raw_bookings = response.json()
+        
+        # Filter bookings to only include those that occur on today's date in user timezone
+        today_date = today.date()
+        filtered_bookings = []
+        
+        for booking in raw_bookings:
+            booking_in_today = False
+            
+            if booking.get('start'):
+                try:
+                    # Parse UTC time from API
+                    start_utc = datetime.fromisoformat(booking['start'].replace('Z', '+00:00'))
+                    start_local = start_utc.astimezone(user_tz)
+                    
+                    # Check if booking starts on today's date in user timezone
+                    if start_local.date() == today_date:
+                        booking_in_today = True
+                except (ValueError, KeyError):
+                    pass
+            
+            if booking.get('end'):
+                try:
+                    # Parse UTC time from API
+                    end_utc = datetime.fromisoformat(booking['end'].replace('Z', '+00:00'))
+                    end_local = end_utc.astimezone(user_tz)
+                    
+                    # Also check if booking ends on today's date in user timezone  
+                    if end_local.date() == today_date:
+                        booking_in_today = True
+                except (ValueError, KeyError):
+                    pass
+            
+            # Only include bookings that have any part on today's date in user timezone
+            if booking_in_today:
+                filtered_bookings.append(booking)
         
         return jsonify({
             'success': True,
-            'bookings': bookings_data,
+            'bookings': filtered_bookings,
             'date': today.strftime('%Y-%m-%d'),
             'debug': {
                 'start_time': start_time,
@@ -3996,14 +4031,20 @@ def mobile_dashboard():
             if response.status_code == 200:
                 raw_bookings = response.json()
                 
-                # Convert booking times to user timezone
+                # Convert booking times to user timezone and filter for today only
                 for booking in raw_bookings:
+                    booking_in_today = False
+                    
                     if booking.get('start'):
                         try:
                             # Parse UTC time from API
                             start_utc = datetime.fromisoformat(booking['start'].replace('Z', '+00:00'))
                             start_local = start_utc.astimezone(user_tz)
                             booking['start_local'] = start_local.strftime('%H:%M')
+                            
+                            # Check if booking starts on today's date in user timezone
+                            if start_local.date() == today:
+                                booking_in_today = True
                         except (ValueError, KeyError):
                             booking['start_local'] = ''
                     
@@ -4013,10 +4054,19 @@ def mobile_dashboard():
                             end_utc = datetime.fromisoformat(booking['end'].replace('Z', '+00:00'))
                             end_local = end_utc.astimezone(user_tz)
                             booking['end_local'] = end_local.strftime('%H:%M')
+                            
+                            # Also check if booking ends on today's date in user timezone
+                            if end_local.date() == today:
+                                booking_in_today = True
                         except (ValueError, KeyError):
                             booking['end_local'] = ''
+                    
+                    # Only include bookings that have any part on today's date in user timezone
+                    if booking_in_today:
+                        booking['is_today'] = True
                 
-                studio_bookings = raw_bookings
+                # Filter to only include bookings that occur on today's date in user timezone
+                studio_bookings = [b for b in raw_bookings if b.get('is_today', False)]
     except Exception as e:
         app.logger.debug(f"Could not fetch studio bookings: {str(e)}")
     
