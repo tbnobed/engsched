@@ -182,9 +182,18 @@
     margin-top: -20px; /* Offset the mobile-content padding */
 }
 
+/* Override body background for calendar page */
+body {
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%) !important;
+}
+
+html[data-bs-theme="dark"] body {
+    background: linear-gradient(180deg, #1c1c1e 0%, #2d2d2d 50%, #1a1a1a 100%) !important;
+}
+
 /* Default light theme styles with gradient background */
 .modern-mobile-calendar {
-    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%) !important;
+    background: transparent !important;
     color: #212529 !important;
     min-height: 100vh;
 }
