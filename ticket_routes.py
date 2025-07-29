@@ -1019,26 +1019,17 @@ def mobile_update_status(ticket_id):
     # Add comment if provided
     if comment and comment.strip():
         try:
-            # Create a fresh session for the comment to avoid any conflicts with previous operations
-            db.session.close()
-            # Removed problematic session handling - use existing session
-            
-            # Reload the ticket to ensure we have a fresh instance
-            fresh_ticket = Ticket.query.get(ticket_id)
-            if fresh_ticket:
-                # Create a new comment with explicit autoincrement
-                new_comment = TicketComment(
-                    ticket_id=fresh_ticket.id,
-                    user_id=current_user.id,
-                    content=comment,
-                    created_at=datetime.now(pytz.UTC),
-                    updated_at=datetime.now(pytz.UTC)
-                )
-                db.session.add(new_comment)
-                db.session.commit()
-                app.logger.debug("Added comment successfully")
-            else:
-                app.logger.error(f"Could not find ticket #{ticket_id} when trying to add comment")
+            # Create a new comment using the existing session
+            new_comment = TicketComment(
+                ticket_id=ticket_id,
+                user_id=current_user.id,
+                content=comment,
+                created_at=datetime.now(pytz.UTC),
+                updated_at=datetime.now(pytz.UTC)
+            )
+            db.session.add(new_comment)
+            db.session.commit()
+            app.logger.debug("Added comment successfully")
         except Exception as e:
             db.session.rollback()
             app.logger.error(f"Error adding comment: {str(e)}")
@@ -1046,19 +1037,14 @@ def mobile_update_status(ticket_id):
             app.logger.error(f"Comment exception traceback: {traceback.format_exc()}")
             # Don't show error for comment failure - status was still updated
     
-    # Send notification email - but first get a fresh instance of the ticket
-    # since the previous session may have been closed
+    # Send notification email using the current ticket instance
     try:
-        # Create a fresh session for the email notification to avoid detached instance errors
-        # Fresh session creation removed
-        fresh_ticket = Ticket.query.get(ticket_id)
-        
-        if fresh_ticket and fresh_ticket.assigned_to and fresh_ticket.assigned_to != current_user.id:
-            app.logger.info(f"Sending status update notification for ticket #{fresh_ticket.id}")
+        if ticket.assigned_to and ticket.assigned_to != current_user.id:
+            app.logger.info(f"Sending status update notification for ticket #{ticket.id}")
             
-            # The email function will create an app context if needed
+            # Use the current ticket instance for email notification
             result = send_ticket_status_notification(
-                ticket=fresh_ticket,
+                ticket=ticket,
                 old_status=old_status,
                 new_status=new_status,
                 updated_by=current_user,
