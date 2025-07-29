@@ -361,6 +361,163 @@ html[data-bs-theme="dark"] .modern-schedule-container {
     color: white !important;
 }
 
+/* Responsive design for medium screens */
+@media (max-width: 414px) {
+    .schedule-header {
+        padding: 0 18px 26px 18px;
+        margin: -60px -15px 18px -15px;
+        padding-top: 82px;
+    }
+    
+    .week-title {
+        font-size: 19px;
+        letter-spacing: -0.4px;
+    }
+    
+    .year-subtitle {
+        font-size: 13.5px;
+    }
+    
+    .stats-container {
+        gap: 10px;
+    }
+    
+    .stat-pill {
+        padding: 11px 15px;
+        min-width: 78px;
+        border-radius: 19px;
+    }
+    
+    .stat-number {
+        font-size: 17px;
+    }
+    
+    .stat-label {
+        font-size: 10.5px;
+    }
+    
+    .stat-icon {
+        width: 19px;
+        height: 19px;
+    }
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 375px) {
+    .schedule-header {
+        padding: 0 16px 24px 16px;
+        margin: -60px -15px 16px -15px;
+        padding-top: 80px;
+    }
+    
+    .header-top {
+        margin-bottom: 16px;
+    }
+    
+    .nav-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+    }
+    
+    .week-info {
+        margin: 0 12px;
+    }
+    
+    .week-title {
+        font-size: 18px;
+        letter-spacing: -0.3px;
+    }
+    
+    .year-subtitle {
+        font-size: 13px;
+    }
+    
+    .stats-container {
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .stat-pill {
+        padding: 10px 14px;
+        min-width: 75px;
+        border-radius: 18px;
+    }
+    
+    .stat-number {
+        font-size: 16px;
+    }
+    
+    .stat-label {
+        font-size: 10px;
+    }
+    
+    .stat-icon {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* For very small screens (iPhone SE and similar) */
+@media (max-width: 320px) {
+    .schedule-header {
+        padding: 0 12px 20px 12px;
+        margin: -60px -15px 12px -15px;
+        padding-top: 76px;
+    }
+    
+    .header-top {
+        margin-bottom: 14px;
+    }
+    
+    .nav-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+    }
+    
+    .week-info {
+        margin: 0 8px;
+    }
+    
+    .week-title {
+        font-size: 16px;
+        letter-spacing: -0.2px;
+    }
+    
+    .year-subtitle {
+        font-size: 12px;
+    }
+    
+    .stats-container {
+        gap: 6px;
+        flex-direction: row;
+        justify-content: space-evenly;
+    }
+    
+    .stat-pill {
+        padding: 8px 12px;
+        min-width: 65px;
+        border-radius: 16px;
+        flex: 1;
+        max-width: 80px;
+    }
+    
+    .stat-number {
+        font-size: 15px;
+    }
+    
+    .stat-label {
+        font-size: 9px;
+    }
+    
+    .stat-icon {
+        width: 16px;
+        height: 16px;
+    }
+}
+
 /* Stats Container */
 .stats-container {
     display: flex;
