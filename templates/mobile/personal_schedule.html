@@ -258,10 +258,21 @@
     background: #f5f5f7;
     min-height: 100vh;
     padding: 0;
+    position: relative;
 }
 
 [data-bs-theme="dark"] .modern-schedule-container {
     background: #1c1c1e;
+}
+
+/* Force dark mode for entire page when dark theme is active */
+[data-bs-theme="dark"] body {
+    background-color: #1c1c1e !important;
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] html {
+    background-color: #1c1c1e !important;
 }
 
 /* Header Section - DARKER BLUE GRADIENT */
@@ -381,6 +392,12 @@
 /* Schedule List */
 .schedule-list {
     padding: 0 16px 100px 16px;
+    background: transparent;
+}
+
+[data-bs-theme="dark"] .schedule-list {
+    background: transparent;
+    color: #ffffff;
 }
 
 .day-group {
