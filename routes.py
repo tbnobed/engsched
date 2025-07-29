@@ -4143,3 +4143,4 @@ def mobile_quick_links():
     
     return render_template('mobile/quick_links.html',
                          quick_links=quick_links)
+
