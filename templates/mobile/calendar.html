@@ -318,15 +318,29 @@ function changeDate(direction) {
     console.log('Current date string:', currentDateStr);
     
     try {
-        const date = new Date(currentDateStr);
+        // Parse the date string properly to avoid timezone issues
+        const [year, month, day] = currentDateStr.split('-').map(Number);
+        const date = new Date(year, month - 1, day); // month is 0-indexed in JavaScript
+        
+        console.log('Parsed date object:', date);
+        
+        // Add the direction (1 for next day, -1 for previous day)
         date.setDate(date.getDate() + direction);
         
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
+        console.log('New date object:', date);
         
-        const newUrl = `/mobile/calendar?date=${year}-${month}-${day}`;
+        const newYear = date.getFullYear();
+        const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+        const newDay = String(date.getDate()).padStart(2, '0');
+        
+        const newDateStr = `${newYear}-${newMonth}-${newDay}`;
+        const newUrl = `/mobile/calendar?date=${newDateStr}`;
+        
+        console.log('New date string:', newDateStr);
         console.log('Navigating to:', newUrl);
+        
+        // Update the current date string for the next navigation
+        currentDateStr = newDateStr;
         
         window.location.href = newUrl;
     } catch (error) {
