@@ -178,8 +178,15 @@
 /* Modern Mobile Calendar Styles */
 .modern-mobile-calendar {
     min-height: 100vh;
-    background: var(--bs-body-bg);
     padding: 0;
+    margin-top: 60px; /* Account for mobile header */
+    {% if current_user.is_authenticated and current_user.theme_preference == 'dark' %}
+    background: #1c1c1e !important;
+    color: #ffffff !important;
+    {% else %}
+    background: #f8f9fa !important;
+    color: #212529 !important;
+    {% endif %}
 }
 
 /* Header Styles */
@@ -289,7 +296,11 @@
     gap: 0.75rem;
     font-size: 1.3rem;
     font-weight: 700;
-    color: var(--bs-body-color);
+    {% if current_user.is_authenticated and current_user.theme_preference == 'dark' %}
+    color: #ffffff !important;
+    {% else %}
+    color: #212529 !important;
+    {% endif %}
 }
 
 .section-title i {
@@ -370,7 +381,11 @@
 .time-range {
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--bs-body-color);
+    {% if current_user.is_authenticated and current_user.theme_preference == 'dark' %}
+    color: #ffffff !important;
+    {% else %}
+    color: #212529 !important;
+    {% endif %}
 }
 
 .card-actions {
@@ -443,8 +458,12 @@
 .user-name {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--bs-body-color);
     margin-bottom: 0.25rem;
+    {% if current_user.is_authenticated and current_user.theme_preference == 'dark' %}
+    color: #ffffff !important;
+    {% else %}
+    color: #212529 !important;
+    {% endif %}
 }
 
 .location {
@@ -531,7 +550,11 @@
     font-size: 1.3rem;
     font-weight: 600;
     margin-bottom: 0.75rem;
-    color: var(--bs-body-color);
+    {% if current_user.is_authenticated and current_user.theme_preference == 'dark' %}
+    color: #ffffff !important;
+    {% else %}
+    color: #212529 !important;
+    {% endif %}
 }
 
 .empty-state p {
@@ -540,34 +563,51 @@
     line-height: 1.5;
 }
 
-/* Dark Mode Overrides */
-html[data-bs-theme="dark"] .calendar-header {
-    background: linear-gradient(135deg, #4c5fd7 0%, #6b46c1 100%);
+/* Theme-aware dynamic styles */
+{% if current_user.is_authenticated and current_user.theme_preference == 'dark' %}
+/* Dark Mode Styles */
+.calendar-header {
+    background: linear-gradient(135deg, #4c5fd7 0%, #6b46c1 100%) !important;
 }
 
-html[data-bs-theme="dark"] .schedule-count {
-    background: rgba(102, 126, 234, 0.2);
-    color: #a5b4fc;
+.schedule-count {
+    background: rgba(102, 126, 234, 0.2) !important;
+    color: #a5b4fc !important;
 }
 
-html[data-bs-theme="dark"] .description {
-    background: #1f2937;
-    border-left-color: #6366f1;
+.description {
+    background: #1f2937 !important;
+    border-left-color: #6366f1 !important;
+    color: #ffffff !important;
 }
 
-html[data-bs-theme="dark"] .timeoff-badge {
-    background: rgba(234, 88, 12, 0.15);
-    border-color: rgba(234, 88, 12, 0.3);
+.timeoff-badge {
+    background: rgba(234, 88, 12, 0.15) !important;
+    border-color: rgba(234, 88, 12, 0.3) !important;
 }
 
-html[data-bs-theme="dark"] .ooo-badge {
-    background: rgba(217, 119, 6, 0.15);
-    border-color: rgba(217, 119, 6, 0.3);
+.ooo-badge {
+    background: rgba(217, 119, 6, 0.15) !important;
+    border-color: rgba(217, 119, 6, 0.3) !important;
 }
 
-html[data-bs-theme="dark"] .empty-icon {
-    background: rgba(102, 126, 234, 0.15);
+.empty-icon {
+    background: rgba(102, 126, 234, 0.15) !important;
 }
+
+.schedule-card {
+    background: #2d2d2d !important;
+    border-color: #3a3a3a !important;
+}
+
+.time-dot {
+    border-color: #2d2d2d !important;
+}
+
+.user-avatar {
+    border-color: #2d2d2d !important;
+}
+{% endif %}
 
 /* Responsive Adjustments */
 @media (max-width: 375px) {
