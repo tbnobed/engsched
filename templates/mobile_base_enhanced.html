@@ -312,7 +312,6 @@
                     <!-- Timezone Settings -->
                     <li>
                         <a class="dropdown-item" href="#" onclick="showTimezoneModal()" style="{% if current_user.theme_preference != 'light' %}color: #ffffff; background: transparent;{% endif %}">
-                            <i data-feather="clock" style="width: 16px; height: 16px; margin-right: 8px;"></i>
                             Timezone ({{ current_user.timezone }})
                         </a>
                     </li>
@@ -391,7 +390,6 @@
             <div class="modal-content" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #ffffff; color: #212529;{% else %}background: #2d2d2d; color: #ffffff; border: 1px solid #3a3a3a;{% endif %}">
                 <div class="modal-header" style="border-bottom: 1px solid {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#e9ecef{% else %}#3a3a3a{% endif %};">
                     <h5 class="modal-title">
-                        <i data-feather="clock" style="width: 20px; height: 20px; margin-right: 8px;"></i>
                         Change Timezone
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" {% if current_user.is_authenticated and current_user.theme_preference != 'light' %}style="filter: invert(1);"{% endif %}></button>
@@ -401,7 +399,7 @@
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label class="form-label" style="{% if current_user.theme_preference != 'light' %}color: #ffffff;{% endif %}">Select Your Timezone:</label>
-                            <select class="form-select" name="timezone" required style="{% if current_user.theme_preference != 'light' %}background: #1a1a1a; color: #ffffff; border: 1px solid #3a3a3a;{% endif %}">
+                            <select class="form-select" name="timezone" required style="{% if current_user.theme_preference != 'light' %}background: #1a1a1a; color: #ffffff; border: 1px solid #3a3a3a;{% endif %} -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: none;">
                                 <option value="America/Chicago" {% if current_user.timezone == 'America/Chicago' %}selected{% endif %}>Central Time (CST/CDT)</option>
                                 <option value="America/Los_Angeles" {% if current_user.timezone == 'America/Los_Angeles' %}selected{% endif %}>Pacific Time (PST/PDT)</option>
                                 <option value="America/New_York" {% if current_user.timezone == 'America/New_York' %}selected{% endif %}>Eastern Time (EST/EDT)</option>
@@ -411,7 +409,6 @@
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">
-                                <i data-feather="check" style="width: 16px; height: 16px; margin-right: 8px;"></i>
                                 Update Timezone
                             </button>
                         </div>
