@@ -4211,23 +4211,18 @@ def mobile_personal_schedule():
     # Handle GET requests (display view)
     # Get week start parameter, default to current week
     week_start_str = request.args.get('week_start')
-    app.logger.debug(f"Week start parameter received: {week_start_str}")
     
     if week_start_str:
         try:
-            # Parse the provided date
+            # Parse the provided date and always normalize to Monday of that week
             provided_date = datetime.strptime(week_start_str, '%Y-%m-%d').date()
-            # Always normalize to Monday of that week
             week_start = provided_date - timedelta(days=provided_date.weekday())
-            app.logger.debug(f"Provided date: {provided_date}, normalized to Monday: {week_start}")
         except ValueError:
             today = date.today()
             week_start = today - timedelta(days=today.weekday())
-            app.logger.debug(f"Invalid date format, using current week: {week_start}")
     else:
         today = date.today()
         week_start = today - timedelta(days=today.weekday())
-        app.logger.debug(f"No date provided, using current week: {week_start}")
     
     week_end = week_start + timedelta(days=6)
     

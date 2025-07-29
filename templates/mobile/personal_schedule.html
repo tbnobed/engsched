@@ -663,21 +663,14 @@ function changeWeek(direction) {
     const currentUrl = new URL(window.location);
     const weekStart = currentUrl.searchParams.get('week_start') || '{{ week_start.strftime("%Y-%m-%d") }}';
     
-    console.log('Current week_start:', weekStart);
-    console.log('Direction:', direction);
-    
     const date = new Date(weekStart + 'T00:00:00'); // Add time to avoid timezone issues
     date.setDate(date.getDate() + (direction * 7));
-    
-    console.log('New date calculated:', date);
     
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     
     const newWeekStart = year + '-' + month + '-' + day;
-    console.log('New week_start parameter:', newWeekStart);
-    
     window.location.href = '/mobile/personal_schedule?week_start=' + newWeekStart;
 }
 

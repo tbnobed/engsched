@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
 Recent Updates (July 29, 2025):
+- ✅ COMPLETED: Mobile Personal Schedule Week Navigation Fix - Consistent Monday-to-Sunday Display
+- Fixed mobile personal schedule to always display weeks in Monday-to-Sunday order regardless of navigation direction
+- Enhanced week calculation logic to normalize any provided date to its Monday week start for consistent display
+- Updated form redirects to preserve week context after adding/editing schedules with proper error handling
+- JavaScript navigation now correctly calculates Monday-based week boundaries for forward and backward navigation
+- Backend route applies additional normalization to ensure any date parameter results in Monday week start
+- Mobile personal schedule now maintains consistent week view structure when navigating between weeks
+- All form submissions (add schedule, validation errors) redirect back to the correct week view
 - ✅ COMPLETED: Critical Mobile Navigation Bug Fixes - Complete Mobile Route Consistency
 - Fixed mobile users being incorrectly redirected to desktop views after performing ticket actions (status updates, comments, etc.)
 - Implemented mobile-aware redirect helper functions in ticket_routes.py to maintain mobile navigation flow
