@@ -41,7 +41,7 @@
                 <!-- Top Row: Time and Actions -->
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div class="schedule-time">
-                        <span style="font-size: 1.5rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #212529;{% else %}color: #ffffff;{% endif %}">
+                        <span style="font-size: 1.5rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
                             {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
                         </span>
                     </div>
@@ -71,11 +71,11 @@
                         {% endif %}
                         
                         <div>
-                            <div style="font-size: 1.2rem; font-weight: 600; color: {{ schedule.technician.color or '#007bff' }};">
+                            <div style="font-size: 1.2rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
                                 {{ schedule.technician.username }}
                             </div>
                             {% if schedule.location %}
-                            <div style="font-size: 1rem; {% if current_user.theme_preference == 'light' %}color: #6c757d;{% else %}color: #adb5bd;{% endif %}">
+                            <div style="font-size: 1rem; {% if current_user.theme_preference == 'light' %}color: #333333;{% else %}color: #ffffff;{% endif %}">
                                 <i data-feather="map-pin" style="width: 14px; height: 14px;"></i> {{ schedule.location.name }}
                             </div>
                             {% endif %}
