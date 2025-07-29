@@ -46,7 +46,7 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div class="flex-grow-1">
                     <h6 class="mb-1">
-                        <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" 
+                        <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}?mobile=1" 
                            class="text-decoration-none">
                             #{{ ticket.id }} - {{ ticket.title }}
                         </a>
@@ -68,7 +68,7 @@
                         <i data-feather="more-vertical" style="width: 16px; height: 16px;"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}">
+                        <li><a class="dropdown-item" href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}?mobile=1">
                             <i data-feather="eye" style="width: 16px; height: 16px;"></i> View
                         </a></li>
                         <li><a class="dropdown-item" href="{{ url_for('tickets.edit_ticket', ticket_id=ticket.id) }}?mobile=1">
