@@ -182,47 +182,88 @@
     margin-top: -20px; /* Offset the mobile-content padding */
 }
 
-/* Light theme styles */
+/* Default light theme styles - applied first */
 .modern-mobile-calendar {
-    background: #f8f9fa;
-    color: #212529;
-}
-
-/* Light theme explicit styles */
-html[data-bs-theme="light"] .modern-mobile-calendar {
     background: #f8f9fa !important;
     color: #212529 !important;
 }
 
-html[data-bs-theme="light"] .section-title {
+.section-title {
     color: #212529 !important;
 }
 
-html[data-bs-theme="light"] .section-header {
+.section-header {
     color: #212529 !important;
 }
 
-html[data-bs-theme="light"] .schedule-count {
+.schedule-count {
     color: #6c757d !important;
 }
 
-html[data-bs-theme="light"] .time-label {
+.time-label {
     color: #667eea !important;
 }
 
-html[data-bs-theme="light"] .time-range {
+.time-range {
     color: #212529 !important;
 }
 
-html[data-bs-theme="light"] .user-name {
+.user-name {
     color: #212529 !important;
 }
 
-html[data-bs-theme="light"] .location-info {
+.location-info {
     color: #6c757d !important;
 }
 
-html[data-bs-theme="light"] .description {
+.description {
+    color: #495057 !important;
+}
+
+/* Light theme explicit styles */
+html[data-bs-theme="light"] .modern-mobile-calendar,
+body.light-theme .modern-mobile-calendar {
+    background: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+html[data-bs-theme="light"] .section-title,
+body.light-theme .section-title {
+    color: #212529 !important;
+}
+
+html[data-bs-theme="light"] .section-header,
+body.light-theme .section-header {
+    color: #212529 !important;
+}
+
+html[data-bs-theme="light"] .schedule-count,
+body.light-theme .schedule-count {
+    color: #6c757d !important;
+}
+
+html[data-bs-theme="light"] .time-label,
+body.light-theme .time-label {
+    color: #667eea !important;
+}
+
+html[data-bs-theme="light"] .time-range,
+body.light-theme .time-range {
+    color: #212529 !important;
+}
+
+html[data-bs-theme="light"] .user-name,
+body.light-theme .user-name {
+    color: #212529 !important;
+}
+
+html[data-bs-theme="light"] .location-info,
+body.light-theme .location-info {
+    color: #6c757d !important;
+}
+
+html[data-bs-theme="light"] .description,
+body.light-theme .description {
     color: #495057 !important;
 }
 
