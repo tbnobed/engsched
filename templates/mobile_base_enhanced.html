@@ -246,6 +246,33 @@
             }
         }
         
+        /* Dropdown menu styling */
+        .dropdown-menu {
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border: none;
+            min-width: 200px;
+        }
+        
+        .dropdown-item {
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin: 2px 8px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .dropdown-item:hover {
+            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+            background: #f8f9fa !important;
+            color: #495057 !important;
+            {% else %}
+            background: #3a3a3a !important;
+            color: #ffffff !important;
+            {% endif %}
+        }
+        
         /* Page-specific active states */
         body.page-dashboard .nav-item[href*="dashboard"] { {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}color: #007bff; background: rgba(0, 123, 255, 0.1);{% else %}color: #66d9ef; background: rgba(102, 217, 239, 0.1);{% endif %} }
         body.page-schedule .nav-item[href*="calendar"] { {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}color: #007bff; background: rgba(0, 123, 255, 0.1);{% else %}color: #66d9ef; background: rgba(102, 217, 239, 0.1);{% endif %} }
@@ -263,12 +290,52 @@
         </div>
         <div class="header-actions">
             {% if current_user.is_authenticated %}
-            <form method="POST" action="{{ url_for('toggle_theme') }}" style="margin: 0;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="theme-toggle">
-                    <i data-feather="{% if current_user.theme_preference == 'light' %}moon{% else %}sun{% endif %}" style="width: 20px; height: 20px;"></i>
+            <div class="dropdown">
+                <button class="btn btn-link p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border: none; background: none; {% if current_user.theme_preference == 'light' %}color: #495057;{% else %}color: #ffffff;{% endif %}">
+                    <i data-feather="user" style="width: 22px; height: 22px;"></i>
                 </button>
-            </form>
+                <ul class="dropdown-menu dropdown-menu-end" style="{% if current_user.theme_preference != 'light' %}background: #2d2d2d; border: 1px solid #3a3a3a;{% endif %}">
+                    <li><h6 class="dropdown-header" style="{% if current_user.theme_preference != 'light' %}color: #ffffff;{% endif %}">{{ current_user.username }}</h6></li>
+                    <li><hr class="dropdown-divider" style="{% if current_user.theme_preference != 'light' %}border-color: #3a3a3a;{% endif %}"></li>
+                    
+                    <!-- Theme Toggle -->
+                    <li>
+                        <form method="POST" action="{{ url_for('toggle_theme') }}" style="margin: 0;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="dropdown-item" style="{% if current_user.theme_preference != 'light' %}color: #ffffff; background: transparent;{% endif %}">
+                                <i data-feather="{% if current_user.theme_preference == 'light' %}moon{% else %}sun{% endif %}" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                                {% if current_user.theme_preference == 'light' %}Dark Mode{% else %}Light Mode{% endif %}
+                            </button>
+                        </form>
+                    </li>
+                    
+                    <!-- Timezone Settings -->
+                    <li>
+                        <a class="dropdown-item" href="#" onclick="showTimezoneModal()" style="{% if current_user.theme_preference != 'light' %}color: #ffffff; background: transparent;{% endif %}">
+                            <i data-feather="clock" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                            Timezone ({{ current_user.timezone }})
+                        </a>
+                    </li>
+                    
+                    <li><hr class="dropdown-divider" style="{% if current_user.theme_preference != 'light' %}border-color: #3a3a3a;{% endif %}"></li>
+                    
+                    <!-- Profile Settings -->
+                    <li>
+                        <a class="dropdown-item" href="{{ url_for('profile') }}" style="{% if current_user.theme_preference != 'light' %}color: #ffffff; background: transparent;{% endif %}">
+                            <i data-feather="settings" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                            Profile Settings
+                        </a>
+                    </li>
+                    
+                    <!-- Logout -->
+                    <li>
+                        <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}" style="{% if current_user.theme_preference != 'light' %}color: #ff6b6b;{% endif %}">
+                            <i data-feather="log-out" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                            Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
             {% endif %}
         </div>
     </header>
@@ -318,6 +385,42 @@
         </div>
     </div>
 
+    <!-- Timezone Modal -->
+    <div class="modal fade" id="timezoneModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: #ffffff; color: #212529;{% else %}background: #2d2d2d; color: #ffffff; border: 1px solid #3a3a3a;{% endif %}">
+                <div class="modal-header" style="border-bottom: 1px solid {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#e9ecef{% else %}#3a3a3a{% endif %};">
+                    <h5 class="modal-title">
+                        <i data-feather="clock" style="width: 20px; height: 20px; margin-right: 8px;"></i>
+                        Change Timezone
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" {% if current_user.is_authenticated and current_user.theme_preference != 'light' %}style="filter: invert(1);"{% endif %}></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{{ url_for('update_timezone') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label class="form-label" style="{% if current_user.theme_preference != 'light' %}color: #ffffff;{% endif %}">Select Your Timezone:</label>
+                            <select class="form-select" name="timezone" required style="{% if current_user.theme_preference != 'light' %}background: #1a1a1a; color: #ffffff; border: 1px solid #3a3a3a;{% endif %}">
+                                <option value="America/Chicago" {% if current_user.timezone == 'America/Chicago' %}selected{% endif %}>Central Time (CST/CDT)</option>
+                                <option value="America/Los_Angeles" {% if current_user.timezone == 'America/Los_Angeles' %}selected{% endif %}>Pacific Time (PST/PDT)</option>
+                                <option value="America/New_York" {% if current_user.timezone == 'America/New_York' %}selected{% endif %}>Eastern Time (EST/EDT)</option>
+                                <option value="America/Denver" {% if current_user.timezone == 'America/Denver' %}selected{% endif %}>Mountain Time (MST/MDT)</option>
+                                <option value="UTC" {% if current_user.timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                            </select>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="check" style="width: 16px; height: 16px; margin-right: 8px;"></i>
+                                Update Timezone
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
@@ -361,6 +464,14 @@
                 .catch(error => {
                     console.log('Could not load ticket count:', error);
                 });
+        }
+        
+        // Show timezone modal
+        function showTimezoneModal() {
+            const modal = new bootstrap.Modal(document.getElementById('timezoneModal'));
+            modal.show();
+            // Re-initialize icons after modal shows
+            setTimeout(() => feather.replace(), 100);
         }
         
         // Show quick links modal
