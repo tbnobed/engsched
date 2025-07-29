@@ -3,91 +3,115 @@
 {% block title %}My Schedule - Mobile{% endblock %}
 
 {% block content %}
-<div class="mobile-personal-schedule">
-    <!-- Week Navigation -->
-    <div class="week-navigation">
-        <button class="btn btn-outline-primary btn-sm" onclick="changeWeek(-1)">
-            <i data-feather="chevron-left"></i>
-        </button>
-        <h4 class="week-title mb-0">{{ week_start.strftime('%b %d') }} - {{ week_end.strftime('%b %d, %Y') }}</h4>
-        <button class="btn btn-outline-primary btn-sm" onclick="changeWeek(1)">
-            <i data-feather="chevron-right"></i>
-        </button>
-    </div>
-
-    <!-- Quick Stats -->
-    <div class="quick-stats mb-3">
-        <div class="stat-card">
-            <div class="stat-number">{{ total_hours }}</div>
-            <div class="stat-label">Hours This Week</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ schedule_count }}</div>
-            <div class="stat-label">Schedule Entries</div>
-        </div>
-    </div>
-
-    <!-- Daily Schedule -->
-    {% for day_name, day_date, day_schedules in week_data %}
-    <div class="day-section">
-        <div class="day-header">
-            <h5 class="day-title">
-                {{ day_name }}
-                <span class="day-date">{{ day_date.strftime('%m/%d') }}</span>
-            </h5>
-            <button class="btn btn-sm btn-outline-primary" onclick="addScheduleForDay('{{ day_date.strftime('%Y-%m-%d') }}')">
-                <i data-feather="plus"></i>
+<div class="modern-schedule-container">
+    <!-- Header Section -->
+    <div class="schedule-header">
+        <div class="header-top">
+            <button class="nav-btn" onclick="changeWeek(-1)">
+                <i data-feather="chevron-left"></i>
+            </button>
+            <div class="week-info">
+                <h2 class="week-title">{{ week_start.strftime('%b %d') }} - {{ week_end.strftime('%b %d') }}</h2>
+                <p class="year-subtitle">{{ week_end.strftime('%Y') }}</p>
+            </div>
+            <button class="nav-btn" onclick="changeWeek(1)">
+                <i data-feather="chevron-right"></i>
             </button>
         </div>
         
-        <div class="day-schedules">
+        <!-- Modern Stats Cards -->
+        <div class="stats-container">
+            <div class="stat-pill hours-pill">
+                <div class="stat-icon">
+                    <i data-feather="clock"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-number">{{ total_hours }}</span>
+                    <span class="stat-label">hrs</span>
+                </div>
+            </div>
+            <div class="stat-pill entries-pill">
+                <div class="stat-icon">
+                    <i data-feather="calendar"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-number">{{ schedule_count }}</span>
+                    <span class="stat-label">entries</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Schedule List -->
+    <div class="schedule-list">
+        {% for day_name, day_date, day_schedules in week_data %}
+        <div class="day-group">
+            <div class="day-header-modern">
+                <div class="day-info">
+                    <h3 class="day-name">{{ day_name }}</h3>
+                    <span class="day-date">{{ day_date.strftime('%m/%d') }}</span>
+                </div>
+                <button class="add-btn" onclick="addScheduleForDay('{{ day_date.strftime('%Y-%m-%d') }}')">
+                    <i data-feather="plus"></i>
+                </button>
+            </div>
+            
             {% if day_schedules %}
                 {% for schedule in day_schedules %}
-                <div class="schedule-item {% if schedule.time_off %}time-off{% endif %}">
-                    <div class="schedule-time">
-                        {% if schedule.all_day and schedule.time_off %}
-                        <span class="all-day-indicator">All Day - OOO</span>
-                        {% else %}
-                        {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
+                <div class="schedule-card {% if schedule.time_off %}time-off-card{% endif %}" onclick="editSchedule({{ schedule.id }})">
+                    <div class="card-left">
+                        <div class="time-block">
+                            {% if schedule.all_day and schedule.time_off %}
+                            <span class="time-text all-day">All Day</span>
+                            <span class="ooo-badge">OOO</span>
+                            {% else %}
+                            <span class="time-text">{{ schedule.start_time.strftime('%H:%M') }}</span>
+                            <span class="time-dash">–</span>
+                            <span class="time-text">{{ schedule.end_time.strftime('%H:%M') }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if schedule.time_off and not schedule.all_day %}
+                        <div class="time-off-indicator">
+                            <i data-feather="coffee"></i>
+                            <span>Time Off</span>
+                        </div>
                         {% endif %}
                     </div>
                     
-                    <div class="schedule-details">
+                    <div class="card-content">
                         {% if schedule.location %}
-                        <div class="schedule-location">
+                        <div class="location-info">
                             <i data-feather="map-pin"></i>
-                            {{ schedule.location.name }}
+                            <span>{{ schedule.location.name }}</span>
                         </div>
                         {% endif %}
                         
                         {% if schedule.description %}
-                        <div class="schedule-description">{{ schedule.description }}</div>
+                        <div class="description-text">{{ schedule.description }}</div>
                         {% endif %}
                         
-                        {% if schedule.time_off %}
-                        <div class="time-off-badge">
-                            <i data-feather="coffee"></i>
-                            {% if schedule.all_day %}Out of Office{% else %}Time Off{% endif %}
-                        </div>
+                        {% if not schedule.location and not schedule.description %}
+                        <div class="placeholder-text">Work Schedule</div>
                         {% endif %}
                     </div>
                     
-                    <div class="schedule-actions">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="editSchedule({{ schedule.id }})">
-                            <i data-feather="edit-2"></i>
-                        </button>
+                    <div class="card-arrow">
+                        <i data-feather="chevron-right"></i>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
-            <div class="no-schedule">
-                <i data-feather="calendar-x"></i>
-                <span>No schedule</span>
+            <div class="empty-day">
+                <div class="empty-icon">
+                    <i data-feather="calendar"></i>
+                </div>
+                <span class="empty-text">No schedule</span>
             </div>
             {% endif %}
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
 </div>
 
 <!-- Add Schedule Modal -->
@@ -154,219 +178,371 @@
 </div>
 
 <style>
-.mobile-personal-schedule {
-    padding: 1rem;
+/* Modern iOS/Android-inspired design */
+.modern-schedule-container {
+    background: #f5f5f7;
+    min-height: 100vh;
+    padding: 0;
 }
 
-.week-navigation {
+[data-bs-theme="dark"] .modern-schedule-container {
+    background: #1c1c1e;
+}
+
+/* Header Section */
+.schedule-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 24px 20px 28px 20px;
+    border-radius: 0 0 24px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+[data-bs-theme="dark"] .schedule-header {
+    background: linear-gradient(135deg, #4a5d7e 0%, #5d4a7e 100%);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.header-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: var(--bs-body-bg);
-    border-radius: 0.5rem;
-    border: 1px solid var(--bs-border-color);
+    margin-bottom: 20px;
+}
+
+.nav-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.nav-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.05);
+}
+
+.week-info {
+    text-align: center;
+    flex: 1;
+    margin: 0 16px;
 }
 
 .week-title {
-    font-weight: 600;
-    color: var(--bs-body-color);
-}
-
-.quick-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.stat-card {
-    background: var(--bs-primary);
-    color: white;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    text-align: center;
-}
-
-.stat-number {
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
-.stat-label {
-    font-size: 0.8rem;
-    opacity: 0.8;
-}
-
-.day-section {
-    margin-bottom: 1.5rem;
-}
-
-.day-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-}
-
-.day-title {
+    font-size: 20px;
+    font-weight: 700;
     margin: 0;
-    font-weight: 600;
-    color: var(--bs-body-color);
+    letter-spacing: -0.5px;
 }
 
-.day-date {
-    font-weight: normal;
-    color: var(--bs-secondary);
-    font-size: 0.9rem;
-}
-
-.day-schedules {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.schedule-item {
-    background: var(--bs-body-bg);
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.5rem;
-    padding: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    color: var(--bs-body-color) !important;
-}
-
-.schedule-item.time-off {
-    background: rgba(var(--bs-warning-rgb), 0.1);
-    border-color: var(--bs-warning);
-}
-
-.schedule-time {
-    font-weight: 600;
-    color: var(--bs-primary);
-    min-width: 100px;
-    font-size: 0.9rem;
-}
-
-.all-day-indicator {
-    background: var(--bs-warning);
-    color: var(--bs-dark);
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.7rem;
-    white-space: nowrap;
-}
-
-.schedule-details {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.schedule-location {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    color: var(--bs-secondary);
-    font-size: 0.8rem;
-}
-
-.schedule-description {
-    color: var(--bs-body-color) !important;
-    font-size: 0.9rem;
-}
-
-.time-off-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    color: var(--bs-warning);
+.year-subtitle {
+    font-size: 14px;
+    opacity: 0.8;
+    margin: 2px 0 0 0;
     font-weight: 500;
-    font-size: 0.8rem;
 }
 
-.schedule-actions {
+/* Stats Container */
+.stats-container {
     display: flex;
-    gap: 0.25rem;
-}
-
-.no-schedule {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--bs-secondary);
-    font-style: italic;
-    padding: 1rem;
-    text-align: center;
+    gap: 12px;
     justify-content: center;
 }
 
-/* Dark mode adjustments */
-[data-bs-theme="dark"] .schedule-item {
-    background: #2d2d2d;
-    border-color: #3a3a3a;
-    color: #ffffff !important;
+.stat-pill {
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 80px;
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
-[data-bs-theme="dark"] .week-navigation {
-    background: #2d2d2d;
-    border-color: #3a3a3a;
+.stat-icon {
+    width: 20px;
+    height: 20px;
+    opacity: 0.9;
 }
 
-[data-bs-theme="dark"] .schedule-item.time-off {
-    background: rgba(255, 193, 7, 0.1);
-    color: #ffffff !important;
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
-[data-bs-theme="dark"] .schedule-description {
-    color: #ffffff !important;
+.stat-number {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
 }
 
-[data-bs-theme="dark"] .schedule-location {
-    color: #cccccc !important;
+.stat-label {
+    font-size: 11px;
+    opacity: 0.7;
+    font-weight: 500;
+    line-height: 1;
 }
 
-/* Light mode adjustments to ensure visibility */
-[data-bs-theme="light"] .schedule-item {
-    background: #ffffff;
-    color: #000000 !important;
+/* Schedule List */
+.schedule-list {
+    padding: 0 16px 100px 16px;
 }
 
-[data-bs-theme="light"] .schedule-description {
-    color: #000000 !important;
+.day-group {
+    margin-bottom: 24px;
 }
 
-[data-bs-theme="light"] .schedule-location {
-    color: #666666 !important;
+.day-header-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0 4px;
 }
 
-/* Force text visibility regardless of theme */
-.schedule-item * {
-    color: inherit !important;
+.day-info {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
 }
 
-.schedule-time {
-    color: var(--bs-primary) !important;
+.day-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    color: #1c1c1e;
+    letter-spacing: -0.5px;
 }
 
-/* Override any Bootstrap defaults that might be causing issues */
-.mobile-personal-schedule .schedule-item {
-    color: #000000 !important;
-    background: #ffffff !important;
-    border: 1px solid #dee2e6 !important;
+[data-bs-theme="dark"] .day-name {
+    color: #ffffff;
 }
 
-[data-bs-theme="dark"] .mobile-personal-schedule .schedule-item {
-    color: #ffffff !important;
-    background: #2d2d2d !important;
-    border: 1px solid #3a3a3a !important;
+.day-date {
+    font-size: 14px;
+    color: #8e8e93;
+    font-weight: 500;
 }
 
-[data-bs-theme="dark"] .mobile-personal-schedule .schedule-item .schedule-time {
-    color: #66b3ff !important;
+[data-bs-theme="dark"] .day-date {
+    color: #8e8e93;
+}
+
+.add-btn {
+    background: #007aff;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+.add-btn:hover {
+    background: #0056b3;
+    transform: scale(1.1);
+}
+
+/* Schedule Cards */
+.schedule-card {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.04);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.schedule-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+[data-bs-theme="dark"] .schedule-card {
+    background: #2c2c2e;
+    border-color: rgba(255,255,255,0.1);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+}
+
+[data-bs-theme="dark"] .schedule-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.time-off-card {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+    border-color: #e17055;
+}
+
+[data-bs-theme="dark"] .time-off-card {
+    background: linear-gradient(135deg, #d4a574 0%, #c77a6f 100%);
+}
+
+.card-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.time-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.time-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: #007aff;
+    line-height: 1.2;
+}
+
+.time-text.all-day {
+    font-size: 13px;
+    color: #ff6b35;
+}
+
+.time-dash {
+    font-size: 12px;
+    color: #8e8e93;
+    font-weight: 400;
+}
+
+.ooo-badge {
+    background: #ff6b35;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 8px;
+    margin-top: 4px;
+}
+
+.time-off-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    color: #ff6b35;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.location-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #8e8e93;
+    font-size: 14px;
+}
+
+.location-info i {
+    width: 14px;
+    height: 14px;
+}
+
+.description-text {
+    color: #1c1c1e;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.3;
+}
+
+[data-bs-theme="dark"] .description-text {
+    color: #ffffff;
+}
+
+.placeholder-text {
+    color: #8e8e93;
+    font-size: 15px;
+    font-style: italic;
+}
+
+.card-arrow {
+    color: #c7c7cc;
+    opacity: 0.6;
+}
+
+[data-bs-theme="dark"] .card-arrow {
+    color: #636366;
+}
+
+/* Empty Day */
+.empty-day {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    border: 2px dashed #e5e5ea;
+}
+
+[data-bs-theme="dark"] .empty-day {
+    background: #2c2c2e;
+    border-color: #48484a;
+}
+
+.empty-icon {
+    color: #c7c7cc;
+    opacity: 0.6;
+    width: 24px;
+    height: 24px;
+}
+
+.empty-text {
+    color: #8e8e93;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 375px) {
+    .schedule-header {
+        padding: 20px 16px 24px 16px;
+    }
+    
+    .week-title {
+        font-size: 18px;
+    }
+    
+    .day-name {
+        font-size: 20px;
+    }
+    
+    .schedule-card {
+        padding: 14px;
+        gap: 12px;
+    }
 }
 </style>
 
