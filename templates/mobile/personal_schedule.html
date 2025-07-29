@@ -186,7 +186,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form action="/schedule/update" method="POST">
-                {{ csrf_token() }}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" id="editScheduleId" name="schedule_id">
                 <div class="modal-header">
                     <h5 class="modal-title">Edit Schedule</h5>
