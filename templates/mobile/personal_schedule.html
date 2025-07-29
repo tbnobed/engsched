@@ -280,9 +280,11 @@ html[data-bs-theme="dark"] .mobile-content {
     color: #ffffff !important;
 }
 
-/* Override any white backgrounds in dark mode */
-html[data-bs-theme="dark"] * {
-    background-color: inherit !important;
+/* Override specific white backgrounds in dark mode */
+html[data-bs-theme="dark"] .mobile-content,
+html[data-bs-theme="dark"] .schedule-list,
+html[data-bs-theme="dark"] .day-group {
+    background-color: transparent !important;
 }
 
 html[data-bs-theme="dark"] .modern-schedule-container {
