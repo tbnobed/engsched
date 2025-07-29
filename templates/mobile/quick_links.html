@@ -242,13 +242,43 @@
 }
 
 /* Dark mode adjustments */
-[data-bs-theme="dark"] .quick-link-card {
-    background: #2d2d2d;
-    border-color: #3a3a3a;
+html[data-bs-theme="dark"] {
+    background-color: #1c1c1e !important;
 }
 
-[data-bs-theme="dark"] .quick-link-card:hover {
-    box-shadow: 0 4px 12px rgba(255,255,255,0.1);
+html[data-bs-theme="dark"] .mobile-quick-links {
+    background-color: #1c1c1e !important;
+    color: #ffffff !important;
+}
+
+html[data-bs-theme="dark"] .page-title {
+    color: #ffffff !important;
+}
+
+html[data-bs-theme="dark"] .quick-link-card {
+    background: #2d2d2d !important;
+    border-color: #3a3a3a !important;
+    color: #ffffff !important;
+}
+
+html[data-bs-theme="dark"] .quick-link-card:hover {
+    box-shadow: 0 4px 12px rgba(255,255,255,0.1) !important;
+}
+
+html[data-bs-theme="dark"] .link-title {
+    color: #ffffff !important;
+}
+
+html[data-bs-theme="dark"] .link-description {
+    color: #a0a0a0 !important;
+}
+
+html[data-bs-theme="dark"] .no-links {
+    color: #a0a0a0 !important;
+}
+
+html[data-bs-theme="dark"] .no-links p {
+    color: #a0a0a0 !important;
 }
 
 /* Responsive adjustments */
