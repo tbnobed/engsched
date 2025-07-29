@@ -344,6 +344,16 @@ body.dark-theme .calendar-header {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Ensure all header text is white */
+.calendar-header .current-date,
+.calendar-header .current-date-sub,
+html[data-bs-theme="light"] .calendar-header .current-date,
+html[data-bs-theme="light"] .calendar-header .current-date-sub,
+body.light-theme .calendar-header .current-date,
+body.light-theme .calendar-header .current-date-sub {
+    color: white !important;
+}
+
 .current-date-sub {
     font-size: 1rem;
     opacity: 0.9;
