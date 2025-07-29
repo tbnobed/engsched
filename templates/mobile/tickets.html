@@ -68,7 +68,7 @@
                         <i data-feather="more-vertical" style="width: 16px; height: 16px;"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{{ url_for('tickets.mobile_view_ticket', ticket_id=ticket.id) }}">
+                        <li><a class="dropdown-item" href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}">
                             <i data-feather="eye" style="width: 16px; height: 16px;"></i> View
                         </a></li>
                         <li><a class="dropdown-item" href="{{ url_for('tickets.edit_ticket', ticket_id=ticket.id) }}?mobile=1">
@@ -139,7 +139,7 @@ function quickUpdateStatus(ticketId, newStatus) {
         formData.append('csrf_token', '{{ csrf_token() }}');
         formData.append('status', newStatus);
         
-        fetch(`/tickets/${ticketId}/mobile_update_status`, {
+        fetch(`/tickets/${ticketId}/mobile_status`, {
             method: 'POST',
             body: formData
         })
