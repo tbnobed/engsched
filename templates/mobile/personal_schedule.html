@@ -661,7 +661,7 @@
 <script>
 function changeWeek(direction) {
     const currentUrl = new URL(window.location);
-    const weekStart = currentUrl.searchParams.get('week_start') || '{{ week_start.strftime('%Y-%m-%d') }}';
+    const weekStart = currentUrl.searchParams.get('week_start') || '{{ week_start.strftime("%Y-%m-%d") }}';
     
     const date = new Date(weekStart);
     date.setDate(date.getDate() + (direction * 7));
@@ -670,7 +670,7 @@ function changeWeek(direction) {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     
-    window.location.href = `/mobile/personal_schedule?week_start=${year}-${month}-${day}`;
+    window.location.href = '/mobile/personal_schedule?week_start=' + year + '-' + month + '-' + day;
 }
 
 function addScheduleForDay(dateStr) {
@@ -680,7 +680,7 @@ function addScheduleForDay(dateStr) {
 
 function editSchedule(scheduleId) {
     // Find the schedule in the page data and populate the edit modal
-    fetch(`/api/schedule/${scheduleId}`)
+    fetch('/api/schedule/' + scheduleId)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -710,7 +710,7 @@ function populateEditModal(schedule) {
 function deleteSchedule() {
     const scheduleId = document.getElementById('editScheduleId').value;
     if (confirm('Are you sure you want to delete this schedule entry?')) {
-        fetch(`/schedule/delete/${scheduleId}`, {
+        fetch('/schedule/delete/' + scheduleId, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
@@ -737,9 +737,9 @@ function generateTimeOptions() {
         for (let minute = 0; minute < 60; minute += 30) {
             const hourStr = hour.toString().padStart(2, '0');
             const minuteStr = minute.toString().padStart(2, '0');
-            const timeValue = `${hourStr}:${minuteStr}`;
+            const timeValue = hourStr + ':' + minuteStr;
             const displayTime = formatTime24to12(timeValue);
-            options.push(`<option value="${timeValue}">${displayTime}</option>`);
+            options.push('<option value="' + timeValue + '">' + displayTime + '</option>');
         }
     }
     return options.join('');
@@ -751,7 +751,7 @@ function formatTime24to12(time24) {
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${displayHour}:${minutes} ${ampm}`;
+    return displayHour + ':' + minutes + ' ' + ampm;
 }
 
 // Populate time dropdowns on page load
@@ -778,7 +778,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const [hours, minutes] = startTime.split(':');
             const endHours = String(parseInt(hours) + 1).padStart(2, '0');
             const endMinutes = minutes;
-            const endTime = `${endHours}:${endMinutes}`;
+            const endTime = endHours + ':' + endMinutes;
             document.getElementById('endTime').value = endTime;
         }
     });
