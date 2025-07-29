@@ -122,7 +122,7 @@
                 <h5 class="modal-title">Add Schedule Entry</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="addScheduleForm" method="POST" action="{{ url_for('new_schedule') }}">
+            <form id="addScheduleForm" method="POST" action="{{ url_for('mobile_personal_schedule') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-body">
                     <input type="hidden" name="schedule_date" id="modalScheduleDate">
