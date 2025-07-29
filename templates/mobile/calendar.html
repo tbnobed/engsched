@@ -1,9 +1,26 @@
 {% extends "mobile_base_enhanced.html" %}
 
+{% block head %}
+<style>
+    body, html, .mobile-calendar {
+        background-color: #e9ecef !important;
+        background: #e9ecef !important;
+    }
+    
+    /* Override Bootstrap and other CSS */
+    body.light-theme,
+    html[data-bs-theme="light"],
+    .container-fluid {
+        background-color: #e9ecef !important;
+        background: #e9ecef !important;
+    }
+</style>
+{% endblock %}
+
 {% block title %}Schedule - Mobile{% endblock %}
 
 {% block content %}
-<div class="modern-mobile-calendar">
+<div class="modern-mobile-calendar" style="background-color: #e9ecef !important; background: #e9ecef !important; min-height: 100vh;">
     <!-- Header Section -->
     <div class="calendar-header">
         <div class="date-navigation">
