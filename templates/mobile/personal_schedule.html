@@ -392,10 +392,11 @@
     border: 1px solid rgba(0,0,0,0.05);
 }
 
-[data-bs-theme="dark"] .day-group {
-    background: #1c1c1e;
-    border-color: #3a3a3c;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+/* Dark mode styling (when body doesn't have light-theme class) */
+body:not(.light-theme) .day-group {
+    background: #1c1c1e !important;
+    border-color: #3a3a3c !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
 }
 
 .day-header-modern {
@@ -420,8 +421,8 @@
     letter-spacing: -0.5px;
 }
 
-[data-bs-theme="dark"] .day-name {
-    color: #ffffff;
+body:not(.light-theme) .day-name {
+    color: #ffffff !important;
 }
 
 .day-date {
@@ -430,8 +431,8 @@
     font-weight: 500;
 }
 
-[data-bs-theme="dark"] .day-date {
-    color: #98989d;
+body:not(.light-theme) .day-date {
+    color: #98989d !important;
 }
 
 .add-btn {
