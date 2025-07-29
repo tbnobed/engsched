@@ -31,6 +31,11 @@ Recent Updates (July 29, 2025):
 - Added comprehensive all-day time-off timezone handling to mobile personal schedule matching desktop functionality
 - Personal schedule times now display correctly in user's selected timezone across all views (desktop and mobile)
 - Improved robustness with null timezone checks and proper UTC localization before timezone conversion
+- ✅ COMPLETED: Schedule Edit Form Timezone Fix - API Returns Times in User's Timezone
+- Fixed schedule editing API endpoint (/api/schedule/<id>) to properly convert UTC times to user's selected timezone
+- Enhanced timezone handling with proper null checks before conversion to prevent timezone errors
+- Edit forms now populate with times in user's timezone instead of UTC for accurate schedule editing
+- Added debug logging to verify timezone conversion is working correctly for troubleshooting
 - ✅ COMPLETED: Mobile Navigation System Cleanup - Unified Mobile Dashboard Architecture  
 - Removed old conflicting mobile templates (mobile_calendar.html, mobile_calendar_simplified.html, etc.)
 - Fixed calendar and personal schedule routes to redirect mobile users to /mobile/dashboard instead of old templates

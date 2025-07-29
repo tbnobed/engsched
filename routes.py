@@ -4422,9 +4422,21 @@ def get_schedule_api(schedule_id):
     # Get user timezone for proper display
     user_tz = current_user.get_timezone_obj()
     
-    # Convert times to user timezone
-    local_start = schedule.start_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
-    local_end = schedule.end_time.replace(tzinfo=pytz.UTC).astimezone(user_tz)
+    # Convert times to user timezone with proper timezone checking
+    if schedule.start_time.tzinfo is None:
+        local_start = pytz.UTC.localize(schedule.start_time).astimezone(user_tz)
+        local_end = pytz.UTC.localize(schedule.end_time).astimezone(user_tz)
+    else:
+        local_start = schedule.start_time.astimezone(user_tz)
+        local_end = schedule.end_time.astimezone(user_tz)
+    
+    # Debug logging to verify timezone conversion
+    app.logger.debug(f"Schedule {schedule_id} timezone conversion:")
+    app.logger.debug(f"  Original UTC start: {schedule.start_time}")
+    app.logger.debug(f"  Original UTC end: {schedule.end_time}")
+    app.logger.debug(f"  User timezone: {user_tz}")
+    app.logger.debug(f"  Converted local start: {local_start}")
+    app.logger.debug(f"  Converted local end: {local_end}")
     
     return jsonify({
         'success': True,
