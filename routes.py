@@ -1068,7 +1068,11 @@ def new_schedule():
         except Exception as e:
             app.logger.error(f"Error parsing mobile form data: {str(e)}")
             flash('Invalid date or time format. Please try again.')
-            return redirect(url_for('calendar', week_start=week_start))
+            # Check if user is on mobile device and redirect to appropriate mobile route
+            if is_mobile_device():
+                return redirect(url_for('mobile_calendar', week_start=week_start))
+            else:
+                return redirect(url_for('calendar', week_start=week_start))
 
     if form.validate_on_submit() or is_mobile_submission:
         try:
@@ -1092,7 +1096,11 @@ def new_schedule():
 
             if end_time_utc <= start_time_utc:
                 flash('End time must be after start time.')
-                return redirect(url_for('calendar', week_start=week_start))
+                # Check if user is on mobile device and redirect to appropriate mobile route
+                if is_mobile_device():
+                    return redirect(url_for('mobile_calendar', week_start=week_start))
+                else:
+                    return redirect(url_for('calendar', week_start=week_start))
 
             overlapping_query = Schedule.query.filter(
                 Schedule.technician_id == technician_id,
@@ -1105,10 +1113,17 @@ def new_schedule():
 
             if overlapping_schedules and not form.time_off.data:
                 flash('Schedule conflicts with existing appointments.')
-                if personal_view:
-                    return redirect(url_for('personal_schedule', week_start=week_start))
+                # Check if user is on mobile device and redirect to appropriate mobile route
+                if is_mobile_device():
+                    if personal_view:
+                        return redirect(url_for('mobile_personal_schedule', week_start=week_start))
+                    else:
+                        return redirect(url_for('mobile_calendar', week_start=week_start))
                 else:
-                    return redirect(url_for('calendar', week_start=week_start))
+                    if personal_view:
+                        return redirect(url_for('personal_schedule', week_start=week_start))
+                    else:
+                        return redirect(url_for('calendar', week_start=week_start))
 
             # Check if we have repeat days selected from any of the possible sources
             repeat_days = None
@@ -1147,10 +1162,17 @@ def new_schedule():
                 schedule = Schedule.query.get_or_404(schedule_id)
                 if schedule.technician_id != current_user.id and not current_user.is_admin:
                     flash('You do not have permission to edit this schedule.')
-                    if personal_view:
-                        return redirect(url_for('personal_schedule', week_start=week_start))
+                    # Check if user is on mobile device and redirect to appropriate mobile route
+                    if is_mobile_device():
+                        if personal_view:
+                            return redirect(url_for('mobile_personal_schedule', week_start=week_start))
+                        else:
+                            return redirect(url_for('mobile_calendar', week_start=week_start))
                     else:
-                        return redirect(url_for('calendar', week_start=week_start))
+                        if personal_view:
+                            return redirect(url_for('personal_schedule', week_start=week_start))
+                        else:
+                            return redirect(url_for('calendar', week_start=week_start))
 
                 old_desc = schedule.description
                 
@@ -1438,10 +1460,18 @@ def new_schedule():
                     send_schedule_notification(primary_schedule, 'created', f"Schedule created by {current_user.username}")
                     db.session.commit()
                     flash('Schedule created successfully!')
-            if personal_view:
-                return redirect(url_for('personal_schedule', week_start=week_start))
+            
+            # Check if user is on mobile device and redirect to appropriate mobile route
+            if is_mobile_device():
+                if personal_view:
+                    return redirect(url_for('mobile_personal_schedule', week_start=week_start))
+                else:
+                    return redirect(url_for('mobile_calendar', week_start=week_start))
             else:
-                return redirect(url_for('calendar', week_start=week_start))
+                if personal_view:
+                    return redirect(url_for('personal_schedule', week_start=week_start))
+                else:
+                    return redirect(url_for('calendar', week_start=week_start))
 
         except Exception as e:
             db.session.rollback()
@@ -1452,15 +1482,30 @@ def new_schedule():
             app.logger.error(f"Traceback: {traceback.format_exc()}")
             # Log the request form data for debugging
             app.logger.error(f"Form data: {request.form}")
-            if personal_view:
-                return redirect(url_for('personal_schedule', week_start=week_start))
+            
+            # Check if user is on mobile device and redirect to appropriate mobile route
+            if is_mobile_device():
+                if personal_view:
+                    return redirect(url_for('mobile_personal_schedule', week_start=week_start))
+                else:
+                    return redirect(url_for('mobile_calendar', week_start=week_start))
             else:
-                return redirect(url_for('calendar', week_start=week_start))
+                if personal_view:
+                    return redirect(url_for('personal_schedule', week_start=week_start))
+                else:
+                    return redirect(url_for('calendar', week_start=week_start))
 
-    if personal_view:
-        return redirect(url_for('personal_schedule', week_start=week_start))
+    # Check if user is on mobile device and redirect to appropriate mobile route
+    if is_mobile_device():
+        if personal_view:
+            return redirect(url_for('mobile_personal_schedule', week_start=week_start))
+        else:
+            return redirect(url_for('mobile_calendar', week_start=week_start))
     else:
-        return redirect(url_for('calendar', week_start=week_start))
+        if personal_view:
+            return redirect(url_for('personal_schedule', week_start=week_start))
+        else:
+            return redirect(url_for('calendar', week_start=week_start))
 
 @app.route('/schedule/delete/<int:schedule_id>')
 @login_required
@@ -1486,19 +1531,33 @@ def delete_schedule(schedule_id):
     if not schedule:
         app.logger.warning(f"Schedule with ID {schedule_id} not found")
         flash('Schedule not found or already deleted.')
-        if personal_view:
-            return redirect(url_for('personal_schedule', week_start=week_start))
+        # Check if user is on mobile device and redirect to appropriate mobile route
+        if is_mobile_device():
+            if personal_view:
+                return redirect(url_for('mobile_personal_schedule', week_start=week_start))
+            else:
+                return redirect(url_for('mobile_calendar', week_start=week_start))
         else:
-            return redirect(url_for('calendar', week_start=week_start))
+            if personal_view:
+                return redirect(url_for('personal_schedule', week_start=week_start))
+            else:
+                return redirect(url_for('calendar', week_start=week_start))
     
     app.logger.debug(f"Schedule found: {schedule.id}, technician_id: {schedule.technician_id}")
 
     if schedule.technician_id != current_user.id and not current_user.is_admin:
         flash('You do not have permission to delete this schedule.')
-        if personal_view:
-            return redirect(url_for('personal_schedule', week_start=week_start))
+        # Check if user is on mobile device and redirect to appropriate mobile route
+        if is_mobile_device():
+            if personal_view:
+                return redirect(url_for('mobile_personal_schedule', week_start=week_start))
+            else:
+                return redirect(url_for('mobile_calendar', week_start=week_start))
         else:
-            return redirect(url_for('calendar', week_start=week_start))
+            if personal_view:
+                return redirect(url_for('personal_schedule', week_start=week_start))
+            else:
+                return redirect(url_for('calendar', week_start=week_start))
 
     try:
         send_schedule_notification(schedule, 'deleted', f"Schedule deleted by {current_user.username}")
@@ -1511,10 +1570,17 @@ def delete_schedule(schedule_id):
         app.logger.error(f"Error deleting schedule: {str(e)}")
 
     # Redirect back to the same week view
-    if personal_view:
-        return redirect(url_for('personal_schedule', week_start=week_start))
+    # Check if user is on mobile device and redirect to appropriate mobile route
+    if is_mobile_device():
+        if personal_view:
+            return redirect(url_for('mobile_personal_schedule', week_start=week_start))
+        else:
+            return redirect(url_for('mobile_calendar', week_start=week_start))
     else:
-        return redirect(url_for('calendar', week_start=week_start))
+        if personal_view:
+            return redirect(url_for('personal_schedule', week_start=week_start))
+        else:
+            return redirect(url_for('calendar', week_start=week_start))
 
 @app.route('/schedule/copy_previous_week', methods=['POST'])
 @login_required

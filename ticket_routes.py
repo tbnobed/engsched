@@ -8,6 +8,21 @@ from sqlalchemy import text, or_
 from app import app, is_mobile_device  # Import app for logging and mobile detection
 from email_utils import send_ticket_assigned_notification, send_ticket_comment_notification, send_ticket_status_notification
 
+def mobile_aware_redirect(endpoint, **kwargs):
+    """Helper function to redirect based on mobile device detection"""
+    if is_mobile_device():
+        # For mobile devices, redirect to mobile-specific routes or views
+        if endpoint == 'tickets.view_ticket':
+            return redirect(url_for('tickets.view_ticket', **kwargs))  # view_ticket already handles mobile
+        elif endpoint == 'tickets.tickets_dashboard':
+            return redirect(url_for('mobile_tickets'))  # mobile tickets dashboard
+        else:
+            # For other endpoints, use the original endpoint but could be extended
+            return redirect(url_for(endpoint, **kwargs))
+    else:
+        # For desktop, use original endpoints
+        return redirect(url_for(endpoint, **kwargs))
+
 # Update Blueprint to use the correct template directory
 tickets = Blueprint('tickets', __name__)
 
@@ -546,7 +561,7 @@ def create_ticket():
                     app.logger.error(f"Exception traceback: {traceback.format_exc()}")
             
             flash('Ticket created successfully', 'success')
-            return redirect(url_for('tickets.view_ticket', ticket_id=ticket.id))
+            return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket.id)
 
         except ValueError as ve:
             db.session.rollback()
@@ -777,7 +792,7 @@ def add_comment(ticket_id):
             app.logger.error(f"Comment exception traceback: {traceback.format_exc()}")
             flash('Error adding comment', 'error')
     
-    return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+    return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
 
 @tickets.route('/tickets/<int:ticket_id>/status', methods=['POST'])
 @login_required
@@ -799,7 +814,7 @@ def update_status(ticket_id):
     
     if new_status not in vars(TicketStatus).values():
         flash('Invalid ticket status', 'error')
-        return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+        return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
     
     # Store old status for history and flag for tracking success
     old_status = ticket.status
@@ -845,7 +860,7 @@ def update_status(ticket_id):
         import traceback
         app.logger.error(f"Exception traceback: {traceback.format_exc()}")
         flash('Error updating ticket status', 'error')
-        return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+        return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
     
     # If we get here, the ticket status was updated successfully
     # Now handle non-critical operations
@@ -906,7 +921,7 @@ def update_status(ticket_id):
     app.logger.debug(f"Successfully updated ticket #{ticket_id} status to '{new_status}'")
     flash('Ticket status updated successfully', 'success')
         
-    return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+    return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
 
 @tickets.route('/tickets/<int:ticket_id>/mobile_status', methods=['POST'])
 @login_required
@@ -925,7 +940,7 @@ def mobile_update_status(ticket_id):
     # Validate new status
     if new_status not in vars(TicketStatus).values():
         flash('Invalid ticket status', 'error')
-        return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+        return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
     
     # Store old status for history
     old_status = ticket.status
@@ -972,7 +987,7 @@ def mobile_update_status(ticket_id):
         import traceback
         app.logger.error(f"Exception traceback: {traceback.format_exc()}")
         flash('Error updating ticket status', 'error')
-        return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+        return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
     
     # If we get here, the status was updated successfully
     # Now handle non-critical operations separately
@@ -1037,7 +1052,7 @@ def mobile_update_status(ticket_id):
     flash('Ticket status updated successfully', 'success')
     app.logger.info(f"Mobile status update successful for ticket #{ticket_id}")
     
-    return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+    return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
 
 @tickets.route('/tickets/<int:ticket_id>/assign', methods=['POST'])
 @login_required
@@ -1163,7 +1178,7 @@ def assign_ticket(ticket_id):
             pass
     
     flash('Ticket assigned successfully', 'success')
-    return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+    return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
 
 @tickets.route('/tickets/<int:ticket_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -1267,10 +1282,10 @@ def edit_ticket(ticket_id):
         else:
             flash('No changes made to ticket', 'info')
 
-        return redirect(url_for('tickets.view_ticket', ticket_id=ticket.id))
+        return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket.id)
 
     # GET requests should go to view ticket page
-    return redirect(url_for('tickets.view_ticket', ticket_id=ticket.id))
+    return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket.id)
 
 
 @tickets.route('/tickets/<int:ticket_id>/delete')
@@ -1279,7 +1294,7 @@ def delete_ticket(ticket_id):
     """Delete a ticket (admin only)"""
     if not current_user.is_admin:
         flash('You do not have permission to delete tickets', 'error')
-        return redirect(url_for('tickets.tickets_dashboard'))
+        return mobile_aware_redirect('tickets.tickets_dashboard')
         
     ticket = Ticket.query.get_or_404(ticket_id)
     
@@ -1299,7 +1314,7 @@ def delete_ticket(ticket_id):
         app.logger.error(f"Error deleting ticket #{ticket_id}: {str(e)}")
         flash('Error deleting ticket', 'error')
         
-    return redirect(url_for('tickets.tickets_dashboard'))
+    return mobile_aware_redirect('tickets.tickets_dashboard')
     
 @tickets.route('/tickets/comment/<int:comment_id>/delete')
 @login_required
@@ -1311,7 +1326,7 @@ def delete_comment(comment_id):
     # Check if user has permission to delete this comment
     if not (current_user.is_admin or comment.user_id == current_user.id):
         flash('You do not have permission to delete this comment', 'error')
-        return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+        return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
         
     try:
         # Get the ticket for the history entry
@@ -1346,7 +1361,7 @@ def delete_comment(comment_id):
         app.logger.error(f"Error deleting comment #{comment_id}: {str(e)}")
         flash('Error deleting comment', 'error')
         
-    return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+    return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
 
 # Admin routes for managing ticket categories
 @tickets.route('/tickets/categories', methods=['GET', 'POST'])
@@ -1355,7 +1370,7 @@ def manage_categories():
     """Manage ticket categories (admin only)"""
     if not current_user.is_admin:
         flash('Access denied. Admin privileges required.', 'error')
-        return redirect(url_for('tickets.tickets_dashboard'))
+        return mobile_aware_redirect('tickets.tickets_dashboard')
 
     form = TicketCategoryForm()
     if form.validate_on_submit():
@@ -1382,7 +1397,7 @@ def edit_category(category_id):
     """Edit an existing ticket category"""
     if not current_user.is_admin:
         flash('Access denied. Admin privileges required.', 'error')
-        return redirect(url_for('tickets.tickets_dashboard'))
+        return mobile_aware_redirect('tickets.tickets_dashboard')
         
     category = TicketCategory.query.get_or_404(category_id)
     
@@ -1407,7 +1422,7 @@ def delete_category(category_id):
     """Delete a ticket category"""
     if not current_user.is_admin:
         flash('Access denied. Admin privileges required.', 'error')
-        return redirect(url_for('tickets.tickets_dashboard'))
+        return mobile_aware_redirect('tickets.tickets_dashboard')
         
     category = TicketCategory.query.get_or_404(category_id)
     
@@ -1459,7 +1474,7 @@ def archive_ticket(ticket_id):
         flash('Error archiving ticket', 'error')
     
     # Redirect back to the tickets dashboard
-    return redirect(url_for('tickets.tickets_dashboard'))
+    return mobile_aware_redirect('tickets.tickets_dashboard')
 
 
 @tickets.route('/tickets/<int:ticket_id>/unarchive')
@@ -1493,7 +1508,7 @@ def unarchive_ticket(ticket_id):
         flash('Error unarchiving ticket', 'error')
     
     # Redirect back to the tickets dashboard
-    return redirect(url_for('tickets.view_ticket', ticket_id=ticket_id))
+    return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
 
 
 @tickets.route('/tickets/archived')
@@ -1544,7 +1559,7 @@ def batch_archive_tickets():
     """Batch archive tickets based on criteria"""
     if not current_user.is_admin:
         flash('Only administrators can perform batch archive operations', 'error')
-        return redirect(url_for('tickets.tickets_dashboard'))
+        return mobile_aware_redirect('tickets.tickets_dashboard')
     
     # Get filter criteria from form
     status = request.form.get('status', 'all')
@@ -1568,7 +1583,7 @@ def batch_archive_tickets():
             query = query.filter(Ticket.updated_at < date_before)
         except ValueError:
             flash('Invalid date format', 'error')
-            return redirect(url_for('tickets.tickets_dashboard'))
+            return mobile_aware_redirect('tickets.tickets_dashboard')
     
     # Execute the query to get the tickets to archive
     tickets_to_archive = query.all()
@@ -1576,7 +1591,7 @@ def batch_archive_tickets():
     
     if count == 0:
         flash('No tickets matched the criteria for archiving', 'info')
-        return redirect(url_for('tickets.tickets_dashboard'))
+        return mobile_aware_redirect('tickets.tickets_dashboard')
     
     try:
         # Archive each ticket and create history entries
@@ -1601,6 +1616,6 @@ def batch_archive_tickets():
         app.logger.error(f"Error in batch archiving tickets: {str(e)}")
         flash(f'Error archiving tickets: {str(e)}', 'error')
     
-    return redirect(url_for('tickets.tickets_dashboard'))
+    return mobile_aware_redirect('tickets.tickets_dashboard')
 
 
