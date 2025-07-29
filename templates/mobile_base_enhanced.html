@@ -22,39 +22,13 @@
     {% endif %}
     
     <style>
-        /* Mobile-first design with bottom navigation */
-        body, html {
+        body {
             padding-bottom: 80px; /* Space for bottom nav */
             overflow-x: hidden;
-            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
-            background-color: #e9ecef !important;
-            background: #e9ecef !important;
-            color: #212529 !important;
-            {% else %}
-            background-color: #1a1a1a !important;
-            background: #1a1a1a !important;
-            color: #ffffff !important;
-            {% endif %}
         }
         
-        /* Force background with JavaScript fallback */
-        body * {
-            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
-            background-color: inherit !important;
-            {% else %}
-            background-color: inherit !important;
-            {% endif %}
-        }
-        
-        /* Additional HTML override for maximum specificity */
-        html, body.light-theme, html[data-bs-theme="light"] {
-            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
-            background-color: #e9ecef !important;
-            background: #e9ecef !important;
-            {% else %}  
-            background-color: #1a1a1a !important;
-            background: #1a1a1a !important;
-            {% endif %}
+        html {
+            overflow-x: hidden;
         }
         
         /* Top header - minimal and clean */

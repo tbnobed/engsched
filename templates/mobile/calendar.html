@@ -1,26 +1,9 @@
 {% extends "mobile_base_enhanced.html" %}
 
-{% block head %}
-<style>
-    body, html, .mobile-calendar {
-        background-color: #e9ecef !important;
-        background: #e9ecef !important;
-    }
-    
-    /* Override Bootstrap and other CSS */
-    body.light-theme,
-    html[data-bs-theme="light"],
-    .container-fluid {
-        background-color: #e9ecef !important;
-        background: #e9ecef !important;
-    }
-</style>
-{% endblock %}
-
 {% block title %}Schedule - Mobile{% endblock %}
 
 {% block content %}
-<div class="modern-mobile-calendar" style="background-color: #e9ecef !important; background: #e9ecef !important; min-height: 100vh;">
+<div class="modern-mobile-calendar">
     <!-- Header Section -->
     <div class="calendar-header">
         <div class="date-navigation">
@@ -850,28 +833,6 @@ document.getElementById('allDay').addEventListener('change', function() {
 
 document.addEventListener('DOMContentLoaded', function() {
     feather.replace();
-    
-    // Force background color change with JavaScript
-    function forceBackgroundColor() {
-        document.body.style.setProperty('background-color', '#e9ecef', 'important');
-        document.body.style.setProperty('background', '#e9ecef', 'important');
-        document.documentElement.style.setProperty('background-color', '#e9ecef', 'important');
-        document.documentElement.style.setProperty('background', '#e9ecef', 'important');
-        
-        // Also target any containers
-        const containers = document.querySelectorAll('.container, .container-fluid, .modern-mobile-calendar');
-        containers.forEach(container => {
-            container.style.setProperty('background-color', '#e9ecef', 'important');
-            container.style.setProperty('background', '#e9ecef', 'important');
-        });
-        
-        console.log('Background color forced to #e9ecef');
-    }
-    
-    // Apply immediately and also after a delay
-    forceBackgroundColor();
-    setTimeout(forceBackgroundColor, 100);
-    setTimeout(forceBackgroundColor, 500);
 });
 </script>
 {% endblock %}
