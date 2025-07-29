@@ -923,21 +923,10 @@ def calendar():
     # Check for force mobile parameter for testing
     force_mobile = request.args.get('mobile') == 'true'
     
-    # Check if user is on a mobile device
+    # Check if user is on a mobile device and redirect to mobile dashboard
     if is_mobile_device() or force_mobile:
-        print("Using mobile template for calendar")
-        return render_template('mobile_calendar.html', 
-                            schedules=schedules,
-                            week_start=week_start,
-                            week_end=week_start + timedelta(days=7),
-                            form=form,
-                            locations=locations,
-                            selected_location=location_filter,
-                            today=datetime.now(viewing_tz),
-                            user_timezone=str(viewing_tz),
-                            viewing_tz_param=viewing_tz_param,
-                            datetime=datetime,
-                            timedelta=timedelta)
+        print("Mobile device detected in calendar - redirecting to mobile dashboard")
+        return redirect('/mobile/dashboard')
     else:
         return render_template('calendar.html', 
                             schedules=schedules,
@@ -1070,7 +1059,7 @@ def new_schedule():
             flash('Invalid date or time format. Please try again.')
             # Check if user is on mobile device and redirect to appropriate mobile route
             if is_mobile_device():
-                return redirect(url_for('mobile_calendar', week_start=week_start))
+                return redirect('/mobile/dashboard')
             else:
                 return redirect(url_for('calendar', week_start=week_start))
 
@@ -1098,7 +1087,7 @@ def new_schedule():
                 flash('End time must be after start time.')
                 # Check if user is on mobile device and redirect to appropriate mobile route
                 if is_mobile_device():
-                    return redirect(url_for('mobile_calendar', week_start=week_start))
+                    return redirect('/mobile/dashboard')
                 else:
                     return redirect(url_for('calendar', week_start=week_start))
 
@@ -1118,7 +1107,7 @@ def new_schedule():
                     if personal_view:
                         return redirect(url_for('mobile_personal_schedule', week_start=week_start))
                     else:
-                        return redirect(url_for('mobile_calendar', week_start=week_start))
+                        return redirect('/mobile/dashboard')
                 else:
                     if personal_view:
                         return redirect(url_for('personal_schedule', week_start=week_start))
@@ -1167,7 +1156,7 @@ def new_schedule():
                         if personal_view:
                             return redirect(url_for('mobile_personal_schedule', week_start=week_start))
                         else:
-                            return redirect(url_for('mobile_calendar', week_start=week_start))
+                            return redirect('/mobile/dashboard')
                     else:
                         if personal_view:
                             return redirect(url_for('personal_schedule', week_start=week_start))
@@ -1466,7 +1455,7 @@ def new_schedule():
                 if personal_view:
                     return redirect(url_for('mobile_personal_schedule', week_start=week_start))
                 else:
-                    return redirect(url_for('mobile_calendar', week_start=week_start))
+                    return redirect('/mobile/dashboard')
             else:
                 if personal_view:
                     return redirect(url_for('personal_schedule', week_start=week_start))
@@ -1488,7 +1477,7 @@ def new_schedule():
                 if personal_view:
                     return redirect(url_for('mobile_personal_schedule', week_start=week_start))
                 else:
-                    return redirect(url_for('mobile_calendar', week_start=week_start))
+                    return redirect('/mobile/dashboard')
             else:
                 if personal_view:
                     return redirect(url_for('personal_schedule', week_start=week_start))
@@ -1500,7 +1489,7 @@ def new_schedule():
         if personal_view:
             return redirect(url_for('mobile_personal_schedule', week_start=week_start))
         else:
-            return redirect(url_for('mobile_calendar', week_start=week_start))
+            return redirect('/mobile/dashboard')
     else:
         if personal_view:
             return redirect(url_for('personal_schedule', week_start=week_start))
@@ -1536,7 +1525,7 @@ def delete_schedule(schedule_id):
             if personal_view:
                 return redirect(url_for('mobile_personal_schedule', week_start=week_start))
             else:
-                return redirect(url_for('mobile_calendar', week_start=week_start))
+                return redirect('/mobile/dashboard')
         else:
             if personal_view:
                 return redirect(url_for('personal_schedule', week_start=week_start))
@@ -1552,7 +1541,7 @@ def delete_schedule(schedule_id):
             if personal_view:
                 return redirect(url_for('mobile_personal_schedule', week_start=week_start))
             else:
-                return redirect(url_for('mobile_calendar', week_start=week_start))
+                return redirect('/mobile/dashboard')
         else:
             if personal_view:
                 return redirect(url_for('personal_schedule', week_start=week_start))
@@ -1575,7 +1564,7 @@ def delete_schedule(schedule_id):
         if personal_view:
             return redirect(url_for('mobile_personal_schedule', week_start=week_start))
         else:
-            return redirect(url_for('mobile_calendar', week_start=week_start))
+            return redirect('/mobile/dashboard')
     else:
         if personal_view:
             return redirect(url_for('personal_schedule', week_start=week_start))
@@ -2073,20 +2062,10 @@ def personal_schedule():
     is_mobile = is_mobile_device()  # Force evaluation
     print(f"is_mobile value in personal_schedule: {is_mobile}")
     
-    # Check if user is on a mobile device
+    # Check if user is on a mobile device and redirect to mobile dashboard
     if is_mobile_device():
-        print("Using mobile template for personal schedule")
-        return render_template('mobile_personal_schedule.html', 
-                            schedules=schedules,
-                            week_start=week_start,
-                            week_end=week_start + timedelta(days=7),
-                            form=form,
-                            locations=locations,  # Add locations to mobile template
-                            today=datetime.now(current_user.get_timezone_obj()),
-                            user_timezone=str(current_user.get_timezone_obj()),
-                            datetime=datetime,
-                            timedelta=timedelta,
-                            personal_view=True)
+        print("Mobile device detected in personal schedule - redirecting to mobile dashboard")
+        return redirect('/mobile/dashboard')
     else:
         return render_template('personal_schedule.html', 
                             schedules=schedules,
