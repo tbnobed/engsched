@@ -86,7 +86,7 @@
                 <!-- Description -->
                 {% if schedule.description %}
                 <div class="mb-2">
-                    <div style="font-size: 1rem; {% if current_user.theme_preference == 'light' %}color: #495057;{% else %}color: #ced4da;{% endif %}">
+                    <div style="font-size: 1rem; {% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
                         {{ schedule.description }}
                     </div>
                 </div>
@@ -104,8 +104,8 @@
                 {% endif %}
             </div>
             {% else %}
-            <div class="text-center py-5" style="{% if current_user.theme_preference == 'light' %}color: #6c757d;{% else %}color: #adb5bd;{% endif %}">
-                <i data-feather="calendar" style="width: 48px; height: 48px; opacity: 0.5;"></i>
+            <div class="text-center py-5" style="{% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
+                <i data-feather="calendar" style="width: 48px; height: 48px;"></i>
                 <p class="mt-3 mb-0" style="font-size: 1.1rem;">No schedules for this date</p>
             </div>
             {% endfor %}
