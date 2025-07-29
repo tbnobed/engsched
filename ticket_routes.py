@@ -1062,6 +1062,10 @@ def mobile_update_status(ticket_id):
     flash('Ticket status updated successfully', 'success')
     app.logger.info(f"Mobile status update successful for ticket #{ticket_id}")
     
+    # Check if this is an AJAX request expecting JSON response
+    if request.headers.get('Content-Type') == 'application/json' or request.is_json or 'application/json' in request.headers.get('Accept', ''):
+        return jsonify({'success': True, 'message': 'Ticket status updated successfully'})
+    
     return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
 
 @tickets.route('/tickets/<int:ticket_id>/assign', methods=['POST'])
