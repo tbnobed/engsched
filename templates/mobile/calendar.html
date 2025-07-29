@@ -3,110 +3,109 @@
 {% block title %}Schedule - Mobile{% endblock %}
 
 {% block content %}
-<div class="mobile-calendar-container">
-    <!-- Date Navigation -->
-    <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded" 
-         style="{% if current_user.theme_preference == 'light' %}background: #f8f9fa; border: 1px solid #dee2e6;{% else %}background: #2d2d2d; border: 1px solid #3a3a3a;{% endif %}">
-        <button class="btn btn-outline-primary" style="padding: 12px 16px;" onclick="changeDate(-1)">
-            <i data-feather="chevron-left" style="width: 20px; height: 20px;"></i>
-        </button>
-        <h4 class="mb-0 text-center" id="currentDate" style="font-size: 1.3rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #212529;{% else %}color: #ffffff;{% endif %}">
-            {{ current_date.strftime('%A, %B %d, %Y') }}
-        </h4>
-        <button class="btn btn-outline-primary" style="padding: 12px 16px;" onclick="changeDate(1)">
-            <i data-feather="chevron-right" style="width: 20px; height: 20px;"></i>
-        </button>
-    </div>
-
-    <!-- Add Schedule Button -->
-    <div class="mb-4">
-        <button class="btn btn-primary w-100" style="padding: 15px; font-size: 1.1rem; font-weight: 600;" onclick="showAddScheduleModal()">
-            <i data-feather="plus" style="width: 20px; height: 20px;"></i> Add Schedule Entry
-        </button>
-    </div>
-
-    <!-- Today's Schedules -->
-    <div class="schedules-container">
-        <h5 class="d-flex align-items-center mb-3" style="font-size: 1.25rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #212529;{% else %}color: #ffffff;{% endif %}">
-            <i data-feather="calendar" style="width: 22px; height: 22px; margin-right: 8px;"></i>
-            Today's Schedule
-        </h5>
+<div class="modern-mobile-calendar">
+    <!-- Header Section -->
+    <div class="calendar-header">
+        <div class="date-navigation">
+            <button class="nav-btn" onclick="changeDate(-1)">
+                <i data-feather="chevron-left"></i>
+            </button>
+            <div class="date-display">
+                <h2 class="current-date" id="currentDate">{{ current_date.strftime('%A') }}</h2>
+                <p class="current-date-sub">{{ current_date.strftime('%B %d, %Y') }}</p>
+            </div>
+            <button class="nav-btn" onclick="changeDate(1)">
+                <i data-feather="chevron-right"></i>
+            </button>
+        </div>
         
-        <div id="schedulesList" class="schedules-list">
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="add-schedule-btn" onclick="showAddScheduleModal()">
+                <i data-feather="plus"></i>
+                <span>Add Schedule</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Schedule Content -->
+    <div class="schedule-content">
+        <div class="section-header">
+            <div class="section-title">
+                <i data-feather="clock"></i>
+                <span>Today's Schedule</span>
+            </div>
+            <div class="schedule-count">{{ schedules|length }} event{{ 's' if schedules|length != 1 else '' }}</div>
+        </div>
+        
+        <div id="schedulesList" class="schedules-timeline">
             {% for schedule in schedules %}
-            <div class="schedule-card mb-3 p-4 rounded" 
-                 style="{% if current_user.theme_preference == 'light' %}background: #ffffff; border: 1px solid #dee2e6;{% else %}background: #2d2d2d; border: 1px solid #3a3a3a;{% endif %}"
-                 data-schedule-id="{{ schedule.id }}">
-                
-                <!-- Top Row: Time and Actions -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="schedule-time">
-                        <span style="font-size: 1.5rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
-                            {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
-                        </span>
-                    </div>
-                    <div class="schedule-actions">
-                        <button class="btn btn-outline-secondary me-2" style="padding: 8px 12px;" onclick="editSchedule({{ schedule.id }})">
-                            <i data-feather="edit-2" style="width: 18px; height: 18px;"></i>
-                        </button>
-                        <button class="btn btn-outline-danger" style="padding: 8px 12px;" onclick="deleteSchedule({{ schedule.id }})">
-                            <i data-feather="trash-2" style="width: 18px; height: 18px;"></i>
-                        </button>
-                    </div>
+            <div class="schedule-item" data-schedule-id="{{ schedule.id }}">
+                <div class="schedule-time-indicator">
+                    <div class="time-dot"></div>
+                    <div class="time-label">{{ schedule.start_time.strftime('%H:%M') }}</div>
                 </div>
                 
-                <!-- User Info -->
-                <div class="mb-2">
-                    <div class="d-flex align-items-center">
-                        {% if schedule.technician.profile_picture %}
-                        <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}" 
-                             alt="{{ schedule.technician.username }}" 
-                             class="rounded-circle me-3" 
-                             style="width: 40px; height: 40px; object-fit: cover;">
-                        {% else %}
-                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold me-3"
-                             style="width: 40px; height: 40px; background-color: {{ schedule.technician.color or '#6c757d' }}; font-size: 16px;">
-                            {{ schedule.technician.username[:2].upper() }}
+                <div class="schedule-card">
+                    <div class="card-header">
+                        <div class="time-range">
+                            {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
                         </div>
-                        {% endif %}
-                        
-                        <div>
-                            <div style="font-size: 1.2rem; font-weight: 600; {% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
-                                {{ schedule.technician.username }}
-                            </div>
-                            {% if schedule.location %}
-                            <div style="font-size: 1rem; {% if current_user.theme_preference == 'light' %}color: #333333;{% else %}color: #ffffff;{% endif %}">
-                                <i data-feather="map-pin" style="width: 14px; height: 14px;"></i> {{ schedule.location.name }}
+                        <div class="card-actions">
+                            <button class="action-btn edit-btn" onclick="editSchedule({{ schedule.id }})">
+                                <i data-feather="edit-2"></i>
+                            </button>
+                            <button class="action-btn delete-btn" onclick="deleteSchedule({{ schedule.id }})">
+                                <i data-feather="trash-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="user-info">
+                            {% if schedule.technician.profile_picture %}
+                            <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}" 
+                                 alt="{{ schedule.technician.username }}" 
+                                 class="user-avatar">
+                            {% else %}
+                            <div class="user-avatar user-initials" style="background-color: {{ schedule.technician.color or '#6c757d' }}">
+                                {{ schedule.technician.username[:2].upper() }}
                             </div>
                             {% endif %}
+                            
+                            <div class="user-details">
+                                <div class="user-name">{{ schedule.technician.username }}</div>
+                                {% if schedule.location %}
+                                <div class="location">
+                                    <i data-feather="map-pin"></i>
+                                    {{ schedule.location.name }}
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
+                        
+                        {% if schedule.description %}
+                        <div class="description">{{ schedule.description }}</div>
+                        {% endif %}
+                        
+                        {% if schedule.time_off %}
+                        <div class="status-badges">
+                            <span class="status-badge {% if schedule.all_day %}ooo-badge{% else %}timeoff-badge{% endif %}">
+                                <i data-feather="coffee"></i>
+                                {% if schedule.all_day %}Out of Office{% else %}Time Off{% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
-                
-                <!-- Description -->
-                {% if schedule.description %}
-                <div class="mb-2">
-                    <div style="font-size: 1rem; {% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
-                        {{ schedule.description }}
-                    </div>
-                </div>
-                {% endif %}
-                
-                <!-- Time Off Badge -->
-                {% if schedule.time_off %}
-                <div class="mt-2">
-                    <span class="badge" style="font-size: 0.9rem; padding: 6px 12px; {% if schedule.all_day %}background-color: #fd7e14;{% else %}background-color: #ffc107;{% endif %} color: #000;">
-                        <i data-feather="coffee" style="width: 14px; height: 14px;"></i>
-                        {% if schedule.all_day %}Out of Office{% else %}Time Off{% endif %}
-                        {% if schedule.all_day %}<span class="ms-1">All Day</span>{% endif %}
-                    </span>
-                </div>
-                {% endif %}
             </div>
             {% else %}
-            <div class="text-center py-5" style="{% if current_user.theme_preference == 'light' %}color: #000000;{% else %}color: #ffffff;{% endif %}">
-                <i data-feather="calendar" style="width: 48px; height: 48px;"></i>
-                <p class="mt-3 mb-0" style="font-size: 1.1rem;">No schedules for this date</p>
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i data-feather="calendar"></i>
+                </div>
+                <h3>No schedules today</h3>
+                <p>Tap the "Add Schedule" button to create your first entry</p>
             </div>
             {% endfor %}
         </div>
@@ -176,52 +175,415 @@
 </div>
 
 <style>
-.mobile-calendar-container {
-    padding: 1rem;
+/* Modern Mobile Calendar Styles */
+.modern-mobile-calendar {
+    min-height: 100vh;
+    background: var(--bs-body-bg);
+    padding: 0;
+}
+
+/* Header Styles */
+.calendar-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 1.5rem 1.5rem;
+    border-radius: 0 0 2rem 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .date-navigation {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: var(--bs-body-bg);
-    border-radius: 0.5rem;
-    border: 1px solid var(--bs-border-color);
+    margin-bottom: 1.5rem;
+}
+
+.nav-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.nav-btn:hover, .nav-btn:active {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+}
+
+.nav-btn i {
+    width: 24px;
+    height: 24px;
+}
+
+.date-display {
+    text-align: center;
+    flex: 1;
 }
 
 .current-date {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.current-date-sub {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0;
+    font-weight: 400;
+}
+
+.quick-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.add-schedule-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 2rem;
+    color: white;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
     font-weight: 600;
-    color: var(--bs-body-color);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.add-schedule-btn:hover, .add-schedule-btn:active {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Content Styles */
+.schedule-content {
+    padding: 0 1.5rem 2rem;
 }
 
 .section-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.3rem;
+    font-weight: 700;
     color: var(--bs-body-color);
 }
 
-.schedules-list {
+.section-title i {
+    width: 24px;
+    height: 24px;
+    color: #667eea;
+}
+
+.schedule-count {
+    background: #f0f3ff;
+    color: #4c63d2;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Timeline Styles */
+.schedules-timeline {
+    position: relative;
+}
+
+.schedule-item {
+    display: flex;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.schedule-time-indicator {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    align-items: center;
+    margin-right: 1rem;
+    min-width: 60px;
+}
+
+.time-dot {
+    width: 12px;
+    height: 12px;
+    background: #667eea;
+    border-radius: 50%;
+    border: 3px solid #f0f3ff;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.time-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #667eea;
+    text-align: center;
+    line-height: 1.2;
 }
 
 .schedule-card {
+    flex: 1;
     background: var(--bs-body-bg);
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     border: 1px solid var(--bs-border-color);
-    border-radius: 0.5rem;
-    padding: 1rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.schedule-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem 0.75rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.time-range {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--bs-body-color);
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    background: transparent;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.2s ease;
 }
 
-.schedule-card:active {
-    transform: scale(0.98);
+.edit-btn:hover {
+    background: #f0f9ff;
+    border-color: #0ea5e9;
+    color: #0ea5e9;
 }
+
+.delete-btn:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.action-btn i {
+    width: 16px;
+    height: 16px;
+}
+
+.card-content {
+    padding: 1.25rem 1.5rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #f0f3ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.user-details {
+    flex: 1;
+}
+
+.user-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--bs-body-color);
+    margin-bottom: 0.25rem;
+}
+
+.location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--bs-secondary);
+}
+
+.location i {
+    width: 14px;
+    height: 14px;
+}
+
+.description {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 1rem;
+    font-size: 0.95rem;
+    color: var(--bs-body-color);
+    margin-bottom: 1rem;
+    border-left: 4px solid #667eea;
+}
+
+.status-badges {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.timeoff-badge {
+    background: #fff7ed;
+    color: #ea580c;
+    border: 1px solid #fed7aa;
+}
+
+.ooo-badge {
+    background: #fef3c7;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+
+.status-badge i {
+    width: 14px;
+    height: 14px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--bs-secondary);
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: #f0f3ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #667eea;
+}
+
+.empty-icon i {
+    width: 40px;
+    height: 40px;
+}
+
+.empty-state h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--bs-body-color);
+}
+
+.empty-state p {
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Dark Mode Overrides */
+html[data-bs-theme="dark"] .calendar-header {
+    background: linear-gradient(135deg, #4c5fd7 0%, #6b46c1 100%);
+}
+
+html[data-bs-theme="dark"] .schedule-count {
+    background: rgba(102, 126, 234, 0.2);
+    color: #a5b4fc;
+}
+
+html[data-bs-theme="dark"] .description {
+    background: #1f2937;
+    border-left-color: #6366f1;
+}
+
+html[data-bs-theme="dark"] .timeoff-badge {
+    background: rgba(234, 88, 12, 0.15);
+    border-color: rgba(234, 88, 12, 0.3);
+}
+
+html[data-bs-theme="dark"] .ooo-badge {
+    background: rgba(217, 119, 6, 0.15);
+    border-color: rgba(217, 119, 6, 0.3);
+}
+
+html[data-bs-theme="dark"] .empty-icon {
+    background: rgba(102, 126, 234, 0.15);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 375px) {
+    .calendar-header {
+        padding: 1.5rem 1rem 1rem;
+        border-radius: 0 0 1.5rem 1.5rem;
+    }
+    
+    .current-date {
+        font-size: 1.75rem;
+    }
+    
+    .schedule-content {
+        padding: 0 1rem 2rem;
+    }
+}</style>
 
 .schedule-header {
     display: flex;
