@@ -266,12 +266,26 @@
 }
 
 /* Force dark mode for entire page when dark theme is active */
-[data-bs-theme="dark"] body {
+html[data-bs-theme="dark"] {
+    background-color: #1c1c1e !important;
+}
+
+html[data-bs-theme="dark"] body {
     background-color: #1c1c1e !important;
     color: #ffffff !important;
 }
 
-[data-bs-theme="dark"] html {
+html[data-bs-theme="dark"] .mobile-content {
+    background-color: #1c1c1e !important;
+    color: #ffffff !important;
+}
+
+/* Override any white backgrounds in dark mode */
+html[data-bs-theme="dark"] * {
+    background-color: inherit !important;
+}
+
+html[data-bs-theme="dark"] .modern-schedule-container {
     background-color: #1c1c1e !important;
 }
 
