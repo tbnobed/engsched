@@ -4166,7 +4166,8 @@ def mobile_personal_schedule():
             # Validation
             if end_time_utc <= start_time_utc:
                 flash('End time must be after start time.')
-                return redirect(url_for('mobile_personal_schedule'))
+                week_start_for_redirect = date_obj - timedelta(days=date_obj.weekday())
+                return redirect(url_for('mobile_personal_schedule', week_start=week_start_for_redirect.strftime('%Y-%m-%d')))
             
             # Check for overlapping schedules
             overlapping = Schedule.query.filter(
@@ -4177,7 +4178,8 @@ def mobile_personal_schedule():
             
             if overlapping and not time_off:
                 flash('Schedule conflicts with existing appointments.')
-                return redirect(url_for('mobile_personal_schedule'))
+                week_start_for_redirect = date_obj - timedelta(days=date_obj.weekday())
+                return redirect(url_for('mobile_personal_schedule', week_start=week_start_for_redirect.strftime('%Y-%m-%d')))
             
             # Create new schedule
             new_schedule = Schedule(
@@ -4194,12 +4196,17 @@ def mobile_personal_schedule():
             db.session.commit()
             
             flash('Schedule added successfully!')
-            return redirect(url_for('mobile_personal_schedule'))
+            # Preserve the week view by redirecting to the week containing the new schedule
+            week_start_for_redirect = date_obj - timedelta(days=date_obj.weekday())
+            return redirect(url_for('mobile_personal_schedule', week_start=week_start_for_redirect.strftime('%Y-%m-%d')))
             
         except Exception as e:
             app.logger.error(f"Error creating schedule: {str(e)}")
             flash('Error creating schedule. Please try again.')
-            return redirect(url_for('mobile_personal_schedule'))
+            # In case of error, redirect to current week
+            today = date.today()
+            week_start_for_redirect = today - timedelta(days=today.weekday())
+            return redirect(url_for('mobile_personal_schedule', week_start=week_start_for_redirect.strftime('%Y-%m-%d')))
     
     # Handle GET requests (display view)
     # Get week start parameter, default to current week
