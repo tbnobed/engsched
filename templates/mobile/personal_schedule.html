@@ -130,12 +130,16 @@
                     
                     <div class="mb-3">
                         <label for="startTime" class="form-label">Start Time</label>
-                        <input type="time" class="form-control" id="startTime" name="start_time" required>
+                        <select class="form-select" id="startTime" name="start_time" required>
+                            <option value="">Select Start Time</option>
+                        </select>
                     </div>
                     
                     <div class="mb-3">
                         <label for="endTime" class="form-label">End Time</label>
-                        <input type="time" class="form-control" id="endTime" name="end_time" required>
+                        <select class="form-select" id="endTime" name="end_time" required>
+                            <option value="">Select End Time</option>
+                        </select>
                     </div>
                     
                     <div class="mb-3">
@@ -196,12 +200,16 @@
                     
                     <div class="mb-3">
                         <label for="editStartTime" class="form-label">Start Time</label>
-                        <input type="time" class="form-control" id="editStartTime" name="start_time" required>
+                        <select class="form-select" id="editStartTime" name="start_time" required>
+                            <option value="">Select Start Time</option>
+                        </select>
                     </div>
                     
                     <div class="mb-3">
                         <label for="editEndTime" class="form-label">End Time</label>
-                        <input type="time" class="form-control" id="editEndTime" name="end_time" required>
+                        <select class="form-select" id="editEndTime" name="end_time" required>
+                            <option value="">Select End Time</option>
+                        </select>
                     </div>
                     
                     <div class="mb-3">
@@ -722,26 +730,77 @@ function deleteSchedule() {
     }
 }
 
-// Auto-set end time when start time changes
-document.getElementById('startTime').addEventListener('change', function() {
-    const startTime = this.value;
-    if (startTime && !document.getElementById('endTime').value) {
-        const [hours, minutes] = startTime.split(':');
-        const endHours = String(parseInt(hours) + 1).padStart(2, '0');
-        document.getElementById('endTime').value = `${endHours}:${minutes}`;
+// Generate 30-minute increment time options
+function generateTimeOptions() {
+    const options = [];
+    for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+            const hourStr = hour.toString().padStart(2, '0');
+            const minuteStr = minute.toString().padStart(2, '0');
+            const timeValue = `${hourStr}:${minuteStr}`;
+            const displayTime = formatTime24to12(timeValue);
+            options.push(`<option value="${timeValue}">${displayTime}</option>`);
+        }
     }
-});
+    return options.join('');
+}
 
-// All day checkbox handling
-document.getElementById('allDay').addEventListener('change', function() {
-    if (this.checked) {
-        document.getElementById('timeOff').checked = true;
-        document.getElementById('startTime').value = '00:00';
-        document.getElementById('endTime').value = '23:59';
-    }
-});
+// Convert 24-hour format to 12-hour format for display
+function formatTime24to12(time24) {
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:${minutes} ${ampm}`;
+}
+
+// Populate time dropdowns on page load
+function populateTimeDropdowns() {
+    const timeOptions = generateTimeOptions();
+    
+    // Add Schedule modal
+    document.getElementById('startTime').innerHTML = '<option value="">Select Start Time</option>' + timeOptions;
+    document.getElementById('endTime').innerHTML = '<option value="">Select End Time</option>' + timeOptions;
+    
+    // Edit Schedule modal
+    document.getElementById('editStartTime').innerHTML = '<option value="">Select Start Time</option>' + timeOptions;
+    document.getElementById('editEndTime').innerHTML = '<option value="">Select End Time</option>' + timeOptions;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize time dropdowns
+    populateTimeDropdowns();
+    
+    // Auto-set end time when start time changes
+    document.getElementById('startTime').addEventListener('change', function() {
+        const startTime = this.value;
+        if (startTime && !document.getElementById('endTime').value) {
+            const [hours, minutes] = startTime.split(':');
+            const endHours = String(parseInt(hours) + 1).padStart(2, '0');
+            const endMinutes = minutes;
+            const endTime = `${endHours}:${endMinutes}`;
+            document.getElementById('endTime').value = endTime;
+        }
+    });
+
+    // All day checkbox handling
+    document.getElementById('allDay').addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('timeOff').checked = true;
+            document.getElementById('startTime').value = '00:00';
+            document.getElementById('endTime').value = '00:00';
+        }
+    });
+    
+    // Edit modal all day checkbox handling
+    document.getElementById('editAllDay').addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('editTimeOff').checked = true;
+            document.getElementById('editStartTime').value = '00:00';
+            document.getElementById('editEndTime').value = '00:00';
+        }
+    });
+
     feather.replace();
 });
 </script>
