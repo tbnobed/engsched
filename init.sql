@@ -37,6 +37,7 @@ CREATE TABLE quick_link (
     id SERIAL PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
     url VARCHAR(500) NOT NULL,
+    description VARCHAR(500) DEFAULT '',
     icon VARCHAR(50) DEFAULT 'link',
     category VARCHAR(100) NOT NULL,
     "order" INTEGER DEFAULT 0,

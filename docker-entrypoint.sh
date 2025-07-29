@@ -42,6 +42,17 @@ if [ "$1" = "gunicorn" ] || [ "$1" = "python" ] || [ "$1" = "flask" ]; then
     fi
   fi
   
+  # Check if quick_link description column migration needs to run
+  if [ -f "/app/add_quick_link_description_column.sql" ]; then
+    echo "Running quick_link description column migration..."
+    PGPASSWORD="$POSTGRES_PASSWORD" psql -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /app/add_quick_link_description_column.sql
+    if [ $? -eq 0 ]; then
+      echo "Quick link description column migration completed successfully"
+    else
+      echo "Quick link description column migration failed - continuing anyway"
+    fi
+  fi
+  
   echo "Starting the application with: $@"
   exec "$@"
 fi
