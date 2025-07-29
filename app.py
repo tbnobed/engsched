@@ -95,9 +95,9 @@ def is_mobile_device():
     force_mobile = request.args.get('mobile') == 'true'
     
     # Debug the detection logic
-    app.logger.debug(f"User-Agent: {user_agent}")
-    app.logger.debug(f"Sec-CH-UA-Mobile header: {sec_ch_ua_mobile}")
-    app.logger.debug(f"Force mobile parameter: {force_mobile}")
+    app.logger.debug(f"Mobile Detection Debug - User-Agent: {user_agent}")
+    app.logger.debug(f"Mobile Detection Debug - Sec-CH-UA-Mobile header: {sec_ch_ua_mobile}")
+    app.logger.debug(f"Mobile Detection Debug - Force mobile parameter: {force_mobile}")
     
     # Check multiple indicators for mobile device
     pattern_match = any(re.search(pattern, user_agent) for pattern in mobile_patterns)
@@ -105,8 +105,8 @@ def is_mobile_device():
     
     is_mobile = force_mobile or pattern_match or header_mobile
     
-    app.logger.debug(f"Pattern match: {pattern_match}, Header mobile: {header_mobile}, Force: {force_mobile}")
-    app.logger.debug(f"Final is_mobile_device result: {is_mobile}")
+    app.logger.debug(f"Mobile Detection Debug - Pattern match: {pattern_match}, Header mobile: {header_mobile}, Force: {force_mobile}")
+    app.logger.debug(f"Mobile Detection Debug - Final is_mobile_device result: {is_mobile}")
     
     return is_mobile
 

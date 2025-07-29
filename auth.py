@@ -12,7 +12,7 @@ def login():
         # Check if user is on mobile device and redirect appropriately
         from app import is_mobile_device
         if is_mobile_device():
-            return redirect(url_for('mobile_dashboard'))
+            return redirect('/mobile/dashboard')
         else:
             return redirect(url_for('tickets.tickets_dashboard'))
     
@@ -89,12 +89,15 @@ def login():
             
             # Check if user is on mobile device and redirect appropriately
             from app import is_mobile_device
+            mobile_detected = is_mobile_device()
+            app.logger.debug(f"Login redirect decision - next_page: {next_page}, mobile_detected: {mobile_detected}")
+            
             if next_page:
                 app.logger.debug(f"Redirecting to next page: {next_page}")
                 return redirect(next_page)
-            elif is_mobile_device():
+            elif mobile_detected:
                 app.logger.debug("Mobile device detected after login - redirecting to mobile dashboard")
-                return redirect(url_for('mobile_dashboard'))
+                return redirect('/mobile/dashboard')
             else:
                 app.logger.debug("Desktop device detected after login - redirecting to tickets dashboard")
                 return redirect(url_for('tickets.tickets_dashboard'))
