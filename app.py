@@ -55,30 +55,58 @@ def is_mobile_device():
     import re
     
     user_agent = request.headers.get('User-Agent', '').lower()
-    # Pattern to match common mobile devices and Chrome DevTools device emulation
-    pattern = r"android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile"
     
-    # Check for Chrome DevTools mobile emulation indicators
+    # Comprehensive pattern to match mobile devices
+    mobile_patterns = [
+        r"android",
+        r"webos", 
+        r"iphone",
+        r"ipad",
+        r"ipod",
+        r"blackberry",
+        r"iemobile",
+        r"opera mini",
+        r"mobile",
+        r"phone",
+        r"tablet",
+        r"touch",
+        r"silk",
+        r"kindle",
+        r"samsung",
+        r"nokia",
+        r"lg-",
+        r"htc",
+        r"sony",
+        r"pixel",
+        r"nexus",
+        r"motorola",
+        r"mobi",
+        r"windows phone",
+        r"windows mobile",
+        r"bb10",
+        r"rim tablet",
+        r"playbook"
+    ]
+    
+    # Check for Chrome mobile emulation headers
     sec_ch_ua_mobile = request.headers.get('Sec-CH-UA-Mobile', '')
     
-    # Also check for viewport width as an additional indicator for Chrome DevTools
-    viewport_width = request.headers.get('Viewport-Width', '')
-    
-    # Check for specific mobile device strings that Chrome DevTools might use
-    mobile_device_patterns = r"iphone|ipad|android|samsung|pixel|nexus|lg-|sony|htc"
+    # Force mobile parameter
+    force_mobile = request.args.get('mobile') == 'true'
     
     # Debug the detection logic
     app.logger.debug(f"User-Agent: {user_agent}")
     app.logger.debug(f"Sec-CH-UA-Mobile header: {sec_ch_ua_mobile}")
-    app.logger.debug(f"Viewport-Width header: {viewport_width}")
-    app.logger.debug(f"All headers: {dict(request.headers)}")
+    app.logger.debug(f"Force mobile parameter: {force_mobile}")
     
     # Check multiple indicators for mobile device
-    is_mobile = (bool(re.search(pattern, user_agent)) or 
-                 sec_ch_ua_mobile == '?1' or
-                 bool(re.search(mobile_device_patterns, user_agent)))
+    pattern_match = any(re.search(pattern, user_agent) for pattern in mobile_patterns)
+    header_mobile = sec_ch_ua_mobile == '?1'
     
-    app.logger.debug(f"is_mobile_device detection result: {is_mobile}")
+    is_mobile = force_mobile or pattern_match or header_mobile
+    
+    app.logger.debug(f"Pattern match: {pattern_match}, Header mobile: {header_mobile}, Force: {force_mobile}")
+    app.logger.debug(f"Final is_mobile_device result: {is_mobile}")
     
     return is_mobile
 
