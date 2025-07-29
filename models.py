@@ -37,6 +37,7 @@ class QuickLink(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     url = db.Column(db.String(500), nullable=False)
+    description = db.Column(db.String(500), nullable=True, default='')  # Optional description
     icon = db.Column(db.String(50), nullable=False, default='link')  # Feather icon name
     category = db.Column(db.String(100), nullable=False)
     order = db.Column(db.Integer, default=0)
@@ -51,6 +52,7 @@ class QuickLink(db.Model):
         return {
             'title': self.title,
             'url': self.url,
+            'description': self.description,
             'icon': self.icon,
             'category': self.category,
             'order': self.order

@@ -2278,7 +2278,8 @@ def admin_create_quick_link():
             title=request.form.get('title'),
             url=request.form.get('url'),
             icon=request.form.get('icon', 'link'),
-            category=request.form.get('category'),
+            category=request.form.get('category', 'General'),
+            description=request.form.get('description', ''),
             order=request.form.get('order', 0)
         )
 
@@ -2290,6 +2291,9 @@ def admin_create_quick_link():
         app.logger.error(f"Error creating quick link: {str(e)}")
         flash('Error creating quick link. Please try again.')
 
+    # Check if this came from mobile interface
+    if request.args.get('mobile') or request.form.get('mobile'):
+        return redirect(url_for('mobile_quick_links'))
     return redirect(url_for('admin_quick_links'))
 
 @app.route('/admin/quick_links/edit/<int:link_id>', methods=['POST'])
@@ -2304,7 +2308,8 @@ def admin_edit_quick_link(link_id):
         link.title = request.form.get('title')
         link.url = request.form.get('url')
         link.icon = request.form.get('icon')
-        link.category = request.form.get('category')
+        link.category = request.form.get('category', 'General')
+        link.description = request.form.get('description', '')
         link.order = request.form.get('order', 0)
 
         db.session.commit()
@@ -2314,7 +2319,35 @@ def admin_edit_quick_link(link_id):
         app.logger.error(f"Error updating quick link: {str(e)}")
         flash('Error updating quick link. Please try again.')
 
+    # Check if this came from mobile interface
+    if request.args.get('mobile') or request.form.get('mobile'):
+        return redirect(url_for('mobile_quick_links'))
     return redirect(url_for('admin_quick_links'))
+
+@app.route('/quick-links/<int:link_id>/data')
+@login_required
+def get_quick_link_data(link_id):
+    """API endpoint to get quick link data for editing"""
+    if not current_user.is_admin:
+        return jsonify({'success': False, 'error': 'Access denied'}), 403
+    
+    try:
+        link = QuickLink.query.get_or_404(link_id)
+        return jsonify({
+            'success': True,
+            'link': {
+                'id': link.id,
+                'title': link.title,
+                'url': link.url,
+                'description': link.description or '',
+                'icon': link.icon,
+                'category': link.category,
+                'order': link.order
+            }
+        })
+    except Exception as e:
+        app.logger.error(f"Error getting quick link data: {str(e)}")
+        return jsonify({'success': False, 'error': 'Internal error'}), 500
 
 @app.route('/admin/quick_links/delete/<int:link_id>')
 @login_required

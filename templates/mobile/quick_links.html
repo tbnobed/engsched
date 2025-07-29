@@ -65,6 +65,7 @@
             </div>
             <form id="linkForm" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="mobile" value="1"/>
                 <div class="modal-body">
                     <input type="hidden" id="linkId" name="link_id">
                     
@@ -304,7 +305,7 @@ function openLink(url) {
 function showAddLinkModal() {
     document.getElementById('linkModalTitle').textContent = 'Add Quick Link';
     document.getElementById('linkSubmitBtn').textContent = 'Add Link';
-    document.getElementById('linkForm').action = '{{ url_for("admin_create_quick_link") }}';
+    document.getElementById('linkForm').action = '{{ url_for("admin_create_quick_link") }}?mobile=1';
     document.getElementById('linkId').value = '';
     document.getElementById('linkTitle').value = '';
     document.getElementById('linkUrl').value = '';
@@ -315,30 +316,34 @@ function showAddLinkModal() {
 }
 
 function editLink(linkId) {
-    // Find the link data from the page
-    const linkCard = document.querySelector(`[onclick*="${linkId}"]`);
-    const title = linkCard.querySelector('.link-title').textContent;
-    const description = linkCard.querySelector('.link-description')?.textContent || '';
-    
-    // Get the URL from the onclick attribute
-    const onclickAttr = linkCard.getAttribute('onclick');
-    const urlMatch = onclickAttr.match(/openLink\('([^']+)'\)/);
-    const url = urlMatch ? urlMatch[1] : '';
-    
-    // Get the icon from the icon element
-    const iconElement = linkCard.querySelector('.link-icon i');
-    const iconAttr = iconElement.getAttribute('data-feather');
-    
-    document.getElementById('linkModalTitle').textContent = 'Edit Quick Link';
-    document.getElementById('linkSubmitBtn').textContent = 'Update Link';
-    document.getElementById('linkForm').action = '{{ url_for("admin_edit_quick_link", link_id=0) }}'.replace('0', linkId);
-    document.getElementById('linkId').value = linkId;
-    document.getElementById('linkTitle').value = title;
-    document.getElementById('linkUrl').value = url;
-    document.getElementById('linkDescription').value = description;
-    document.getElementById('linkIcon').value = iconAttr;
-    
-    new bootstrap.Modal(document.getElementById('linkModal')).show();
+    try {
+        // Fetch link data from server instead of parsing DOM
+        fetch(`/quick-links/${linkId}/data`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('linkModalTitle').textContent = 'Edit Quick Link';
+                    document.getElementById('linkSubmitBtn').textContent = 'Update Link';
+                    document.getElementById('linkForm').action = '{{ url_for("admin_edit_quick_link", link_id=0) }}'.replace('0', linkId) + '?mobile=1';
+                    document.getElementById('linkId').value = linkId;
+                    document.getElementById('linkTitle').value = data.link.title || '';
+                    document.getElementById('linkUrl').value = data.link.url || '';
+                    document.getElementById('linkDescription').value = data.link.description || '';
+                    document.getElementById('linkIcon').value = data.link.icon || 'external-link';
+                    
+                    new bootstrap.Modal(document.getElementById('linkModal')).show();
+                } else {
+                    alert('Error loading link data');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading link data');
+            });
+    } catch (error) {
+        console.error('Error in editLink:', error);
+        alert('Error opening edit form');
+    }
 }
 
 function deleteLink(linkId) {
