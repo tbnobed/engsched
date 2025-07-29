@@ -369,15 +369,15 @@
 
 /* Schedule Cards */
 .schedule-card {
-    background: white;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
     border-radius: 16px;
     padding: 16px;
     margin-bottom: 8px;
     display: flex;
     align-items: center;
     gap: 16px;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.04);
-    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.05);
     transition: all 0.2s ease;
     cursor: pointer;
 }
@@ -388,13 +388,21 @@
 }
 
 [data-bs-theme="dark"] .schedule-card {
-    background: #2c2c2e;
+    background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
     border-color: rgba(255,255,255,0.1);
-    box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.3);
 }
 
 [data-bs-theme="dark"] .schedule-card:hover {
     box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+[data-bs-theme="dark"] .time-text {
+    color: #90caf9;
+}
+
+[data-bs-theme="dark"] .location-info {
+    color: #e0e0e0;
 }
 
 .time-off-card {
@@ -423,7 +431,7 @@
 .time-text {
     font-size: 15px;
     font-weight: 600;
-    color: #007aff;
+    color: #1565c0;
     line-height: 1.2;
 }
 
