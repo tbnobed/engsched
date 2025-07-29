@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}light{% else %}dark{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,6 +26,21 @@
         body {
             padding-bottom: 80px; /* Space for bottom nav */
             overflow-x: hidden;
+            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+            background-color: #f8f9fa !important;
+            color: #212529 !important;
+            {% else %}
+            background-color: #1c1c1e !important;
+            color: #ffffff !important;
+            {% endif %}
+        }
+        
+        html {
+            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+            background-color: #f8f9fa !important;
+            {% else %}
+            background-color: #1c1c1e !important;
+            {% endif %}
         }
         
         /* Top header - minimal and clean */
