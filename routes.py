@@ -4128,10 +4128,80 @@ def mobile_calendar():
                          locations=locations)
 
 
-@app.route('/mobile/personal_schedule')
+@app.route('/mobile/personal_schedule', methods=['GET', 'POST'])
 @login_required
 def mobile_personal_schedule():
     """Mobile personal schedule view - weekly view for current user"""
+    
+    # Handle POST requests (form submissions)
+    if request.method == 'POST':
+        app.logger.debug(f"Mobile personal schedule form submission: {request.form}")
+        
+        try:
+            # Extract form data
+            schedule_date = request.form.get('schedule_date')
+            start_time_str = request.form.get('start_time')
+            end_time_str = request.form.get('end_time')
+            description = request.form.get('description', '')
+            location_id = request.form.get('location_id')
+            time_off = request.form.get('time_off') == 'on'
+            all_day = request.form.get('all_day') == 'on'
+            
+            # Convert date and time strings to datetime objects
+            date_obj = datetime.strptime(schedule_date, '%Y-%m-%d').date()
+            start_time_obj = datetime.strptime(start_time_str, '%H:%M').time()
+            end_time_obj = datetime.strptime(end_time_str, '%H:%M').time()
+            
+            # Get user timezone
+            user_tz = current_user.get_timezone_obj()
+            
+            # Create timezone-aware datetime objects
+            start_time = user_tz.localize(datetime.combine(date_obj, start_time_obj))
+            end_time = user_tz.localize(datetime.combine(date_obj, end_time_obj))
+            
+            # Convert to UTC for storage
+            start_time_utc = start_time.astimezone(pytz.UTC)
+            end_time_utc = end_time.astimezone(pytz.UTC)
+            
+            # Validation
+            if end_time_utc <= start_time_utc:
+                flash('End time must be after start time.')
+                return redirect(url_for('mobile_personal_schedule'))
+            
+            # Check for overlapping schedules
+            overlapping = Schedule.query.filter(
+                Schedule.technician_id == current_user.id,
+                Schedule.start_time < end_time_utc,
+                Schedule.end_time > start_time_utc
+            ).first()
+            
+            if overlapping and not time_off:
+                flash('Schedule conflicts with existing appointments.')
+                return redirect(url_for('mobile_personal_schedule'))
+            
+            # Create new schedule
+            new_schedule = Schedule(
+                technician_id=current_user.id,
+                start_time=start_time_utc,
+                end_time=end_time_utc,
+                description=description,
+                location_id=int(location_id) if location_id and location_id.isdigit() else None,
+                time_off=time_off,
+                all_day=all_day
+            )
+            
+            db.session.add(new_schedule)
+            db.session.commit()
+            
+            flash('Schedule added successfully!')
+            return redirect(url_for('mobile_personal_schedule'))
+            
+        except Exception as e:
+            app.logger.error(f"Error creating schedule: {str(e)}")
+            flash('Error creating schedule. Please try again.')
+            return redirect(url_for('mobile_personal_schedule'))
+    
+    # Handle GET requests (display view)
     # Get week start parameter, default to current week
     week_start_str = request.args.get('week_start')
     if week_start_str:
