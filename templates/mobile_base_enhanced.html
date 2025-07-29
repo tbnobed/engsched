@@ -23,23 +23,28 @@
     
     <style>
         /* Mobile-first design with bottom navigation */
-        body {
+        body, html {
             padding-bottom: 80px; /* Space for bottom nav */
             overflow-x: hidden;
             {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
             background-color: #e9ecef !important;
+            background: #e9ecef !important;
             color: #212529 !important;
             {% else %}
             background-color: #1a1a1a !important;
+            background: #1a1a1a !important;
             color: #ffffff !important;
             {% endif %}
         }
         
-        html {
+        /* Additional HTML override for maximum specificity */
+        html, body.light-theme, html[data-bs-theme="light"] {
             {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
             background-color: #e9ecef !important;
-            {% else %}
+            background: #e9ecef !important;
+            {% else %}  
             background-color: #1a1a1a !important;
+            background: #1a1a1a !important;
             {% endif %}
         }
         

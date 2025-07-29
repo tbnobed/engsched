@@ -175,9 +175,12 @@
 </div>
 
 <style>
-/* Critical background overrides - must be first */
-body, html {
+/* Critical background overrides - must be first and highest specificity */
+body, html, body.light-theme, html[data-bs-theme="light"], 
+body.light-theme html, html[data-bs-theme="light"] body,
+.mobile-calendar body, .mobile-calendar html {
     background-color: #e9ecef !important;
+    background: #e9ecef !important;
 }
 
 /* Modern Mobile Calendar Styles */
