@@ -850,6 +850,28 @@ document.getElementById('allDay').addEventListener('change', function() {
 
 document.addEventListener('DOMContentLoaded', function() {
     feather.replace();
+    
+    // Force background color change with JavaScript
+    function forceBackgroundColor() {
+        document.body.style.setProperty('background-color', '#e9ecef', 'important');
+        document.body.style.setProperty('background', '#e9ecef', 'important');
+        document.documentElement.style.setProperty('background-color', '#e9ecef', 'important');
+        document.documentElement.style.setProperty('background', '#e9ecef', 'important');
+        
+        // Also target any containers
+        const containers = document.querySelectorAll('.container, .container-fluid, .modern-mobile-calendar');
+        containers.forEach(container => {
+            container.style.setProperty('background-color', '#e9ecef', 'important');
+            container.style.setProperty('background', '#e9ecef', 'important');
+        });
+        
+        console.log('Background color forced to #e9ecef');
+    }
+    
+    // Apply immediately and also after a delay
+    forceBackgroundColor();
+    setTimeout(forceBackgroundColor, 100);
+    setTimeout(forceBackgroundColor, 500);
 });
 </script>
 {% endblock %}

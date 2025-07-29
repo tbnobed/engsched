@@ -37,6 +37,15 @@
             {% endif %}
         }
         
+        /* Force background with JavaScript fallback */
+        body * {
+            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+            background-color: inherit !important;
+            {% else %}
+            background-color: inherit !important;
+            {% endif %}
+        }
+        
         /* Additional HTML override for maximum specificity */
         html, body.light-theme, html[data-bs-theme="light"] {
             {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
