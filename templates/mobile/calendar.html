@@ -182,10 +182,11 @@
     margin-top: -20px; /* Offset the mobile-content padding */
 }
 
-/* Default light theme styles - applied first */
+/* Default light theme styles with gradient background */
 .modern-mobile-calendar {
-    background: #f8f9fa !important;
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%) !important;
     color: #212529 !important;
+    min-height: 100vh;
 }
 
 .section-title {
@@ -223,7 +224,7 @@
 /* Light theme explicit styles */
 html[data-bs-theme="light"] .modern-mobile-calendar,
 body.light-theme .modern-mobile-calendar {
-    background: #f8f9fa !important;
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 50%, #e9ecef 100%) !important;
     color: #212529 !important;
 }
 
@@ -446,12 +447,18 @@ html[data-bs-theme="dark"] .section-title {
 
 .schedule-card {
     flex: 1;
-    background: var(--bs-body-bg);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 1.5rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    border: 1px solid var(--bs-border-color);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     overflow: hidden;
     transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+html[data-bs-theme="dark"] .schedule-card {
+    background: rgba(45, 45, 45, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .schedule-card:hover {
