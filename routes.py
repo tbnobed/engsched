@@ -4206,6 +4206,9 @@ def mobile_calendar():
         Schedule.end_time > start_utc
     ).join(User).outerjoin(Location).order_by(Schedule.start_time).all()
     
+    app.logger.debug(f"Mobile calendar: Found {len(schedules)} schedules for {current_date} in timezone {user_tz}")
+    app.logger.debug(f"UTC query range: {start_utc} to {end_utc}")
+    
     # Convert times back to user timezone for display and filter
     filtered_schedules = []
     for schedule in schedules:
@@ -4219,28 +4222,25 @@ def mobile_calendar():
         schedule.start_time_local = schedule.start_time.astimezone(user_tz)
         schedule.end_time_local = schedule.end_time.astimezone(user_tz)
         
-        # For all-day events, check if they should appear on this calendar date
+        # For all-day events, use more inclusive logic
         if schedule.all_day and schedule.time_off:
-            # All-day OOO should appear on the intended calendar date
-            # Use smart detection based on the schedule's local date
-            schedule_date = schedule.start_time_local.date()
+            # All-day OOO should appear if any part overlaps with the current date
+            schedule_start_date = schedule.start_time_local.date()
+            schedule_end_date = schedule.end_time_local.date()
             
-            # If start time is very late in day (like 23:00+), it might be intended for next day
-            if schedule.start_time_local.hour >= 23:
-                schedule_date = (schedule.start_time_local + timedelta(days=1)).date()
-            # If start time is very early (like 00:00-01:00), keep original date
-            elif schedule.start_time_local.hour <= 1:
-                schedule_date = schedule.start_time_local.date()
-                
-            # Only include if this matches the current viewing date
-            if schedule_date == current_date:
+            # Include if the current date falls between start and end dates (inclusive)
+            if schedule_start_date <= current_date <= schedule_end_date:
+                app.logger.debug(f"Including OOO schedule: {schedule.technician.username} from {schedule_start_date} to {schedule_end_date}")
                 filtered_schedules.append(schedule)
+            else:
+                app.logger.debug(f"Excluding OOO schedule: {schedule.technician.username} from {schedule_start_date} to {schedule_end_date} (current: {current_date})")
         else:
-            # Regular schedules: include if they start on the current date
-            if schedule.start_time_local.date() == current_date:
+            # Regular schedules: include if they start on the current date or span into it
+            if (schedule.start_time_local.date() <= current_date <= schedule.end_time_local.date()):
                 filtered_schedules.append(schedule)
     
     schedules = filtered_schedules
+    app.logger.debug(f"Mobile calendar: After filtering, showing {len(schedules)} schedules")
     
     # Get locations for the add form
     locations = Location.query.all()
