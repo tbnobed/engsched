@@ -1313,23 +1313,24 @@ function initializeTimeline() {
             }
         }
         
+        // Calculate center position for this column
+        const columnCenterPercent = (column * columnWidth) + (columnWidth / 2);
+        
         // Create duration line
         const durationLine = document.createElement('div');
         durationLine.className = 'timeline-duration-line';
         durationLine.style.position = 'absolute';
         durationLine.style.top = topPosition + 'px';
         durationLine.style.height = height + 'px';
-        durationLine.style.left = (column * columnWidth + 2 + (columnWidth - 4) / 2 - 2) + '%'; // Center in column
-        durationLine.style.color = userColor;
+        durationLine.style.left = `calc(${columnCenterPercent}% - 2px)`; // Center line in column
+        durationLine.style.backgroundColor = userColor;
         durationLine.style.zIndex = '4';
         
-        // Position the event card (profile picture)
+        // Position the event card (profile picture) - centered on the line
         clonedCard.style.position = 'absolute';
         clonedCard.style.top = topPosition + (Math.floor(height/2) - 22) + 'px'; // Center vertically in the time slot
-        clonedCard.style.left = (column * columnWidth + 2 + (columnWidth - 4) / 2 - 22) + '%'; // Center in column
+        clonedCard.style.left = `calc(${columnCenterPercent}% - 22px)`; // Center profile pic on line
         clonedCard.style.zIndex = '5';
-        // Remove the background color override to use the original user color
-        clonedCard.style.backgroundColor = '';
         
         // Store this event's position for future collision detection
         positionedEvents.push({
