@@ -116,7 +116,41 @@
             background: linear-gradient(135deg, #BBBAC6 0%, #E2E2E2 100%) !important;
             color: #1C0F13 !important;
         }
+        
+        /* Force override Bootstrap defaults */
+        .btn-primary:not(.btn-outline):not(.btn-link) {
+            background: linear-gradient(135deg, #6E7E85 0%, #B7CECE 100%) !important;
+            border-color: #6E7E85 !important;
+        }
+        
+        .btn-secondary:not(.btn-outline):not(.btn-link) {
+            background: linear-gradient(135deg, #BBBAC6 0%, #E2E2E2 100%) !important;
+            border-color: #BBBAC6 !important;
+        }
     </style>
+    
+    <!-- JavaScript to force style application -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Force apply custom button styles
+            const primaryButtons = document.querySelectorAll('.btn-primary');
+            const secondaryButtons = document.querySelectorAll('.btn-secondary');
+            
+            primaryButtons.forEach(btn => {
+                btn.style.setProperty('background', 'linear-gradient(135deg, #6E7E85 0%, #B7CECE 100%)', 'important');
+                btn.style.setProperty('border-color', '#6E7E85', 'important');
+                btn.style.setProperty('color', 'white', 'important');
+            });
+            
+            secondaryButtons.forEach(btn => {
+                btn.style.setProperty('background', 'linear-gradient(135deg, #BBBAC6 0%, #E2E2E2 100%)', 'important');
+                btn.style.setProperty('border-color', '#BBBAC6', 'important');
+                btn.style.setProperty('color', '#1C0F13', 'important');
+            });
+            
+            console.log('Custom button styles applied to', primaryButtons.length, 'primary and', secondaryButtons.length, 'secondary buttons');
+        });
+    </script>
     <style>
         /* Use theme variables for current time display */
         #current-time-display {
