@@ -762,7 +762,7 @@
                         const entries = data.upcoming_time_off || data;
                         
                         if (entries.length === 0) {
-                            timeOffDiv.innerHTML = '<p class="text-muted">No upcoming time off scheduled</p>';
+                            timeOffDiv.innerHTML = '<p class="text-muted text-center">No upcoming time off scheduled</p>';
                             return;
                         }
 
@@ -770,31 +770,33 @@
                         const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
                         console.log('Time off section - dark mode detected:', isDarkMode);
                         
-                        // Clean design matching the image with dark mode support - 10% larger scaling
-                        timeOffDiv.innerHTML = entries.map(entry => {
-                            const barColor = entry.color || '#ffc107';
+                        // 2-column grid layout similar to active technicians
+                        let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">';
+                        
+                        entries.forEach((entry, index) => {
+                            // Create avatar - either profile picture or initials
+                            let avatarHtml = '';
+                            if (entry.profile_picture) {
+                                avatarHtml = `<img src="/static/${entry.profile_picture}" alt="${entry.username}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 8px; flex-shrink: 0;">`;
+                            } else {
+                                const initials = entry.username.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                                const bgColor = entry.color || '#ffc107';
+                                avatarHtml = `<div style="width: 30px; height: 30px; background: ${bgColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.7rem; margin-right: 8px; flex-shrink: 0;">${initials}</div>`;
+                            }
                             
-                            return `
-                                <div class="time-off-card d-flex align-items-start mb-3" style="border-radius: 13px; padding: 13px;">
-                                    <div style="width: 4px; height: 100%; background: ${barColor}; border-radius: 2px; margin-right: 13px; min-height: 44px;"></div>
-                                    <div style="flex: 1;">
-                                        <div class="d-flex align-items-center mb-1">
-                                            ${entry.profile_picture ? 
-                                                `<img src="/static/${entry.profile_picture}" alt="${entry.username}" class="rounded-circle" style="width: 22px; height: 22px; margin-right: 9px; object-fit: cover;">` :
-                                                `<div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 22px; height: 22px; margin-right: 9px; background-color: ${entry.color}; color: white; font-size: 11px; font-weight: bold;">${entry.username.charAt(0).toUpperCase()}</div>`
-                                            }
-                                            <span class="time-off-name" style="font-weight: 600; font-size: 1.045rem;">${entry.username}</span>
-                                        </div>
-                                        <div class="time-off-date" style="font-size: 0.935rem; margin-bottom: 4px;">
-                                            ${entry.start_date} to ${entry.end_date}
-                                        </div>
-                                        <div class="time-off-duration" style="font-size: 0.88rem;">
-                                            ${entry.duration}
-                                        </div>
-                                        ${entry.description && entry.description !== 'Time Off' ? `<div class="time-off-desc" style="font-size: 0.88rem; margin-top: 4px;">${entry.description}</div>` : ''}
+                            html += `
+                                <div class="grid-item d-flex align-items-center p-2" style="border-radius: 10px; min-height: 60px;">
+                                    ${avatarHtml}
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div class="time-off-name" style="font-weight: 600; font-size: 0.8rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${entry.username}</div>
+                                        <div class="time-off-date" style="font-size: 0.65rem; margin-bottom: 1px;">${entry.start_date} to ${entry.end_date}</div>
+                                        <div class="time-off-duration" style="font-size: 0.6rem; opacity: 0.8;">${entry.duration}</div>
                                     </div>
                                 </div>`;
-                        }).join('');
+                        });
+                        
+                        html += '</div>';
+                        timeOffDiv.innerHTML = html;
                         
                         feather.replace();
                     })
@@ -802,7 +804,7 @@
                         console.error('Error fetching time off entries:', error);
                         const timeOffDiv = document.getElementById('upcoming-time-off');
                         if (timeOffDiv) {
-                            timeOffDiv.innerHTML = '<p class="text-danger">Error loading time off entries</p>';
+                            timeOffDiv.innerHTML = '<p class="text-danger text-center">Error loading time off entries</p>';
                         }
                     });
             }
