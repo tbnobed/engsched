@@ -949,36 +949,36 @@ body.light-theme .time-off-entry[class*="user-color-"] div {
 
 .calendar-controls .btn-outline-primary {
   background: transparent !important;
-  border: 1px solid var(--light-accent) !important;
-  color: var(--light-accent) !important;
+  border: 1px solid #7A93AC !important;
+  color: #7A93AC !important;
   position: relative;
   overflow: hidden;
   z-index: 1;
 }
 
 .calendar-controls .btn-outline-primary:hover {
-  background: linear-gradient(135deg, #6366f1, #818cf8) !important;
+  background: linear-gradient(135deg, #7A93AC, #92BCEA) !important;
   color: white !important;
   border-color: transparent !important;
 }
 
 .calendar-controls .btn-outline-secondary {
   background: transparent !important;
-  border: 1px solid #64748b !important;
-  color: #64748b !important;
+  border: 1px solid #617073 !important;
+  color: #617073 !important;
   position: relative;
   overflow: hidden;
   z-index: 1;
 }
 
 .calendar-controls .btn-outline-secondary:hover {
-  background: linear-gradient(135deg, #64748b, #94a3b8) !important;
+  background: linear-gradient(135deg, #617073, #7A93AC) !important;
   color: white !important;
   border-color: transparent !important;
 }
 
 .calendar-controls .btn-success {
-  background: linear-gradient(135deg, #10b981, #34d399) !important;
+  background: linear-gradient(135deg, #92BCEA, #AFB3F7) !important;
   border: none !important;
   color: white !important;
 }
@@ -1004,7 +1004,7 @@ body.light-theme .time-off-entry[class*="user-color-"] div {
 }
 
 .day-header.today {
-  background: linear-gradient(135deg, #6366f1, #818cf8) !important;
+  background: linear-gradient(135deg, #171A21, #617073) !important;
   color: white !important;
   border-bottom: none !important;
 }

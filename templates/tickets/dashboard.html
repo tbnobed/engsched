@@ -59,13 +59,13 @@
             <p class="text-muted">Showing {{ ticket_count }} ticket{% if ticket_count != 1 %}s{% endif %}</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary">
+            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #7A93AC 0%, #92BCEA 100%); border: none; color: white;">
                 <i data-feather="plus"></i> New Ticket
             </a>
             {% if current_user.is_admin %}
             <div class="dropdown">
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="adminActionsDropdown" 
-                        data-bs-toggle="dropdown" aria-expanded="false">
+                        data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #617073; color: #617073;">
                     <i data-feather="settings"></i> Admin Actions
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminActionsDropdown">
