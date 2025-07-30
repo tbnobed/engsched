@@ -4177,18 +4177,20 @@ def update_ticket_status_api(ticket_id):
 @login_required
 def mobile_calendar():
     """Mobile calendar view - daily schedule view"""
-    # Get the date parameter, default to today
+    # Get user timezone
+    user_tz = current_user.get_timezone_obj()
+    
+    # Get the date parameter, default to today in user's timezone
     date_str = request.args.get('date')
     if date_str:
         try:
             current_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
-            current_date = date.today()
+            # Default to today in user's timezone
+            current_date = datetime.now(user_tz).date()
     else:
-        current_date = date.today()
-    
-    # Get user timezone
-    user_tz = current_user.get_timezone_obj()
+        # Default to today in user's timezone
+        current_date = datetime.now(user_tz).date()
     
     # Calculate day boundaries in user timezone
     start_of_day = user_tz.localize(datetime.combine(current_date, datetime.min.time()))
