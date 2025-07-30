@@ -510,7 +510,7 @@
         }
     </style>
 </head>
-<body {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}class="light-theme {% block page_class %}{% endblock %}"{% else %}class="{% block page_class %}{% endblock %}"{% endif %}>
+<body class="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}light-theme {% endif %}{% block page_class %}{% endblock %}">
     
     <!-- Top Header -->
     <header class="mobile-header">
