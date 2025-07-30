@@ -538,29 +538,38 @@
             </div>
             
             <!-- Active Technicians -->
-            <div class="col-md-4 d-flex flex-column">
-                <h6 class="mb-2 text-center" style="color: var(--dark-text); font-weight: 600; font-size: 0.95rem;">Active Technicians</h6>
+            <div class="col-md-4 d-flex flex-column" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15)); border-radius: 8px; padding: 12px; margin-right: 8px; border-left: 4px solid #10b981;">
+                <h6 class="mb-2 text-center" style="color: var(--dark-text); font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center;">
+                    <i data-feather="users" style="width: 16px; height: 16px; margin-right: 6px; color: #10b981;"></i>
+                    Active Technicians
+                </h6>
                 <div id="active-users" style="color: var(--dark-text); font-size: 0.85rem; flex-grow: 1;">
                     Loading active users...
                 </div>
             </div>
             
             <!-- Upcoming Time Off -->
-            <div class="col-md-3 d-flex flex-column">
-                <h6 class="mb-2 text-center" style="color: var(--dark-text); font-weight: 600; font-size: 0.95rem;">Upcoming Time Off</h6>
+            <div class="col-md-3 d-flex flex-column" style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15)); border-radius: 8px; padding: 12px; margin-right: 8px; border-left: 4px solid #f59e0b;">
+                <h6 class="mb-2 text-center" style="color: var(--dark-text); font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center;">
+                    <i data-feather="calendar-x" style="width: 16px; height: 16px; margin-right: 6px; color: #f59e0b;"></i>
+                    Upcoming Time Off
+                </h6>
                 <div id="upcoming-time-off" style="color: var(--dark-text); font-size: 0.85rem; flex-grow: 1;">
                     Loading time off entries...
                 </div>
             </div>
             
             <!-- Quick Links -->
-            <div class="col-md-3 d-flex flex-column">
-                <h6 class="mb-2 text-center" style="color: var(--dark-text); font-weight: 600; font-size: 0.95rem;">Quick Links</h6>
+            <div class="col-md-3 d-flex flex-column" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(124, 58, 237, 0.15)); border-radius: 8px; padding: 12px; border-left: 4px solid #8b5cf6;">
+                <h6 class="mb-2 text-center" style="color: var(--dark-text); font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center;">
+                    <i data-feather="external-link" style="width: 16px; height: 16px; margin-right: 6px; color: #8b5cf6;"></i>
+                    Quick Links
+                </h6>
                 {% set quick_links = get_quick_links() %}
                 {% if quick_links %}
                     <div style="display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; flex-grow: 1; align-content: flex-start;">
                         {% for link in quick_links %}
-                        <a href="{{ link.url }}" target="_blank" class="btn btn-sm top-bar-quick-link" style="color: var(--dark-text); padding: 4px 8px; border-radius: 6px; background: var(--quick-link-bg, rgba(0,0,0,0.02)); border: 1px solid var(--quick-link-border, rgba(0,0,0,0.08)); font-size: 0.75rem; text-decoration: none; transition: all 0.2s ease;">
+                        <a href="{{ link.url }}" target="_blank" class="btn btn-sm top-bar-quick-link" style="color: var(--dark-text); padding: 4px 8px; border-radius: 6px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); font-size: 0.75rem; text-decoration: none; transition: all 0.2s ease;">
                             <i data-feather="{{ link.icon }}" style="width: 12px; height: 12px;" class="me-1"></i>
                             {{ link.title }}
                         </a>
@@ -600,22 +609,47 @@
     <script src="{{ url_for('static', filename='js/calendar.js') }}?v={{ now.timestamp() | int }}&refresh=true&grid=2col"></script>
     
     <style>
-        /* Modern Quick Links Styling */
-        .quick-link-btn:hover {
-            background: var(--primary) !important;
-            border-color: var(--primary) !important;
-            color: white !important;
+        /* Modern Top Bar Section Styling */
+        .top-bar-quick-link:hover {
+            background: rgba(139, 92, 246, 0.3) !important;
+            border-color: rgba(139, 92, 246, 0.4) !important;
+            color: var(--dark-text) !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
         }
         
-        .quick-link-btn:hover i {
-            color: white !important;
+        /* Grid item styling for different sections */
+        .grid-item {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s ease;
         }
         
-        .quick-link-btn:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        .grid-item:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Dark mode overrides for grid items */
+        [data-bs-theme="dark"] .grid-item {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        }
+        
+        [data-bs-theme="dark"] .grid-item:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+        
+        /* Light mode overrides for grid items */
+        [data-bs-theme="light"] .grid-item {
+            background: rgba(0, 0, 0, 0.03) !important;
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        }
+        
+        [data-bs-theme="light"] .grid-item:hover {
+            background: rgba(0, 0, 0, 0.06) !important;
         }
         
         /* Smooth scrollbar for quick links */
