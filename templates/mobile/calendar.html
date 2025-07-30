@@ -1699,9 +1699,22 @@ function updateCurrentTimeLine() {
     const displayedDate = currentDateElement.textContent;
     
     if (displayedDate === todayName) {
-        // Calculate position for current time
+        // Calculate position for current time - more precise calculation
         const totalMinutes = currentHour * 60 + currentMinute;
-        const topPosition = (totalMinutes / 60) * 60; // 60px per hour
+        const topPosition = totalMinutes; // 1px per minute (60px per hour)
+        
+        // Update the time display in the "Now" badge
+        const timeDisplay = currentTimeInUserTz.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            hour12: true 
+        });
+        
+        // Find the time label and update its text
+        const timeLabel = currentTimeLine.querySelector('.time-label');
+        if (timeLabel) {
+            timeLabel.textContent = timeDisplay;
+        }
         
         currentTimeLine.style.top = topPosition + 'px';
         currentTimeLine.style.display = 'flex';
