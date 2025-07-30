@@ -4227,16 +4227,22 @@ def mobile_calendar():
         app.logger.debug(f"  UTC times: {schedule.start_time} to {schedule.end_time}")
         app.logger.debug(f"  Local times: {schedule.start_time_local} to {schedule.end_time_local}")
         
-        # Temporarily include ALL schedules to debug what's being found
-        filtered_schedules.append(schedule)
-        
-        # Log what we're including
-        if schedule.all_day and schedule.time_off:
+        # For time-off events (both all-day and partial day), use inclusive date logic
+        if schedule.time_off:
             schedule_start_date = schedule.start_time_local.date()
             schedule_end_date = schedule.end_time_local.date()
-            app.logger.debug(f"Found OOO schedule: {schedule.technician.username} from {schedule_start_date} to {schedule_end_date} (viewing: {current_date})")
+            
+            # Include if the current date falls between start and end dates (inclusive)
+            if schedule_start_date <= current_date <= schedule_end_date:
+                app.logger.debug(f"Including time-off schedule: {schedule.technician.username} from {schedule_start_date} to {schedule_end_date}")
+                filtered_schedules.append(schedule)
+            else:
+                app.logger.debug(f"Excluding time-off schedule: {schedule.technician.username} from {schedule_start_date} to {schedule_end_date} (current: {current_date})")
         else:
-            app.logger.debug(f"Found regular schedule: {schedule.technician.username} on {schedule.start_time_local.date()}")
+            # Regular schedules: include if they start on the current date or span into it
+            if (schedule.start_time_local.date() <= current_date <= schedule.end_time_local.date()):
+                app.logger.debug(f"Including regular schedule: {schedule.technician.username} on {schedule.start_time_local.date()}")
+                filtered_schedules.append(schedule)
     
     schedules = filtered_schedules
     app.logger.debug(f"Mobile calendar: After filtering, showing {len(schedules)} schedules")
