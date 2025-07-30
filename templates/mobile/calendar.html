@@ -50,7 +50,7 @@
                             <span class="hour-period" style="display: block; font-size: 0.7rem; opacity: 0.7; margin-top: 2px;">{{ "AM" if hour < 12 else "PM" }}</span>
                         </div>
                         <div class="hour-line" style="width: 5px; height: 1px; background: rgba(0,0,0,0.1); margin-top: 12px;"></div>
-                        <div class="schedule-events" data-hour="{{ hour }}" style="position: absolute; left: 95px; right: 10px; top: 0; bottom: 0;">
+                        <div class="schedule-events" data-hour="{{ hour }}" style="position: absolute; left: 100px; right: 10px; top: 0; bottom: 0;">
                             <!-- Schedules will be positioned here via JavaScript -->
                         </div>
                     </div>
@@ -556,7 +556,7 @@ html[data-bs-theme="dark"] .hour-line {
 
 .schedule-events {
     position: absolute;
-    left: 95px;
+    left: 100px;
     right: 10px;
     top: 0;
     bottom: 0;
@@ -782,7 +782,7 @@ html[data-bs-theme="dark"] .hour-line {
     }
     
     .schedule-events {
-        left: 70px;
+        left: 75px;
         right: 8px;
     }
     
@@ -813,7 +813,7 @@ html[data-bs-theme="dark"] .hour-line {
     }
     
     .schedule-events {
-        left: 65px;
+        left: 70px;
         right: 6px;
     }
     
