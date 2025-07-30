@@ -4302,8 +4302,8 @@ def mobile_personal_schedule():
             start_time_utc = start_time.astimezone(pytz.UTC)
             end_time_utc = end_time.astimezone(pytz.UTC)
             
-            # Validation
-            if end_time_utc <= start_time_utc:
+            # Validation (skip for all-day entries)
+            if not all_day and end_time_utc <= start_time_utc:
                 flash('End time must be after start time.')
                 week_start_for_redirect = date_obj - timedelta(days=date_obj.weekday())
                 return redirect(url_for('mobile_personal_schedule', week_start=week_start_for_redirect.strftime('%Y-%m-%d')))
