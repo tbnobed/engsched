@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Tickets</h1>
-    <a href="{{ url_for('tickets.create_ticket', mobile=1) }}" class="btn btn-primary">
+    <a href="{{ url_for('tickets.create_ticket', mobile=1) }}" class="btn btn-primary" style="background: linear-gradient(135deg, #7A93AC, #92BCEA); border: none;">
         <i data-feather="plus" style="width: 18px; height: 18px;"></i>
         New
     </a>
@@ -64,7 +64,7 @@
                     </div>
                 </div>
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown" style="border-color: #617073; color: #617073;">
                         <i data-feather="more-vertical" style="width: 16px; height: 16px;"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
