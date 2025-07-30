@@ -43,13 +43,13 @@
                 <!-- 24-Hour Timeline -->
                 <div class="timeline-grid">
                     {% for hour in range(24) %}
-                    <div class="hour-slot" data-hour="{{ hour }}">
-                        <div class="hour-label">
-                            <span class="hour-time">{{ "%02d:00"|format(hour) }}</span>
-                            <span class="hour-period">{{ "AM" if hour < 12 else "PM" }}</span>
+                    <div class="hour-slot" data-hour="{{ hour }}" style="display: flex; position: relative; height: 60px; border-bottom: 1px solid rgba(0,0,0,0.1);">
+                        <div class="hour-label" style="width: 90px; flex-shrink: 0; padding: 8px 15px 0 0; text-align: right; border-right: 2px solid #667eea;">
+                            <span class="hour-time" style="display: block; font-size: 0.9rem; font-weight: 600; line-height: 1;">{{ "%02d:00"|format(hour) }}</span>
+                            <span class="hour-period" style="display: block; font-size: 0.7rem; opacity: 0.7; margin-top: 2px;">{{ "AM" if hour < 12 else "PM" }}</span>
                         </div>
-                        <div class="hour-line"></div>
-                        <div class="schedule-events" data-hour="{{ hour }}">
+                        <div class="hour-line" style="flex: 1; height: 1px; background: rgba(0,0,0,0.1); margin-top: 12px;"></div>
+                        <div class="schedule-events" data-hour="{{ hour }}" style="position: absolute; left: 100px; right: 10px; top: 0; bottom: 0; pointer-events: none;">
                             <!-- Schedules will be positioned here via JavaScript -->
                         </div>
                     </div>
@@ -1414,10 +1414,9 @@ function initializeTimeline() {
             }
         }
         
-        // Calculate position ensuring it stays right of time labels (minimum 90px from left)
-        const baseLeftPosition = 90; // Start after time labels + padding
-        const columnWidth = 60; // Wider columns for better spacing
-        const columnPosition = baseLeftPosition + (column * columnWidth);
+        // Position relative to the schedule-events container (which starts at 100px)
+        const columnWidth = 50; // Column spacing within schedule area
+        const columnPosition = (column * columnWidth); // Relative to schedule-events container
         
         // Create duration line positioned to the right of time labels
         const durationLine = document.createElement('div');
