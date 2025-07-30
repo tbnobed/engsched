@@ -493,7 +493,7 @@ html[data-bs-theme="dark"] .hour-line {
 .schedule-events {
     position: absolute;
     left: 82px;
-    right: 8px;
+    right: 4px;
     top: 0;
     bottom: 0;
     pointer-events: none;
@@ -534,6 +534,18 @@ html[data-bs-theme="dark"] .hour-line {
     font-size: 0.85rem;
     color: white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Duration Lines */
+.timeline-duration-line {
+    position: absolute;
+    width: 4px;
+    background: currentColor;
+    opacity: 0.8;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 3;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .event-time {
@@ -1097,7 +1109,7 @@ html[data-bs-theme="dark"] .user-avatar {
     }
     
     .schedule-content {
-        padding: 0 0.5rem 2rem;
+        padding: 0 0.25rem 2rem;
     }
 }
 </style>
@@ -1276,10 +1288,20 @@ function initializeTimeline() {
             }
         }
         
-        // Position the event card
+        // Create duration line
+        const durationLine = document.createElement('div');
+        durationLine.className = 'timeline-duration-line';
+        durationLine.style.position = 'absolute';
+        durationLine.style.top = topPosition + 'px';
+        durationLine.style.height = height + 'px';
+        durationLine.style.left = (column * columnWidth + 2 + (columnWidth - 4) / 2 - 2) + '%'; // Center in column
+        durationLine.style.color = userColor;
+        durationLine.style.zIndex = '4';
+        
+        // Position the event card (profile picture)
         clonedCard.style.position = 'absolute';
         clonedCard.style.top = topPosition + (Math.floor(height/2) - 22) + 'px'; // Center vertically in the time slot
-        clonedCard.style.left = (column * columnWidth + 2) + '%'; // +2% for left margin
+        clonedCard.style.left = (column * columnWidth + 2 + (columnWidth - 4) / 2 - 22) + '%'; // Center in column
         clonedCard.style.zIndex = '5';
         // Remove the background color override to use the original user color
         clonedCard.style.backgroundColor = '';
@@ -1294,6 +1316,7 @@ function initializeTimeline() {
         
         // Add to the timeline grid positioned absolutely
         timelineGrid.style.position = 'relative';
+        timelineGrid.appendChild(durationLine);
         timelineGrid.appendChild(clonedCard);
         
         // Add click handler for editing
