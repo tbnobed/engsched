@@ -1133,24 +1133,22 @@ html[data-bs-theme="dark"] .user-avatar {
         font-size: 1.75rem;
     }
     
-    /* FORCE FULL WIDTH - Override ALL container constraints */
-    body {
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow-x: hidden !important;
-    }
-    
-    .container, .container-fluid, .mobile-content {
+    /* TARGET THE EXACT CONTAINER: main.mobile-content */
+    main.mobile-content {
         width: 100vw !important;
         max-width: 100vw !important;
         margin: 0 !important;
         padding: 0 !important;
-    }
-    
-    /* Mobile content overrides */
-    .mobile-content {
         margin-top: 60px !important;
         margin-bottom: 80px !important;
+        overflow-x: hidden !important;
+    }
+    
+    /* Force body to not constrain width */
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
     }
     
     /* Calendar containers - FULL WIDTH */
@@ -1187,17 +1185,44 @@ html[data-bs-theme="dark"] .user-avatar {
 }
 </style>
 
-<!-- Force browser cache refresh -->
+<!-- Force timeline full width with JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Force CSS refresh by adding timestamp
-    const links = document.querySelectorAll('link[rel="stylesheet"]');
-    links.forEach(link => {
-        const href = link.href;
-        link.href = href + (href.indexOf('?') > -1 ? '&' : '?') + 'v=' + Date.now();
+    console.log('Timeline container CSS loaded - forcing full width layout');
+    
+    // Ensure all timeline containers are full width
+    const mainContent = document.querySelector('main.mobile-content');
+    const timelineContainers = [
+        '.modern-mobile-calendar',
+        '.timeline-container', 
+        '.timeline-wrapper',
+        '.timeline-scroll',
+        '.timeline-grid'
+    ];
+    
+    // Force full width on main container
+    if (mainContent) {
+        mainContent.style.setProperty('width', '100vw', 'important');
+        mainContent.style.setProperty('max-width', '100vw', 'important');
+        mainContent.style.setProperty('margin', '0', 'important');
+        mainContent.style.setProperty('padding', '0', 'important');
+        console.log('Main content container forced to full width');
+    }
+    
+    // Force full width on timeline containers
+    timelineContainers.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(el => {
+            el.style.setProperty('width', '100vw', 'important');
+            el.style.setProperty('max-width', '100vw', 'important');
+            el.style.setProperty('margin-left', '0', 'important');
+            el.style.setProperty('margin-right', '0', 'important');
+            el.style.setProperty('padding-left', '0', 'important');
+            el.style.setProperty('padding-right', '0', 'important');
+        });
     });
     
-    console.log('Timeline container CSS loaded - forcing full width layout');
+    console.log('Timeline forced to full width via JavaScript');
 });
 </script>
 
