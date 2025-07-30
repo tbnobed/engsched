@@ -1585,8 +1585,14 @@ function initializeTimeline() {
             startTotalMinutes = startHour * 60 + startMinute;
             
             // Backend should handle splitting, so just use the times as provided
-            endTotalMinutes = endHour * 60 + endMinute;
-            console.log(`Schedule positioning: ${startHour}:${startMinute} (${startTotalMinutes}min) to ${endHour}:${endMinute} (${endTotalMinutes}min)`);
+            // Special case: if endHour is 0 and startHour > 0, treat endHour as 24 (midnight of next day)
+            let adjustedEndHour = endHour;
+            if (endHour === 0 && startHour > 0) {
+                adjustedEndHour = 24;
+                console.log(`Midnight end detected: treating endHour 0 as 24 for positioning`);
+            }
+            endTotalMinutes = adjustedEndHour * 60 + endMinute;
+            console.log(`Schedule positioning: ${startHour}:${startMinute} (${startTotalMinutes}min) to ${adjustedEndHour}:${endMinute} (${endTotalMinutes}min)`);
         }
         
         // Find which hour slots this event spans
