@@ -1171,6 +1171,12 @@ html[data-bs-theme="dark"] .user-avatar {
         padding-right: 0 !important;
     }
     
+    /* Fix calendar header being covered by mobile navigation */
+    .calendar-header {
+        margin-top: 20px !important;
+        padding-top: 20px !important;
+    }
+    
     /* Only add minimal side padding to timeline scroll for touch safety */
     .timeline-scroll {
         padding-left: 5px !important;
@@ -1183,10 +1189,12 @@ html[data-bs-theme="dark"] .user-avatar {
         margin: 0 auto !important;
     }
     
-    /* Header can have some padding */
+    /* Header positioned properly below mobile nav */
     .calendar-header {
         padding: 15px 20px !important;
         width: calc(100vw - 40px) !important;
+        margin-top: 0 !important;
+        padding-top: 25px !important;
     }
 }
 </style>
