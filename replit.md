@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
 Recent Updates (July 30, 2025):
+- ✅ COMPLETED: Universal Midnight Crossing Fix - Complete Cross-Timezone Schedule Display
+- Fixed critical JavaScript positioning logic to handle ALL midnight crossings (not just schedules ending at 00:00)
+- Enhanced midnight detection from `endHour === 0 && startHour > endHour` to universal `endHour < startHour`
+- Now properly handles cross-timezone scenarios: PST 20:00-22:00 → CST 22:00-00:00 → EST 23:00-01:00
+- All schedule durations now calculate correctly regardless of timezone conversion results
+- System handles schedules ending at any hour after midnight (01:00, 02:00, etc.) when viewed in different timezones
+- Debug logging confirms proper positioning: 22:00-00:00 as (1320min to 1440min), 23:00-01:00 as (1380min to 1500min)
+- Timeline displays cross-timezone schedules accurately without negative durations or positioning errors
+
+Recent Updates (July 30, 2025):
 - ✅ COMPLETED: Mobile Dashboard OOO Duplicate Fix - Timezone-Stable All-Day Schedule Display
 - Fixed critical issue where mobile dashboard displayed duplicate OOO entries when viewing in CST timezone
 - Applied same timezone-stable filtering logic from calendar views to mobile dashboard

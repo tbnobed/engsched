@@ -1583,10 +1583,10 @@ function initializeTimeline() {
             endTotalMinutes = 24 * 60;
         } else {
             startTotalMinutes = startHour * 60 + startMinute;
-            // Handle midnight crossing: if endHour is 0 and startHour > endHour, treat as 24:00
+            // Handle ALL midnight crossings: if endHour < startHour, treat as next day
             let adjustedEndHour = endHour;
-            if (endHour === 0 && startHour > endHour) {
-                adjustedEndHour = 24;
+            if (endHour < startHour) {
+                adjustedEndHour = endHour + 24;
                 console.log(`Midnight crossing detected: ${startHour}:${startMinute} to ${endHour}:${endMinute} -> treating as ${startHour}:${startMinute} to ${adjustedEndHour}:${endMinute}`);
             }
             endTotalMinutes = adjustedEndHour * 60 + endMinute;
