@@ -3,123 +3,6 @@ body {
     background-color: #f8f9fa;
 }
 
-/* Custom Bootstrap Button Overrides - New Color Palette - High Specificity */
-.btn.btn-primary, 
-a.btn.btn-primary,
-button.btn.btn-primary {
-    background: linear-gradient(135deg, #6E7E85 0%, #B7CECE 100%) !important;
-    border: none !important;
-    color: white !important;
-    border-color: #6E7E85 !important;
-}
-
-.btn.btn-primary:hover, 
-.btn.btn-primary:focus,
-.btn.btn-primary:active,
-a.btn.btn-primary:hover,
-button.btn.btn-primary:hover {
-    background: linear-gradient(135deg, #5a6a70 0%, #a1b5b5 100%) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
-    border-color: #5a6a70 !important;
-    color: white !important;
-}
-
-.btn.btn-secondary,
-a.btn.btn-secondary, 
-button.btn.btn-secondary {
-    background: linear-gradient(135deg, #BBBAC6 0%, #E2E2E2 100%) !important;
-    border: none !important;
-    color: #1C0F13 !important;
-    border-color: #BBBAC6 !important;
-}
-
-.btn.btn-secondary:hover,
-.btn.btn-secondary:focus,
-.btn.btn-secondary:active,
-a.btn.btn-secondary:hover,
-button.btn.btn-secondary:hover {
-    background: linear-gradient(135deg, #a8a7b0 0%, #d1d1d1 100%) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
-    border-color: #a8a7b0 !important;
-    color: #1C0F13 !important;
-}
-
-.btn.btn-outline-primary,
-a.btn.btn-outline-primary,
-button.btn.btn-outline-primary {
-    border: 2px solid #6E7E85 !important;
-    color: #6E7E85 !important;
-    background: transparent !important;
-}
-
-.btn.btn-outline-primary:hover,
-.btn.btn-outline-primary:focus,
-.btn.btn-outline-primary:active,
-a.btn.btn-outline-primary:hover,
-button.btn.btn-outline-primary:hover {
-    background: linear-gradient(135deg, #6E7E85 0%, #B7CECE 100%) !important;
-    color: white !important;
-    border-color: #6E7E85 !important;
-}
-
-.btn.btn-outline-secondary,
-a.btn.btn-outline-secondary,
-button.btn.btn-outline-secondary {
-    border: 2px solid #BBBAC6 !important;
-    color: #BBBAC6 !important;
-    background: transparent !important;
-}
-
-.btn.btn-outline-secondary:hover,
-.btn.btn-outline-secondary:focus,
-.btn.btn-outline-secondary:active,
-a.btn.btn-outline-secondary:hover,
-button.btn.btn-outline-secondary:hover {
-    background: linear-gradient(135deg, #BBBAC6 0%, #E2E2E2 100%) !important;
-    color: #1C0F13 !important;
-    border-color: #BBBAC6 !important;
-}
-
-/* Badge Overrides - High Specificity */
-.badge.bg-primary,
-span.badge.bg-primary {
-    background: linear-gradient(135deg, #6E7E85 0%, #B7CECE 100%) !important;
-    color: white !important;
-}
-
-.badge.bg-secondary,
-span.badge.bg-secondary {
-    background: linear-gradient(135deg, #BBBAC6 0%, #E2E2E2 100%) !important;
-    color: #1C0F13 !important;
-}
-
-.badge.bg-success,
-span.badge.bg-success {
-    background: linear-gradient(135deg, #B7CECE 0%, #E2E2E2 100%) !important;
-    color: #1C0F13 !important;
-}
-
-.badge.bg-info,
-span.badge.bg-info {
-    background: linear-gradient(135deg, #6E7E85 0%, #BBBAC6 100%) !important;
-    color: white !important;
-}
-
-/* Alert Overrides */
-.alert-primary {
-    background: linear-gradient(135deg, rgba(110, 126, 133, 0.1) 0%, rgba(183, 206, 206, 0.1) 100%) !important;
-    border-color: #6E7E85 !important;
-    color: #1C0F13 !important;
-}
-
-/* Form Control Focus */
-.form-control:focus {
-    border-color: #6E7E85 !important;
-    box-shadow: 0 0 0 0.2rem rgba(110, 126, 133, 0.25) !important;
-}
-
 /* Remove focus outline from all elements */
 *:focus {
     outline: none !important;
@@ -206,7 +89,7 @@ div[style*="gradient"] {
 }
 
 .sortable-row:hover {
-    background-color: rgba(110, 126, 133, 0.05);
+    background-color: rgba(0, 123, 255, 0.05);
 }
 
 .sortable-ghost {
@@ -231,11 +114,11 @@ div[style*="gradient"] {
 }
 
 .day-column.today {
-    background-color: rgba(110, 126, 133, 0.05);
+    background-color: rgba(0, 123, 255, 0.05);
 }
 
 .day-header.today {
-    background: linear-gradient(135deg, #6E7E85 0%, #B7CECE 100%);
+    background-color: #007bff;
     color: white;
 }
 

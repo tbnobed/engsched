@@ -16,7 +16,7 @@ def create_admin():
                 existing_admin_username.email = 'admin@obedtv.com'
                 existing_admin_username.is_admin = True
                 existing_admin_username.set_password('TBN@dmin!!')
-                existing_admin_username.color = '#6E7E85'
+                existing_admin_username.color = '#3498db'
                 existing_admin_username.timezone = 'America/Chicago'
                 existing_admin_username.theme_preference = 'dark'
                 db.session.commit()
@@ -32,7 +32,7 @@ def create_admin():
                 existing_admin_email.username = 'admin'
                 existing_admin_email.is_admin = True
                 existing_admin_email.set_password('TBN@dmin!!')
-                existing_admin_email.color = '#6E7E85'
+                existing_admin_email.color = '#3498db'
                 existing_admin_email.timezone = 'America/Chicago'
                 existing_admin_email.theme_preference = 'dark'
                 db.session.commit()
@@ -45,7 +45,7 @@ def create_admin():
                 username='admin',
                 email='admin@obedtv.com',
                 is_admin=True,
-                color='#6E7E85',  # Slate gray color
+                color='#3498db',  # Blue color
                 timezone='America/Chicago',  # Default timezone
                 theme_preference='dark'  # Default theme
             )
@@ -74,7 +74,7 @@ def create_admin():
                     UPDATE "user" 
                     SET email = 'admin@obedtv.com', 
                         is_admin = TRUE,
-                        color = '#6E7E85',
+                        color = '#3498db',
                         timezone = 'America/Chicago',
                         theme_preference = 'dark'
                     WHERE username = 'admin'

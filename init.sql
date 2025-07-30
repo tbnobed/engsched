@@ -4,7 +4,7 @@ CREATE TABLE "user" (
     username VARCHAR(64) NOT NULL UNIQUE,
     email VARCHAR(120) NOT NULL UNIQUE,
     password_hash VARCHAR(256),
-    color VARCHAR(7) DEFAULT '#6E7E85',
+    color VARCHAR(7) DEFAULT '#3498db',
     is_admin BOOLEAN DEFAULT FALSE,
     timezone VARCHAR(50) DEFAULT 'America/Los_Angeles',
     theme_preference VARCHAR(20) DEFAULT 'light',
@@ -175,7 +175,7 @@ INSERT INTO "user" (username, email, password_hash, color, is_admin, timezone) V
 ('Nic C', 'NCasoria@tbn.tv', 'scrypt:32768:8:1$EcQQ1NkH3PMrMCPy$d716babad7d5faecb5d8a1a3bf1839d30ef8a754b5f218c4dd021779e60dfa46259446eb982295b65f0a31b9a6e781635a97dfc149e9aca17fd28f5bb32af854', '#004040', false, 'America/Los_Angeles'),
 ('Sarah H', 'SHusted@tbn.tv', 'scrypt:32768:8:1$OyMSd6GNRnSkw2Jc$7c250062d48092b25eb9ecea210f5e82bb8df8a3e40079b10d8925d8b5b28f3934d2eea2d47347033010d0a891b548e443b34f88bcd599dff05581282282364a', '#ae33db', true, 'America/Los_Angeles'),
 ('admin', 'admin@obedtv.com', 'scrypt:32768:8:1$YZ4gm91MkS075SE1$2df4a29d88adbcf82002b5db90c1d0a3634637fa7aa2e532e02358b095d0918c0454f9aa087a1d323d26c58365c1f6ff8620773a44f9b567b54f2a448a96b535', '#ff0000', true, 'America/Los_Angeles'),
-('Marty C', 'MCruz@tbn.tv', 'scrypt:32768:8:1$6KwnqLHpzfp0tA07$a6c7f9d079fd75a87ed537ede7d7fa52f45898e7de48d5febef2c216748c0c986737f53db97a603ab2e6659f00d7f27148e9d640788261ff69d05471ac2a8796a', '#6E7E85', false, 'America/Los_Angeles'),
+('Marty C', 'MCruz@tbn.tv', 'scrypt:32768:8:1$6KwnqLHpzfp0tA07$a6c7f9d079fd75a87ed537ede7d7fa52f45898e7de48d5febef2c216748c0c986737f53db97a603ab2e659f00d7f27148e9d640788261ff69d05471ac2a8796a', '#3498db', false, 'America/Los_Angeles'),
 ('David H', 'DHarvilla@tbn.tv', 'scrypt:32768:8:1$igGtD8Nb2gevX5Uv$22778f15438c5bc52c557526070459637afbba7e2d813d948f64a6d5e3685aa4a0cab4c533880ddc33f323de0cd158dc9aee6a08984dff9e091308001683b62d', '#418171', true, 'America/Los_Angeles');
 
 -- Insert sample locations

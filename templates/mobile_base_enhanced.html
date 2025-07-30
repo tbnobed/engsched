@@ -13,32 +13,13 @@
     <meta name="theme-color" content="#4A90B2">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.css" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/style.css') }}?v={{ now.timestamp() | int }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     
     {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
     <link href="{{ url_for('static', filename='css/light-theme.css') }}?v={{ now.timestamp() | int }}" rel="stylesheet">
     {% else %}
     <link href="{{ url_for('static', filename='css/dark-theme.css') }}?v={{ now.timestamp() | int }}" rel="stylesheet">
     {% endif %}
-    
-    <!-- Force Custom Color Palette - Mobile -->
-    <style>
-        html body .btn.btn-primary, 
-        html body a.btn.btn-primary,
-        html body button.btn.btn-primary {
-            background: linear-gradient(135deg, #6E7E85 0%, #B7CECE 100%) !important;
-            border-color: #6E7E85 !important;
-            color: white !important;
-        }
-        
-        html body .btn.btn-secondary,
-        html body a.btn.btn-secondary,
-        html body button.btn.btn-secondary {
-            background: linear-gradient(135deg, #BBBAC6 0%, #E2E2E2 100%) !important;
-            border-color: #BBBAC6 !important;
-            color: #1C0F13 !important;
-        }
-    </style>
     
     <style>
         body {
@@ -320,12 +301,12 @@
         /* Quick action buttons */
         .quick-action-btn {
             {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
-            background: linear-gradient(135deg, #6E7E85, #B7CECE);
+            background: linear-gradient(135deg, #007bff, #0056b3);
             {% else %}
-            background: linear-gradient(135deg, #B7CECE, #E2E2E2);
+            background: linear-gradient(135deg, #66d9ef, #4fc3f7);
             {% endif %}
             border: none;
-            color: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}white{% else %}#1C0F13{% endif %};
+            color: white;
             padding: 12px 20px;
             border-radius: 25px;
             font-weight: 600;
