@@ -85,7 +85,7 @@
                              alt="{{ schedule.technician.username }}" 
                              class="timeline-profile-pic">
                     {% else %}
-                        <div class="timeline-profile-pic" style="background-color: {{ schedule.technician.color or '#6c757d' }};">
+                        <div class="timeline-profile-pic" style="background-color: {{ schedule.technician.color or '#6c757d' }}">
                             {{ schedule.technician.username[0].upper() }}
                         </div>
                     {% endif %}
@@ -1241,7 +1241,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-let currentDateStr = '{{ current_date.strftime('%Y-%m-%d') }}';
+let currentDateStr = '{{ current_date.strftime("%Y-%m-%d") }}';
 
 function changeDate(direction) {
     console.log('changeDate called with direction:', direction);
