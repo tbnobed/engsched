@@ -1335,11 +1335,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initializeTimeline() {
     const scheduleItems = document.querySelectorAll('.schedule-data .schedule-item');
-    const timelineGrid = document.querySelector('.timeline-grid');
     
-    if (!timelineGrid || scheduleItems.length === 0) return;
+    if (scheduleItems.length === 0) return;
     
-    // Array to track positioned events for collision detection
+    // Clear any existing positioned events
+    document.querySelectorAll('.positioned-schedule-event').forEach(el => el.remove());
+    
+    // Array to track positioned events for collision detection  
     const positionedEvents = [];
     
     scheduleItems.forEach(item => {
@@ -1353,39 +1355,28 @@ function initializeTimeline() {
         const eventCard = item.querySelector('.timeline-event-card');
         if (!eventCard) return;
         
-        // Clone the event card
-        const clonedCard = eventCard.cloneNode(true);
-        clonedCard.style.backgroundColor = userColor;
-        
-        // Calculate position and height
-        let topPosition, height, startTotalMinutes, endTotalMinutes;
+        // Calculate time positions
+        let startTotalMinutes, endTotalMinutes;
         
         if (allDay) {
-            // All-day events span the entire timeline
-            topPosition = 0;
-            height = 24 * 60; // 24 hours * 60px per hour
             startTotalMinutes = 0;
             endTotalMinutes = 24 * 60;
-            clonedCard.style.opacity = '0.8';
-            clonedCard.style.border = '2px dashed rgba(255, 255, 255, 0.5)';
         } else {
-            // Calculate exact position based on time
             startTotalMinutes = startHour * 60 + startMinute;
             endTotalMinutes = endHour * 60 + endMinute;
-            
-            topPosition = (startTotalMinutes / 60) * 60; // 60px per hour
-            height = Math.max(((endTotalMinutes - startTotalMinutes) / 60) * 60, 30); // Minimum 30px height
         }
         
+        // Find which hour slots this event spans
+        const startSlot = Math.floor(startTotalMinutes / 60);
+        const endSlot = Math.ceil(endTotalMinutes / 60);
+        
         // Find horizontal position to avoid overlaps
-        const columnWidth = 20; // Percentage width for each column (smaller for profile pics)
         let column = 0;
-        let maxColumns = 5; // Maximum 5 columns to fit more profile pics
+        const maxColumns = 4;
         
         // Check for overlaps with existing events
         while (column < maxColumns) {
             const hasOverlap = positionedEvents.some(event => {
-                // Check if times overlap and are in the same column
                 return event.column === column && 
                        event.startTime < endTotalMinutes && 
                        event.endTime > startTotalMinutes;
@@ -1395,63 +1386,71 @@ function initializeTimeline() {
             column++;
         }
         
-        // If we've exceeded max columns, find the column with least overlap
-        if (column >= maxColumns) {
-            column = 0;
-            let minOverlapCount = Infinity;
+        // If we've exceeded max columns, use the first column
+        if (column >= maxColumns) column = 0;
+        
+        // Position within each affected hour slot
+        for (let hour = startSlot; hour < Math.min(endSlot, 24); hour++) {
+            const hourSlot = document.querySelector(`[data-hour="${hour}"] .schedule-events`);
+            if (!hourSlot) continue;
             
-            for (let i = 0; i < maxColumns; i++) {
-                const overlapCount = positionedEvents.filter(event => 
-                    event.column === i && 
-                    event.startTime < endTotalMinutes && 
-                    event.endTime > startTotalMinutes
-                ).length;
+            // Calculate position within this hour slot
+            const slotStartMinutes = hour * 60;
+            const slotEndMinutes = (hour + 1) * 60;
+            const eventStartInSlot = Math.max(startTotalMinutes, slotStartMinutes);
+            const eventEndInSlot = Math.min(endTotalMinutes, slotEndMinutes);
+            
+            // Calculate position and height within the 60px hour slot
+            const topOffset = ((eventStartInSlot - slotStartMinutes) / 60) * 60;
+            const height = Math.max(((eventEndInSlot - eventStartInSlot) / 60) * 60, 10);
+            
+            // Create duration line
+            const durationLine = document.createElement('div');
+            durationLine.className = 'positioned-schedule-event timeline-duration-line';
+            durationLine.style.cssText = `
+                position: absolute;
+                top: ${topOffset}px;
+                left: ${column * 50 + 10}px;
+                width: 4px;
+                height: ${height}px;
+                background-color: ${userColor};
+                z-index: 4;
+            `;
+            
+            // Clone and position profile picture (only for the first hour slot)
+            if (hour === startSlot) {
+                const clonedCard = eventCard.cloneNode(true);
+                clonedCard.className = 'positioned-schedule-event timeline-event-card';
+                clonedCard.style.cssText = `
+                    position: absolute;
+                    top: ${topOffset + Math.max(0, height/2 - 22)}px;
+                    left: ${column * 50 + 10 - 22}px;
+                    width: 44px;
+                    height: 44px;
+                    background-color: ${userColor};
+                    z-index: 5;
+                    border-radius: 50%;
+                    border: 2px solid white;
+                    cursor: pointer;
+                `;
                 
-                if (overlapCount < minOverlapCount) {
-                    minOverlapCount = overlapCount;
-                    column = i;
-                }
+                // Add click handler for editing
+                clonedCard.addEventListener('click', function() {
+                    const scheduleId = item.dataset.scheduleId;
+                    editSchedule(scheduleId);
+                });
+                
+                hourSlot.appendChild(clonedCard);
             }
+            
+            hourSlot.appendChild(durationLine);
         }
-        
-        // Position relative to the schedule-events container (which starts at 100px)
-        const columnWidth = 50; // Column spacing within schedule area
-        const columnPosition = (column * columnWidth); // Relative to schedule-events container
-        
-        // Create duration line positioned to the right of time labels
-        const durationLine = document.createElement('div');
-        durationLine.className = 'timeline-duration-line';
-        durationLine.style.position = 'absolute';
-        durationLine.style.top = topPosition + 'px';
-        durationLine.style.height = height + 'px';
-        durationLine.style.left = columnPosition + 'px'; // Fixed pixel position
-        durationLine.style.backgroundColor = userColor;
-        durationLine.style.zIndex = '4';
-        durationLine.style.width = '4px';
-        
-        // Position the event card (profile picture) centered on the line
-        clonedCard.style.position = 'absolute';
-        clonedCard.style.top = topPosition + (Math.floor(height/2) - 22) + 'px'; // Center vertically
-        clonedCard.style.left = (columnPosition - 22) + 'px'; // Center profile pic on line
-        clonedCard.style.zIndex = '5';
         
         // Store this event's position for future collision detection
         positionedEvents.push({
             startTime: startTotalMinutes,
             endTime: endTotalMinutes,
-            column: column,
-            element: clonedCard
-        });
-        
-        // Add to the timeline grid positioned absolutely
-        timelineGrid.style.position = 'relative';
-        timelineGrid.appendChild(durationLine);
-        timelineGrid.appendChild(clonedCard);
-        
-        // Add click handler for editing
-        clonedCard.addEventListener('click', function() {
-            const scheduleId = item.dataset.scheduleId;
-            editSchedule(scheduleId);
+            column: column
         });
     });
 }
