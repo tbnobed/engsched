@@ -1,31 +1,31 @@
-/* Modern Dark Theme CSS - Plex Studios */
+/* Dark Theme CSS - Updated with Custom Palette */
 :root {
-  /* Base colors - more modern shades */
-  --dark-bg: #0d1117;
-  --dark-panel: #131b2a;
-  --dark-card: #1e2f4f;
-  --dark-accent: #6366f1;
-  --dark-text: #f3f4f6;
-  --dark-text-secondary: #d1d5db;
-  --dark-muted: #9ca3af;
-  --dark-border: #374151;
-  --dark-hover: #2a3859;
-  --dark-active: #374a80;
-  --dark-input-bg: #1b2842;
-  --dark-success: #10b981;
-  --dark-info: #0ea5e9;
-  --dark-warning: #f59e0b;
-  --dark-danger: #ef4444;
+  /* Base colors using custom palette */
+  --dark-bg: #1C0F13;
+  --dark-panel: #2A1D21;
+  --dark-card: #3A2D31;
+  --dark-accent: #B7CECE;
+  --dark-text: #E2E2E2;
+  --dark-text-secondary: #BBBAC6;
+  --dark-muted: #6E7E85;
+  --dark-border: #4A3D41;
+  --dark-hover: #4A3D41;
+  --dark-active: #6E7E85;
+  --dark-input-bg: #3A2D31;
+  --dark-success: #B7CECE;
+  --dark-info: #BBBAC6;
+  --dark-warning: #6E7E85;
+  --dark-danger: #E2E2E2;
   
-  /* Sidebar section specific colors - updated for modern palette with gradients */
-  --sidebar-time-bg: linear-gradient(135deg, #131d31, #5d7ed0);
-  --sidebar-active-bg: linear-gradient(135deg, #192f69, #2a4494);
-  --sidebar-timeoff-bg: linear-gradient(135deg, #2e2a7b, #877eed);
-  --sidebar-tickets-bg: linear-gradient(135deg, #4633a0, #8e59e3);
-  --sidebar-links-bg: linear-gradient(135deg, #2563eb, #9390c6);
+  /* Sidebar section specific colors using new palette gradients */
+  --sidebar-time-bg: linear-gradient(135deg, #1C0F13, #6E7E85, #B7CECE);
+  --sidebar-active-bg: linear-gradient(135deg, #6E7E85, #B7CECE, #BBBAC6);
+  --sidebar-timeoff-bg: linear-gradient(135deg, #BBBAC6, #B7CECE, #E2E2E2);
+  --sidebar-tickets-bg: linear-gradient(135deg, #1C0F13, #BBBAC6, #B7CECE);
+  --sidebar-links-bg: linear-gradient(135deg, #6E7E85, #BBBAC6, #E2E2E2);
 
   /* For Bootstrap compatibility */
-  --primary-color: #3b82f6;
+  --primary-color: #B7CECE;
 }
 
 body {
@@ -143,10 +143,6 @@ div[style*="gradient"] {
 .current-time-line::after {
   background: var(--dark-danger);
 }
-  padding: 12px 15px !important;
-  color: #ffffff !important;
-  border-bottom: 1px solid #2c3e50 !important;
-}
 
 /* Specific for admin dashboard */
 .admin-dashboard .table {
@@ -255,20 +251,29 @@ tbody tr:hover {
 }
 
 .btn-primary {
-  background-color: var(--dark-accent);
-  border-color: var(--dark-accent);
+  background: linear-gradient(135deg, #B7CECE, #E2E2E2);
+  border: none;
+  color: #1C0F13;
 }
 
 .btn-primary:hover {
-  background-color: #2563eb;
-  border-color: #1d4ed8;
+  background: linear-gradient(135deg, #6E7E85, #B7CECE) !important;
+  border: none;
+  color: #E2E2E2;
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
 }
 
 .btn-secondary {
-  background-color: var(--dark-panel);
-  border-color: var(--dark-border);
+  background: linear-gradient(135deg, #6E7E85, #BBBAC6);
+  border: none;
+  color: #E2E2E2;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #1C0F13, #6E7E85) !important;
+  border: none;
+  color: #E2E2E2;
 }
 
 .btn-outline-primary {
@@ -966,7 +971,7 @@ tbody tr:hover {
 }
 
 .fc-timegrid-event-harness .fc-timegrid-event {
-  background: linear-gradient(135deg, #4f46e5, #6366f1) !important;
+  background: linear-gradient(135deg, #6E7E85, #B7CECE) !important;
   border: none !important;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25) !important;
   border-radius: 8px !important;

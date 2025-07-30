@@ -765,7 +765,7 @@
                                     avatarHtml = `<img src="/static/${user.profile_picture}" alt="${user.username}" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; margin-right: 8px; flex-shrink: 0;">`;
                                 } else {
                                     const initials = user.username.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-                                    avatarHtml = `<div style="width: 35px; height: 35px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.8rem; margin-right: 8px; flex-shrink: 0;">${initials}</div>`;
+                                    avatarHtml = `<div style="width: 35px; height: 35px; background: linear-gradient(135deg, #6E7E85, #B7CECE); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.8rem; margin-right: 8px; flex-shrink: 0;">${initials}</div>`;
                                 }
                                 
                                 console.log(`User ${index + 1}: ${user.username} in grid position`);

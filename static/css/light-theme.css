@@ -1,30 +1,30 @@
-/* Light Theme CSS */
+/* Light Theme CSS - Updated with Custom Palette */
 :root {
-  --light-bg: #f8f9fa;
-  --light-panel: #ffffff;
-  --light-card: #ffffff;
-  --light-accent: #6366f1;
-  --light-text: #1e293b;
-  --light-text-secondary: #475569;
-  --light-muted: #64748b;
-  --light-border: #e2e8f0;
-  --light-hover: #f1f5f9;
-  --light-active: #e2e8f0;
-  --light-input-bg: #ffffff;
-  --light-success: #10b981;
-  --light-info: #0ea5e9;
-  --light-warning: #f59e0b;
-  --light-danger: #ef4444;
+  --light-bg: #E2E2E2;
+  --light-panel: #FFFFFF;
+  --light-card: #FFFFFF;
+  --light-accent: #6E7E85;
+  --light-text: #1C0F13;
+  --light-text-secondary: #6E7E85;
+  --light-muted: #BBBAC6;
+  --light-border: #B7CECE;
+  --light-hover: #F5F5F5;
+  --light-active: #B7CECE;
+  --light-input-bg: #FFFFFF;
+  --light-success: #6E7E85;
+  --light-info: #B7CECE;
+  --light-warning: #BBBAC6;
+  --light-danger: #6E7E85;
   
-  /* Sidebar section specific colors with vibrant gradients */
-  --sidebar-time-bg: linear-gradient(135deg, #7cbae4, #bae6fd, #60aed2);
-  --sidebar-active-bg: linear-gradient(135deg, #dbeafe, #bfdbfe, #93c5fd);
-  --sidebar-timeoff-bg: linear-gradient(135deg, #ddd6fe, #c4b5fd, #7e5ce6);
-  --sidebar-tickets-bg: linear-gradient(135deg, #c7d2fe, #4b5db9, #5b6af1);
-  --sidebar-links-bg: linear-gradient(135deg, #e0e7ff, #c7d2fe, #a5b4fc);
+  /* Sidebar section specific colors with new palette gradients */
+  --sidebar-time-bg: linear-gradient(135deg, #B7CECE, #E2E2E2, #BBBAC6);
+  --sidebar-active-bg: linear-gradient(135deg, #6E7E85, #B7CECE, #BBBAC6);
+  --sidebar-timeoff-bg: linear-gradient(135deg, #BBBAC6, #E2E2E2, #B7CECE);
+  --sidebar-tickets-bg: linear-gradient(135deg, #6E7E85, #BBBAC6, #B7CECE);
+  --sidebar-links-bg: linear-gradient(135deg, #B7CECE, #BBBAC6, #E2E2E2);
 
   /* For Bootstrap compatibility */
-  --primary-color: #3498db;
+  --primary-color: #6E7E85;
 }
 
 body {
@@ -265,25 +265,26 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1, #818cf8);
+  background: linear-gradient(135deg, #6E7E85, #B7CECE);
   border: none;
   color: #fff;
 }
 
 .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
-  background: linear-gradient(135deg, #4f46e5, #6366f1) !important;
+  background: linear-gradient(135deg, #1C0F13, #6E7E85) !important;
   border: none;
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, #64748b, #94a3b8);
+  background: linear-gradient(135deg, #BBBAC6, #E2E2E2);
   border: none;
-  color: #fff;
+  color: #1C0F13;
 }
 
 .btn-secondary:hover, .btn-secondary:focus, .btn-secondary:active {
-  background: linear-gradient(135deg, #475569, #64748b) !important;
+  background: linear-gradient(135deg, #6E7E85, #BBBAC6) !important;
   border: none;
+  color: #fff;
 }
 
 .btn-outline-primary {
@@ -293,7 +294,7 @@ body {
 }
 
 .btn-outline-primary:hover {
-  background: linear-gradient(135deg, #6366f1, #818cf8);
+  background: linear-gradient(135deg, #6E7E85, #B7CECE);
   border-color: transparent;
   color: #fff;
 }
@@ -370,12 +371,13 @@ body {
 }
 
 .badge.bg-secondary {
-  background: linear-gradient(135deg, #64748b, #94a3b8) !important;
+  background: linear-gradient(135deg, #BBBAC6, #E2E2E2) !important;
   border: none;
+  color: #1C0F13 !important;
 }
 
 .badge.bg-primary {
-  background: linear-gradient(135deg, #6366f1, #818cf8) !important;
+  background: linear-gradient(135deg, #6E7E85, #B7CECE) !important;
   border: none;
 }
 

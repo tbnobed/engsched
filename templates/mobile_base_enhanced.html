@@ -301,12 +301,12 @@
         /* Quick action buttons */
         .quick-action-btn {
             {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
-            background: linear-gradient(135deg, #007bff, #0056b3);
+            background: linear-gradient(135deg, #6E7E85, #B7CECE);
             {% else %}
-            background: linear-gradient(135deg, #66d9ef, #4fc3f7);
+            background: linear-gradient(135deg, #B7CECE, #E2E2E2);
             {% endif %}
             border: none;
-            color: white;
+            color: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}white{% else %}#1C0F13{% endif %};
             padding: 12px 20px;
             border-radius: 25px;
             font-weight: 600;
