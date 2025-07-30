@@ -176,7 +176,7 @@
                 <h5 class="modal-title">Edit Schedule Entry</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="editScheduleForm" method="POST" action="{{ url_for('edit_schedule') }}">
+            <form id="editScheduleForm" method="POST" action="{{ url_for('new_schedule') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="id" id="editScheduleId">
                 
