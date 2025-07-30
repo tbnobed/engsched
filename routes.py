@@ -4200,11 +4200,36 @@ def mobile_calendar():
     start_utc = start_of_day.astimezone(pytz.UTC)
     end_utc = end_of_day.astimezone(pytz.UTC)
     
-    # Query schedules for the day
-    schedules = Schedule.query.filter(
-        Schedule.start_time >= start_utc,
-        Schedule.start_time <= end_utc
+    # Query schedules for the day - include broader range for all-day OOO entries
+    # that might have been created in different timezones
+    extended_start = start_utc - timedelta(hours=24)
+    extended_end = end_utc + timedelta(hours=24)
+    
+    all_schedules = Schedule.query.filter(
+        Schedule.start_time >= extended_start,
+        Schedule.start_time <= extended_end
     ).join(User).outerjoin(Location).order_by(Schedule.start_time).all()
+    
+    # Filter schedules to include only those that belong to the current day
+    schedules = []
+    for schedule in all_schedules:
+        # Ensure times are timezone-aware
+        if schedule.start_time.tzinfo is None:
+            schedule.start_time = pytz.UTC.localize(schedule.start_time)
+        if schedule.end_time.tzinfo is None:
+            schedule.end_time = pytz.UTC.localize(schedule.end_time)
+            
+        # For all-day OOO entries, check if they match the current date
+        if schedule.all_day and schedule.time_off:
+            # Get the intended date from the UTC storage
+            intended_date = schedule.start_time.date()
+            if intended_date == current_date:
+                schedules.append(schedule)
+        else:
+            # For regular schedules, check if they overlap with the day
+            schedule_start_local = schedule.start_time.astimezone(user_tz)
+            if schedule_start_local.date() == current_date:
+                schedules.append(schedule)
     
     # Convert times back to user timezone for display
     for schedule in schedules:
@@ -4213,7 +4238,22 @@ def mobile_calendar():
             schedule.start_time = pytz.UTC.localize(schedule.start_time)
         if schedule.end_time.tzinfo is None:
             schedule.end_time = pytz.UTC.localize(schedule.end_time)
+        
+        # Special handling for all-day OOO entries to prevent date shifting
+        if schedule.all_day and schedule.time_off:
+            # For all-day OOO, keep it locked to the intended calendar date
+            # Determine the intended date from the schedule's start time
+            utc_date = schedule.start_time.date()
             
+            # Create all-day time range in user's timezone for the same calendar date
+            schedule.start_time_local = user_tz.localize(datetime.combine(utc_date, time.min))
+            schedule.end_time_local = user_tz.localize(datetime.combine(utc_date, time.max))
+        else:
+            # Regular schedules and partial-day time off convert normally
+            schedule.start_time_local = schedule.start_time.astimezone(user_tz)
+            schedule.end_time_local = schedule.end_time.astimezone(user_tz)
+            
+        # Also set the main attributes for backward compatibility
         schedule.start_time = schedule.start_time.astimezone(user_tz)
         schedule.end_time = schedule.end_time.astimezone(user_tz)
     
