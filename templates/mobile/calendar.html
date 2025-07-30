@@ -1365,28 +1365,74 @@ function initializeTimeline() {
                 const existingOOO = document.querySelectorAll('.ooo-badge').length;
                 oooColumn = existingOOO;
                 
-                // Create OOO badge
+                // Create OOO badge container
                 const oooBadge = document.createElement('div');
                 oooBadge.className = 'positioned-schedule-event ooo-badge';
                 oooBadge.style.cssText = `
                     position: absolute;
                     top: 5px;
-                    left: ${oooColumn * 85 + 10}px;
-                    width: 75px;
-                    height: 24px;
+                    left: ${oooColumn * 90 + 10}px;
+                    width: 80px;
+                    height: 30px;
                     background-color: ${userColor};
                     color: white;
-                    font-size: 11px;
+                    font-size: 10px;
                     font-weight: bold;
-                    text-align: center;
-                    line-height: 24px;
-                    border-radius: 12px;
+                    border-radius: 15px;
                     z-index: 6;
                     cursor: pointer;
                     border: 1px solid rgba(255,255,255,0.3);
+                    display: flex;
+                    align-items: center;
+                    padding: 2px;
+                    gap: 4px;
                 `;
-                oooBadge.textContent = 'OOO';
                 oooBadge.title = `${eventCard.title}`;
+                
+                // Add profile picture or initials
+                const profileElement = document.createElement('div');
+                const profilePicImg = eventCard.querySelector('img');
+                if (profilePicImg) {
+                    // Clone the profile picture
+                    const clonedImg = profilePicImg.cloneNode(true);
+                    clonedImg.style.cssText = `
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 50%;
+                        object-fit: cover;
+                        border: 1px solid white;
+                    `;
+                    profileElement.appendChild(clonedImg);
+                } else {
+                    // Create initials circle
+                    const profilePicDiv = eventCard.querySelector('.timeline-profile-pic');
+                    profileElement.style.cssText = `
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 50%;
+                        background-color: rgba(255,255,255,0.3);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 10px;
+                        font-weight: bold;
+                        color: white;
+                        border: 1px solid white;
+                    `;
+                    profileElement.textContent = profilePicDiv ? profilePicDiv.textContent : '?';
+                }
+                
+                // Add OOO text
+                const oooText = document.createElement('span');
+                oooText.textContent = 'OOO';
+                oooText.style.cssText = `
+                    flex: 1;
+                    text-align: center;
+                    line-height: 1;
+                `;
+                
+                oooBadge.appendChild(profileElement);
+                oooBadge.appendChild(oooText);
                 
                 // Add click handler for editing
                 oooBadge.addEventListener('click', function() {
