@@ -471,14 +471,46 @@
             {% endif %}
         }
         
-        /* Page-specific active states */
-        body.page-dashboard .nav-item[href*="dashboard"] { {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}color: #007bff; background: rgba(0, 123, 255, 0.1);{% else %}color: #66d9ef; background: rgba(102, 217, 239, 0.1);{% endif %} }
-        body.page-schedule .nav-item[href*="calendar"] { {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}color: #007bff; background: rgba(0, 123, 255, 0.1);{% else %}color: #66d9ef; background: rgba(102, 217, 239, 0.1);{% endif %} }
-        body.page-tickets .nav-item[href*="tickets"] { {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}color: #007bff; background: rgba(0, 123, 255, 0.1);{% else %}color: #66d9ef; background: rgba(102, 217, 239, 0.1);{% endif %} }
-        body.page-quicklinks .nav-item[href*="quicklinks"] { {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}color: #007bff; background: rgba(0, 123, 255, 0.1);{% else %}color: #66d9ef; background: rgba(102, 217, 239, 0.1);{% endif %} }
+        /* Page-specific active states with blue-gray palette */
+        body.page-dashboard .nav-item[href*="dashboard"] { 
+            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+            color: #7A93AC !important; 
+            background: rgba(122, 147, 172, 0.2) !important;
+            {% else %}
+            color: #92BCEA !important; 
+            background: rgba(146, 188, 234, 0.2) !important;
+            {% endif %} 
+        }
+        body.page-schedule .nav-item[href*="calendar"] { 
+            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+            color: #7A93AC !important; 
+            background: rgba(122, 147, 172, 0.2) !important;
+            {% else %}
+            color: #92BCEA !important; 
+            background: rgba(146, 188, 234, 0.2) !important;
+            {% endif %} 
+        }
+        body.page-tickets .nav-item[href*="tickets"] { 
+            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+            color: #7A93AC !important; 
+            background: rgba(122, 147, 172, 0.2) !important;
+            {% else %}
+            color: #92BCEA !important; 
+            background: rgba(146, 188, 234, 0.2) !important;
+            {% endif %} 
+        }
+        body.page-quicklinks .nav-item[href*="quicklinks"] { 
+            {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
+            color: #7A93AC !important; 
+            background: rgba(122, 147, 172, 0.2) !important;
+            {% else %}
+            color: #92BCEA !important; 
+            background: rgba(146, 188, 234, 0.2) !important;
+            {% endif %} 
+        }
     </style>
 </head>
-<body {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}class="light-theme"{% endif %}>
+<body {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}class="light-theme {% block page_class %}{% endblock %}"{% else %}class="{% block page_class %}{% endblock %}"{% endif %}>
     
     <!-- Top Header -->
     <header class="mobile-header">
@@ -554,10 +586,23 @@
             <i data-feather="calendar" class="nav-icon" id="dynamic-nav-icon"></i>
             <span class="nav-label" id="dynamic-nav-label">Schedule</span>
         </a>
-        <a href="{{ url_for('mobile_tickets') }}" class="nav-item">
+        <a href="{{ url_for('mobile_tickets') }}" class="nav-item" style="position: relative;">
             <i data-feather="life-buoy" class="nav-icon"></i>
             <span class="nav-label">Tickets</span>
-            <span class="nav-badge" id="ticket-badge" style="display: none;">0</span>
+            <span class="nav-badge" id="ticket-badge" style="
+                position: absolute; 
+                top: 8px; 
+                right: 20px; 
+                background: #dc3545; 
+                color: white; 
+                border-radius: 10px; 
+                padding: 2px 6px; 
+                font-size: 11px; 
+                font-weight: 600; 
+                min-width: 18px; 
+                text-align: center;
+                display: none;
+            ">0</span>
         </a>
         <a href="{{ url_for('mobile_quick_links') }}" class="nav-item">
             <i data-feather="grid" class="nav-icon"></i>
@@ -769,6 +814,30 @@
                     console.log('Could not load quick links:', error);
                 });
         }
+        
+        // Load ticket count for navigation badge
+        function loadTicketCount() {
+            fetch('/api/active-tickets-count')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('ticket-badge');
+                    if (data.count && data.count > 0) {
+                        badge.textContent = data.count;
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.log('Could not load ticket count:', error);
+                });
+        }
+        
+        // Load ticket count on page load and refresh every 2 minutes
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTicketCount();
+            setInterval(loadTicketCount, 120000); // Refresh every 2 minutes
+        });
         
         // Chat integration
         {% if CHAT_ENABLED %}
