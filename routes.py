@@ -4277,12 +4277,16 @@ def mobile_calendar():
             else:
                 app.logger.debug(f"Schedule {schedule.id}: Excluding all-day OOO - intended date {intended_date} != current date {current_date}")
         else:
-            # For regular schedules, check if they overlap with the day (including schedules ending at midnight)
-            if schedule.start_time < end_utc and schedule.end_time > start_utc:
-                app.logger.debug(f"Schedule {schedule.id}: Including regular schedule - overlaps with day")
+            # For regular schedules, show only on the day they START in user's timezone
+            # Convert start time to user timezone to determine which day it belongs to
+            schedule_start_local = schedule.start_time.astimezone(user_tz)
+            schedule_start_date = schedule_start_local.date()
+            
+            if schedule_start_date == current_date:
+                app.logger.debug(f"Schedule {schedule.id}: Including regular schedule - starts on {schedule_start_date} in user timezone")
                 schedules.append(schedule)
             else:
-                app.logger.debug(f"Schedule {schedule.id}: Excluding regular schedule - no overlap (start: {schedule.start_time} >= {end_utc} OR end: {schedule.end_time} <= {start_utc})")
+                app.logger.debug(f"Schedule {schedule.id}: Excluding regular schedule - starts on {schedule_start_date}, not {current_date} in user timezone")
     
     app.logger.debug(f"Final filtered schedules: {len(schedules)} schedules")
     

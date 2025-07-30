@@ -18,6 +18,13 @@ Recent Updates (July 30, 2025):
 - System handles schedules ending at any hour after midnight (01:00, 02:00, etc.) when viewed in different timezones
 - Debug logging confirms proper positioning: 22:00-00:00 as (1320min to 1440min), 23:00-01:00 as (1380min to 1500min)
 - Timeline displays cross-timezone schedules accurately without negative durations or positioning errors
+- ✅ COMPLETED: Cross-Timezone Schedule Duplication Fix - Start Date Only Display Logic
+- Fixed critical backend filtering issue where cross-timezone schedules appeared on multiple calendar dates
+- Changed mobile calendar filtering from "overlap-based" to "start date only" logic to prevent schedule splitting
+- EST users viewing PST 20:00-22:00 schedules (EST 23:00-01:00) now see complete schedule only on start date (July 30)
+- Eliminates duplicate display where midnight-crossing schedules appeared fragmented across consecutive days
+- Backend now converts schedule start time to user's timezone to determine proper calendar date assignment
+- Cross-timezone schedule management provides clean, non-duplicated timeline view across all timezone scenarios
 
 Recent Updates (July 30, 2025):
 - ✅ COMPLETED: Mobile Dashboard OOO Duplicate Fix - Timezone-Stable All-Day Schedule Display
