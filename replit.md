@@ -10,6 +10,17 @@ Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
 Recent Updates (July 30, 2025):
+- ✅ COMPLETED: Mobile Dashboard OOO Duplicate Fix - Timezone-Stable All-Day Schedule Display
+- Fixed critical issue where mobile dashboard displayed duplicate OOO entries when viewing in CST timezone
+- Applied same timezone-stable filtering logic from calendar views to mobile dashboard
+- Enhanced mobile dashboard to use reverse-engineering algorithm to determine intended calendar dates for all-day OOO entries
+- Mobile dashboard now filters OOO entries after timezone conversion to prevent duplicates regardless of creation timezone
+- All-day OOO entries now display consistently on their intended date in mobile dashboard view
+- ✅ COMPLETED: All-Day Schedule Creation Validation Fix - Mobile Schedule Form Enhancement
+- Fixed critical validation bug preventing all-day schedule creation when start_time and end_time were both 00:00
+- Updated mobile personal schedule route to skip time validation for all-day entries (where all_day=True)
+- Mobile users can now successfully create all-day OOO entries without encountering "End time must be after start time" error
+- Validation logic now properly handles all-day time-off entries while maintaining validation for regular schedule entries
 - ✅ COMPLETED: Mobile Current Time Line Dynamic Positioning Fix - Real-Time Timeline Indicator
 - Fixed critical current time line positioning that was frozen at 8:00 AM despite correct calculations
 - Resolved DOM structure issue by moving current time line inside timeline-grid container with position: relative

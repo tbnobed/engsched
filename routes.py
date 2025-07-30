@@ -4008,21 +4008,55 @@ def mobile_dashboard():
     
     # No need for active tickets since we have a dedicated tickets page
     
-    # Get today's schedules
-    today_schedules = Schedule.query.filter(
-        Schedule.start_time < today_end_utc,
-        Schedule.end_time > today_start_utc
+    # Get today's schedules with extended range for all-day OOO entries
+    extended_start = today_start_utc - timedelta(hours=24)
+    extended_end = today_end_utc + timedelta(hours=24)
+    
+    raw_schedules = Schedule.query.filter(
+        Schedule.start_time >= extended_start,
+        Schedule.start_time <= extended_end
     ).order_by(Schedule.start_time).all()
     
-    # Convert schedule times to user timezone
-    for schedule in today_schedules:
+    # Apply timezone-stable filtering
+    today_schedules = []
+    for schedule in raw_schedules:
+        # Ensure timezone awareness
         if schedule.start_time.tzinfo is None:
             schedule.start_time = pytz.UTC.localize(schedule.start_time)
         if schedule.end_time.tzinfo is None:
             schedule.end_time = pytz.UTC.localize(schedule.end_time)
         
-        schedule.start_time_local = schedule.start_time.astimezone(user_tz)
-        schedule.end_time_local = schedule.end_time.astimezone(user_tz)
+        if schedule.all_day and schedule.time_off:
+            # Special handling for all-day OOO entries
+            # Reverse-engineer the intended date by checking if start time is midnight in any timezone
+            start_hour_utc = schedule.start_time.hour
+            
+            # Check common timezone offsets to find intended date
+            intended_date = None
+            for offset_hours in [0, 5, 6, 7, 8]:  # UTC, EST, CST, MST, PST
+                check_date = (schedule.start_time + timedelta(hours=offset_hours)).date()
+                if (schedule.start_time + timedelta(hours=offset_hours)).hour == 0:
+                    intended_date = check_date
+                    break
+            
+            # Fallback: use UTC date if no timezone gives midnight
+            if intended_date is None:
+                intended_date = schedule.start_time.date()
+            
+            # Only include if the intended date matches today's date
+            if intended_date == today:
+                # Apply timezone-aware display time conversion
+                schedule.start_time_local = user_tz.localize(datetime.combine(intended_date, time(0, 0)))
+                schedule.end_time_local = user_tz.localize(datetime.combine(intended_date, time(23, 59)))
+                today_schedules.append(schedule)
+            else:
+                app.logger.debug(f"Mobile Dashboard all-day OOO {schedule.id}: Filtered out - intended date {intended_date} != today {today}")
+        else:
+            # Regular schedules - check if they overlap with today
+            if schedule.start_time < today_end_utc and schedule.end_time > today_start_utc:
+                schedule.start_time_local = schedule.start_time.astimezone(user_tz)
+                schedule.end_time_local = schedule.end_time.astimezone(user_tz)
+                today_schedules.append(schedule)
     
     # Get studio bookings (if API is available)
     studio_bookings = []
