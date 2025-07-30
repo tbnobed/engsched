@@ -28,87 +28,110 @@
         </div>
     </div>
 
-    <!-- Schedule Content -->
-    <div class="schedule-content">
-        <div class="section-header">
-            <div class="section-title">
+    <!-- 24-Hour Timeline View -->
+    <div class="timeline-container">
+        <div class="timeline-header">
+            <div class="timeline-title">
                 <i data-feather="clock"></i>
-                <span>Today's Schedule</span>
+                <span>24-Hour Timeline</span>
             </div>
             <div class="schedule-count">{{ schedules|length }} event{{ 's' if schedules|length != 1 else '' }}</div>
         </div>
         
-        <div id="schedulesList" class="schedules-timeline">
-            {% for schedule in schedules %}
-            <div class="schedule-item" data-schedule-id="{{ schedule.id }}">
-                <div class="schedule-time-indicator">
-                    <div class="time-dot"></div>
-                    <div class="time-label">{{ schedule.start_time.strftime('%H:%M') }}</div>
+        <div class="timeline-wrapper">
+            <div class="timeline-scroll">
+                <!-- 24-Hour Timeline -->
+                <div class="timeline-grid">
+                    {% for hour in range(24) %}
+                    <div class="hour-slot" data-hour="{{ hour }}">
+                        <div class="hour-label">
+                            <span class="hour-time">{{ "%02d:00"|format(hour) }}</span>
+                            <span class="hour-period">{{ "AM" if hour < 12 else "PM" }}</span>
+                        </div>
+                        <div class="hour-line"></div>
+                        <div class="schedule-events" data-hour="{{ hour }}">
+                            <!-- Schedules will be positioned here via JavaScript -->
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
                 
-                <div class="schedule-card">
-                    <div class="card-header">
-                        <div class="time-range">
-                            {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
-                        </div>
-                        <div class="card-actions">
-                            <button class="action-btn edit-btn" onclick="editSchedule({{ schedule.id }})">
-                                <i data-feather="edit-2"></i>
-                            </button>
-                            <button class="action-btn delete-btn" onclick="deleteSchedule({{ schedule.id }})">
-                                <i data-feather="trash-2"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="card-content">
-                        <div class="user-info">
-                            {% if schedule.technician.profile_picture %}
-                            <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}" 
-                                 alt="{{ schedule.technician.username }}" 
-                                 class="user-avatar">
-                            {% else %}
-                            <div class="user-avatar user-initials" style="background-color: {{ schedule.technician.color or '#6c757d' }}">
-                                {{ schedule.technician.username[:2].upper() }}
-                            </div>
-                            {% endif %}
-                            
-                            <div class="user-details">
-                                <div class="user-name">{{ schedule.technician.username }}</div>
-                                {% if schedule.location %}
-                                <div class="location">
-                                    <i data-feather="map-pin"></i>
-                                    {{ schedule.location.name }}
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        {% if schedule.description %}
-                        <div class="description">{{ schedule.description }}</div>
-                        {% endif %}
-                        
-                        {% if schedule.time_off %}
-                        <div class="status-badges">
-                            <span class="status-badge {% if schedule.all_day %}ooo-badge{% else %}timeoff-badge{% endif %}">
-                                <i data-feather="coffee"></i>
-                                {% if schedule.all_day %}Out of Office{% else %}Time Off{% endif %}
-                            </span>
-                        </div>
-                        {% endif %}
-                    </div>
+                <!-- Current Time Indicator -->
+                <div class="current-time-line" id="currentTimeLine" style="display: none;">
+                    <div class="time-marker"></div>
+                    <div class="time-label">Now</div>
                 </div>
             </div>
-            {% else %}
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i data-feather="calendar"></i>
+        </div>
+        
+        <!-- Hidden schedule data for JavaScript positioning -->
+        <div class="schedule-data" style="display: none;">
+            {% for schedule in schedules %}
+            <div class="schedule-item" 
+                 data-schedule-id="{{ schedule.id }}"
+                 data-start-hour="{{ schedule.start_time_local.hour if schedule.start_time_local else schedule.start_time.hour }}"
+                 data-start-minute="{{ schedule.start_time_local.minute if schedule.start_time_local else schedule.start_time.minute }}"
+                 data-end-hour="{{ schedule.end_time_local.hour if schedule.end_time_local else schedule.end_time.hour }}"
+                 data-end-minute="{{ schedule.end_time_local.minute if schedule.end_time_local else schedule.end_time.minute }}"
+                 data-duration="{{ ((schedule.end_time_local if schedule.end_time_local else schedule.end_time) - (schedule.start_time_local if schedule.start_time_local else schedule.start_time)).total_seconds() / 60 }}"
+                 data-user-color="{{ schedule.technician.color or '#6c757d' }}"
+                 data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
+                 data-all-day="{{ 'true' if schedule.all_day else 'false' }}">
+                
+                <div class="timeline-event-card" style="background-color: {{ schedule.technician.color or '#6c757d' }};">
+                    <div class="event-time">
+                        {% if schedule.all_day and schedule.time_off %}
+                        All Day - OOO
+                        {% else %}
+                        {{ (schedule.start_time_local if schedule.start_time_local else schedule.start_time).strftime('%H:%M') }} - 
+                        {{ (schedule.end_time_local if schedule.end_time_local else schedule.end_time).strftime('%H:%M') }}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="event-user">
+                        {% if schedule.technician.profile_picture %}
+                        <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}" 
+                             alt="{{ schedule.technician.username }}" 
+                             class="event-avatar">
+                        {% else %}
+                        <div class="event-avatar event-initials">
+                            {{ schedule.technician.username[:2].upper() }}
+                        </div>
+                        {% endif %}
+                        <span class="event-username">{{ schedule.technician.username }}</span>
+                    </div>
+                    
+                    {% if schedule.location %}
+                    <div class="event-location">
+                        <i data-feather="map-pin"></i>
+                        {{ schedule.location.name }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if schedule.description %}
+                    <div class="event-description">{{ schedule.description }}</div>
+                    {% endif %}
+                    
+                    {% if schedule.time_off %}
+                    <div class="event-badge">
+                        <i data-feather="coffee"></i>
+                        {% if schedule.all_day %}OOO{% else %}Time Off{% endif %}
+                    </div>
+                    {% endif %}
                 </div>
-                <h3>No schedules today</h3>
-                <p>Tap the "Add Schedule" button to create your first entry</p>
             </div>
             {% endfor %}
         </div>
+        
+        {% if not schedules %}
+        <div class="empty-timeline">
+            <div class="empty-icon">
+                <i data-feather="calendar"></i>
+            </div>
+            <h3>No schedules today</h3>
+            <p>Tap the "Add Schedule" button to create your first entry</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -391,17 +414,361 @@ body.light-theme .calendar-header .current-date-sub {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* Content Styles */
-.schedule-content {
-    padding: 0 1.5rem 2rem;
+/* 24-Hour Timeline Styles */
+.timeline-container {
+    padding: 0 1rem 2rem;
+    background: transparent;
 }
 
-.section-header {
+.timeline-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     padding: 0 0.5rem;
+}
+
+.timeline-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.timeline-title i {
+    width: 20px;
+    height: 20px;
+}
+
+.schedule-count {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 1rem;
+    font-weight: 500;
+}
+
+.timeline-wrapper {
+    position: relative;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+}
+
+html[data-bs-theme="dark"] .timeline-wrapper {
+    background: rgba(28, 28, 30, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.timeline-scroll {
+    height: 70vh;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.timeline-grid {
+    position: relative;
+    min-height: 100%;
+}
+
+.hour-slot {
+    position: relative;
+    height: 60px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: flex-start;
+}
+
+html[data-bs-theme="dark"] .hour-slot {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.hour-label {
+    width: 70px;
+    flex-shrink: 0;
+    padding: 8px 12px 0 0;
+    text-align: right;
+    border-right: 2px solid #667eea;
+}
+
+.hour-time {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.hour-period {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-top: 2px;
+}
+
+.hour-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.1);
+    margin-top: 12px;
+}
+
+html[data-bs-theme="dark"] .hour-line {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.schedule-events {
+    position: absolute;
+    left: 82px;
+    right: 12px;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+/* Timeline Event Cards */
+.timeline-event-card {
+    position: absolute;
+    left: 0;
+    right: 0;
+    background: #667eea;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 2px 0;
+    color: white;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all 0.2s ease;
+    min-height: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.timeline-event-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.event-time {
+    font-weight: 600;
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+    opacity: 0.9;
+}
+
+.event-user {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.event-avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+}
+
+.event-initials {
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 600;
+}
+
+.event-username {
+    font-weight: 500;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.event-location {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    opacity: 0.8;
+    margin-bottom: 2px;
+}
+
+.event-location i {
+    width: 10px;
+    height: 10px;
+}
+
+.event-description {
+    font-size: 0.7rem;
+    opacity: 0.9;
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+
+.event-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    width: fit-content;
+    margin-top: 4px;
+}
+
+.event-badge i {
+    width: 8px;
+    height: 8px;
+}
+
+/* Current Time Indicator */
+.current-time-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+}
+
+.time-marker {
+    width: 12px;
+    height: 12px;
+    background: #ff4757;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+}
+
+.time-label {
+    background: #ff4757;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 8px;
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+}
+
+/* Empty Timeline State */
+.empty-timeline {
+    text-align: center;
+    padding: 3rem 1rem;
+    opacity: 0.7;
+}
+
+.empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem;
+    opacity: 0.5;
+}
+
+.empty-timeline h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.empty-timeline p {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 414px) {
+    .timeline-container {
+        padding: 0 0.75rem 2rem;
+    }
+    
+    .hour-label {
+        width: 60px;
+        padding-right: 8px;
+    }
+    
+    .schedule-events {
+        left: 72px;
+        right: 8px;
+    }
+    
+    .timeline-event-card {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        min-height: 45px;
+    }
+    
+    .event-time {
+        font-size: 0.7rem;
+    }
+    
+    .event-username {
+        font-size: 0.75rem;
+    }
+    
+    .event-avatar {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@media (max-width: 375px) {
+    .hour-label {
+        width: 55px;
+        padding-right: 6px;
+    }
+    
+    .schedule-events {
+        left: 67px;
+        right: 6px;
+    }
+    
+    .timeline-event-card {
+        padding: 5px 8px;
+        min-height: 40px;
+    }
+    
+    .hour-time {
+        font-size: 0.8rem;
+    }
+    
+    .hour-period {
+        font-size: 0.65rem;
+    }
+}
+
+@media (max-width: 320px) {
+    .hour-label {
+        width: 50px;
+        padding-right: 4px;
+    }
+    
+    .schedule-events {
+        left: 62px;
+        right: 4px;
+    }
+    
+    .timeline-event-card {
+        padding: 4px 6px;
+        min-height: 35px;
+        font-size: 0.75rem;
+    }
+    
+    .hour-time {
+        font-size: 0.75rem;
+    }
 }
 
 .section-title {
@@ -840,6 +1207,106 @@ document.getElementById('allDay').addEventListener('change', function() {
 
 document.addEventListener('DOMContentLoaded', function() {
     feather.replace();
+    initializeTimeline();
+    updateCurrentTimeLine();
+    
+    // Update current time line every minute
+    setInterval(updateCurrentTimeLine, 60000);
 });
+
+function initializeTimeline() {
+    const scheduleItems = document.querySelectorAll('.schedule-data .schedule-item');
+    const timelineGrid = document.querySelector('.timeline-grid');
+    
+    if (!timelineGrid || scheduleItems.length === 0) return;
+    
+    scheduleItems.forEach(item => {
+        const startHour = parseInt(item.dataset.startHour);
+        const startMinute = parseInt(item.dataset.startMinute);
+        const endHour = parseInt(item.dataset.endHour);
+        const endMinute = parseInt(item.dataset.endMinute);
+        const userColor = item.dataset.userColor;
+        const allDay = item.dataset.allDay === 'true';
+        
+        const eventCard = item.querySelector('.timeline-event-card');
+        if (!eventCard) return;
+        
+        // Clone the event card
+        const clonedCard = eventCard.cloneNode(true);
+        clonedCard.style.backgroundColor = userColor;
+        
+        // Calculate position and height
+        let topPosition, height;
+        
+        if (allDay) {
+            // All-day events span the entire timeline
+            topPosition = 0;
+            height = 24 * 60; // 24 hours * 60px per hour
+            clonedCard.style.opacity = '0.8';
+            clonedCard.style.border = '2px dashed rgba(255, 255, 255, 0.5)';
+        } else {
+            // Calculate exact position based on time
+            const startTotalMinutes = startHour * 60 + startMinute;
+            const endTotalMinutes = endHour * 60 + endMinute;
+            
+            topPosition = (startTotalMinutes / 60) * 60; // 60px per hour
+            height = Math.max(((endTotalMinutes - startTotalMinutes) / 60) * 60, 30); // Minimum 30px height
+        }
+        
+        clonedCard.style.position = 'absolute';
+        clonedCard.style.top = topPosition + 'px';
+        clonedCard.style.height = height + 'px';
+        clonedCard.style.left = '0';
+        clonedCard.style.right = '0';
+        clonedCard.style.zIndex = '5';
+        
+        // Add to the timeline grid positioned absolutely
+        timelineGrid.style.position = 'relative';
+        timelineGrid.appendChild(clonedCard);
+        
+        // Add click handler for editing
+        clonedCard.addEventListener('click', function() {
+            const scheduleId = item.dataset.scheduleId;
+            editSchedule(scheduleId);
+        });
+    });
+}
+
+function updateCurrentTimeLine() {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeLine = document.getElementById('currentTimeLine');
+    
+    if (!currentTimeLine) return;
+    
+    // Check if we're viewing today
+    const currentDateElement = document.getElementById('currentDate');
+    if (!currentDateElement) return;
+    
+    const today = new Date();
+    const displayedDate = currentDateElement.textContent;
+    const todayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+    
+    if (displayedDate === todayName) {
+        // Calculate position for current time
+        const totalMinutes = currentHour * 60 + currentMinute;
+        const topPosition = (totalMinutes / 60) * 60; // 60px per hour
+        
+        currentTimeLine.style.top = topPosition + 'px';
+        currentTimeLine.style.display = 'flex';
+        
+        // Scroll to current time if it's early in the day
+        if (currentHour < 12) {
+            const timelineScroll = document.querySelector('.timeline-scroll');
+            if (timelineScroll) {
+                const scrollPosition = Math.max(0, topPosition - 150);
+                timelineScroll.scrollTop = scrollPosition;
+            }
+        }
+    } else {
+        currentTimeLine.style.display = 'none';
+    }
+}
 </script>
 {% endblock %}
