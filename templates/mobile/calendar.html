@@ -717,27 +717,19 @@ html[data-bs-theme="dark"] .hour-line {
 /* Current Time Indicator */
 .current-time-line {
     position: absolute;
-    left: 0;
-    right: 0;
+    left: 90px; /* Start at timeline content area */
+    right: 10px;
     z-index: 10;
     display: flex;
     align-items: center;
     pointer-events: none;
-    height: 2px; /* Constrain height to prevent overflow */
-}
-
-.current-time-line::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
     height: 2px;
-    background: #ff4757;
-    z-index: 1;
+    background: #ff4757; /* Red line across timeline area only */
 }
 
 .time-marker {
-    position: relative;
+    position: absolute;
+    left: -6px; /* Center the dot on the line */
     width: 12px;
     height: 12px;
     background: #ff4757;
@@ -745,8 +737,6 @@ html[data-bs-theme="dark"] .hour-line {
     border: 2px solid white;
     box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
     z-index: 2;
-    margin-left: 90px; /* Align with timeline content area */
-    flex-shrink: 0;
 }
 
 .time-label {
