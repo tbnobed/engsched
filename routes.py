@@ -4236,12 +4236,13 @@ def mobile_calendar():
     
     # Query schedules for the day - include broader range for all-day OOO entries
     # that might have been created in different timezones
+    # Use overlap logic to include schedules that end at midnight (00:00)
     extended_start = start_utc - timedelta(hours=24)
     extended_end = end_utc + timedelta(hours=24)
     
     all_schedules = Schedule.query.filter(
-        Schedule.start_time >= extended_start,
-        Schedule.start_time <= extended_end
+        Schedule.start_time < extended_end,
+        Schedule.end_time > extended_start
     ).join(User).outerjoin(Location).order_by(Schedule.start_time).all()
     
     # Filter schedules to include only those that belong to the current day
@@ -4260,9 +4261,8 @@ def mobile_calendar():
             if intended_date == current_date:
                 schedules.append(schedule)
         else:
-            # For regular schedules, check if they overlap with the day
-            schedule_start_local = schedule.start_time.astimezone(user_tz)
-            if schedule_start_local.date() == current_date:
+            # For regular schedules, check if they overlap with the day (including schedules ending at midnight)
+            if schedule.start_time < end_utc and schedule.end_time > start_utc:
                 schedules.append(schedule)
     
     # Convert times back to user timezone for display
