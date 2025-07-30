@@ -550,9 +550,9 @@
             <i data-feather="home" class="nav-icon"></i>
             <span class="nav-label">Dashboard</span>
         </a>
-        <a href="{{ url_for('mobile_personal_schedule') }}" class="nav-item">
-            <i data-feather="calendar" class="nav-icon"></i>
-            <span class="nav-label">Schedule</span>
+        <a href="{{ url_for('mobile_personal_schedule') }}" class="nav-item" id="dynamic-nav-item">
+            <i data-feather="calendar" class="nav-icon" id="dynamic-nav-icon"></i>
+            <span class="nav-label" id="dynamic-nav-label">Schedule</span>
         </a>
         <a href="{{ url_for('mobile_tickets') }}" class="nav-item">
             <i data-feather="life-buoy" class="nav-icon"></i>
@@ -664,7 +664,38 @@
             
             // Auto-refresh ticket badge every 30 seconds
             setInterval(loadTicketBadge, 30000);
+            
+            // Update dynamic navigation based on current page
+            updateDynamicNavigation();
         });
+        
+        // Update dynamic navigation based on current page
+        function updateDynamicNavigation() {
+            const currentPath = window.location.pathname;
+            const dynamicNavItem = document.getElementById('dynamic-nav-item');
+            const dynamicNavLabel = document.getElementById('dynamic-nav-label');
+            const dynamicNavIcon = document.getElementById('dynamic-nav-icon');
+            
+            if (currentPath.includes('/mobile/personal_schedule')) {
+                // On Personal Schedule page - show "Timeline" to go back to calendar
+                dynamicNavLabel.textContent = 'Timeline';
+                dynamicNavItem.href = '{{ url_for("mobile_calendar") }}';
+                dynamicNavIcon.setAttribute('data-feather', 'clock');
+            } else if (currentPath.includes('/mobile/calendar')) {
+                // On Calendar page - show "Schedule" to go to personal schedule
+                dynamicNavLabel.textContent = 'Schedule';
+                dynamicNavItem.href = '{{ url_for("mobile_personal_schedule") }}';
+                dynamicNavIcon.setAttribute('data-feather', 'calendar');
+            } else {
+                // Default state - show "Schedule" for personal schedule
+                dynamicNavLabel.textContent = 'Schedule';
+                dynamicNavItem.href = '{{ url_for("mobile_personal_schedule") }}';
+                dynamicNavIcon.setAttribute('data-feather', 'calendar');
+            }
+            
+            // Re-initialize feather icons to apply icon changes
+            feather.replace();
+        }
         
         // Load ticket count for badge
         function loadTicketBadge() {
