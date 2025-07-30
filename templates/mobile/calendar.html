@@ -1220,6 +1220,9 @@ function initializeTimeline() {
     
     if (!timelineGrid || scheduleItems.length === 0) return;
     
+    // Array to track positioned events for collision detection
+    const positionedEvents = [];
+    
     scheduleItems.forEach(item => {
         const startHour = parseInt(item.dataset.startHour);
         const startMinute = parseInt(item.dataset.startMinute);
@@ -1236,29 +1239,80 @@ function initializeTimeline() {
         clonedCard.style.backgroundColor = userColor;
         
         // Calculate position and height
-        let topPosition, height;
+        let topPosition, height, startTotalMinutes, endTotalMinutes;
         
         if (allDay) {
             // All-day events span the entire timeline
             topPosition = 0;
             height = 24 * 60; // 24 hours * 60px per hour
+            startTotalMinutes = 0;
+            endTotalMinutes = 24 * 60;
             clonedCard.style.opacity = '0.8';
             clonedCard.style.border = '2px dashed rgba(255, 255, 255, 0.5)';
         } else {
             // Calculate exact position based on time
-            const startTotalMinutes = startHour * 60 + startMinute;
-            const endTotalMinutes = endHour * 60 + endMinute;
+            startTotalMinutes = startHour * 60 + startMinute;
+            endTotalMinutes = endHour * 60 + endMinute;
             
             topPosition = (startTotalMinutes / 60) * 60; // 60px per hour
             height = Math.max(((endTotalMinutes - startTotalMinutes) / 60) * 60, 30); // Minimum 30px height
         }
         
+        // Find horizontal position to avoid overlaps
+        const columnWidth = 25; // Percentage width for each column
+        let column = 0;
+        let maxColumns = 4; // Maximum 4 columns to keep events readable
+        
+        // Check for overlaps with existing events
+        while (column < maxColumns) {
+            const hasOverlap = positionedEvents.some(event => {
+                // Check if times overlap and are in the same column
+                return event.column === column && 
+                       event.startTime < endTotalMinutes && 
+                       event.endTime > startTotalMinutes;
+            });
+            
+            if (!hasOverlap) break;
+            column++;
+        }
+        
+        // If we've exceeded max columns, find the column with least overlap
+        if (column >= maxColumns) {
+            column = 0;
+            let minOverlapCount = Infinity;
+            
+            for (let i = 0; i < maxColumns; i++) {
+                const overlapCount = positionedEvents.filter(event => 
+                    event.column === i && 
+                    event.startTime < endTotalMinutes && 
+                    event.endTime > startTotalMinutes
+                ).length;
+                
+                if (overlapCount < minOverlapCount) {
+                    minOverlapCount = overlapCount;
+                    column = i;
+                }
+            }
+        }
+        
+        // Position the event card
         clonedCard.style.position = 'absolute';
         clonedCard.style.top = topPosition + 'px';
         clonedCard.style.height = height + 'px';
-        clonedCard.style.left = '0';
-        clonedCard.style.right = '0';
+        clonedCard.style.left = (column * columnWidth + 2) + '%'; // +2% for left margin
+        clonedCard.style.width = (columnWidth - 4) + '%'; // -4% for margins between columns
         clonedCard.style.zIndex = '5';
+        clonedCard.style.marginRight = '2px';
+        clonedCard.style.boxShadow = '0 2px 4px rgba(0,0,0,0.15)';
+        clonedCard.style.border = '1px solid rgba(255,255,255,0.2)';
+        
+        // Store this event's position for future collision detection
+        positionedEvents.push({
+            startTime: startTotalMinutes,
+            endTime: endTotalMinutes,
+            column: column,
+            element: clonedCard
+        });
         
         // Add to the timeline grid positioned absolutely
         timelineGrid.style.position = 'relative';
