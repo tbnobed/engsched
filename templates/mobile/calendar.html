@@ -1133,45 +1133,73 @@ html[data-bs-theme="dark"] .user-avatar {
         font-size: 1.75rem;
     }
     
-    /* Override mobile base padding for full-width timeline */
-    .mobile-content {
+    /* FORCE FULL WIDTH - Override ALL container constraints */
+    body {
+        margin: 0 !important;
         padding: 0 !important;
+        overflow-x: hidden !important;
+    }
+    
+    .container, .container-fluid, .mobile-content {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Mobile content overrides */
+    .mobile-content {
         margin-top: 60px !important;
         margin-bottom: 80px !important;
     }
     
-    .modern-mobile-calendar {
+    /* Calendar containers - FULL WIDTH */
+    .modern-mobile-calendar,
+    .timeline-container,
+    .timeline-wrapper,
+    .timeline-scroll,
+    .timeline-grid {
         width: 100vw !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        max-width: 100vw !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
     
+    /* Only add minimal side padding to timeline scroll for touch safety */
+    .timeline-scroll {
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+    
+    /* Timeline grid uses almost full width */
+    .timeline-grid {
+        width: calc(100vw - 10px) !important;
+        margin: 0 auto !important;
+    }
+    
+    /* Header can have some padding */
     .calendar-header {
         padding: 15px 20px !important;
-    }
-    
-    .timeline-container {
-        width: 100vw !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    
-    .timeline-wrapper {
-        width: 100vw !important;
-        padding: 0 !important;
-    }
-    
-    .timeline-scroll {
-        width: 100vw !important;
-        padding: 0 10px !important;
-    }
-    
-    .timeline-grid {
-        width: calc(100vw - 20px) !important;
-        margin: 0 auto !important;
+        width: calc(100vw - 40px) !important;
     }
 }
 </style>
+
+<!-- Force browser cache refresh -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Force CSS refresh by adding timestamp
+    const links = document.querySelectorAll('link[rel="stylesheet"]');
+    links.forEach(link => {
+        const href = link.href;
+        link.href = href + (href.indexOf('?') > -1 ? '&' : '?') + 'v=' + Date.now();
+    });
+    
+    console.log('Timeline container CSS loaded - forcing full width layout');
+});
+</script>
 
 <script>
 let currentDateStr = '{{ current_date.strftime('%Y-%m-%d') }}';
