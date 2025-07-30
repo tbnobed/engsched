@@ -1371,21 +1371,21 @@ function initializeTimeline() {
                 oooBadge.style.cssText = `
                     position: absolute;
                     top: 5px;
-                    left: ${oooColumn * 90 + 10}px;
-                    width: 80px;
-                    height: 30px;
+                    left: ${oooColumn * 100 + 10}px;
+                    width: 90px;
+                    height: 44px;
                     background-color: ${userColor};
                     color: white;
-                    font-size: 10px;
+                    font-size: 12px;
                     font-weight: bold;
-                    border-radius: 15px;
+                    border-radius: 22px;
                     z-index: 6;
                     cursor: pointer;
-                    border: 1px solid rgba(255,255,255,0.3);
+                    border: 2px solid rgba(255,255,255,0.3);
                     display: flex;
                     align-items: center;
                     padding: 2px;
-                    gap: 4px;
+                    gap: 6px;
                 `;
                 oooBadge.title = `${eventCard.title}`;
                 
@@ -1396,28 +1396,29 @@ function initializeTimeline() {
                     // Clone the profile picture
                     const clonedImg = profilePicImg.cloneNode(true);
                     clonedImg.style.cssText = `
-                        width: 24px;
-                        height: 24px;
+                        width: 40px;
+                        height: 40px;
                         border-radius: 50%;
                         object-fit: cover;
-                        border: 1px solid white;
+                        border: 2px solid white;
                     `;
                     profileElement.appendChild(clonedImg);
                 } else {
                     // Create initials circle
                     const profilePicDiv = eventCard.querySelector('.timeline-profile-pic');
                     profileElement.style.cssText = `
-                        width: 24px;
-                        height: 24px;
+                        width: 40px;
+                        height: 40px;
                         border-radius: 50%;
                         background-color: rgba(255,255,255,0.3);
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        font-size: 10px;
+                        font-size: 16px;
                         font-weight: bold;
                         color: white;
-                        border: 1px solid white;
+                        border: 2px solid white;
+                        flex-shrink: 0;
                     `;
                     profileElement.textContent = profilePicDiv ? profilePicDiv.textContent : '?';
                 }
