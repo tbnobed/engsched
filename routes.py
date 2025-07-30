@@ -4234,6 +4234,14 @@ def mobile_calendar():
     start_utc = start_of_day.astimezone(pytz.UTC)
     end_utc = end_of_day.astimezone(pytz.UTC)
     
+    app.logger.debug(f"Mobile calendar date range calculation:")
+    app.logger.debug(f"  Current date (user timezone): {current_date}")
+    app.logger.debug(f"  User timezone: {user_tz}")
+    app.logger.debug(f"  Start of day (user tz): {start_of_day}")
+    app.logger.debug(f"  End of day (user tz): {end_of_day}")
+    app.logger.debug(f"  Start UTC: {start_utc}")
+    app.logger.debug(f"  End UTC: {end_utc}")
+    
     # Query schedules for the day - include broader range for all-day OOO entries
     # that might have been created in different timezones
     # Use overlap logic to include schedules that end at midnight (00:00)
@@ -4247,6 +4255,9 @@ def mobile_calendar():
     
     # Filter schedules to include only those that belong to the current day
     schedules = []
+    app.logger.debug(f"Mobile calendar filtering for date: {current_date} (UTC range: {start_utc} to {end_utc})")
+    app.logger.debug(f"Found {len(all_schedules)} total schedules in extended range")
+    
     for schedule in all_schedules:
         # Ensure times are timezone-aware
         if schedule.start_time.tzinfo is None:
@@ -4254,16 +4265,26 @@ def mobile_calendar():
         if schedule.end_time.tzinfo is None:
             schedule.end_time = pytz.UTC.localize(schedule.end_time)
             
+        app.logger.debug(f"Schedule {schedule.id}: {schedule.start_time} to {schedule.end_time} (all_day={schedule.all_day}, time_off={schedule.time_off})")
+        
         # For all-day OOO entries, check if they match the current date
         if schedule.all_day and schedule.time_off:
             # Get the intended date from the UTC storage
             intended_date = schedule.start_time.date()
             if intended_date == current_date:
+                app.logger.debug(f"Schedule {schedule.id}: Including all-day OOO for date {intended_date}")
                 schedules.append(schedule)
+            else:
+                app.logger.debug(f"Schedule {schedule.id}: Excluding all-day OOO - intended date {intended_date} != current date {current_date}")
         else:
             # For regular schedules, check if they overlap with the day (including schedules ending at midnight)
             if schedule.start_time < end_utc and schedule.end_time > start_utc:
+                app.logger.debug(f"Schedule {schedule.id}: Including regular schedule - overlaps with day")
                 schedules.append(schedule)
+            else:
+                app.logger.debug(f"Schedule {schedule.id}: Excluding regular schedule - no overlap (start: {schedule.start_time} >= {end_utc} OR end: {schedule.end_time} <= {start_utc})")
+    
+    app.logger.debug(f"Final filtered schedules: {len(schedules)} schedules")
     
     # Convert times back to user timezone for display
     for schedule in schedules:
