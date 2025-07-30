@@ -1583,14 +1583,10 @@ function initializeTimeline() {
             endTotalMinutes = 24 * 60;
         } else {
             startTotalMinutes = startHour * 60 + startMinute;
-            // Handle ALL midnight crossings: if endHour < startHour, treat as next day
-            let adjustedEndHour = endHour;
-            if (endHour < startHour) {
-                adjustedEndHour = endHour + 24;
-                console.log(`Midnight crossing detected: ${startHour}:${startMinute} to ${endHour}:${endMinute} -> treating as ${startHour}:${startMinute} to ${adjustedEndHour}:${endMinute}`);
-            }
-            endTotalMinutes = adjustedEndHour * 60 + endMinute;
-            console.log(`Schedule positioning: ${startHour}:${startMinute} (${startTotalMinutes}min) to ${adjustedEndHour}:${endMinute} (${endTotalMinutes}min)`);
+            
+            // Backend should handle splitting, so just use the times as provided
+            endTotalMinutes = endHour * 60 + endMinute;
+            console.log(`Schedule positioning: ${startHour}:${startMinute} (${startTotalMinutes}min) to ${endHour}:${endMinute} (${endTotalMinutes}min)`);
         }
         
         // Find which hour slots this event spans

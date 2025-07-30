@@ -4277,20 +4277,17 @@ def mobile_calendar():
             else:
                 app.logger.debug(f"Schedule {schedule.id}: Excluding all-day OOO - intended date {intended_date} != current date {current_date}")
         else:
-            # For regular schedules, show only on the day they START in user's timezone
-            # Convert start time to user timezone to determine which day it belongs to
-            schedule_start_local = schedule.start_time.astimezone(user_tz)
-            schedule_start_date = schedule_start_local.date()
-            
-            if schedule_start_date == current_date:
-                app.logger.debug(f"Schedule {schedule.id}: Including regular schedule - starts on {schedule_start_date} in user timezone")
+            # For regular schedules, check if they overlap with the day (including schedules ending at midnight)
+            if schedule.start_time < end_utc and schedule.end_time > start_utc:
+                app.logger.debug(f"Schedule {schedule.id}: Including regular schedule - overlaps with day")
                 schedules.append(schedule)
             else:
-                app.logger.debug(f"Schedule {schedule.id}: Excluding regular schedule - starts on {schedule_start_date}, not {current_date} in user timezone")
+                app.logger.debug(f"Schedule {schedule.id}: Excluding regular schedule - no overlap (start: {schedule.start_time} >= {end_utc} OR end: {schedule.end_time} <= {start_utc})")
     
     app.logger.debug(f"Final filtered schedules: {len(schedules)} schedules")
     
-    # Convert times back to user timezone for display
+    # Convert times back to user timezone for display and handle midnight crossings
+    split_schedules = []
     for schedule in schedules:
         # Ensure times are timezone-aware in UTC before converting
         if schedule.start_time.tzinfo is None:
@@ -4307,14 +4304,40 @@ def mobile_calendar():
             # Create all-day time range in user's timezone for the same calendar date
             schedule.start_time_local = user_tz.localize(datetime.combine(utc_date, time.min))
             schedule.end_time_local = user_tz.localize(datetime.combine(utc_date, time.max))
+            schedule.start_time = schedule.start_time_local
+            schedule.end_time = schedule.end_time_local
+            split_schedules.append(schedule)
         else:
             # Regular schedules and partial-day time off convert normally
-            schedule.start_time_local = schedule.start_time.astimezone(user_tz)
-            schedule.end_time_local = schedule.end_time.astimezone(user_tz)
+            schedule_start_local = schedule.start_time.astimezone(user_tz)
+            schedule_end_local = schedule.end_time.astimezone(user_tz)
             
-        # Also set the main attributes for backward compatibility
-        schedule.start_time = schedule.start_time.astimezone(user_tz)
-        schedule.end_time = schedule.end_time.astimezone(user_tz)
+            # Check if schedule crosses midnight in user's timezone
+            if schedule_start_local.date() != schedule_end_local.date():
+                # Schedule crosses midnight - check which portion belongs to current_date
+                if schedule_start_local.date() == current_date:
+                    # This is the first day portion: start_time to midnight (00:00 next day)
+                    schedule.start_time = schedule_start_local
+                    midnight_next_day = user_tz.localize(datetime.combine(current_date + timedelta(days=1), time.min))
+                    schedule.end_time = midnight_next_day
+                    app.logger.debug(f"Schedule {schedule.id}: Split first day portion - {schedule.start_time} to {schedule.end_time}")
+                elif schedule_end_local.date() == current_date:
+                    # This is the second day portion: midnight to end_time
+                    schedule.start_time = user_tz.localize(datetime.combine(current_date, time.min))
+                    schedule.end_time = schedule_end_local
+                    app.logger.debug(f"Schedule {schedule.id}: Split second day portion - {schedule.start_time} to {schedule.end_time}")
+                else:
+                    # Schedule doesn't belong to this day after all
+                    continue
+                    
+                split_schedules.append(schedule)
+            else:
+                # Schedule doesn't cross midnight, use normal conversion
+                schedule.start_time = schedule_start_local
+                schedule.end_time = schedule_end_local
+                split_schedules.append(schedule)
+    
+    schedules = split_schedules
     
     # Get locations for the add form
     locations = Location.query.all()
