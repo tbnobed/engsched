@@ -64,7 +64,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))
     is_admin = db.Column(db.Boolean, default=False)
-    color = db.Column(db.String(7), default="#3498db")  # Default color for calendar
+    color = db.Column(db.String(7), default="#6E7E85")  # Default color for calendar
     timezone = db.Column(db.String(50), default='UTC')  # New timezone field
     theme_preference = db.Column(db.String(20), default='dark')  # Theme preference (dark/light)
     profile_picture = db.Column(db.String(255), nullable=True)  # Path to profile picture file

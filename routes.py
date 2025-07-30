@@ -1745,7 +1745,7 @@ def admin_create_user():
             user = User(
                 username=form.username.data,
                 email=email,  # Store email in lowercase
-                color=form.color.data or '#3498db',  # Default color if none provided
+                color=form.color.data or '#6E7E85',  # Default color if none provided
                 is_admin=form.is_admin.data,
                 timezone=form.timezone.data or 'America/Los_Angeles'  # Default timezone
             )
@@ -2599,7 +2599,7 @@ def get_upcoming_time_off(for_template=False):
                     'end_date': entry['end_date'].strftime('%b %d'),
                     'duration': f"{duration} day{'s' if duration != 1 else ''}",
                     'description': entry.get('description') or 'Time Off',
-                    'color': entry.get('color', '#3498db'),
+                    'color': entry.get('color', '#6E7E85'),
                     'profile_picture': user.profile_picture if user and user.profile_picture else None
                 })
 
@@ -2788,7 +2788,7 @@ def restore_backup():
                                 username=username,
                                 email=email,
                                 password_hash=user_data['password_hash'],
-                                color=user_data.get('color', '#3498db'),
+                                color=user_data.get('color', '#6E7E85'),
                                 is_admin=user_data.get('is_admin', False),
                                 timezone=user_data.get('timezone', 'America/Los_Angeles')
                             )

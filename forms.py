@@ -38,7 +38,7 @@ class AdminUserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
-    color = ColorField('Color', default='#3498db')
+    color = ColorField('Color', default='#6E7E85')
     is_admin = BooleanField('Is Admin')
     timezone = SelectField('Timezone', 
                          choices=[(tz, tz) for tz in pytz.common_timezones],
