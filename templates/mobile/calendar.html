@@ -1681,34 +1681,50 @@ function updateCurrentTimeLine() {
     const userTimezone = '{{ user_timezone }}';
     const now = new Date();
     
-    // Create timezone-aware current time
+    // Create timezone-aware current time using Intl.DateTimeFormat for accuracy
     let currentTimeInUserTz;
     try {
-        currentTimeInUserTz = new Date(now.toLocaleString("en-US", {timeZone: userTimezone}));
+        // Get current time components in user's timezone
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: userTimezone,
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: false
+        });
+        const parts = formatter.formatToParts(now);
+        const userHour = parseInt(parts.find(p => p.type === 'hour').value);
+        const userMinute = parseInt(parts.find(p => p.type === 'minute').value);
+        
+        // Create a date object representing current time in user timezone
+        currentTimeInUserTz = { hours: userHour, minutes: userMinute };
+        console.log('Current time in user timezone:', userHour + ':' + userMinute.toString().padStart(2, '0'));
     } catch (e) {
         // Fallback to local time if timezone is invalid
-        currentTimeInUserTz = now;
+        console.log('Timezone conversion failed, using local time');
+        currentTimeInUserTz = { hours: now.getHours(), minutes: now.getMinutes() };
     }
     
-    const currentHour = currentTimeInUserTz.getHours();
-    const currentMinute = currentTimeInUserTz.getMinutes();
+    const currentHour = currentTimeInUserTz.hours;
+    const currentMinute = currentTimeInUserTz.minutes;
     
     // Get today's date in user timezone for comparison
     const todayInUserTz = new Date(now.toLocaleString("en-US", {timeZone: userTimezone}));
     const todayName = todayInUserTz.toLocaleDateString('en-US', { weekday: 'long' });
     const displayedDate = currentDateElement.textContent;
     
+    console.log('Comparing dates - Today:', todayName, 'Displayed:', displayedDate);
+    
     if (displayedDate === todayName) {
         // Calculate position for current time - more precise calculation
         const totalMinutes = currentHour * 60 + currentMinute;
         const topPosition = totalMinutes; // 1px per minute (60px per hour)
         
+        console.log('Positioning current time line at:', topPosition, 'px for time', currentHour + ':' + currentMinute.toString().padStart(2, '0'));
+        
         // Update the time display in the "Now" badge
-        const timeDisplay = currentTimeInUserTz.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit',
-            hour12: true 
-        });
+        const hour12 = currentHour === 0 ? 12 : (currentHour > 12 ? currentHour - 12 : currentHour);
+        const ampm = currentHour >= 12 ? 'PM' : 'AM';
+        const timeDisplay = hour12 + ':' + currentMinute.toString().padStart(2, '0') + ' ' + ampm;
         
         // Find the time label and update its text
         const timeLabel = currentTimeLine.querySelector('.time-label');
