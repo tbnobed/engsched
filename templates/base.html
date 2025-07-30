@@ -815,27 +815,27 @@
                         const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
                         console.log('Time off section - dark mode detected:', isDarkMode);
                         
-                        // 2-column grid layout similar to active technicians
-                        let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">';
+                        // 2-column grid layout with overflow containment
+                        let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; max-width: 100%; overflow: hidden;">';
                         
                         entries.forEach((entry, index) => {
                             // Create avatar - either profile picture or initials
                             let avatarHtml = '';
                             if (entry.profile_picture) {
-                                avatarHtml = `<img src="/static/${entry.profile_picture}" alt="${entry.username}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 8px; flex-shrink: 0;">`;
+                                avatarHtml = `<img src="/static/${entry.profile_picture}" alt="${entry.username}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; margin-right: 6px; flex-shrink: 0;">`;
                             } else {
                                 const initials = entry.username.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
                                 const bgColor = entry.color || '#ffc107';
-                                avatarHtml = `<div style="width: 30px; height: 30px; background: ${bgColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.7rem; margin-right: 8px; flex-shrink: 0;">${initials}</div>`;
+                                avatarHtml = `<div style="width: 28px; height: 28px; background: ${bgColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.65rem; margin-right: 6px; flex-shrink: 0;">${initials}</div>`;
                             }
                             
                             html += `
-                                <div class="grid-item d-flex align-items-center p-2" style="border-radius: 10px; min-height: 60px;">
+                                <div class="grid-item d-flex align-items-center p-2" style="border-radius: 10px; min-height: 60px; max-width: 100%; overflow: hidden;">
                                     ${avatarHtml}
-                                    <div style="flex: 1; min-width: 0;">
-                                        <div class="time-off-name" style="font-weight: 600; font-size: 0.8rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${entry.username}</div>
-                                        <div class="time-off-date" style="font-size: 0.55rem; margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${entry.start_date} to ${entry.end_date}</div>
-                                        <div class="time-off-duration" style="font-size: 0.6rem; opacity: 0.8;">${entry.duration}</div>
+                                    <div style="flex: 1; min-width: 0; max-width: calc(100% - 34px);">
+                                        <div class="time-off-name" style="font-weight: 600; font-size: 0.75rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${entry.username}</div>
+                                        <div class="time-off-date" style="font-size: 0.5rem; margin-bottom: 1px; line-height: 1.2; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%;">${entry.start_date} to ${entry.end_date}</div>
+                                        <div class="time-off-duration" style="font-size: 0.55rem; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${entry.duration}</div>
                                     </div>
                                 </div>`;
                         });

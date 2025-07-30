@@ -32,6 +32,12 @@ Recent Updates (July 30, 2025):
 - Reduced padding and font sizes progressively for mobile optimization
 - Quick Links show truncated titles on small screens with ellipsis for longer text
 - Top bar now properly stacks on mobile and flows horizontally on desktop
+- ✅ COMPLETED: Time Off Cards Overflow Fix - Container Boundary Enforcement
+- Fixed overflow issue where time off cards extended outside container boundaries
+- Added proper max-width constraints and overflow containment to grid layout
+- Reduced avatar sizes from 30px to 28px for better space utilization
+- Implemented word-wrap and break-word for date text to prevent horizontal overflow
+- Enhanced text truncation with proper ellipsis for username and duration fields
 - ✅ COMPLETED: Universal Midnight Crossing Fix - Complete Cross-Timezone Schedule Display
 - Fixed critical JavaScript positioning logic to handle ALL midnight crossings (not just schedules ending at 00:00)
 - Enhanced midnight detection from `endHour === 0 && startHour > endHour` to universal `endHour < startHour`
