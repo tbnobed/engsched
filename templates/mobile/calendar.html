@@ -1480,6 +1480,8 @@ function initializeTimeline() {
         const allDay = item.dataset.allDay === 'true';
         const timeOff = item.dataset.timeOff === 'true';
         
+        console.log(`Processing schedule ${item.dataset.scheduleId}: startHour=${startHour}, endHour=${endHour}, allDay=${allDay}, timeOff=${timeOff}`);
+        
         const eventCard = item.querySelector('.timeline-event-card');
         if (!eventCard) return;
         
