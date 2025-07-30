@@ -1133,12 +1133,18 @@ html[data-bs-theme="dark"] .user-avatar {
         font-size: 1.75rem;
     }
     
-    /* TARGET THE EXACT CONTAINER: main.mobile-content */
-    main.mobile-content {
+    /* TARGET THE EXACT CONSTRAINING PADDING: .mobile-content has padding: 20px 15px */
+    body .mobile-content {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        /* Keep top/bottom padding for header/footer spacing */
+        padding-top: 20px !important;
+        padding-bottom: 20px !important;
+        /* Ensure no width constraints */
         width: 100vw !important;
         max-width: 100vw !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
         margin-top: 60px !important;
         margin-bottom: 80px !important;
         overflow-x: hidden !important;
