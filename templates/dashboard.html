@@ -3,23 +3,23 @@
 
 {% block content %}
 <style>
-/* Dashboard-specific gradient headers using purple palette */
-.dashboard .card-header.gradient-pale-purple {
-    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(229, 217, 242, 0.9) 0%, rgba(245, 239, 255, 0.7) 100%){% else %}linear-gradient(135deg, rgba(229, 217, 242, 0.95) 0%, rgba(245, 239, 255, 0.8) 100%){% endif %} !important;
-    color: #4c1d95 !important;
-}
-.dashboard .card-header.gradient-periwinkle {
-    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(205, 193, 255, 0.9) 0%, rgba(165, 148, 249, 0.7) 100%){% else %}linear-gradient(135deg, rgba(205, 193, 255, 0.95) 0%, rgba(165, 148, 249, 0.8) 100%){% endif %} !important;
+/* Dashboard-specific gradient headers using blue-gray palette */
+.dashboard .card-header.gradient-rich-black {
+    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(23, 26, 33, 0.9) 0%, rgba(97, 112, 115, 0.7) 100%){% else %}linear-gradient(135deg, rgba(23, 26, 33, 0.95) 0%, rgba(97, 112, 115, 0.8) 100%){% endif %} !important;
     color: white !important;
 }
-.dashboard .card-header.gradient-slate-blue {
-    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(165, 148, 249, 0.9) 0%, rgba(115, 113, 252, 0.7) 100%){% else %}linear-gradient(135deg, rgba(165, 148, 249, 0.95) 0%, rgba(115, 113, 252, 0.8) 100%){% endif %} !important;
+.dashboard .card-header.gradient-air-blue {
+    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(122, 147, 172, 0.9) 0%, rgba(146, 188, 234, 0.7) 100%){% else %}linear-gradient(135deg, rgba(122, 147, 172, 0.95) 0%, rgba(146, 188, 234, 0.8) 100%){% endif %} !important;
+    color: white !important;
+}
+.dashboard .card-header.gradient-periwinkle-blue {
+    background: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}linear-gradient(135deg, rgba(146, 188, 234, 0.9) 0%, rgba(175, 179, 247, 0.7) 100%){% else %}linear-gradient(135deg, rgba(146, 188, 234, 0.95) 0%, rgba(175, 179, 247, 0.8) 100%){% endif %} !important;
     color: white !important;
 }
 
-/* Button styling using purple palette */
+/* Button styling using blue-gray palette */
 .dashboard .btn-primary {
-    background: linear-gradient(135deg, #A594F9 0%, #7371FC 100%) !important;
+    background: linear-gradient(135deg, #7A93AC 0%, #92BCEA 100%) !important;
     border: none !important;
     color: white !important;
     font-weight: 600 !important;
@@ -27,34 +27,34 @@
 }
 
 .dashboard .btn-primary:hover {
-    background: linear-gradient(135deg, #9080f7 0%, #5f5dfa 100%) !important;
+    background: linear-gradient(135deg, #6b829a 0%, #7ea8d8 100%) !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 4px 12px rgba(165, 148, 249, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(122, 147, 172, 0.4) !important;
 }
 
 .dashboard .btn-outline-primary {
-    border: 2px solid #A594F9 !important;
-    color: #A594F9 !important;
+    border: 2px solid #7A93AC !important;
+    color: #7A93AC !important;
     background: transparent !important;
     font-weight: 600 !important;
 }
 
 .dashboard .btn-outline-primary:hover {
-    background: #A594F9 !important;
+    background: #7A93AC !important;
     color: white !important;
     transform: translateY(-1px) !important;
 }
 
-/* Status badges using purple palette */
+/* Status badges using blue-gray palette */
 .dashboard .badge-status-open,
 .dashboard .badge-status-in_progress {
-    background: linear-gradient(135deg, #CDC1FF, #F5EFFF) !important;
-    color: #4c1d95 !important;
+    background: linear-gradient(135deg, #92BCEA, #AFB3F7) !important;
+    color: white !important;
 }
 
 .dashboard .badge-status-resolved,
 .dashboard .badge-status-closed {
-    background: linear-gradient(135deg, #A594F9, #7371FC) !important;
+    background: linear-gradient(135deg, #617073, #171A21) !important;
     color: white !important;
 }
 </style>
@@ -67,7 +67,7 @@
                 <!-- Top Left: Ticket Information -->
                 <div class="col-12 mb-4">
                     <div class="card h-100">
-                        <div class="card-header text-white gradient-pale-purple">
+                        <div class="card-header text-white gradient-rich-black">
                             <h5 class="mb-0">
                                 <i data-feather="alert-circle"></i>
                                 Active Tickets
@@ -139,7 +139,7 @@
                 <!-- Bottom Left: Studio Calendar Bookings -->
                 <div class="col-12">
                     <div class="card h-100">
-                        <div class="card-header text-white gradient-periwinkle">
+                        <div class="card-header text-white gradient-air-blue">
                             <h5 class="mb-0">
                                 <i data-feather="calendar"></i>
                                 Studio Bookings - {{ today.strftime('%A, %B %d') }}
@@ -163,7 +163,7 @@
         <!-- Right Side: Today's Technician Schedules -->
         <div class="col-md-4">
             <div class="card h-100">
-                <div class="card-header text-white gradient-slate-blue">
+                <div class="card-header text-white gradient-periwinkle-blue">
                     <h5 class="mb-0">
                         <i data-feather="users"></i>
                         Today's Schedule - {{ today.strftime('%a %m/%d') }}
