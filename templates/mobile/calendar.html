@@ -5,8 +5,8 @@
 
 {% block content %}
 <div class="modern-mobile-calendar">
-    <!-- Header Section with compact design -->
-    <div class="calendar-header" style="position: relative; top: 80px; z-index: 999; background: white; padding: 10px 20px; margin-bottom: 80px;">
+    <!-- Header Section with proper positioning -->
+    <div class="calendar-header" style="position: relative; top: 80px; z-index: 999; background: white; padding: 15px 20px; margin-bottom: 80px;">
         <div class="date-navigation">
             <button class="nav-btn" onclick="changeDate(-1)">
                 <i data-feather="chevron-left"></i>
@@ -17,6 +17,14 @@
             </div>
             <button class="nav-btn" onclick="changeDate(1)">
                 <i data-feather="chevron-right"></i>
+            </button>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="add-schedule-btn" onclick="showAddScheduleModal()">
+                <i data-feather="plus"></i>
+                <span>Add Schedule</span>
             </button>
         </div>
     </div>
@@ -93,13 +101,73 @@
                 <i data-feather="calendar"></i>
             </div>
             <h3>No schedules today</h3>
-            <p>Your timeline is clear for today</p>
+            <p>Tap the "Add Schedule" button to create your first entry</p>
         </div>
         {% endif %}
     </div>
 </div>
 
-
+<!-- Add Schedule Modal -->
+<div class="modal fade" id="addScheduleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Schedule Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addScheduleForm" method="POST" action="{{ url_for('new_schedule') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="modal-body">
+                    <input type="hidden" name="schedule_date" id="modalScheduleDate" value="{{ current_date.strftime('%Y-%m-%d') }}">
+                    
+                    <div class="mb-3">
+                        <label for="startTime" class="form-label">Start Time</label>
+                        <input type="time" class="form-control" id="startTime" name="start_time" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="endTime" class="form-label">End Time</label>
+                        <input type="time" class="form-control" id="endTime" name="end_time" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <select class="form-select" id="location" name="location_id">
+                            <option value="">Select Location</option>
+                            {% for location in locations %}
+                            <option value="{{ location.id }}">{{ location.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="timeOff" name="time_off">
+                                <label class="form-check-label" for="timeOff">Time Off</label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="allDay" name="all_day">
+                                <label class="form-check-label" for="allDay">All Day</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Schedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Edit Schedule Modal -->
 <div class="modal fade" id="editScheduleModal" tabindex="-1">
@@ -1284,7 +1352,10 @@ function changeDate(direction) {
     }
 }
 
-
+function showAddScheduleModal() {
+    document.getElementById('modalScheduleDate').value = currentDateStr;
+    new bootstrap.Modal(document.getElementById('addScheduleModal')).show();
+}
 
 function editSchedule(scheduleId) {
     // Open edit modal with schedule data
