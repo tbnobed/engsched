@@ -1670,20 +1670,33 @@ function initializeTimeline() {
 }
 
 function updateCurrentTimeLine() {
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
     const currentTimeLine = document.getElementById('currentTimeLine');
-    
     if (!currentTimeLine) return;
     
     // Check if we're viewing today
     const currentDateElement = document.getElementById('currentDate');
     if (!currentDateElement) return;
     
-    const today = new Date();
+    // Get current time in user's timezone
+    const userTimezone = '{{ user_timezone }}';
+    const now = new Date();
+    
+    // Create timezone-aware current time
+    let currentTimeInUserTz;
+    try {
+        currentTimeInUserTz = new Date(now.toLocaleString("en-US", {timeZone: userTimezone}));
+    } catch (e) {
+        // Fallback to local time if timezone is invalid
+        currentTimeInUserTz = now;
+    }
+    
+    const currentHour = currentTimeInUserTz.getHours();
+    const currentMinute = currentTimeInUserTz.getMinutes();
+    
+    // Get today's date in user timezone for comparison
+    const todayInUserTz = new Date(now.toLocaleString("en-US", {timeZone: userTimezone}));
+    const todayName = todayInUserTz.toLocaleDateString('en-US', { weekday: 'long' });
     const displayedDate = currentDateElement.textContent;
-    const todayName = today.toLocaleDateString('en-US', { weekday: 'long' });
     
     if (displayedDate === todayName) {
         // Calculate position for current time

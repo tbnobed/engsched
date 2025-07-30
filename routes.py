@@ -4263,7 +4263,8 @@ def mobile_calendar():
     return render_template('mobile/calendar.html',
                          schedules=schedules,
                          current_date=current_date,
-                         locations=locations)
+                         locations=locations,
+                         user_timezone=current_user.timezone)
 
 
 @app.route('/mobile/personal_schedule', methods=['GET', 'POST'])
