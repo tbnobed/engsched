@@ -723,15 +723,30 @@ html[data-bs-theme="dark"] .hour-line {
     display: flex;
     align-items: center;
     pointer-events: none;
+    height: 2px; /* Constrain height to prevent overflow */
+}
+
+.current-time-line::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #ff4757;
+    z-index: 1;
 }
 
 .time-marker {
+    position: relative;
     width: 12px;
     height: 12px;
     background: #ff4757;
     border-radius: 50%;
     border: 2px solid white;
     box-shadow: 0 2px 8px rgba(255, 71, 87, 0.4);
+    z-index: 2;
+    margin-left: 90px; /* Align with timeline content area */
+    flex-shrink: 0;
 }
 
 .time-label {
@@ -1672,6 +1687,10 @@ function initializeTimeline() {
 function updateCurrentTimeLine() {
     const currentTimeLine = document.getElementById('currentTimeLine');
     if (!currentTimeLine) return;
+    
+    // Clear any duplicate current time lines that might exist
+    const existingLines = document.querySelectorAll('.current-time-line:not(#currentTimeLine)');
+    existingLines.forEach(line => line.remove());
     
     // Check if we're viewing today
     const currentDateElement = document.getElementById('currentDate');
