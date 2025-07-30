@@ -492,8 +492,8 @@ html[data-bs-theme="dark"] .hour-line {
 
 .schedule-events {
     position: absolute;
-    left: 82px;
-    right: 4px;
+    left: 76px;
+    right: 2px;
     top: 0;
     bottom: 0;
     pointer-events: none;
@@ -534,6 +534,31 @@ html[data-bs-theme="dark"] .hour-line {
     font-size: 0.85rem;
     color: white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Schedule Content Container */
+.schedule-content {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 1.5rem 1.5rem 0 0;
+    margin-top: -1.5rem;
+    position: relative;
+    z-index: 2;
+    backdrop-filter: blur(20px);
+    min-height: calc(100vh - 180px);
+    padding: 2rem 0 2rem;
+    overflow: hidden;
+}
+
+.timeline-scroll {
+    height: calc(100vh - 240px);
+    overflow-y: auto;
+    position: relative;
+    background: linear-gradient(to bottom, 
+        transparent 0%, 
+        rgba(102, 126, 234, 0.03) 25%, 
+        rgba(118, 75, 162, 0.03) 75%, 
+        transparent 100%);
 }
 
 /* Duration Lines */
@@ -1109,7 +1134,7 @@ html[data-bs-theme="dark"] .user-avatar {
     }
     
     .schedule-content {
-        padding: 0 0.25rem 2rem;
+        padding: 2rem 0 2rem;
     }
 }
 </style>
