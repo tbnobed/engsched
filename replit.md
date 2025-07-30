@@ -9,6 +9,20 @@ This is a comprehensive web application for managing technician schedules and ti
 Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
+Recent Updates (July 30, 2025):
+- ✅ COMPLETED: Mobile Calendar All-Day OOO Timezone Lock - Date-Stable Out of Office Entries
+- Fixed critical timezone shifting issue where all-day OOO entries moved between dates when switching timezones (e.g., 7/29 OOO moving to 7/28 when changing CST to PST)
+- Enhanced mobile calendar to use timezone-aware date filtering for "today" instead of UTC server time
+- Implemented special timezone handling for all-day OOO entries to lock them to intended calendar dates
+- Extended query range with smart filtering to catch OOO entries created in different timezone boundaries
+- All-day OOO entries now display consistently on their intended date regardless of user's timezone setting
+- Enhanced OOO display with full-size 40px profile pictures matching regular schedule entry styling
+- ✅ COMPLETED: Mobile Interface Button Optimization - 50% Smaller Add Schedule Button
+- Reduced "Add Schedule" button size by 50% in mobile calendar for cleaner, less overwhelming interface
+- Updated padding from 1rem 2rem to 0.5rem 1rem, font size from 1.1rem to 0.9rem
+- Proportionally adjusted border radius and element spacing for consistent visual hierarchy
+- Provides more space in mobile calendar header while maintaining button functionality and visual appeal
+
 Recent Updates (July 29, 2025):
 - ✅ COMPLETED: COMPREHENSIVE Studio Booking Timezone Fix - All Views Now Timezone-Aware
 - Fixed critical issue where Eastern Time users saw tomorrow's studio bookings appearing in today's view
