@@ -1,5 +1,5 @@
 {% extends "mobile_base_enhanced.html" %}
-<!-- CACHE BUST: Blue line restored - timeline alignment complete 2025-07-30 14:55 -->
+<!-- CACHE BUST: Schedule elements positioned with proper clearance 2025-07-30 14:56 -->
 
 {% block title %}Schedule - Mobile{% endblock %}
 
@@ -1623,7 +1623,7 @@ function initializeTimeline() {
             durationLine.style.cssText = `
                 position: absolute;
                 top: ${topOffset}px;
-                left: ${column * 25}px;
+                left: ${10 + column * 25}px;
                 width: 4px;
                 height: ${height}px;
                 background-color: ${userColor};
@@ -1637,7 +1637,7 @@ function initializeTimeline() {
                 clonedCard.style.cssText = `
                     position: absolute;
                     top: ${topOffset + Math.max(0, height/2 - 22)}px;
-                    left: ${column * 25 - 11}px;
+                    left: ${10 + column * 25 - 11}px;
                     width: 44px;
                     height: 44px;
                     background-color: ${userColor};
