@@ -1623,13 +1623,13 @@ function initializeTimeline() {
             durationLine.style.cssText = `
                 position: absolute;
                 top: ${topOffset}px;
-                left: ${10 + column * 25}px;
+                left: ${20 + column * 60}px;
                 width: 4px;
                 height: ${height}px;
                 background-color: ${userColor};
                 z-index: 4;
             `;
-            console.log('Duration line positioned at left:', 10 + column * 25, 'px');
+            console.log('Duration line positioned at left:', 20 + column * 60, 'px');
             
             // Clone and position profile picture (only for the first hour slot)
             if (hour === startSlot) {
@@ -1638,7 +1638,7 @@ function initializeTimeline() {
                 clonedCard.style.cssText = `
                     position: absolute;
                     top: ${topOffset + Math.max(0, height/2 - 22)}px;
-                    left: ${10 + column * 25 - 11}px;
+                    left: ${20 + column * 60 - 11}px;
                     width: 44px;
                     height: 44px;
                     background-color: ${userColor};
