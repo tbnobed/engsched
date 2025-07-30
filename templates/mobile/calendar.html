@@ -1715,11 +1715,11 @@ function updateCurrentTimeLine() {
     console.log('Comparing dates - Today:', todayName, 'Displayed:', displayedDate);
     
     if (displayedDate === todayName) {
-        // Calculate position for current time - more precise calculation
-        const totalMinutes = currentHour * 60 + currentMinute;
-        const topPosition = totalMinutes; // 1px per minute (60px per hour)
+        // Calculate position for current time - each hour slot is 60px tall
+        // Position = (hour * 60px) + (minutes * 1px per minute within the hour)
+        const topPosition = (currentHour * 60) + currentMinute;
         
-        console.log('Positioning current time line at:', topPosition, 'px for time', currentHour + ':' + currentMinute.toString().padStart(2, '0'));
+        console.log('Positioning current time line at:', topPosition, 'px for time', currentHour + ':' + currentMinute.toString().padStart(2, '0'), 'Total minutes:', currentHour * 60 + currentMinute);
         
         // Update the time display in the "Now" badge
         const hour12 = currentHour === 0 ? 12 : (currentHour > 12 ? currentHour - 12 : currentHour);
