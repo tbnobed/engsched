@@ -4200,13 +4200,14 @@ def mobile_calendar():
     start_utc = start_of_day.astimezone(pytz.UTC)
     end_utc = end_of_day.astimezone(pytz.UTC)
     
-    # Query schedules for the day
+    # Query schedules for the day - using overlap logic to catch all-day events
     schedules = Schedule.query.filter(
-        Schedule.start_time >= start_utc,
-        Schedule.start_time <= end_utc
+        Schedule.start_time < end_utc,
+        Schedule.end_time > start_utc
     ).join(User).outerjoin(Location).order_by(Schedule.start_time).all()
     
-    # Convert times back to user timezone for display
+    # Convert times back to user timezone for display and filter
+    filtered_schedules = []
     for schedule in schedules:
         # Ensure times are timezone-aware in UTC before converting
         if schedule.start_time.tzinfo is None:
@@ -4214,8 +4215,32 @@ def mobile_calendar():
         if schedule.end_time.tzinfo is None:
             schedule.end_time = pytz.UTC.localize(schedule.end_time)
             
-        schedule.start_time = schedule.start_time.astimezone(user_tz)
-        schedule.end_time = schedule.end_time.astimezone(user_tz)
+        # Convert to user timezone
+        schedule.start_time_local = schedule.start_time.astimezone(user_tz)
+        schedule.end_time_local = schedule.end_time.astimezone(user_tz)
+        
+        # For all-day events, check if they should appear on this calendar date
+        if schedule.all_day and schedule.time_off:
+            # All-day OOO should appear on the intended calendar date
+            # Use smart detection based on the schedule's local date
+            schedule_date = schedule.start_time_local.date()
+            
+            # If start time is very late in day (like 23:00+), it might be intended for next day
+            if schedule.start_time_local.hour >= 23:
+                schedule_date = (schedule.start_time_local + timedelta(days=1)).date()
+            # If start time is very early (like 00:00-01:00), keep original date
+            elif schedule.start_time_local.hour <= 1:
+                schedule_date = schedule.start_time_local.date()
+                
+            # Only include if this matches the current viewing date
+            if schedule_date == current_date:
+                filtered_schedules.append(schedule)
+        else:
+            # Regular schedules: include if they start on the current date
+            if schedule.start_time_local.date() == current_date:
+                filtered_schedules.append(schedule)
+    
+    schedules = filtered_schedules
     
     # Get locations for the add form
     locations = Location.query.all()
