@@ -528,7 +528,7 @@
         <div class="row g-2" style="background: var(--dark-panel); border-radius: 12px; padding: 15px; margin: 0 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-height: 120px;">
             <!-- Current Time -->
             <div class="col-12 col-sm-6 col-lg-2 mb-2 mb-lg-0">
-                <div class="text-center text-white d-flex flex-column justify-content-center align-items-center" style="background: linear-gradient(135deg, #6E7E85 0%, #B7CECE 100%); border-radius: 8px; padding: 10px; height: 100%; min-height: 80px;">
+                <div class="text-center text-white d-flex flex-column justify-content-center align-items-center" style="background: linear-gradient(135deg, #A594F9 0%, #7371FC 100%); border-radius: 8px; padding: 10px; height: 100%; min-height: 80px;">
                     <div style="font-size: 0.8rem; opacity: 0.9; margin-bottom: 6px;">
                         <i data-feather="clock" style="width: 12px; height: 12px;" class="me-1"></i>
                         <span class="d-none d-sm-inline">Current Time</span>
@@ -540,9 +540,9 @@
             
             <!-- Active Technicians -->
             <div class="col-12 col-sm-6 col-lg-4 mb-2 mb-lg-0">
-                <div class="d-flex flex-column h-100" style="background: linear-gradient(135deg, rgba(110, 126, 133, 0.2), rgba(183, 206, 206, 0.15)); border-radius: 8px; padding: 10px; border-left: 4px solid #6E7E85;">
+                <div class="d-flex flex-column h-100" style="background: linear-gradient(135deg, rgba(229, 217, 242, 0.2), rgba(245, 239, 255, 0.15)); border-radius: 8px; padding: 10px; border-left: 4px solid #E5D9F2;">
                     <h6 class="mb-2 text-center" style="color: var(--dark-text); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;">
-                        <i data-feather="users" style="width: 14px; height: 14px; margin-right: 4px; color: #6E7E85;"></i>
+                        <i data-feather="users" style="width: 14px; height: 14px; margin-right: 4px; color: #A594F9;"></i>
                         <span class="d-none d-md-inline">Active Technicians</span>
                         <span class="d-md-none">Active</span>
                     </h6>
@@ -554,9 +554,9 @@
             
             <!-- Upcoming Time Off -->
             <div class="col-12 col-sm-6 col-lg-3 mb-2 mb-lg-0">
-                <div class="d-flex flex-column h-100" style="background: linear-gradient(135deg, rgba(183, 206, 206, 0.2), rgba(187, 186, 198, 0.15)); border-radius: 8px; padding: 10px; border-left: 4px solid #B7CECE;">
+                <div class="d-flex flex-column h-100" style="background: linear-gradient(135deg, rgba(205, 193, 255, 0.2), rgba(165, 148, 249, 0.15)); border-radius: 8px; padding: 10px; border-left: 4px solid #CDC1FF;">
                     <h6 class="mb-2 text-center" style="color: var(--dark-text); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;">
-                        <i data-feather="calendar" style="width: 14px; height: 14px; margin-right: 4px; color: #B7CECE;"></i>
+                        <i data-feather="calendar" style="width: 14px; height: 14px; margin-right: 4px; color: #A594F9;"></i>
                         <span class="d-none d-lg-inline">Upcoming Time Off</span>
                         <span class="d-lg-none">Time Off</span>
                     </h6>
@@ -568,9 +568,9 @@
             
             <!-- Quick Links -->
             <div class="col-12 col-sm-6 col-lg-3">
-                <div class="d-flex flex-column h-100" style="background: linear-gradient(135deg, rgba(187, 186, 198, 0.2), rgba(226, 226, 226, 0.15)); border-radius: 8px; padding: 10px; border-left: 4px solid #BBBAC6;">
+                <div class="d-flex flex-column h-100" style="background: linear-gradient(135deg, rgba(165, 148, 249, 0.2), rgba(115, 113, 252, 0.15)); border-radius: 8px; padding: 10px; border-left: 4px solid #7371FC;">
                     <h6 class="mb-2 text-center" style="color: var(--dark-text); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;">
-                        <i data-feather="external-link" style="width: 14px; height: 14px; margin-right: 4px; color: #BBBAC6;"></i>
+                        <i data-feather="external-link" style="width: 14px; height: 14px; margin-right: 4px; color: #7371FC;"></i>
                         <span class="d-none d-md-inline">Quick Links</span>
                         <span class="d-md-none">Links</span>
                     </h6>
@@ -578,7 +578,7 @@
                     {% if quick_links %}
                         <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; flex-grow: 1; align-content: flex-start;">
                             {% for link in quick_links %}
-                            <a href="{{ link.url }}" target="_blank" class="btn btn-sm top-bar-quick-link" style="color: var(--dark-text); padding: 3px 6px; border-radius: 6px; background: rgba(187, 186, 198, 0.1); border: 1px solid rgba(187, 186, 198, 0.2); font-size: 0.7rem; text-decoration: none; transition: all 0.2s ease;">
+                            <a href="{{ link.url }}" target="_blank" class="btn btn-sm top-bar-quick-link" style="color: var(--dark-text); padding: 3px 6px; border-radius: 6px; background: rgba(115, 113, 252, 0.1); border: 1px solid rgba(115, 113, 252, 0.2); font-size: 0.7rem; text-decoration: none; transition: all 0.2s ease;">
                                 <i data-feather="{{ link.icon }}" style="width: 10px; height: 10px;" class="me-1"></i>
                                 <span class="d-none d-lg-inline">{{ link.title }}</span>
                                 <span class="d-lg-none">{{ link.title[:8] }}{% if link.title|length > 8 %}...{% endif %}</span>
