@@ -1,4 +1,5 @@
 {% extends "mobile_base_enhanced.html" %}
+<!-- CACHE BUST: Timeline alignment fix - removed blue line 2025-07-30 14:44 -->
 
 {% block title %}Schedule - Mobile{% endblock %}
 
@@ -525,7 +526,6 @@ html[data-bs-theme="dark"] .hour-slot {
     flex-shrink: 0;
     padding: 8px 15px 0 0;
     text-align: right;
-    border-right: 2px solid #667eea;
 }
 
 .hour-time {
@@ -555,7 +555,7 @@ html[data-bs-theme="dark"] .hour-line {
 
 .schedule-events {
     position: absolute;
-    left: 85px;
+    left: 95px;
     right: 10px;
     top: 0;
     bottom: 0;
