@@ -78,45 +78,16 @@
                  data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
                  data-all-day="{{ 'true' if schedule.all_day else 'false' }}">
                 
-                <div class="timeline-event-card" style="background-color: {{ schedule.technician.color or '#6c757d' }};">
-                    <div class="event-time">
-                        {% if schedule.all_day and schedule.time_off %}
-                        All Day - OOO
-                        {% else %}
-                        {{ (schedule.start_time_local if schedule.start_time_local else schedule.start_time).strftime('%H:%M') }} - 
-                        {{ (schedule.end_time_local if schedule.end_time_local else schedule.end_time).strftime('%H:%M') }}
-                        {% endif %}
-                    </div>
-                    
-                    <div class="event-user">
-                        {% if schedule.technician.profile_picture %}
+                <div class="timeline-event-card" 
+                     title="{{ schedule.technician.username }}{% if schedule.location %} - {{ schedule.location.name }}{% endif %}{% if schedule.time_off %} ({% if schedule.all_day %}All Day OOO{% else %}Time Off{% endif %}){% endif %}">
+                    {% if schedule.technician.profile_picture %}
                         <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}" 
                              alt="{{ schedule.technician.username }}" 
-                             class="event-avatar">
-                        {% else %}
-                        <div class="event-avatar event-initials">
-                            {{ schedule.technician.username[:2].upper() }}
+                             class="timeline-profile-pic">
+                    {% else %}
+                        <div class="timeline-profile-pic" style="background-color: {{ schedule.technician.color or '#6c757d' }};">
+                            {{ schedule.technician.username[0].upper() }}
                         </div>
-                        {% endif %}
-                        <span class="event-username">{{ schedule.technician.username }}</span>
-                    </div>
-                    
-                    {% if schedule.location %}
-                    <div class="event-location">
-                        <i data-feather="map-pin"></i>
-                        {{ schedule.location.name }}
-                    </div>
-                    {% endif %}
-                    
-                    {% if schedule.description %}
-                    <div class="event-description">{{ schedule.description }}</div>
-                    {% endif %}
-                    
-                    {% if schedule.time_off %}
-                    <div class="event-badge">
-                        <i data-feather="coffee"></i>
-                        {% if schedule.all_day %}OOO{% else %}Time Off{% endif %}
-                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -522,7 +493,7 @@ html[data-bs-theme="dark"] .hour-line {
 .schedule-events {
     position: absolute;
     left: 82px;
-    right: 12px;
+    right: 8px;
     top: 0;
     bottom: 0;
     pointer-events: none;
@@ -531,28 +502,38 @@ html[data-bs-theme="dark"] .hour-line {
 /* Timeline Event Cards */
 .timeline-event-card {
     position: absolute;
-    left: 0;
-    right: 0;
-    background: #667eea;
-    border-radius: 8px;
-    padding: 8px 12px;
-    margin: 2px 0;
-    color: white;
-    font-size: 0.85rem;
-    line-height: 1.3;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
-    pointer-events: auto;
-    transition: all 0.2s ease;
-    min-height: 50px;
     display: flex;
-    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    width: 44px;
+    height: 44px;
+    pointer-events: auto;
 }
 
 .timeline-event-card:hover {
-    transform: translateX(4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.timeline-profile-pic {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .event-time {
@@ -1116,7 +1097,7 @@ html[data-bs-theme="dark"] .user-avatar {
     }
     
     .schedule-content {
-        padding: 0 1rem 2rem;
+        padding: 0 0.5rem 2rem;
     }
 }
 </style>
@@ -1259,9 +1240,9 @@ function initializeTimeline() {
         }
         
         // Find horizontal position to avoid overlaps
-        const columnWidth = 25; // Percentage width for each column
+        const columnWidth = 20; // Percentage width for each column (smaller for profile pics)
         let column = 0;
-        let maxColumns = 4; // Maximum 4 columns to keep events readable
+        let maxColumns = 5; // Maximum 5 columns to fit more profile pics
         
         // Check for overlaps with existing events
         while (column < maxColumns) {
@@ -1297,14 +1278,11 @@ function initializeTimeline() {
         
         // Position the event card
         clonedCard.style.position = 'absolute';
-        clonedCard.style.top = topPosition + 'px';
-        clonedCard.style.height = height + 'px';
+        clonedCard.style.top = topPosition + (Math.floor(height/2) - 22) + 'px'; // Center vertically in the time slot
         clonedCard.style.left = (column * columnWidth + 2) + '%'; // +2% for left margin
-        clonedCard.style.width = (columnWidth - 4) + '%'; // -4% for margins between columns
         clonedCard.style.zIndex = '5';
-        clonedCard.style.marginRight = '2px';
-        clonedCard.style.boxShadow = '0 2px 4px rgba(0,0,0,0.15)';
-        clonedCard.style.border = '1px solid rgba(255,255,255,0.2)';
+        // Remove the background color override to use the original user color
+        clonedCard.style.backgroundColor = '';
         
         // Store this event's position for future collision detection
         positionedEvents.push({
