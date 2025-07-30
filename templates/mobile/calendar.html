@@ -1414,23 +1414,26 @@ function initializeTimeline() {
             }
         }
         
-        // Calculate center position for this column
-        const columnCenterPercent = (column * columnWidth) + (columnWidth / 2);
+        // Calculate position ensuring it stays right of time labels (minimum 90px from left)
+        const baseLeftPosition = 90; // Start after time labels + padding
+        const columnWidth = 60; // Wider columns for better spacing
+        const columnPosition = baseLeftPosition + (column * columnWidth);
         
-        // Create duration line
+        // Create duration line positioned to the right of time labels
         const durationLine = document.createElement('div');
         durationLine.className = 'timeline-duration-line';
         durationLine.style.position = 'absolute';
         durationLine.style.top = topPosition + 'px';
         durationLine.style.height = height + 'px';
-        durationLine.style.left = `calc(${columnCenterPercent}% - 2px)`; // Center line in column
+        durationLine.style.left = columnPosition + 'px'; // Fixed pixel position
         durationLine.style.backgroundColor = userColor;
         durationLine.style.zIndex = '4';
+        durationLine.style.width = '4px';
         
-        // Position the event card (profile picture) - centered on the line
+        // Position the event card (profile picture) centered on the line
         clonedCard.style.position = 'absolute';
-        clonedCard.style.top = topPosition + (Math.floor(height/2) - 22) + 'px'; // Center vertically in the time slot
-        clonedCard.style.left = `calc(${columnCenterPercent}% - 22px)`; // Center profile pic on line
+        clonedCard.style.top = topPosition + (Math.floor(height/2) - 22) + 'px'; // Center vertically
+        clonedCard.style.left = (columnPosition - 22) + 'px'; // Center profile pic on line
         clonedCard.style.zIndex = '5';
         
         // Store this event's position for future collision detection
