@@ -1351,14 +1351,58 @@ function initializeTimeline() {
         const endMinute = parseInt(item.dataset.endMinute);
         const userColor = item.dataset.userColor;
         const allDay = item.dataset.allDay === 'true';
+        const timeOff = item.dataset.timeOff === 'true';
         
         const eventCard = item.querySelector('.timeline-event-card');
         if (!eventCard) return;
         
-        // Calculate time positions
+        // Handle OOO entries differently - show as compact badges at top
+        if (timeOff && allDay) {
+            const firstHourSlot = document.querySelector(`[data-hour="0"] .schedule-events`);
+            if (firstHourSlot) {
+                // Find horizontal position for OOO badges
+                let oooColumn = 0;
+                const existingOOO = document.querySelectorAll('.ooo-badge').length;
+                oooColumn = existingOOO;
+                
+                // Create OOO badge
+                const oooBadge = document.createElement('div');
+                oooBadge.className = 'positioned-schedule-event ooo-badge';
+                oooBadge.style.cssText = `
+                    position: absolute;
+                    top: 5px;
+                    left: ${oooColumn * 85 + 10}px;
+                    width: 75px;
+                    height: 24px;
+                    background-color: ${userColor};
+                    color: white;
+                    font-size: 11px;
+                    font-weight: bold;
+                    text-align: center;
+                    line-height: 24px;
+                    border-radius: 12px;
+                    z-index: 6;
+                    cursor: pointer;
+                    border: 1px solid rgba(255,255,255,0.3);
+                `;
+                oooBadge.textContent = 'OOO';
+                oooBadge.title = `${eventCard.title}`;
+                
+                // Add click handler for editing
+                oooBadge.addEventListener('click', function() {
+                    const scheduleId = item.dataset.scheduleId;
+                    editSchedule(scheduleId);
+                });
+                
+                firstHourSlot.appendChild(oooBadge);
+            }
+            return; // Skip normal positioning for OOO entries
+        }
+        
+        // Calculate time positions for regular schedules
         let startTotalMinutes, endTotalMinutes;
         
-        if (allDay) {
+        if (allDay && !timeOff) {
             startTotalMinutes = 0;
             endTotalMinutes = 24 * 60;
         } else {
