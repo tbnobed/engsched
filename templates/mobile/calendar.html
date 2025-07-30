@@ -1357,7 +1357,7 @@ function initializeTimeline() {
         if (!eventCard) return;
         
         // Handle OOO entries differently - show as compact badges at top
-        if (timeOff) {
+        if (timeOff && allDay) {
             const firstHourSlot = document.querySelector(`[data-hour="0"] .schedule-events`);
             if (firstHourSlot) {
                 // Find horizontal position for OOO badges

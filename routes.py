@@ -4200,52 +4200,22 @@ def mobile_calendar():
     start_utc = start_of_day.astimezone(pytz.UTC)
     end_utc = end_of_day.astimezone(pytz.UTC)
     
-    # Query schedules for the day - using overlap logic to catch all-day events
+    # Query schedules for the day
     schedules = Schedule.query.filter(
-        Schedule.start_time < end_utc,
-        Schedule.end_time > start_utc
+        Schedule.start_time >= start_utc,
+        Schedule.start_time <= end_utc
     ).join(User).outerjoin(Location).order_by(Schedule.start_time).all()
     
-    app.logger.debug(f"Mobile calendar: Found {len(schedules)} schedules for {current_date} in timezone {user_tz}")
-    app.logger.debug(f"UTC query range: {start_utc} to {end_utc}")
-    
-    # Convert times back to user timezone for display and filter
-    filtered_schedules = []
+    # Convert times back to user timezone for display
     for schedule in schedules:
-        app.logger.debug(f"Processing schedule: {schedule.technician.username}, all_day={schedule.all_day}, time_off={schedule.time_off}")
-        
         # Ensure times are timezone-aware in UTC before converting
         if schedule.start_time.tzinfo is None:
             schedule.start_time = pytz.UTC.localize(schedule.start_time)
         if schedule.end_time.tzinfo is None:
             schedule.end_time = pytz.UTC.localize(schedule.end_time)
             
-        # Convert to user timezone
-        schedule.start_time_local = schedule.start_time.astimezone(user_tz)
-        schedule.end_time_local = schedule.end_time.astimezone(user_tz)
-        
-        app.logger.debug(f"  UTC times: {schedule.start_time} to {schedule.end_time}")
-        app.logger.debug(f"  Local times: {schedule.start_time_local} to {schedule.end_time_local}")
-        
-        # For time-off events (both all-day and partial day), use inclusive date logic
-        if schedule.time_off:
-            schedule_start_date = schedule.start_time_local.date()
-            schedule_end_date = schedule.end_time_local.date()
-            
-            # Include if the current date falls between start and end dates (inclusive)
-            if schedule_start_date <= current_date <= schedule_end_date:
-                app.logger.debug(f"Including time-off schedule: {schedule.technician.username} from {schedule_start_date} to {schedule_end_date}")
-                filtered_schedules.append(schedule)
-            else:
-                app.logger.debug(f"Excluding time-off schedule: {schedule.technician.username} from {schedule_start_date} to {schedule_end_date} (current: {current_date})")
-        else:
-            # Regular schedules: include if they start on the current date or span into it
-            if (schedule.start_time_local.date() <= current_date <= schedule.end_time_local.date()):
-                app.logger.debug(f"Including regular schedule: {schedule.technician.username} on {schedule.start_time_local.date()}")
-                filtered_schedules.append(schedule)
-    
-    schedules = filtered_schedules
-    app.logger.debug(f"Mobile calendar: After filtering, showing {len(schedules)} schedules")
+        schedule.start_time = schedule.start_time.astimezone(user_tz)
+        schedule.end_time = schedule.end_time.astimezone(user_tz)
     
     # Get locations for the add form
     locations = Location.query.all()
