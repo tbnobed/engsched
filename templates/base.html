@@ -604,7 +604,7 @@
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     {% for message in messages %}
-                        <div class="alert alert-info">{{ message }}</div>
+                        <div class="alert alert-info auto-hide-message" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px; text-align: center;">{{ message }}</div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
@@ -1209,6 +1209,24 @@
         })();
     </script>
     {% endif %}
+    
+    <!-- Auto-hide flash messages after 1 second -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelectorAll('.auto-hide-message');
+            flashMessages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.transition = 'opacity 0.5s ease';
+                    message.style.opacity = '0';
+                    setTimeout(function() {
+                        if (message.parentNode) {
+                            message.remove();
+                        }
+                    }, 500); // Remove after fade out
+                }, 1000); // Start fade after 1 second
+            });
+        });
+    </script>
     
     <!-- Cache busting comment: sidebar removed 2025-07-16 -->
 
