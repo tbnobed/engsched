@@ -201,8 +201,13 @@
     });
 
     function deleteTicket(ticketId) {
+        console.log('Delete ticket function called for ticket ID:', ticketId);
         if (confirm('Are you sure you want to delete this ticket? This action cannot be undone.')) {
-            window.location.href = "{{ url_for('tickets.delete_ticket', ticket_id=0) }}".replace('/0/delete', `/${ticketId}/delete`);
+            const deleteUrl = "{{ url_for('tickets.delete_ticket', ticket_id=0) }}".replace('/0/delete', `/${ticketId}/delete`);
+            console.log('Redirecting to delete URL:', deleteUrl);
+            window.location.href = deleteUrl;
+        } else {
+            console.log('Delete cancelled by user');
         }
     }
 

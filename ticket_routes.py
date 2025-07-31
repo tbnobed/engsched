@@ -1306,11 +1306,15 @@ def edit_ticket(ticket_id):
 @login_required
 def delete_ticket(ticket_id):
     """Delete a ticket (admin only)"""
+    app.logger.debug(f"Delete ticket #{ticket_id} requested by user {current_user.username} (admin: {current_user.is_admin})")
+    
     if not current_user.is_admin:
+        app.logger.warning(f"Non-admin user {current_user.username} attempted to delete ticket #{ticket_id}")
         flash('You do not have permission to delete tickets', 'error')
         return mobile_aware_redirect('tickets.tickets_dashboard')
         
     ticket = Ticket.query.get_or_404(ticket_id)
+    app.logger.debug(f"Found ticket #{ticket_id}: '{ticket.title}'")
     
     try:
         # Store data for logging
