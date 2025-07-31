@@ -910,9 +910,18 @@ function positionSchedules() {
                 if (column >= maxColumns) column = 0;
                 
                 // Calculate even distribution across timeline width
-                const timelineWidth = 280; // Available timeline width  
-                const startPosition = 50; // Starting position to avoid going off-screen
-                const dynamicSpacing = maxColumns > 1 ? timelineWidth / (maxColumns - 1) : 120;
+                const containerWidth = 400; // Full container width for proper distribution
+                const profileWidth = 66; // Profile picture width
+                const availableWidth = containerWidth - profileWidth; // Space for distribution
+                
+                let leftPosition;
+                if (maxColumns === 1) {
+                    leftPosition = availableWidth / 2; // Center single item
+                } else {
+                    // Distribute evenly: first at 50px, last at 350px, others evenly between
+                    const spacing = availableWidth / (maxColumns - 1);
+                    leftPosition = 50 + (column * spacing);
+                }
                 
                 // Get event container for positioning
                 const eventContainer = event.closest('.day-slots');
@@ -946,7 +955,7 @@ function positionSchedules() {
                     durationLine.style.cssText = `
                         position: absolute;
                         top: ${hour * 60 + topOffset}px;
-                        left: ${startPosition + column * dynamicSpacing}px;
+                        left: ${leftPosition}px;
                         width: 6px;
                         height: ${height}px;
                         background-color: ${userColor};
@@ -1009,9 +1018,9 @@ function positionSchedules() {
                 const profileTop = startTotalMinutes + Math.max(0, totalHeight/2 - 33);
                 
                 profilePic.style.top = `${profileTop}px`;
-                profilePic.style.left = `${startPosition + column * dynamicSpacing - 33}px`;
+                profilePic.style.left = `${leftPosition - 33}px`;
                 
-                console.log(`Profile positioned at top: ${profileTop}px, left: ${startPosition + column * dynamicSpacing - 33}px`);
+                console.log(`Profile positioned at top: ${profileTop}px, left: ${leftPosition - 33}px`);
                 
                 eventContainer.appendChild(profilePic);
                 
