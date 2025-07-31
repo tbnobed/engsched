@@ -91,9 +91,15 @@ def dashboard():
         Schedule.end_time >= today_start_utc
     ).order_by(Schedule.start_time).all()
     
-    # Apply timezone-aware filtering for all-day OOO entries to prevent date shifting
+    # Apply timezone-aware filtering and splitting for cross-timezone schedules
     today_schedules = []
     for schedule in raw_schedules:
+        # Ensure timezone awareness for all schedule times
+        if schedule.start_time.tzinfo is None:
+            schedule.start_time = pytz.UTC.localize(schedule.start_time)
+        if schedule.end_time.tzinfo is None:
+            schedule.end_time = pytz.UTC.localize(schedule.end_time)
+        
         # Special handling for all-day time-off events to prevent timezone date shifting
         if schedule.time_off and schedule.all_day:
             # For all-day events, we need to determine the intended calendar date
@@ -127,10 +133,52 @@ def dashboard():
             else:
                 app.logger.debug(f"Dashboard all-day OOO {schedule.id}: Filtered out - intended date {intended_date} != today {today}")
         else:
-            # Regular schedules - include normally with timezone conversion
-            schedule.start_time = schedule.start_time.astimezone(user_tz)
-            schedule.end_time = schedule.end_time.astimezone(user_tz)
-            today_schedules.append(schedule)
+            # Regular schedules - convert to user timezone and check for midnight crossing
+            start_user_tz = schedule.start_time.astimezone(user_tz)
+            end_user_tz = schedule.end_time.astimezone(user_tz)
+            
+            # Check if this schedule crosses midnight in user's timezone
+            if start_user_tz.date() != end_user_tz.date():
+                # Schedule crosses midnight - check if it should appear on today's date
+                start_date = start_user_tz.date()
+                end_date = end_user_tz.date()
+                
+                if start_date == today:
+                    # Create first part (today until midnight)
+                    schedule_part1 = type(schedule)()
+                    for attr in dir(schedule):
+                        if not attr.startswith('_') and hasattr(schedule_part1, attr):
+                            try:
+                                setattr(schedule_part1, attr, getattr(schedule, attr))
+                            except:
+                                pass
+                    
+                    schedule_part1.start_time = start_user_tz
+                    schedule_part1.end_time = user_tz.localize(datetime.combine(today, time(23, 59, 59)))
+                    today_schedules.append(schedule_part1)
+                    app.logger.debug(f"Dashboard split schedule {schedule.id} part 1: {today} {start_user_tz.time()} to 23:59")
+                
+                if end_date == today:
+                    # Create second part (midnight until end time)
+                    schedule_part2 = type(schedule)()
+                    for attr in dir(schedule):
+                        if not attr.startswith('_') and hasattr(schedule_part2, attr):
+                            try:
+                                setattr(schedule_part2, attr, getattr(schedule, attr))
+                            except:
+                                pass
+                    
+                    schedule_part2.start_time = user_tz.localize(datetime.combine(today, time(0, 0)))
+                    schedule_part2.end_time = end_user_tz
+                    today_schedules.append(schedule_part2)
+                    app.logger.debug(f"Dashboard split schedule {schedule.id} part 2: {today} 00:00 to {end_user_tz.time()}")
+            else:
+                # Schedule doesn't cross midnight or is entirely on one day
+                if start_user_tz.date() == today:
+                    schedule.start_time = start_user_tz
+                    schedule.end_time = end_user_tz
+                    today_schedules.append(schedule)
+                    app.logger.debug(f"Dashboard schedule {schedule.id}: {today} {start_user_tz.time()} to {end_user_tz.time()}")
     
     # Organize schedules by technician  
     schedules_by_tech = {}

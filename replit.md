@@ -26,6 +26,14 @@ Recent Updates (July 31, 2025):
 - ✅ COMPLETED: Docker Compose Host Network Build Configuration - Enhanced Compatibility for Restricted Hosts
 - Updated docker-compose.yml to use host networking during build process for hosts that don't support bridge networks until after build completion
 - Enhanced build configuration with context and network specification for broader deployment compatibility
+- ✅ COMPLETED: Dashboard Timeline Timezone Awareness Enhancement - Complete Cross-Timezone Schedule Display
+- Enhanced dashboard route with midnight-crossing schedule split logic to handle cross-timezone scenarios properly
+- Dashboard now properly converts all schedule times to user's selected timezone before display
+- Implemented schedule splitting for midnight-crossing events (e.g., PST 20:00-22:00 → EST 23:00-01:00)
+- Timeline data attributes use proper timezone conversion: `schedule.start_time.astimezone(current_user.get_timezone_obj())`
+- Dashboard displays consistent schedule entries regardless of user's timezone setting (CST, PST, EST, etc.)
+- Enhanced all-day OOO timezone-stable filtering to prevent date shifting between timezones
+- Timeline JavaScript properly handles timezone-converted schedule positioning and duration calculations
 - ✅ COMPLETED: Profile Picture Display Fix for Timeline OOO Events - Corrected Path Concatenation Issue
 - Fixed critical JavaScript path issue where profile picture data already included "uploads/profile_pictures/" causing double path concatenation
 - Updated timeline JavaScript to use correct path: `/static/${event.dataset.profilePicture}` instead of doubled path
