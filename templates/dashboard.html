@@ -418,6 +418,53 @@
 }
 </style>
 
+<style>
+/* Dashboard Timeline Styling - Mobile-inspired profile pictures and duration lines */
+.dashboard-timeline-duration-line {
+    position: absolute;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+}
+
+.dashboard-timeline-duration-line:hover {
+    transform: scaleX(1.5);
+    box-shadow: 0 0 8px rgba(0,0,0,0.3);
+}
+
+.dashboard-timeline-profile {
+    position: absolute;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dashboard-timeline-profile:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+}
+
+/* Clean timeline area for better visibility */
+.day-schedules {
+    position: relative;
+    overflow: visible;
+}
+
+/* Enhanced OOO styling for dashboard */
+.dashboard .all-day-time-off {
+    border: 2px dashed #cc5500 !important;
+    background: linear-gradient(135deg, #fff4e6 0%, #ffe8cc 100%) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(204, 85, 0, 0.3) !important;
+}
+
+.dashboard .all-day-time-off .schedule-title {
+    font-weight: bold !important;
+    color: white !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+</style>
+
 <script>
 // Pass timezone from server to client for schedule positioning
 window.userTimezone = '{{ user_timezone }}';
@@ -793,89 +840,158 @@ function positionSchedules() {
             }
         });
 
-        // Position overlapping events horizontally using main calendar logic
-        overlappingGroups.forEach(group => {
-            if (group.length > 1) {
-                // Group events by start time within this overlap group
-                const startTimeGroups = {};
-                group.forEach(event => {
-                    const startTime = event.dataset.startTime;
-                    if (!startTimeGroups[startTime]) {
-                        startTimeGroups[startTime] = [];
-                    }
-                    startTimeGroups[startTime].push(event);
+        // Apply mobile timeline styling - create profile pictures and duration lines
+        const processedEvents = [];
+        const maxColumns = 4;
+        
+        eventArray.forEach(event => {
+            const startTime = new Date(event.dataset.startTime);
+            const endTime = new Date(event.dataset.endTime);
+            const startHour = startTime.getHours();
+            const startMinute = startTime.getMinutes();
+            let endHour = endTime.getHours();
+            const endMinute = endTime.getMinutes();
+            const userColor = event.dataset.userColor;
+            const isTimeOff = event.dataset.timeOff === 'true';
+            const isAllDay = event.dataset.allDay === 'true';
+            
+            // Skip all-day time-off events - they're handled separately above
+            if (isTimeOff && isAllDay) {
+                return;
+            }
+            
+            // Hide the original event element
+            event.style.display = 'none';
+            
+            // Calculate time positions
+            const startTotalMinutes = startHour * 60 + startMinute;
+            let endTotalMinutes;
+            
+            // Handle midnight crossings
+            if (endHour === 0 && startHour > 0) {
+                endHour = 24;
+            }
+            endTotalMinutes = endHour * 60 + endMinute;
+            
+            // Find horizontal position to avoid overlaps
+            let column = 0;
+            while (column < maxColumns) {
+                const hasOverlap = processedEvents.some(processedEvent => {
+                    return processedEvent.column === column && 
+                           processedEvent.startTime < endTotalMinutes && 
+                           processedEvent.endTime > startTotalMinutes;
                 });
                 
-                // Get all start time groups that have multiple events
-                const sameTimeGroups = Object.values(startTimeGroups).filter(g => g.length > 1);
-                
-                // If we have events that start at the same time, handle them specially
-                if (sameTimeGroups.length > 0) {
-                    let processedEvents = new Set();
-                    
-                    sameTimeGroups.forEach(sameTimeGroup => {
-                        // Divide these same-time events evenly across column width
-                        const eventWidth = Math.floor(100 / sameTimeGroup.length);
-                        const spacing = 1;
-                        
-                        sameTimeGroup.forEach((event, index) => {
-                            const leftPosition = index * eventWidth;
-                            const actualWidth = Math.min(eventWidth - spacing, 100 - leftPosition);
-                            
-                            event.style.setProperty('width', `${Math.max(10, actualWidth)}%`, 'important');
-                            event.style.setProperty('left', `${leftPosition}%`, 'important');
-                            event.style.setProperty('right', 'auto', 'important');
-                            event.style.setProperty('z-index', `${10 + index}`, 'important');
-                            
-                            processedEvents.add(event);
-                            
-                            console.log(`Same-time event ${index + 1}/${sameTimeGroup.length}:`, {
-                                width: `${Math.max(10, actualWidth)}%`,
-                                left: `${leftPosition}%`
-                            });
-                        });
-                    });
-                    
-                    // Handle remaining events (that don't have same start times) with offset positioning
-                    const remainingEvents = group.filter(event => !processedEvents.has(event));
-                    const offsetStep = 8;
-                    
-                    remainingEvents.forEach((event, index) => {
-                        const leftPosition = index * offsetStep;
-                        const maxWidth = 100 - leftPosition;
-                        
-                        event.style.setProperty('width', `${Math.min(75, maxWidth)}%`, 'important');
-                        event.style.setProperty('left', `${leftPosition}%`, 'important');
-                        event.style.setProperty('right', 'auto', 'important');
-                        event.style.setProperty('z-index', `${20 + index}`, 'important');
-                    });
-                } else {
-                    // No same-time events, use standard offset positioning
-                    const offsetStep = 8;
-                    group.forEach((event, index) => {
-                        const leftPosition = index * offsetStep;
-                        const maxWidth = 100 - leftPosition;
-                        
-                        event.style.setProperty('width', `${Math.min(75, maxWidth)}%`, 'important');
-                        event.style.setProperty('left', `${leftPosition}%`, 'important');
-                        event.style.setProperty('right', 'auto', 'important');
-                        event.style.setProperty('z-index', `${10 + index}`, 'important');
-                    });
-                }
-            } else {
-                // Single event takes full width
-                const event = group[0];
-                
-                event.style.setProperty('left', '0%', 'important');
-                event.style.setProperty('width', '100%', 'important');
-                event.style.setProperty('right', 'auto', 'important');
-                event.style.setProperty('z-index', '10', 'important');
+                if (!hasOverlap) break;
+                column++;
             }
-        });
-
-        // Add dashboard-specific class to all events
-        eventArray.forEach(event => {
-            event.classList.add('dashboard-schedule-event');
+            
+            if (column >= maxColumns) column = 0;
+            
+            // Get event container for positioning
+            const eventContainer = event.closest('.day-schedules');
+            if (!eventContainer) return;
+            
+            // Find which hour slots this event spans
+            const startSlot = Math.floor(startTotalMinutes / 60);
+            const endSlot = Math.ceil(endTotalMinutes / 60);
+            
+            // Create duration lines for each hour slot
+            for (let hour = startSlot; hour < Math.min(endSlot, 24); hour++) {
+                const slotStartMinutes = hour * 60;
+                const slotEndMinutes = (hour + 1) * 60;
+                const eventStartInSlot = Math.max(startTotalMinutes, slotStartMinutes);
+                const eventEndInSlot = Math.min(endTotalMinutes, slotEndMinutes);
+                
+                // Calculate position within the 60px hour slot
+                const topOffset = ((eventStartInSlot - slotStartMinutes) / 60) * 60;
+                const height = Math.max(((eventEndInSlot - eventStartInSlot) / 60) * 60, 10);
+                
+                // Create duration line
+                const durationLine = document.createElement('div');
+                durationLine.className = 'dashboard-timeline-duration-line';
+                durationLine.style.cssText = `
+                    position: absolute;
+                    top: ${hour * 60 + topOffset}px;
+                    left: ${20 + column * 60}px;
+                    width: 4px;
+                    height: ${height}px;
+                    background-color: ${userColor};
+                    z-index: 4;
+                    border-radius: 2px;
+                `;
+                
+                eventContainer.appendChild(durationLine);
+            }
+            
+            // Create profile picture (only once, at the start position)
+            const profilePic = document.createElement('div');
+            profilePic.className = 'dashboard-timeline-profile';
+            
+            // Get profile picture from original event
+            const originalImg = event.querySelector('img');
+            const originalInitials = event.querySelector('.schedule-title');
+            
+            if (originalImg && originalImg.src && !originalImg.src.includes('default-avatar')) {
+                // Use actual profile picture
+                const img = document.createElement('img');
+                img.src = originalImg.src;
+                img.style.cssText = `
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    border: 2px solid white;
+                `;
+                profilePic.appendChild(img);
+            } else {
+                // Use initials circle
+                const username = originalInitials ? originalInitials.textContent.split(' - ')[0] : 'User';
+                const initials = username.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                
+                profilePic.style.cssText = `
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 50%;
+                    background-color: ${userColor};
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                    font-size: 16px;
+                    border: 2px solid white;
+                `;
+                profilePic.textContent = initials;
+            }
+            
+            // Position profile picture at the middle of the schedule duration
+            const totalHeight = endTotalMinutes - startTotalMinutes;
+            const profileTop = startTotalMinutes + Math.max(0, totalHeight/2 - 22);
+            
+            profilePic.style.cssText += `
+                position: absolute;
+                top: ${profileTop}px;
+                left: ${20 + column * 60 - 22}px;
+                z-index: 5;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            `;
+            
+            // Add click handler for editing (if needed)
+            profilePic.addEventListener('click', function() {
+                // You can add edit functionality here if needed
+                console.log('Profile clicked for schedule:', event.dataset.scheduleId);
+            });
+            
+            eventContainer.appendChild(profilePic);
+            
+            // Store processed event info for overlap detection
+            processedEvents.push({
+                startTime: startTotalMinutes,
+                endTime: endTotalMinutes,
+                column: column
+            });
         });
     });
 }
