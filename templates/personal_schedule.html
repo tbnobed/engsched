@@ -222,42 +222,39 @@
 </div>
 
 <style>
-/* Use the same calendar grid structure as the main calendar page */
 .calendar-container {
     padding: 20px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-/* Apply the same calendar-grid class structure as calendar.html */
 .week-view {
     display: flex;
     overflow-x: auto;
     min-height: 600px;
     max-height: calc(100vh - 200px);
     overflow-y: auto;
+    border: 1px solid #dee2e6;
     border-radius: 5px;
     margin-bottom: 20px;
     width: 100%;
-    /* Use same background as calendar-grid from light-theme.css */
-    background-color: var(--light-border) !important;
-    border: 1px solid var(--light-border) !important;
+    background-color: #f8f9fa;
 }
 
 .time-column {
     width: 50px;
+    border-right: 1px solid #dee2e6;
     position: sticky;
     left: 0;
+    background-color: #ffffff;
     z-index: 1;
-    /* Match calendar page styling */
-    background-color: var(--light-panel) !important;
 }
 
 .day-column {
     width: calc((100% - 50px) / 7);
+    border-right: 1px solid #dee2e6;
     position: relative;
-    /* Match calendar page styling */
-    background-color: var(--light-panel) !important;
+    background-color: #ffffff;
 }
 
 .day-column:last-child {
@@ -269,33 +266,27 @@
 }
 
 .day-header {
-    padding: 12px !important;
+    padding: 10px;
     text-align: center;
-    font-weight: 600 !important;
-    letter-spacing: 0.3px !important;
+    font-weight: bold;
+    border-bottom: 1px solid #dee2e6;
+    background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+    border-radius: 4px 4px 0 0;
     cursor: pointer;
-    /* Match calendar page day-header styling from light-theme.css */
-    background: linear-gradient(135deg, #f1f5f9, #f8fafc) !important;
-    color: var(--light-text) !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
 }
 
 .day-header.today {
-    /* Match calendar page today styling */
-    background: linear-gradient(135deg, #171A21, #617073) !important;
-    color: white !important;
-    border-bottom: none !important;
+    background: linear-gradient(to bottom, #007bff, #0056b3);
+    color: #ffffff;
 }
 
 .hour-slot {
     height: 60px;
+    border-bottom: 1px solid #dee2e6;
     text-align: center;
     font-size: 0.8rem;
     padding-top: 5px;
-    /* Match calendar page hour-slot styling from light-theme.css */
-    border-bottom: 1px solid var(--light-border) !important;
-    color: var(--light-text-secondary) !important;
+    color: #6c757d;
 }
 
 .day-slots {
@@ -304,50 +295,51 @@
 
 .time-slot {
     height: 60px;
+    border-bottom: 1px solid #dee2e6;
     cursor: pointer;
     transition: background-color 0.2s;
-    /* Match calendar page time-slot styling from light-theme.css */
-    background-color: rgba(0, 0, 0, 0.01) !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
+    background-color: rgba(255, 255, 255, 0.8);
 }
 
 .time-slot:hover {
     background-color: rgba(0, 123, 255, 0.1);
 }
 
-/* Dark theme support - match calendar page dark theme styling */
+/* Dark theme support */
 [data-theme="dark"] .week-view {
-    background-color: var(--dark-border) !important;
-    border: 1px solid var(--dark-border) !important;
+    background-color: #343a40;
+    border: 1px solid #495057;
 }
 
 [data-theme="dark"] .time-column {
-    background-color: var(--dark-panel) !important;
+    background-color: #212529;
+    border-right: 1px solid #495057;
 }
 
 [data-theme="dark"] .day-column {
-    background-color: var(--dark-panel) !important;
+    background-color: #212529;
+    border-right: 1px solid #495057;
 }
 
 [data-theme="dark"] .day-header {
-    background: linear-gradient(135deg, #2d2d2d, #3a3a3a) !important;
-    color: var(--dark-text) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: linear-gradient(to bottom, #495057, #343a40);
+    color: #ffffff;
+    border-bottom: 1px solid #495057;
 }
 
 [data-theme="dark"] .day-header.today {
-    background: linear-gradient(135deg, #171A21, #617073) !important;
-    color: white !important;
+    background: linear-gradient(to bottom, #007bff, #0056b3);
+    color: #ffffff;
 }
 
 [data-theme="dark"] .hour-slot {
-    border-bottom: 1px solid var(--dark-border) !important;
-    color: var(--dark-text-secondary) !important;
+    border-bottom: 1px solid #495057;
+    color: #adb5bd;
 }
 
 [data-theme="dark"] .time-slot {
-    background-color: rgba(255, 255, 255, 0.01) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid #495057;
 }
 
 /* Schedule event styling is now handled in main style.css */
