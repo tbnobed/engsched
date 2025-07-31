@@ -85,10 +85,14 @@ def dashboard():
             # Default to showing as unread if there's an error
             ticket.has_unread_activity = True
     
-    # Get today's technician schedules using overlap logic
+    # Get schedules using expanded date range to catch cross-timezone schedules
+    # Then filter by start date in user's timezone to prevent duplicates
+    yesterday_start_utc = (today_start_local - timedelta(days=1)).astimezone(pytz.UTC)
+    tomorrow_end_utc = (today_end_local + timedelta(days=1)).astimezone(pytz.UTC)
+    
     raw_schedules = Schedule.query.filter(
-        Schedule.start_time <= today_end_utc,
-        Schedule.end_time >= today_start_utc
+        Schedule.start_time >= yesterday_start_utc,
+        Schedule.start_time <= tomorrow_end_utc
     ).order_by(Schedule.start_time).all()
     
     # Apply timezone-aware filtering and splitting for cross-timezone schedules
