@@ -873,10 +873,8 @@ function positionSchedules() {
                     return;
                 }
                 
-                // Don't hide the original event yet - let's modify it instead
-                event.style.background = 'transparent';
-                event.style.border = 'none';
-                event.style.padding = '0';
+                // Completely hide the original event since we're creating timeline elements
+                event.style.display = 'none';
                 
                 // Calculate time positions
                 const startTotalMinutes = startHour * 60 + startMinute;
@@ -916,8 +914,7 @@ function positionSchedules() {
                     return;
                 }
                 
-                // Clear the event content and add timeline elements
-                event.innerHTML = '';
+                // Event is hidden, so we don't need to clear innerHTML
                 
                 // Find which hour slots this event spans
                 const startSlot = Math.floor(startTotalMinutes / 60);
@@ -957,10 +954,17 @@ function positionSchedules() {
                 const profilePic = document.createElement('div');
                 profilePic.className = 'dashboard-timeline-profile';
                 
-                // Get username from original event data
+                // Get username from backend data via technician lookup
+                const technicianId = event.dataset.technicianId;
+                let username = 'User';
+                let initials = 'U';
+                
+                // Look for the username in the event's text content before hiding
                 const scheduleTitle = event.querySelector('.schedule-title');
-                const username = scheduleTitle ? scheduleTitle.textContent.split(' - ')[0] : 'User';
-                const initials = username.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                if (scheduleTitle) {
+                    username = scheduleTitle.textContent.split(' - ')[0];
+                    initials = username.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                }
                 
                 // For now, just use initials (profile pictures can be added later)
                 profilePic.style.cssText = `
