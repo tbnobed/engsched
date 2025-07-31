@@ -993,10 +993,13 @@ function positionSchedules() {
                     // Create duration line
                     const durationLine = document.createElement('div');
                     durationLine.className = 'dashboard-timeline-duration-line';
+                    // Position duration line at the same horizontal position as the profile (centered)
+                    const durationLineLeft = leftPosition + 30; // Profile center offset (66px width / 2 = 33, adjust to 30 for 6px line)
+                    
                     durationLine.style.cssText = `
                         position: absolute;
                         top: ${hour * 60 + topOffset}px;
-                        left: ${leftPosition}px;
+                        left: ${durationLineLeft}px;
                         width: 6px;
                         height: ${height}px;
                         background-color: ${userColor};
