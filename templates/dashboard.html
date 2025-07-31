@@ -888,20 +888,10 @@ function positionSchedules() {
                     duration: endTotalMinutes - startTotalMinutes
                 });
                 
-                // Find horizontal position to avoid overlaps
-                let column = 0;
-                while (column < maxColumns) {
-                    const hasOverlap = processedEvents.some(processedEvent => {
-                        return processedEvent.column === column && 
-                               processedEvent.startTime < endTotalMinutes && 
-                               processedEvent.endTime > startTotalMinutes;
-                    });
-                    
-                    if (!hasOverlap) break;
-                    column++;
-                }
+                // Simple column assignment based on event index to ensure unique positioning
+                let column = index % maxColumns;
                 
-                if (column >= maxColumns) column = 0;
+                console.log(`Event ${index + 1} assigned to column ${column} (of ${maxColumns} columns) - using index-based assignment`);
                 
                 // Calculate even distribution across full timeline width with safe boundaries
                 const timelineFullWidth = 500; // Full timeline container width
