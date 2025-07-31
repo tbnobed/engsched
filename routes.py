@@ -145,6 +145,7 @@ def dashboard():
             if start_user_tz.date() != end_user_tz.date():
                 # Schedule crosses midnight - split into separate entries for each day
                 start_date = start_user_tz.date()
+                end_date = end_user_tz.date()
                 
                 if start_date == today:
                     # Today's portion: start time to midnight (00:00 next day)
@@ -153,8 +154,15 @@ def dashboard():
                     schedule.end_time = midnight_today
                     today_schedules.append(schedule)
                     app.logger.debug(f"Dashboard midnight-crossing schedule {schedule.id}: {today} {start_user_tz.time()} to 23:59:59 (today portion only)")
+                elif end_date == today:
+                    # Yesterday's schedule extending into today: midnight to end time
+                    midnight_start = user_tz.localize(datetime.combine(today, time(0, 0)))
+                    schedule.start_time = midnight_start
+                    schedule.end_time = end_user_tz
+                    today_schedules.append(schedule)
+                    app.logger.debug(f"Dashboard midnight-crossing schedule {schedule.id}: {today} 00:00:00 to {end_user_tz.time()} (yesterday's portion extending into today)")
                 else:
-                    app.logger.debug(f"Dashboard schedule {schedule.id}: Filtered out - starts on {start_date}, not today {today}")
+                    app.logger.debug(f"Dashboard schedule {schedule.id}: Filtered out - starts on {start_date}, ends on {end_date}, neither is today {today}")
             else:
                 # Schedule doesn't cross midnight - normal handling
                 if start_user_tz.date() == today:
