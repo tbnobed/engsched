@@ -231,8 +231,12 @@
 
 .day-column {
     width: calc((100% - 50px) / 7);
-    border-right: 1px solid #eee;
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
     position: relative;
+}
+
+[data-bs-theme="dark"] .day-column {
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .day-column:last-child {
@@ -247,10 +251,14 @@
     padding: 10px;
     text-align: center;
     font-weight: bold;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     background: linear-gradient(to bottom, var(--calendar-header-start), var(--calendar-header-end));
     border-radius: 4px 4px 0 0;
     cursor: pointer;
+}
+
+[data-bs-theme="dark"] .day-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .day-header.today {
@@ -264,27 +272,39 @@
     min-height: 600px;
     max-height: calc(100vh - 200px);
     overflow-y: auto;
-    border: 1px solid #eee;
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 5px;
     margin-bottom: 20px;
     width: 100%;
 }
 
+[data-bs-theme="dark"] .calendar-grid {
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
 .time-column {
     width: 50px;
-    border-right: 1px solid #eee;
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
     position: sticky;
     left: 0;
     background-color: var(--calendar-bg);
     z-index: 1;
 }
 
+[data-bs-theme="dark"] .time-column {
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
 .hour-slot {
     height: 60px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     text-align: center;
     font-size: 0.8rem;
     padding-top: 5px;
+}
+
+[data-bs-theme="dark"] .hour-slot {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .day-slots {
@@ -293,9 +313,13 @@
 
 .time-slot {
     height: 60px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
     cursor: pointer;
     transition: background-color 0.2s;
+}
+
+[data-bs-theme="dark"] .time-slot {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
 .time-slot:hover {
