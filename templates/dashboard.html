@@ -208,6 +208,8 @@
                                              data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
                                              data-all-day="{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}"
                                              data-user-color="{{ '#6a6d6c' if schedule.time_off else schedule.technician.color }}"
+                                             data-profile-picture="{{ schedule.technician.profile_picture if schedule.technician.profile_picture else '' }}"
+                                             data-username="{{ schedule.technician.username }}"
 ">
                                             <div class="schedule-header">
                                                 <div class="schedule-title">{{ schedule.technician.username }}{% if schedule.time_off %} - Time Off{% endif %}</div>
@@ -954,37 +956,48 @@ function positionSchedules() {
                 const profilePic = document.createElement('div');
                 profilePic.className = 'dashboard-timeline-profile';
                 
-                // Get username from backend data via technician lookup
-                const technicianId = event.dataset.technicianId;
-                let username = 'User';
-                let initials = 'U';
+                // Get user data from data attributes
+                const username = event.dataset.username || 'User';
+                const profilePicturePath = event.dataset.profilePicture;
+                const initials = username.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
                 
-                // Look for the username in the event's text content before hiding
-                const scheduleTitle = event.querySelector('.schedule-title');
-                if (scheduleTitle) {
-                    username = scheduleTitle.textContent.split(' - ')[0];
-                    initials = username.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                // Create profile picture with actual image or initials fallback
+                if (profilePicturePath && profilePicturePath.trim() !== '') {
+                    // Use actual profile picture
+                    profilePic.style.cssText = `
+                        width: 44px;
+                        height: 44px;
+                        border-radius: 50%;
+                        background-image: url('/static/${profilePicturePath}');
+                        background-size: cover;
+                        background-position: center;
+                        border: 2px solid white;
+                        position: absolute;
+                        z-index: 5;
+                        cursor: pointer;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    `;
+                } else {
+                    // Use initials with user color background
+                    profilePic.style.cssText = `
+                        width: 44px;
+                        height: 44px;
+                        border-radius: 50%;
+                        background-color: ${userColor};
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: white;
+                        font-weight: bold;
+                        font-size: 16px;
+                        border: 2px solid white;
+                        position: absolute;
+                        z-index: 5;
+                        cursor: pointer;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    `;
+                    profilePic.textContent = initials;
                 }
-                
-                // For now, just use initials (profile pictures can be added later)
-                profilePic.style.cssText = `
-                    width: 44px;
-                    height: 44px;
-                    border-radius: 50%;
-                    background-color: ${userColor};
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-weight: bold;
-                    font-size: 16px;
-                    border: 2px solid white;
-                    position: absolute;
-                    z-index: 5;
-                    cursor: pointer;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                `;
-                profilePic.textContent = initials;
                 
                 // Position profile picture at the middle of the schedule duration
                 const totalHeight = endTotalMinutes - startTotalMinutes;
