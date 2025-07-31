@@ -906,9 +906,9 @@ function positionSchedules() {
                 const startTotalMinutes = startHour * 60 + startMinute;
                 let endTotalMinutes;
                 
-                // Handle midnight crossings
-                if (endHour === 0 && startHour > 0) {
-                    endHour = 24;
+                // Handle midnight crossings - if end time is before start time, it's next day
+                if (endHour < startHour || (endHour === 0 && startHour > 0)) {
+                    endHour += 24;
                 }
                 endTotalMinutes = endHour * 60 + endMinute;
                 
