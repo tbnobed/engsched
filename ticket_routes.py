@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session, after_this_request
 from flask_login import login_required, current_user
 from forms import TicketForm, TicketCommentForm, TicketCategoryForm
-from models import db, Ticket, TicketCategory, TicketComment, TicketHistory, User, TicketStatus
+from models import db, Ticket, TicketCategory, TicketComment, TicketHistory, User, TicketStatus, TicketView
 from datetime import datetime
 import pytz
 from sqlalchemy import text, or_
