@@ -1321,16 +1321,31 @@ def delete_ticket(ticket_id):
         ticket_title = ticket.title
         ticket_id_copy = ticket.id
         
-        # Delete the ticket (comments and history are cascade deleted)
+        # Delete related records first to avoid foreign key constraint issues
+        app.logger.debug(f"Deleting related records for ticket #{ticket_id}")
+        
+        # Delete ticket views
+        deleted_views = TicketView.query.filter_by(ticket_id=ticket_id).delete()
+        app.logger.debug(f"Deleted {deleted_views} ticket_view records for ticket #{ticket_id}")
+        
+        # Delete ticket history
+        deleted_history = TicketHistory.query.filter_by(ticket_id=ticket_id).delete()
+        app.logger.debug(f"Deleted {deleted_history} ticket_history records for ticket #{ticket_id}")
+        
+        # Delete ticket comments
+        deleted_comments = TicketComment.query.filter_by(ticket_id=ticket_id).delete()
+        app.logger.debug(f"Deleted {deleted_comments} ticket_comment records for ticket #{ticket_id}")
+        
+        # Now delete the ticket itself
         db.session.delete(ticket)
         db.session.commit()
         
-        app.logger.info(f"Ticket #{ticket_id_copy} ('{ticket_title}') deleted by {current_user.username}")
-        flash(f'Ticket #{ticket_id_copy} has been deleted', 'success')
+        app.logger.info(f"Ticket #{ticket_id_copy} ('{ticket_title}') and all related records deleted by {current_user.username}")
+        flash(f'Ticket #{ticket_id_copy} has been permanently deleted', 'success')
     except Exception as e:
         db.session.rollback()
         app.logger.error(f"Error deleting ticket #{ticket_id}: {str(e)}")
-        flash('Error deleting ticket', 'error')
+        flash('Error deleting ticket. Please try again.', 'error')
         
     return mobile_aware_redirect('tickets.tickets_dashboard')
     
