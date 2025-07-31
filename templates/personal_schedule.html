@@ -303,8 +303,18 @@
     padding-top: 5px;
 }
 
+/* Remove bottom border from the last hour slot to prevent gray line at bottom */
+.hour-slot:last-child {
+    border-bottom: none !important;
+}
+
 [data-bs-theme="dark"] .hour-slot {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Remove bottom border from the last hour slot in dark mode to prevent gray line at bottom */
+[data-bs-theme="dark"] .hour-slot:last-child {
+    border-bottom: none !important;
 }
 
 .day-slots {
