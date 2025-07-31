@@ -944,22 +944,40 @@ def calendar():
                 if start_date in week_dates:
                     # Today's portion: start time to midnight (00:00 next day)
                     midnight_today = viewing_tz.localize(datetime.combine(start_date, time(23, 59, 59)))
-                    # Create a copy for today's portion
-                    import copy
-                    today_schedule = copy.deepcopy(schedule)
-                    today_schedule.start_time = start_user_tz
-                    today_schedule.end_time = midnight_today
+                    # Create a shallow copy to preserve relationships
+                    today_schedule = Schedule(
+                        id=schedule.id,
+                        technician_id=schedule.technician_id,
+                        start_time=start_user_tz,
+                        end_time=midnight_today,
+                        description=schedule.description,
+                        location_id=schedule.location_id,
+                        time_off=schedule.time_off,
+                        all_day=schedule.all_day
+                    )
+                    # Copy the relationships
+                    today_schedule.technician = schedule.technician
+                    today_schedule.location = schedule.location
                     schedules.append(today_schedule)
                     app.logger.debug(f"Calendar midnight-crossing schedule {schedule.id}: {start_date} {start_user_tz.time()} to 23:59:59 (start date portion)")
                 
                 if end_date in week_dates:
                     # Tomorrow's schedule extending from yesterday: midnight to end time
                     midnight_start = viewing_tz.localize(datetime.combine(end_date, time(0, 0)))
-                    # Create a copy for tomorrow's portion
-                    import copy
-                    tomorrow_schedule = copy.deepcopy(schedule)
-                    tomorrow_schedule.start_time = midnight_start
-                    tomorrow_schedule.end_time = end_user_tz
+                    # Create a shallow copy to preserve relationships
+                    tomorrow_schedule = Schedule(
+                        id=schedule.id,
+                        technician_id=schedule.technician_id,
+                        start_time=midnight_start,
+                        end_time=end_user_tz,
+                        description=schedule.description,
+                        location_id=schedule.location_id,
+                        time_off=schedule.time_off,
+                        all_day=schedule.all_day
+                    )
+                    # Copy the relationships
+                    tomorrow_schedule.technician = schedule.technician
+                    tomorrow_schedule.location = schedule.location
                     schedules.append(tomorrow_schedule)
                     app.logger.debug(f"Calendar midnight-crossing schedule {schedule.id}: {end_date} 00:00:00 to {end_user_tz.time()} (end date portion)")
                 
@@ -987,10 +1005,13 @@ def calendar():
     app.logger.debug(f"Found {time_off_count} time-off entries, {all_day_time_off_count} all-day")
     
     # Debug: check if testuser schedule is in the list
-    testuser_schedules = [s for s in schedules if s.technician.username == 'testuser']
-    app.logger.debug(f"Found {len(testuser_schedules)} testuser schedules")
-    for ts in testuser_schedules:
-        app.logger.debug(f"  Testuser schedule {ts.id}: {ts.start_time} to {ts.end_time}, time_off={ts.time_off}, all_day={ts.all_day}")
+    try:
+        testuser_schedules = [s for s in schedules if hasattr(s, 'technician') and s.technician and s.technician.username == 'testuser']
+        app.logger.debug(f"Found {len(testuser_schedules)} testuser schedules")
+        for ts in testuser_schedules:
+            app.logger.debug(f"  Testuser schedule {ts.id}: {ts.start_time} to {ts.end_time}, time_off={ts.time_off}, all_day={ts.all_day}")
+    except Exception as e:
+        app.logger.debug(f"Debug schedule check failed: {e}")
     
 
 
