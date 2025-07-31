@@ -248,19 +248,42 @@ class Ticket(db.Model):
     
     def has_unread_activity(self, user_id: int) -> bool:
         """Check if ticket has been viewed by ANY user (global NEW badge logic)"""
+        from app import app
+        
         # NEVER show NEW badges on resolved or closed tickets
         if self.status in ['resolved', 'closed']:
+            app.logger.debug(f"Ticket #{self.id}: No NEW badge - status is {self.status}")
             return False
         
-        # Check if ANY user has viewed this ticket
-        # If any technician has viewed/managed this ticket, the NEW badge should disappear for everyone
+        # Check if ANY user has viewed this ticket in multiple ways:
+        # 1. Check TicketView table for explicit views
         any_ticket_view = TicketView.query.filter_by(ticket_id=self.id).first()
         
-        if not any_ticket_view:
-            # NO ONE has viewed this ticket yet, so show NEW badge
+        # 2. Check TicketHistory for any "viewed" actions
+        any_view_history = TicketHistory.query.filter_by(
+            ticket_id=self.id, 
+            action="viewed"
+        ).first()
+        
+        # 3. Check for any assignment/management actions that indicate interaction
+        any_management_action = TicketHistory.query.filter(
+            TicketHistory.ticket_id == self.id,
+            TicketHistory.action.in_(['assigned', 'status_changed', 'commented'])
+        ).first()
+        
+        has_been_viewed = any_ticket_view is not None
+        has_view_history = any_view_history is not None  
+        has_management = any_management_action is not None
+        
+        app.logger.debug(f"Ticket #{self.id}: View check - TicketView: {has_been_viewed}, ViewHistory: {has_view_history}, Management: {has_management}")
+        
+        if not (has_been_viewed or has_view_history or has_management):
+            # NO ONE has interacted with this ticket yet, so show NEW badge
+            app.logger.debug(f"Ticket #{self.id}: Showing NEW badge - no interactions found")
             return True
         
-        # Someone has viewed this ticket, so no NEW badge needed
+        # Someone has interacted with this ticket, so no NEW badge needed
+        app.logger.debug(f"Ticket #{self.id}: NO NEW badge - someone has interacted with it")
         return False
     
     def mark_as_viewed(self, user_id: int):

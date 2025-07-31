@@ -622,12 +622,25 @@ def view_ticket(ticket_id):
 
     # All users can view all tickets
 
-    # Mark ticket as viewed by current user
+    # Mark ticket as viewed by current user and log the view in history
     try:
         ticket_obj.mark_as_viewed(current_user.id)
+        
+        # Add history entry for the view (helps with NEW badge tracking and audit trail)
+        view_history = TicketHistory(
+            ticket_id=ticket_obj.id,
+            user_id=current_user.id,
+            action="viewed",
+            details=f"Ticket viewed by {current_user.username}",
+            created_at=datetime.now(pytz.UTC)
+        )
+        db.session.add(view_history)
+        
         db.session.commit()
+        app.logger.debug(f"Ticket #{ticket_id} viewed by user {current_user.username} (ID: {current_user.id})")
     except Exception as e:
         app.logger.warning(f"Failed to mark ticket #{ticket_id} as viewed: {str(e)}")
+        db.session.rollback()
         # Don't let this affect the main functionality
 
     # Create forms for comments and editing
