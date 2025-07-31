@@ -1142,8 +1142,8 @@ document.addEventListener('DOMContentLoaded', function() {
         feather.replace();
     }, 100);
     
-    // Update current time line every minute
-    setInterval(updateCurrentTimeLine, 60000);
+    // Update current time line every 10 seconds for better sync with main clock
+    setInterval(updateCurrentTimeLine, 10000);
 });
 
 // Re-position timeline elements on window resize for responsive design
@@ -1162,31 +1162,34 @@ function updateCurrentTimeLine() {
     const timeLine = document.querySelector('.current-time-line');
     if (!timeLine) return;
     
-    // Get current time in user's timezone (same approach as main calendar)
+    // Get current time in user's timezone (same approach as main calendar and main clock)
     const now = new Date();
     const userTimezone = '{{ current_user.timezone }}' || 'UTC';
     
-    let currentHour, currentMinute, timeString;
+    let currentHour, currentMinute, currentSecond, timeString;
     
     try {
-        // Get the current time in the user's timezone
+        // Get the current time in the user's timezone - include seconds for precision
         const timeInUserTimezone = new Intl.DateTimeFormat('en-US', {
             timeZone: userTimezone,
             hour: '2-digit',
             minute: '2-digit',
+            second: '2-digit',
             hour12: false
         }).format(now);
         
-        // Parse the formatted time
-        const [hour, minute] = timeInUserTimezone.split(':').map(Number);
+        // Parse the formatted time including seconds
+        const [hour, minute, second] = timeInUserTimezone.split(':').map(Number);
         currentHour = hour;
         currentMinute = minute;
+        currentSecond = second;
         
-        // Format time for display
+        // Format time for display (12-hour format to match main clock)
         timeString = new Intl.DateTimeFormat('en-US', {
             timeZone: userTimezone,
             hour: '2-digit',
             minute: '2-digit',
+            second: '2-digit',
             hour12: true
         }).format(now);
         
@@ -1195,17 +1198,19 @@ function updateCurrentTimeLine() {
         // Fallback to local time
         currentHour = now.getHours();
         currentMinute = now.getMinutes();
-        timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        currentSecond = now.getSeconds();
+        timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
     
-    const totalMinutes = currentHour * 60 + currentMinute;
-    const topPosition = totalMinutes; // Each minute = 1 pixel
+    // Calculate position with second-level precision for smoother updates
+    const totalMinutes = currentHour * 60 + currentMinute + (currentSecond / 60);
+    const topPosition = Math.round(totalMinutes); // Round to nearest pixel
     
     timeLine.style.top = `${topPosition}px`;
     timeLine.style.display = 'block';
     timeLine.setAttribute('data-time', timeString);
     
-    console.log('Current time line updated (user timezone):', `${currentHour}:${currentMinute.toString().padStart(2, '0')}`, 'position:', topPosition);
+    console.log('Current time line updated (user timezone):', `${currentHour}:${currentMinute.toString().padStart(2, '0')}:${currentSecond.toString().padStart(2, '0')}`, 'position:', topPosition);
 }
 </script>
 </div>
