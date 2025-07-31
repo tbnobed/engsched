@@ -11,7 +11,7 @@
     {% if active_tickets %}
         {% for ticket in active_tickets %}
         <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" 
-           class="list-group-item list-group-item-action d-flex align-items-center mb-2 p-3 {% if ticket.has_unread_activity(current_user.id) %}unread-ticket{% endif %}"
+           class="list-group-item list-group-item-action d-flex align-items-center mb-2 p-3 {% if ticket.has_unread_activity %}unread-ticket{% endif %}"
            style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.08); border: 1px solid var(--dark-border); transform: translateY(0); transition: transform 0.3s ease, box-shadow 0.3s ease;"
            onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.12)';"
            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.08)';">
@@ -28,7 +28,7 @@
             <div class="d-flex flex-column flex-grow-1">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="fw-bold text-truncate" style="max-width: 160px;">{{ ticket.title }}</div>
-                    {% if ticket.has_unread_activity(current_user.id) %}
+                    {% if ticket.has_unread_activity %}
                         <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.3rem;">NEW</span>
                     {% endif %}
                 </div>
