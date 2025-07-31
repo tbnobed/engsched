@@ -5,7 +5,7 @@ from models import db, Ticket, TicketCategory, TicketComment, TicketHistory, Use
 from datetime import datetime
 import pytz
 from sqlalchemy import text, or_
-from app import app, is_mobile_device, csrf  # Import app for logging and mobile detection
+from app import app, is_mobile_device  # Import app for logging and mobile detection
 from email_utils import send_ticket_assigned_notification, send_ticket_comment_notification, send_ticket_status_notification
 
 def mobile_aware_redirect(endpoint, **kwargs):
@@ -1314,13 +1314,7 @@ def delete_ticket(ticket_id):
         flash('You do not have permission to delete tickets', 'error')
         return mobile_aware_redirect('tickets.tickets_dashboard')
     
-    import time
-    step_start = time.time()
-    app.logger.info(f"STEP 1: Admin check passed in {time.time() - step_start:.3f}s")
-    
-    step_start = time.time()    
     ticket = Ticket.query.get_or_404(ticket_id)
-    app.logger.info(f"STEP 2: Ticket lookup completed in {time.time() - step_start:.3f}s - Found: '{ticket.title}'")
     
     try:
         # Store data for logging
