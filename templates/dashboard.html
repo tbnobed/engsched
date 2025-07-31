@@ -869,9 +869,50 @@ function positionSchedules() {
                 const isTimeOff = event.dataset.timeOff === 'true';
                 const isAllDay = event.dataset.allDay === 'true';
                 
-                // Skip all-day time-off events - they're handled separately above
+                // Handle all-day time-off events specially - show profile picture at top with OOO label
                 if (isTimeOff && isAllDay) {
-                    console.log('Skipping all-day time-off event');
+                    console.log('Processing all-day OOO event with profile picture');
+                    
+                    const profilePic = document.createElement('img');
+                    profilePic.src = event.dataset.userProfilePicture || '/static/default-avatar.png';
+                    profilePic.className = 'dashboard-timeline-profile-pic';
+                    profilePic.style.cssText = `
+                        position: absolute;
+                        top: 30px;
+                        left: ${leftPosition - 33}px;
+                        width: 66px;
+                        height: 66px;
+                        border-radius: 50%;
+                        border: 3px solid ${userColor};
+                        z-index: 5;
+                        background: white;
+                    `;
+                    
+                    // Add OOO label
+                    const oooLabel = document.createElement('div');
+                    oooLabel.textContent = 'OOO ALL DAY';
+                    oooLabel.style.cssText = `
+                        position: absolute;
+                        top: 100px;
+                        left: ${leftPosition - 45}px;
+                        font-size: 0.75rem;
+                        font-weight: bold;
+                        color: ${userColor};
+                        text-align: center;
+                        width: 90px;
+                        z-index: 5;
+                    `;
+                    
+                    eventContainer.appendChild(profilePic);
+                    eventContainer.appendChild(oooLabel);
+                    
+                    processedEvents.push({
+                        column: column,
+                        startTime: 0,
+                        endTime: 1440
+                    });
+                    
+                    console.log(`All-day OOO event processed successfully in column ${column}`);
                     return;
                 }
                 
@@ -909,18 +950,18 @@ function positionSchedules() {
                 
                 if (column >= maxColumns) column = 0;
                 
-                // Calculate even distribution across timeline width
-                const containerWidth = 400; // Full container width for proper distribution
-                const profileWidth = 66; // Profile picture width
-                const availableWidth = containerWidth - profileWidth; // Space for distribution
+                // Calculate truly even distribution across full timeline width
+                const timelineFullWidth = 500; // Expand to use more space
+                const startPos = 50; // Start position
+                const endPos = 450; // End position
+                const availableSpan = endPos - startPos; // Total span for distribution
                 
                 let leftPosition;
                 if (maxColumns === 1) {
-                    leftPosition = availableWidth / 2; // Center single item
+                    leftPosition = (startPos + endPos) / 2; // Center single item
                 } else {
-                    // Distribute evenly: first at 50px, last at 350px, others evenly between
-                    const spacing = availableWidth / (maxColumns - 1);
-                    leftPosition = 50 + (column * spacing);
+                    // Even distribution: first at startPos, last at endPos, others evenly between
+                    leftPosition = startPos + (column * availableSpan / (maxColumns - 1));
                 }
                 
                 // Get event container for positioning
