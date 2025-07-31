@@ -576,12 +576,11 @@
                     </h6>
                     {% set quick_links = get_quick_links()[:10] %}  {# Limit to 10 links #}
                     {% if quick_links %}
-                        <div class="quick-links-responsive-grid" style="display: grid; gap: 4px; justify-content: center; flex-grow: 1; align-content: flex-start; grid-template-columns: repeat({{ quick_links|length if quick_links|length <= 5 else 5 }}, 1fr);">
+                        <div class="quick-links-responsive-grid" data-link-count="{{ quick_links|length }}" style="display: grid; gap: 4px; justify-content: center; flex-grow: 1; align-content: flex-start; grid-template-columns: repeat({{ quick_links|length if quick_links|length <= 5 else 5 }}, 1fr);">
                             {% for link in quick_links %}
-                            <a href="{{ link.url }}" target="_blank" class="btn btn-sm top-bar-quick-link responsive-quick-link" style="color: var(--dark-text); padding: 6px 10px; border-radius: 8px; background: rgba(175, 179, 247, 0.15); border: 1px solid rgba(175, 179, 247, 0.3); font-size: 0.8rem; text-decoration: none; transition: all 0.2s ease; min-height: 34px; display: flex; align-items: center; justify-content: center; font-weight: 500;">
-                                <i data-feather="{{ link.icon }}" style="width: 13px; height: 13px;" class="me-1"></i>
-                                <span class="d-none d-lg-inline">{{ link.title }}</span>
-                                <span class="d-lg-none">{{ link.title[:8] }}{% if link.title|length > 8 %}...{% endif %}</span>
+                            <a href="{{ link.url }}" target="_blank" class="btn btn-sm top-bar-quick-link responsive-quick-link" data-title="{{ link.title }}" style="color: var(--dark-text); padding: 6px 10px; border-radius: 8px; background: rgba(175, 179, 247, 0.15); border: 1px solid rgba(175, 179, 247, 0.3); text-decoration: none; transition: all 0.2s ease; min-height: 34px; display: flex; align-items: center; justify-content: center; font-weight: 500;">
+                                <i data-feather="{{ link.icon }}" class="quick-link-icon me-1"></i>
+                                <span class="quick-link-text">{{ link.title }}</span>
                             </a>
                             {% endfor %}
                         </div>
@@ -619,6 +618,88 @@
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <script src="{{ url_for('static', filename='js/calendar.js') }}?v={{ now.timestamp() | int }}&refresh=true&grid=2col"></script>
     
+    <script>
+        // Dynamic Quick Links Text Scaling
+        function scaleQuickLinksText() {
+            const container = document.querySelector('.quick-links-responsive-grid');
+            if (!container) return;
+            
+            const links = container.querySelectorAll('.responsive-quick-link');
+            if (links.length === 0) return;
+            
+            const containerWidth = container.offsetWidth;
+            const linkCount = parseInt(container.dataset.linkCount) || links.length;
+            
+            // Calculate optimal font size based on container width and number of links
+            const baseWidth = containerWidth / Math.min(linkCount, 5); // Max 5 columns
+            let fontSize, iconSize, padding;
+            
+            if (baseWidth < 60) {
+                fontSize = '0.65rem';
+                iconSize = '10px';
+                padding = '4px 6px';
+            } else if (baseWidth < 80) {
+                fontSize = '0.7rem';
+                iconSize = '11px';
+                padding = '5px 8px';
+            } else if (baseWidth < 100) {
+                fontSize = '0.75rem';
+                iconSize = '12px';
+                padding = '6px 10px';
+            } else if (baseWidth < 120) {
+                fontSize = '0.8rem';
+                iconSize = '13px';
+                padding = '7px 12px';
+            } else {
+                fontSize = '0.85rem';
+                iconSize = '14px';
+                padding = '8px 14px';
+            }
+            
+            links.forEach(link => {
+                // Update text size
+                const textSpan = link.querySelector('.quick-link-text');
+                const icon = link.querySelector('.quick-link-icon');
+                
+                if (textSpan) {
+                    textSpan.style.fontSize = fontSize;
+                }
+                
+                // Update icon size
+                if (icon) {
+                    icon.style.width = iconSize;
+                    icon.style.height = iconSize;
+                }
+                
+                // Update padding
+                link.style.padding = padding;
+                
+                console.log(`Quick Link scaled: baseWidth=${baseWidth}px, fontSize=${fontSize}, iconSize=${iconSize}`);
+            });
+        }
+        
+        // Apply scaling on load and resize
+        document.addEventListener('DOMContentLoaded', function() {
+            scaleQuickLinksText();
+            
+            // Re-scale on window resize
+            window.addEventListener('resize', debounce(scaleQuickLinksText, 250));
+        });
+        
+        // Debounce function to prevent excessive resize calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+    
     <style>
         /* Modern Top Bar Section Styling */
         .top-bar-quick-link:hover {
@@ -638,8 +719,14 @@
         .responsive-quick-link {
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis;
             font-weight: 500;
+            min-width: 0; /* Allows flex shrinking */
+        }
+        
+        .quick-link-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         
         /* Responsive breakpoints for Quick Links with proportional text sizing */

@@ -26,7 +26,7 @@ from flask import session
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    return redirect(url_for('auth.login'))
 
 @app.route('/dashboard')
 @login_required
