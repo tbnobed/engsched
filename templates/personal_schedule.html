@@ -304,16 +304,7 @@
 
 /* Schedule event styling is now handled in main style.css */
 
-/* Make sure events are positioned correctly using JavaScript */
-{% for day in range(7) %}
-{% set current_date = week_start + timedelta(days=day) %}
-{% for schedule in schedules if schedule.start_time.date() == current_date.date() %}
-.day-column:nth-child({{ day + 2 }}) .schedule-event[data-schedule-id="{{ schedule.id }}"] {
-    top: {{ ((schedule.start_time.hour * 60 + schedule.start_time.minute) / 60) * 60 }}px;
-    height: {{ (((schedule.end_time - schedule.start_time).total_seconds() / 3600) * 60) }}px;
-}
-{% endfor %}
-{% endfor %}
+/* Event positioning is handled by JavaScript instead of inline CSS */
 
 .schedule-time {
     font-weight: bold;

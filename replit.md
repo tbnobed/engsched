@@ -10,6 +10,11 @@ Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
 Recent Updates (July 31, 2025):
+- ✅ COMPLETED: Personal Schedule Grid Lines CSS Fix - Restored Timeline Visual Structure
+- Fixed critical CSS parsing errors in personal_schedule.html template preventing grid lines from displaying
+- Removed malformed Jinja loop-generated CSS rules that were causing parser failures
+- Grid lines now properly display for hourly time slots across all day columns in personal schedule view
+- Timeline visual structure fully restored with proper border styling for clear schedule organization
 - ✅ COMPLETED: CRITICAL Dashboard Midnight-Crossing Schedule Split Fix - Proper Day Boundary Handling
 - Fixed dashboard backend to properly split midnight-crossing schedules at day boundaries instead of showing disconnected duration lines
 - Schedule running 22:00-01:00 now correctly displays as 22:00-23:59:59 on today's dashboard (119 minutes)
@@ -17,6 +22,11 @@ Recent Updates (July 31, 2025):
 - Tomorrow's portion (00:00-01:00) will appear as separate entry on tomorrow's dashboard
 - Dashboard timeline now shows continuous visual flow from 22:00 through 23:59 without gaps or disconnected elements
 - Backend properly truncates today's portion at 23:59:59 using `midnight_today = user_tz.localize(datetime.combine(today, time(23, 59, 59)))`
+- ✅ COMPLETED: Yesterday's Schedule Extension Fix - Cross-Day Schedule Display
+- Enhanced dashboard to include yesterday's midnight-crossing schedules that extend into today
+- Backend now detects and displays yesterday's 22:00-01:00 schedule as 00:00-01:00 portion on today's timeline
+- Fixed schedule filtering logic to handle both directions: today extending to tomorrow AND yesterday extending to today
+- Dashboard timeline now shows complete schedule coverage across day boundaries
 - ✅ COMPLETED: Responsive Quick Links Enhancement - Dynamic Sizing and Proportional Text Scaling
 - Enhanced Quick Links section to use CSS Grid with dynamic column distribution based on number of links (1-5 columns max, 10 links max)
 - Implemented comprehensive responsive breakpoints with proportional text and icon scaling across all screen sizes
