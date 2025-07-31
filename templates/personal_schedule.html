@@ -33,7 +33,7 @@
         </div>
     </div>
 
-    <div class="week-view">
+    <div class="calendar-grid">
         <div class="time-column">
             {% for hour in range(24) %}
                 <div class="hour-slot">{{ "%02d:00"|format(hour) }}</div>
@@ -228,7 +228,8 @@
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-.week-view {
+/* Use exact calendar-grid structure as calendar.html */
+.calendar-grid {
     display: flex;
     overflow-x: auto;
     min-height: 600px;
@@ -306,7 +307,7 @@
 }
 
 /* Dark theme support */
-[data-theme="dark"] .week-view {
+[data-theme="dark"] .calendar-grid {
     background-color: #343a40;
     border: 1px solid #495057;
 }
