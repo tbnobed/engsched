@@ -893,21 +893,24 @@ function positionSchedules() {
                 
                 console.log(`Event ${index + 1} assigned to column ${column} (of ${maxColumns} columns) - using index-based assignment`);
                 
-                // Calculate even distribution across full timeline width with safe boundaries
-                const timelineFullWidth = 500; // Full timeline container width
+                // Calculate even distribution across full timeline width
+                const timelineContainer = eventContainer.querySelector('.timeline-container') || eventContainer;
+                const containerWidth = timelineContainer.offsetWidth || 800; // Get actual container width or fallback
                 const profileWidth = 66; // Profile picture width  
-                const safeStartMargin = 50; // Safe left margin to prevent cutoff
-                const safeEndMargin = 50; // Safe right margin to prevent cutoff
-                const availableSpan = timelineFullWidth - safeStartMargin - safeEndMargin - profileWidth; // Space for distribution
+                const safeStartMargin = 40; // Minimal left margin
+                const safeEndMargin = 40; // Minimal right margin
+                const availableSpan = containerWidth - safeStartMargin - safeEndMargin - profileWidth; // Full available space
                 
-                // Distribute evenly across the available span
+                // Distribute evenly across the full available span
                 let leftPosition;
                 if (maxColumns === 1) {
                     leftPosition = safeStartMargin + (availableSpan / 2); // Center single item
                 } else {
-                    // Even distribution from start to end of available span
+                    // Even distribution from start to end of available span using full container width
                     leftPosition = safeStartMargin + (column * (availableSpan / (maxColumns - 1)));
                 }
+                
+                console.log(`Container width: ${containerWidth}px, available span: ${availableSpan}px, column ${column} position: ${leftPosition}px`);
                 
                 // Get event container for positioning
                 const eventContainer = event.closest('.day-slots');
