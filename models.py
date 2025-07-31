@@ -248,6 +248,10 @@ class Ticket(db.Model):
     
     def has_unread_activity(self, user_id: int) -> bool:
         """Check if ticket has activity since user last viewed it"""
+        # NEVER show NEW badges on resolved or closed tickets
+        if self.status in ['resolved', 'closed']:
+            return False
+            
         # Get user's last view time for this ticket
         ticket_view = TicketView.query.filter_by(
             user_id=user_id, 
