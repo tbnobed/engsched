@@ -576,31 +576,31 @@
                     </h6>
                     <div id="team-stats-content" style="display: grid; gap: 6px; justify-content: center; flex-grow: 1; align-content: flex-start; grid-template-columns: 1fr 1fr;">
                         <!-- Team Availability -->
-                        <div class="stat-card" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; padding: 8px; text-align: center;">
-                            <i data-feather="users" style="width: 12px; height: 12px; color: #22c55e; margin-bottom: 4px;"></i>
-                            <div class="stat-number" id="team-availability" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1;">-</div>
-                            <div class="stat-label" style="font-size: 0.65rem; color: var(--dark-text); opacity: 0.8;">Available</div>
+                        <div class="stat-card" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; padding: 8px; text-align: center;" title="Technicians currently working vs total team size">
+                            <i data-feather="users" style="width: 12px; height: 12px; color: #22c55e; margin-bottom: 2px;"></i>
+                            <div class="stat-number" id="team-availability" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: 2px;">-</div>
+                            <div class="stat-label" style="font-size: 0.6rem; color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Working<br>Now</div>
                         </div>
                         
                         <!-- Active Tickets -->
-                        <div class="stat-card" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 8px; text-align: center;">
-                            <i data-feather="alert-circle" style="width: 12px; height: 12px; color: #ef4444; margin-bottom: 4px;"></i>
-                            <div class="stat-number" id="active-tickets" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1;">-</div>
-                            <div class="stat-label" style="font-size: 0.65rem; color: var(--dark-text); opacity: 0.8;">Active</div>
+                        <div class="stat-card" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 8px; text-align: center;" title="Open, in-progress, and pending tickets requiring attention">
+                            <i data-feather="alert-circle" style="width: 12px; height: 12px; color: #ef4444; margin-bottom: 2px;"></i>
+                            <div class="stat-number" id="active-tickets" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: 2px;">-</div>
+                            <div class="stat-label" style="font-size: 0.6rem; color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Active<br>Tickets</div>
                         </div>
                         
                         <!-- Schedule Coverage -->
-                        <div class="stat-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; padding: 8px; text-align: center;">
-                            <i data-feather="clock" style="width: 12px; height: 12px; color: #3b82f6; margin-bottom: 4px;"></i>
-                            <div class="stat-number" id="schedule-hours" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1;">-</div>
-                            <div class="stat-label" style="font-size: 0.65rem; color: var(--dark-text); opacity: 0.8;">Hours</div>
+                        <div class="stat-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; padding: 8px; text-align: center;" title="Total scheduled work hours for today">
+                            <i data-feather="clock" style="width: 12px; height: 12px; color: #3b82f6; margin-bottom: 2px;"></i>
+                            <div class="stat-number" id="schedule-hours" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: 2px;">-</div>
+                            <div class="stat-label" style="font-size: 0.6rem; color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Today's<br>Hours</div>
                         </div>
                         
                         <!-- Upcoming Time Off -->
-                        <div class="stat-card" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 8px; text-align: center;">
-                            <i data-feather="calendar" style="width: 12px; height: 12px; color: #f59e0b; margin-bottom: 4px;"></i>
-                            <div class="stat-number" id="upcoming-pto" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1;">-</div>
-                            <div class="stat-label" style="font-size: 0.65rem; color: var(--dark-text); opacity: 0.8;">PTO</div>
+                        <div class="stat-card" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 8px; text-align: center;" title="Number of scheduled time-off entries in the next 7 days">
+                            <i data-feather="calendar" style="width: 12px; height: 12px; color: #f59e0b; margin-bottom: 2px;"></i>
+                            <div class="stat-number" id="upcoming-pto" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: 2px;">-</div>
+                            <div class="stat-label" style="font-size: 0.6rem; color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Upcoming<br>PTO</div>
                         </div>
                     </div>
                 </div>
