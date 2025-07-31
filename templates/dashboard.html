@@ -207,6 +207,7 @@
                                              data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
                                              data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
                                              data-all-day="{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}"
+                                             data-user-color="{{ '#6a6d6c' if schedule.time_off else schedule.technician.color }}"
 ">
                                             <div class="schedule-header">
                                                 <div class="schedule-title">{{ schedule.technician.username }}{% if schedule.time_off %} - Time Off{% endif %}</div>
@@ -909,7 +910,7 @@ function positionSchedules() {
                 if (column >= maxColumns) column = 0;
                 
                 // Get event container for positioning
-                const eventContainer = event.closest('.day-schedules');
+                const eventContainer = event.closest('.day-slots');
                 if (!eventContainer) {
                     console.log('No event container found for event:', index + 1);
                     return;
