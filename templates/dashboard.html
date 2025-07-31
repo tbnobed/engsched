@@ -909,6 +909,10 @@ function positionSchedules() {
                 
                 if (column >= maxColumns) column = 0;
                 
+                // Calculate dynamic spacing based on number of overlapping events
+                const availableWidth = 200; // Available width for timeline entries
+                const dynamicSpacing = maxColumns > 1 ? availableWidth / maxColumns : 90;
+                
                 // Get event container for positioning
                 const eventContainer = event.closest('.day-slots');
                 if (!eventContainer) {
@@ -941,7 +945,7 @@ function positionSchedules() {
                     durationLine.style.cssText = `
                         position: absolute;
                         top: ${hour * 60 + topOffset}px;
-                        left: ${20 + column * 90}px;
+                        left: ${20 + column * dynamicSpacing}px;
                         width: 6px;
                         height: ${height}px;
                         background-color: ${userColor};
@@ -1004,9 +1008,9 @@ function positionSchedules() {
                 const profileTop = startTotalMinutes + Math.max(0, totalHeight/2 - 33);
                 
                 profilePic.style.top = `${profileTop}px`;
-                profilePic.style.left = `${20 + column * 90 - 33}px`;
+                profilePic.style.left = `${20 + column * dynamicSpacing - 33}px`;
                 
-                console.log(`Profile positioned at top: ${profileTop}px, left: ${20 + column * 90 - 33}px`);
+                console.log(`Profile positioned at top: ${profileTop}px, left: ${20 + column * dynamicSpacing - 33}px`);
                 
                 eventContainer.appendChild(profilePic);
                 
