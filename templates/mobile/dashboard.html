@@ -49,7 +49,7 @@
         <!-- Upcoming Time Off -->
         <div class="d-flex flex-column align-items-center p-3 rounded text-center shadow-sm"
              style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.3);{% else %}background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.4);{% endif %} min-height: 80px;">
-            <i data-feather="calendar-x" style="width: 20px; height: 20px; color: #f97316; margin-bottom: 4px;"></i>
+            <i data-feather="x-circle" style="width: 20px; height: 20px; color: #f97316; margin-bottom: 4px;"></i>
             <div class="fw-semibold" style="font-size: 1.1rem; color: #f97316;" id="upcoming-pto">-</div>
             <small class="text-muted" style="font-size: 0.75rem;">Upcoming PTO</small>
         </div>
@@ -192,9 +192,23 @@ document.body.classList.add('page-dashboard');
 
 // Function to load team statistics
 function loadTeamStats() {
-    fetch('/api/team-stats')
-        .then(response => response.json())
+    console.log('Loading team statistics...');
+    fetch('/api/team-stats', {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => {
+            console.log('Team stats response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Team stats data received:', data);
             if (data.success) {
                 const stats = data.stats;
                 
@@ -213,25 +227,37 @@ function loadTeamStats() {
                 
                 console.log('Mobile team stats refreshed successfully');
             } else {
-                console.error('Failed to load team stats:', data.error);
+                console.error('Failed to load team stats:', data.error || 'Unknown error');
+                // Set error indicators
+                document.getElementById('team-availability').textContent = 'Error';
+                document.getElementById('active-tickets').textContent = 'Error';
+                document.getElementById('schedule-hours').textContent = 'Error';
+                document.getElementById('upcoming-pto').textContent = 'Error';
             }
         })
         .catch(error => {
             console.error('Error fetching mobile team stats:', error);
+            // Set error indicators
+            document.getElementById('team-availability').textContent = 'Error';
+            document.getElementById('active-tickets').textContent = 'Error';
+            document.getElementById('schedule-hours').textContent = 'Error';
+            document.getElementById('upcoming-pto').textContent = 'Error';
         });
 }
 
-// Load data on page load
-loadActiveUsers();
-loadUpcomingTimeOff();
-loadTeamStats();
-
-// Auto-refresh dashboard data every 2 minutes
-setInterval(function() {
+// Load data when page loads
+document.addEventListener('DOMContentLoaded', function() {
     loadActiveUsers();
     loadUpcomingTimeOff();
     loadTeamStats();
-}, 120000);
+    
+    // Auto-refresh dashboard data every 2 minutes
+    setInterval(function() {
+        loadActiveUsers();
+        loadUpcomingTimeOff();
+        loadTeamStats();
+    }, 120000);
+});
 </script>
 
 
@@ -353,15 +379,7 @@ function loadUpcomingTimeOff() {
         });
 }
 
-// Load data when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    loadActiveUsers();
-    loadUpcomingTimeOff();
-    
-    // Auto-refresh every 60 seconds
-    setInterval(loadActiveUsers, 60000);
-    setInterval(loadUpcomingTimeOff, 60000);
-});
+// This section is now handled above in the combined DOMContentLoaded event
 </script>
 
 {% endblock %}
