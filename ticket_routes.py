@@ -1307,6 +1307,8 @@ def edit_ticket(ticket_id):
 def delete_ticket(ticket_id):
     """Delete a ticket (admin only)"""
     
+    app.logger.info(f"Delete ticket request: Ticket #{ticket_id}, User: {current_user.username}, Admin: {current_user.is_admin}, Method: {request.method}")
+    
     if not current_user.is_admin:
         app.logger.warning(f"Non-admin user {current_user.username} attempted to delete ticket #{ticket_id}")
         flash('You do not have permission to delete tickets', 'error')
