@@ -845,7 +845,7 @@ function positionSchedules() {
 
         // Apply mobile timeline styling - create profile pictures and duration lines
         const processedEvents = [];
-        const maxColumns = 4;
+        const maxColumns = Math.max(4, eventArray.length); // Ensure enough columns for all events
         
         console.log('Processing events for timeline styling, found:', eventArray.length);
         
