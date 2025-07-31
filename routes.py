@@ -618,47 +618,7 @@ def test_email_webhook():
             'message': str(e)
         }), 500
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    app.logger.debug(f"Login attempt - Method: {request.method}")
-    app.logger.debug(f"Session before login: {session}")
-
-    if current_user.is_authenticated:
-        app.logger.debug(f"Already authenticated user: {current_user.username}")
-        app.logger.debug(f"Current session: {session}")
-        return redirect(url_for('calendar'))
-
-    form = LoginForm()
-    if form.validate_on_submit():
-        app.logger.debug(f"Login form submitted for email: {form.email.data}")
-        user = User.query.filter_by(email=form.email.data).first()
-        if user and user.check_password(form.password.data):
-            # Set session to be permanent (7 days)
-            session.permanent = True
-            login_user(user, remember=form.remember_me.data)
-            app.logger.info(f"User {user.username} logged in successfully")
-            app.logger.debug(f"Session after login: {session}")
-            next_page = request.args.get('next')
-            app.logger.debug(f"Redirecting to: {next_page if next_page else 'calendar'}")
-            return redirect(next_page if next_page else url_for('calendar'))
-        app.logger.warning(f"Failed login attempt for email: {form.email.data}")
-        flash('Invalid email or password')
-    return render_template('login.html', form=form)
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('calendar'))
-
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        flash('Registration successful! Please log in.')
-        return redirect(url_for('login'))
-    return render_template('register.html', form=form)
+# Login and register routes are handled in auth.py - removed duplicates to prevent conflicts
 
 # Logout route is handled in auth.py - removed duplicate to prevent conflicts
 
