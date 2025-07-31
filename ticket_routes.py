@@ -1302,7 +1302,7 @@ def edit_ticket(ticket_id):
     return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket.id)
 
 
-@tickets.route('/tickets/<int:ticket_id>/delete')
+@tickets.route('/tickets/<int:ticket_id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete_ticket(ticket_id):
     """Delete a ticket (admin only)"""
