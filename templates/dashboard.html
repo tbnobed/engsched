@@ -909,8 +909,9 @@ function positionSchedules() {
                 
                 if (column >= maxColumns) column = 0;
                 
-                // Calculate dynamic spacing to spread entries across the full timeline width
-                const timelineWidth = 300; // Full timeline width available
+                // Calculate even distribution across timeline width
+                const timelineWidth = 280; // Available timeline width  
+                const startPosition = 50; // Starting position to avoid going off-screen
                 const dynamicSpacing = maxColumns > 1 ? timelineWidth / (maxColumns - 1) : 120;
                 
                 // Get event container for positioning
@@ -945,7 +946,7 @@ function positionSchedules() {
                     durationLine.style.cssText = `
                         position: absolute;
                         top: ${hour * 60 + topOffset}px;
-                        left: ${20 + column * dynamicSpacing}px;
+                        left: ${startPosition + column * dynamicSpacing}px;
                         width: 6px;
                         height: ${height}px;
                         background-color: ${userColor};
@@ -1008,9 +1009,9 @@ function positionSchedules() {
                 const profileTop = startTotalMinutes + Math.max(0, totalHeight/2 - 33);
                 
                 profilePic.style.top = `${profileTop}px`;
-                profilePic.style.left = `${20 + column * dynamicSpacing - 33}px`;
+                profilePic.style.left = `${startPosition + column * dynamicSpacing - 33}px`;
                 
-                console.log(`Profile positioned at top: ${profileTop}px, left: ${20 + column * dynamicSpacing - 33}px`);
+                console.log(`Profile positioned at top: ${profileTop}px, left: ${startPosition + column * dynamicSpacing - 33}px`);
                 
                 eventContainer.appendChild(profilePic);
                 
