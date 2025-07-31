@@ -909,9 +909,9 @@ function positionSchedules() {
                 
                 if (column >= maxColumns) column = 0;
                 
-                // Calculate dynamic spacing based on number of overlapping events
-                const availableWidth = 200; // Available width for timeline entries
-                const dynamicSpacing = maxColumns > 1 ? availableWidth / maxColumns : 90;
+                // Calculate dynamic spacing to spread entries across the full timeline width
+                const timelineWidth = 300; // Full timeline width available
+                const dynamicSpacing = maxColumns > 1 ? timelineWidth / (maxColumns - 1) : 120;
                 
                 // Get event container for positioning
                 const eventContainer = event.closest('.day-slots');
