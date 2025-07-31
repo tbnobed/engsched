@@ -1778,15 +1778,6 @@ function updateCurrentTimeLine() {
         `;
         
         console.log('Current time line element positioned with cssText:', currentTimeLine.style.cssText);
-        
-        // Scroll to current time if it's early in the day
-        if (currentHour < 12) {
-            const timelineScroll = document.querySelector('.timeline-scroll');
-            if (timelineScroll) {
-                const scrollPosition = Math.max(0, topPosition - 150);
-                timelineScroll.scrollTop = scrollPosition;
-            }
-        }
     } else {
         currentTimeLine.style.display = 'none';
     }

@@ -34,6 +34,12 @@ Recent Updates (July 31, 2025):
 - Replaced invalid 'calendar-x' icons with valid 'x-circle' icons in both desktop and mobile interfaces
 - Eliminated JavaScript console warnings for cleaner debugging and improved performance
 - All feather icons now use valid icon names from official Feather Icons library
+- ✅ COMPLETED: Mobile Calendar Scroll Fix - Eliminated Auto-Scroll Interference
+- Fixed critical mobile calendar scrolling issue where timeline auto-refresh forced page back to top every second
+- Removed automatic scroll-to-current-time behavior that was preventing users from scrolling down timeline
+- Timeline current time indicator still updates position and displays correct time without interfering with user scrolling
+- Mobile calendar now allows smooth scrolling throughout 24-hour timeline without interruption
+- Enhanced mobile user experience by preserving scroll position during timeline updates
 - ✅ COMPLETED: Universal Timeline Clock Synchronization Fix - Perfect Time Sync Across All Calendar Views
 - Fixed critical timing issue where main clock displayed "03:53:01 AM" while timeline indicator showed "03:51 AM"
 - Enhanced timeline update functions across ALL views to include second-level precision for smoother positioning calculations
