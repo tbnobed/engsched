@@ -353,61 +353,61 @@
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dashboard') }}">
-                                <i data-feather="home"></i> Dashboard
+                            <a class="nav-link" href="{{ url_for('dashboard') }}" style="font-weight: 500;">
+                                Dashboard
                             </a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="calendarDropdown" role="button" data-bs-toggle="dropdown">
-                                <i data-feather="calendar"></i> Calendar
+                            <a class="nav-link dropdown-toggle" href="#" id="calendarDropdown" role="button" data-bs-toggle="dropdown" style="font-weight: 500;">
+                                Calendar
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('calendar') }}">
-                                        <i data-feather="users"></i> All Schedules
+                                        All Schedules
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('personal_schedule') }}">
-                                        <i data-feather="user"></i> My Schedule
+                                        My Schedule
                                     </a>
                                 </li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="ticketDropdown" role="button" data-bs-toggle="dropdown">
-                                <i data-feather="life-buoy"></i> Tickets
+                            <a class="nav-link dropdown-toggle" href="#" id="ticketDropdown" role="button" data-bs-toggle="dropdown" style="font-weight: 500;">
+                                Tickets
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('tickets.tickets_dashboard') }}">
-                                        <i data-feather="list"></i> All Tickets
+                                        All Tickets
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('tickets.create_ticket') }}">
-                                        <i data-feather="plus-circle"></i> New Ticket
+                                        New Ticket
                                     </a>
                                 </li>
                                 {% if current_user.is_admin %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('tickets.manage_categories') }}">
-                                        <i data-feather="tag"></i> Manage Categories
+                                        Manage Categories
                                     </a>
                                 </li>
                                 {% endif %}
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="quickLinksDropdown" role="button" data-bs-toggle="dropdown">
-                                <i data-feather="external-link"></i> Quick Links
+                            <a class="nav-link dropdown-toggle" href="#" id="quickLinksDropdown" role="button" data-bs-toggle="dropdown" style="font-weight: 500;">
+                                Quick Links
                             </a>
                             <ul class="dropdown-menu">
                                 {% for link in get_quick_links() %}
                                 <li>
                                     <a class="dropdown-item" href="{{ link.url }}" target="_blank">
-                                        <i data-feather="{{ link.icon }}"></i> {{ link.title }}
+                                        {{ link.title }}
                                     </a>
                                 </li>
                                 {% endfor %}
@@ -415,7 +415,7 @@
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('admin_quick_links') }}">
-                                        <i data-feather="settings"></i> Manage Quick Links
+                                        Manage Quick Links
                                     </a>
                                 </li>
                                 {% endif %}
@@ -423,8 +423,8 @@
                         </li>
                         {% if CHAT_ENABLED %}
                         <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="openChatPopup(); return false;">
-                                <i data-feather="message-circle"></i> Team Chat
+                            <a class="nav-link" href="#" onclick="openChatPopup(); return false;" style="font-weight: 500;">
+                                Team Chat
                             </a>
                         </li>
                         {% endif %}
@@ -435,52 +435,53 @@
             <!-- Right side navigation - Fixed position -->
             <div class="d-flex align-items-center" style="position: absolute; right: 15px; z-index: 1000;">
                 {% if current_user.is_authenticated %}
-                <ul class="navbar-nav d-flex flex-row">
-                    <li class="nav-item me-2">
-                        <form method="POST" action="{{ url_for('toggle_theme') }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="btn btn-sm btn-link p-0" style="color: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#002744{% else %}#ffffff{% endif %};">
-                                <i data-feather="{% if current_user.theme_preference == 'light' %}moon{% else %}sun{% endif %}" style="width: 20px; height: 20px;"></i>
-                            </button>
-                        </form>
-                    </li>
+                <ul class="navbar-nav d-flex flex-row align-items-center">
                         {% if current_user.is_admin %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
-                                <i data-feather="settings"></i> Admin
+                        <li class="nav-item dropdown me-3">
+                            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" style="font-weight: 500;">
+                                Admin
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('admin_dashboard') }}">
-                                        <i data-feather="users"></i> User Management
+                                        User Management
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('admin_locations') }}">
-                                        <i data-feather="map-pin"></i> Manage Locations
+                                        Manage Locations
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('admin_quick_links') }}">
-                                        <i data-feather="link"></i> Manage Quick Links
+                                        Manage Quick Links
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('admin_backup') }}">
-                                        <i data-feather="database"></i> Backup & Restore
+                                        Backup & Restore
                                     </a>
                                 </li>
                             </ul>
                         </li>
                         {% endif %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <i data-feather="user"></i> {{ current_user.username }}
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" style="font-weight: 500; padding: 4px 8px;">
+                                {% if current_user.profile_picture %}
+                                    <img src="{{ url_for('static', filename=current_user.profile_picture) }}" 
+                                         alt="{{ current_user.username }}" 
+                                         style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-right: 8px; border: 2px solid {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#e9ecef{% else %}#495057{% endif %};">
+                                {% else %}
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ current_user.color or '#6c757d' }}; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; font-size: 14px; margin-right: 8px; border: 2px solid {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#e9ecef{% else %}#495057{% endif %};">
+                                        {{ current_user.username[0].upper() }}
+                                    </div>
+                                {% endif %}
+                                {{ current_user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('profile') }}">
-                                        <i data-feather="settings"></i> Profile Settings
+                                        Profile Settings
                                     </a>
                                 </li>
                                 <li>
@@ -500,7 +501,6 @@
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <div class="d-grid">
                                             <button type="submit" class="btn btn-sm {% if current_user.theme_preference == 'light' %}btn-dark{% else %}btn-light{% endif %}">
-                                                <i data-feather="{% if current_user.theme_preference == 'light' %}moon{% else %}sun{% endif %}"></i>
                                                 Switch to {% if current_user.theme_preference == 'light' %}Dark{% else %}Light{% endif %} Theme
                                             </button>
                                         </div>
