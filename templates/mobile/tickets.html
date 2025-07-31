@@ -169,13 +169,13 @@ function quickUpdateStatus(ticketId, newStatus) {
     }
 }
 
-// Auto-refresh tickets every 30 seconds
+// Auto-refresh tickets every 5 seconds for responsive badge updates
 setInterval(function() {
     // Only refresh if no modals are open
     if (!document.querySelector('.modal.show')) {
         location.reload();
     }
-}, 30000);
+}, 5000);
 </script>
 
 <style>

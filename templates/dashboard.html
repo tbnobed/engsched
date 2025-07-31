@@ -512,10 +512,10 @@ document.addEventListener('DOMContentLoaded', function() {
         loadStudioBookings();
     }, 180000);
     
-    // Set up auto-refresh for dashboard tickets every 60 seconds
+    // Set up auto-refresh for dashboard tickets every 5 seconds for responsive badge updates
     setInterval(function() {
         refreshDashboardTickets();
-    }, 60000);
+    }, 5000);
     
     // Initialize Feather icons
     feather.replace();
