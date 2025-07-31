@@ -986,6 +986,7 @@ body.light-theme .time-off-entry[class*="user-color-"] div {
 /* Override calendar grid */
 .calendar-grid {
   background-color: var(--light-border) !important;
+  border: 1px solid var(--light-border) !important;
 }
 
 .time-column, .day-column {
@@ -1009,13 +1010,13 @@ body.light-theme .time-off-entry[class*="user-color-"] div {
 }
 
 .hour-slot {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-bottom: 1px solid var(--light-border) !important;
   color: var(--light-text-secondary) !important;
 }
 
 .time-slot {
   background-color: rgba(0, 0, 0, 0.01) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
 }
 
 /* Fix calendar text contrast issues */
