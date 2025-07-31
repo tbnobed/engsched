@@ -926,18 +926,8 @@ function positionSchedules() {
                 
                 // Handle all-day time-off events specially - show profile picture at top with OOO label
                 if (isTimeOff && isAllDay) {
-                    console.log('Processing all-day OOO event with profile picture');
-                    console.log('Profile picture data:', event.dataset.profilePicture);
-                    console.log('Username:', event.dataset.username);
-                    
                     const profilePic = document.createElement('img');
-                    const profilePicPath = event.dataset.profilePicture ? `/static/uploads/profile_pictures/${event.dataset.profilePicture}` : '/static/default-avatar.svg';
-                    console.log('Profile picture path:', profilePicPath);
-                    profilePic.src = profilePicPath;
-                    profilePic.onerror = function() {
-                        console.log('Profile picture failed to load, using fallback');
-                        this.src = '/static/default-avatar.svg';
-                    };
+                    profilePic.src = `/static/${event.dataset.profilePicture}`;
                     profilePic.className = 'dashboard-timeline-profile-pic';
                     profilePic.style.cssText = `
                         position: absolute;
