@@ -383,6 +383,10 @@ def tickets_dashboard():
     filtered_tickets = []
     for ticket in tickets:
         # Create a simple dict with only the data we need
+        # Check NEW badge status with debug logging
+        new_badge_status = ticket.has_unread_activity(current_user.id)
+        app.logger.debug(f"🔍 TICKET #{ticket.id} NEW BADGE CHECK: {new_badge_status}")
+        
         ticket_dict = {
             'id': ticket.id,
             'title': ticket.title,
@@ -393,7 +397,7 @@ def tickets_dashboard():
             'created_at': ticket.created_at,
             'updated_at': ticket.updated_at,
             'due_date': ticket.due_date,
-            'has_unread_activity': ticket.has_unread_activity(current_user.id),
+            'has_unread_activity': new_badge_status,
             'category': {
                 'id': ticket.category.id,
                 'name': ticket.category.name
@@ -622,22 +626,31 @@ def view_ticket(ticket_id):
 
     # All users can view all tickets
 
-    # Mark ticket as viewed by current user and log the view in history
+    # Mark ticket as viewed by current user and log the FIRST view in history
     try:
         ticket_obj.mark_as_viewed(current_user.id)
         
-        # Add history entry for the view (helps with NEW badge tracking and audit trail)
-        view_history = TicketHistory(
+        # Only add history entry if this is the first time this user viewed this ticket
+        existing_view_history = TicketHistory.query.filter_by(
             ticket_id=ticket_obj.id,
             user_id=current_user.id,
-            action="viewed",
-            details=f"Ticket viewed by {current_user.username}",
-            created_at=datetime.now(pytz.UTC)
-        )
-        db.session.add(view_history)
+            action="viewed"
+        ).first()
+        
+        if not existing_view_history:
+            view_history = TicketHistory(
+                ticket_id=ticket_obj.id,
+                user_id=current_user.id,
+                action="viewed",
+                details=f"Ticket first viewed by {current_user.username}",
+                created_at=datetime.now(pytz.UTC)
+            )
+            db.session.add(view_history)
+            app.logger.debug(f"Ticket #{ticket_id} FIRST VIEW by user {current_user.username}")
+        else:
+            app.logger.debug(f"Ticket #{ticket_id} already viewed by user {current_user.username}, no new history entry")
         
         db.session.commit()
-        app.logger.debug(f"Ticket #{ticket_id} viewed by user {current_user.username} (ID: {current_user.id})")
     except Exception as e:
         app.logger.warning(f"Failed to mark ticket #{ticket_id} as viewed: {str(e)}")
         db.session.rollback()

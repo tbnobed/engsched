@@ -279,11 +279,11 @@ class Ticket(db.Model):
         
         if not (has_been_viewed or has_view_history or has_management):
             # NO ONE has interacted with this ticket yet, so show NEW badge
-            app.logger.debug(f"Ticket #{self.id}: Showing NEW badge - no interactions found")
+            app.logger.debug(f"Ticket #{self.id}: ✅ SHOWING NEW badge - no interactions found")
             return True
         
         # Someone has interacted with this ticket, so no NEW badge needed
-        app.logger.debug(f"Ticket #{self.id}: NO NEW badge - someone has interacted with it")
+        app.logger.debug(f"Ticket #{self.id}: ❌ NO NEW badge - someone has interacted with it")
         return False
     
     def mark_as_viewed(self, user_id: int):
