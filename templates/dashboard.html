@@ -893,6 +893,13 @@ function positionSchedules() {
                 
                 console.log(`Event ${index + 1} assigned to column ${column} (of ${maxColumns} columns) - using index-based assignment`);
                 
+                // Get event container for positioning
+                const eventContainer = event.closest('.day-slots');
+                if (!eventContainer) {
+                    console.log('No event container found for event:', index + 1);
+                    return;
+                }
+                
                 // Calculate even distribution across full timeline width
                 const timelineContainer = eventContainer.querySelector('.timeline-container') || eventContainer;
                 const containerWidth = timelineContainer.offsetWidth || 800; // Get actual container width or fallback
@@ -911,13 +918,6 @@ function positionSchedules() {
                 }
                 
                 console.log(`Container width: ${containerWidth}px, available span: ${availableSpan}px, column ${column} position: ${leftPosition}px`);
-                
-                // Get event container for positioning
-                const eventContainer = event.closest('.day-slots');
-                if (!eventContainer) {
-                    console.log('No event container found for event:', index + 1);
-                    return;
-                }
                 
                 // Handle all-day time-off events specially - show profile picture at top with OOO label
                 if (isTimeOff && isAllDay) {
