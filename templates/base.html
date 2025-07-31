@@ -574,33 +574,33 @@
                         <span class="d-none d-md-inline">Team Stats</span>
                         <span class="d-md-none">Stats</span>
                     </h6>
-                    <div id="team-stats-content" style="display: grid; gap: 6px; justify-content: center; flex-grow: 1; align-content: flex-start; grid-template-columns: 1fr 1fr;">
+                    <div id="team-stats-content" class="team-stats-responsive-grid" style="display: grid; gap: 0.5vw; justify-content: center; flex-grow: 1; align-content: center; grid-template-columns: 1fr 1fr; height: 100%;">
                         <!-- Team Availability -->
-                        <div class="stat-card" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; padding: 8px; text-align: center;" title="Technicians currently working vs total team size">
-                            <i data-feather="users" style="width: 12px; height: 12px; color: #22c55e; margin-bottom: 2px;"></i>
-                            <div class="stat-number" id="team-availability" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: 2px;">-</div>
-                            <div class="stat-label" style="font-size: 0.6rem; color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Working<br>Now</div>
+                        <div class="stat-card responsive-stat-card" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: min(6px, 1vw); padding: min(8px, 1.5vw); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 35px;" title="Technicians currently working vs total team size">
+                            <i data-feather="users" class="stat-icon" style="width: clamp(10px, 2vw, 14px); height: clamp(10px, 2vw, 14px); color: #22c55e; margin-bottom: min(2px, 0.5vw);"></i>
+                            <div class="stat-number" id="team-availability" style="font-size: clamp(0.7rem, 1.5vw, 1rem); font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: min(2px, 0.3vw);">-</div>
+                            <div class="stat-label" style="font-size: clamp(0.5rem, 1vw, 0.65rem); color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Working<br>Now</div>
                         </div>
                         
                         <!-- Active Tickets -->
-                        <div class="stat-card" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 8px; text-align: center;" title="Open, in-progress, and pending tickets requiring attention">
-                            <i data-feather="alert-circle" style="width: 12px; height: 12px; color: #ef4444; margin-bottom: 2px;"></i>
-                            <div class="stat-number" id="active-tickets" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: 2px;">-</div>
-                            <div class="stat-label" style="font-size: 0.6rem; color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Active<br>Tickets</div>
+                        <div class="stat-card responsive-stat-card" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: min(6px, 1vw); padding: min(8px, 1.5vw); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 35px;" title="Open, in-progress, and pending tickets requiring attention">
+                            <i data-feather="alert-circle" class="stat-icon" style="width: clamp(10px, 2vw, 14px); height: clamp(10px, 2vw, 14px); color: #ef4444; margin-bottom: min(2px, 0.5vw);"></i>
+                            <div class="stat-number" id="active-tickets" style="font-size: clamp(0.7rem, 1.5vw, 1rem); font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: min(2px, 0.3vw);">-</div>
+                            <div class="stat-label" style="font-size: clamp(0.5rem, 1vw, 0.65rem); color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Active<br>Tickets</div>
                         </div>
                         
                         <!-- Schedule Coverage -->
-                        <div class="stat-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; padding: 8px; text-align: center;" title="Total scheduled work hours for today">
-                            <i data-feather="clock" style="width: 12px; height: 12px; color: #3b82f6; margin-bottom: 2px;"></i>
-                            <div class="stat-number" id="schedule-hours" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: 2px;">-</div>
-                            <div class="stat-label" style="font-size: 0.6rem; color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Today's<br>Hours</div>
+                        <div class="stat-card responsive-stat-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: min(6px, 1vw); padding: min(8px, 1.5vw); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 35px;" title="Total scheduled work hours for today">
+                            <i data-feather="clock" class="stat-icon" style="width: clamp(10px, 2vw, 14px); height: clamp(10px, 2vw, 14px); color: #3b82f6; margin-bottom: min(2px, 0.5vw);"></i>
+                            <div class="stat-number" id="schedule-hours" style="font-size: clamp(0.7rem, 1.5vw, 1rem); font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: min(2px, 0.3vw);">-</div>
+                            <div class="stat-label" style="font-size: clamp(0.5rem, 1vw, 0.65rem); color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Today's<br>Hours</div>
                         </div>
                         
                         <!-- Upcoming Time Off -->
-                        <div class="stat-card" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 8px; text-align: center;" title="Number of scheduled time-off entries in the next 7 days">
-                            <i data-feather="calendar" style="width: 12px; height: 12px; color: #f59e0b; margin-bottom: 2px;"></i>
-                            <div class="stat-number" id="upcoming-pto" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: 2px;">-</div>
-                            <div class="stat-label" style="font-size: 0.6rem; color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Upcoming<br>PTO</div>
+                        <div class="stat-card responsive-stat-card" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: min(6px, 1vw); padding: min(8px, 1.5vw); text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 35px;" title="Number of scheduled time-off entries in the next 7 days">
+                            <i data-feather="calendar" class="stat-icon" style="width: clamp(10px, 2vw, 14px); height: clamp(10px, 2vw, 14px); color: #f59e0b; margin-bottom: min(2px, 0.5vw);"></i>
+                            <div class="stat-number" id="upcoming-pto" style="font-size: clamp(0.7rem, 1.5vw, 1rem); font-weight: 700; color: var(--dark-text); line-height: 1; margin-bottom: min(2px, 0.3vw);">-</div>
+                            <div class="stat-label" style="font-size: clamp(0.5rem, 1vw, 0.65rem); color: var(--dark-text); opacity: 0.8; line-height: 1.1;">Upcoming<br>PTO</div>
                         </div>
                     </div>
                 </div>
@@ -724,20 +724,103 @@
                 console.log(`Quick Link scaled: baseWidth=${baseWidth}px, fontSize=${fontSize}, iconSize=${iconSize}`);
             });
         }
+
+        // Dynamic Team Stats Scaling
+        function scaleTeamStats() {
+            const container = document.querySelector('.team-stats-responsive-grid');
+            if (!container) return;
+            
+            const statCards = container.querySelectorAll('.responsive-stat-card');
+            if (statCards.length === 0) return;
+            
+            const containerWidth = container.offsetWidth;
+            const containerHeight = container.offsetHeight;
+            
+            // Calculate responsive scaling based on container dimensions
+            const cardWidth = containerWidth / 2; // 2 columns
+            const cardHeight = containerHeight / 2; // 2 rows
+            
+            let fontSize, iconSize, padding, labelSize;
+            
+            // Scale based on the smaller dimension to maintain proportions
+            const minDimension = Math.min(cardWidth, cardHeight);
+            
+            if (minDimension < 40) {
+                fontSize = '0.6rem';
+                iconSize = '8px';
+                padding = '2px';
+                labelSize = '0.45rem';
+            } else if (minDimension < 60) {
+                fontSize = '0.7rem';
+                iconSize = '10px';
+                padding = '4px';
+                labelSize = '0.5rem';
+            } else if (minDimension < 80) {
+                fontSize = '0.8rem';
+                iconSize = '12px';
+                padding = '6px';
+                labelSize = '0.55rem';
+            } else if (minDimension < 100) {
+                fontSize = '0.9rem';
+                iconSize = '14px';
+                padding = '8px';
+                labelSize = '0.6rem';
+            } else {
+                fontSize = '1rem';
+                iconSize = '16px';
+                padding = '10px';
+                labelSize = '0.65rem';
+            }
+            
+            statCards.forEach(card => {
+                // Update stat number size
+                const statNumber = card.querySelector('.stat-number');
+                const statIcon = card.querySelector('.stat-icon');
+                const statLabel = card.querySelector('.stat-label');
+                
+                if (statNumber) {
+                    statNumber.style.fontSize = fontSize;
+                }
+                
+                if (statIcon) {
+                    statIcon.style.width = iconSize;
+                    statIcon.style.height = iconSize;
+                }
+                
+                if (statLabel) {
+                    statLabel.style.fontSize = labelSize;
+                }
+                
+                // Update padding
+                card.style.padding = padding;
+            });
+            
+            console.log(`Team Stats scaled: minDimension=${minDimension}px, fontSize=${fontSize}, iconSize=${iconSize}`);
+        }
         
         // Apply scaling on load and resize
         document.addEventListener('DOMContentLoaded', function() {
             scaleQuickLinksText();
+            scaleTeamStats();
             
             // Re-scale on window resize
-            window.addEventListener('resize', debounce(scaleQuickLinksText, 250));
+            window.addEventListener('resize', debounce(function() {
+                scaleQuickLinksText();
+                scaleTeamStats();
+            }, 250));
             
             // Load team stats initially
             if (document.getElementById('team-stats-content')) {
                 loadTeamStats();
                 
+                // Scale team stats after data loads
+                setTimeout(scaleTeamStats, 100);
+                
                 // Auto-refresh team stats every 2 minutes
-                setInterval(loadTeamStats, 120000);
+                setInterval(function() {
+                    loadTeamStats();
+                    setTimeout(scaleTeamStats, 100); // Re-scale after data update
+                }, 120000);
             }
         });
         
