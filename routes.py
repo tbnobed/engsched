@@ -934,7 +934,8 @@ def calendar():
             app.logger.debug(f"Calendar schedule {schedule.id}: {start_user_tz.date()} {start_user_tz.time()} to {end_user_tz.time()} (time_off={schedule.time_off}, all_day={schedule.all_day})")
             
             # Check if this schedule crosses midnight in user's timezone
-            if start_user_tz.date() != end_user_tz.date():
+            # BUT ignore schedules that end exactly at midnight (00:00) - they don't really cross
+            if start_user_tz.date() != end_user_tz.date() and end_user_tz.time() != time(0, 0):
                 # Schedule crosses midnight - split into separate entries for each day
                 start_date = start_user_tz.date()
                 end_date = end_user_tz.date()
