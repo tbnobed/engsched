@@ -10,6 +10,13 @@ Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
 Recent Updates (July 31, 2025):
+- ✅ COMPLETED: CRITICAL Midnight-Crossing False Split Bug Fixed - Eliminated False "OOO ALL DAY" Display
+- Fixed critical bug where schedules ending exactly at midnight (00:00) were incorrectly treated as crossing midnight
+- Added condition `and end_user_tz.time() != time(0, 0)` to both calendar and dashboard routes to prevent false midnight crossings
+- PST 20:00-22:00 schedules (converted to CST 22:00-00:00) no longer incorrectly display as "OOO ALL DAY" entries
+- Regular schedules ending at exactly midnight now display normally without unnecessary splitting logic
+- Both calendar and dashboard views now correctly handle timezone-converted schedules ending at 00:00
+- Root cause: Schedules ending at precisely midnight were triggering split logic even though they don't actually cross day boundaries
 - ✅ COMPLETED: CRITICAL Dashboard Midnight-Crossing Schedule Split Fix - Proper Day Boundary Handling
 - Fixed dashboard backend to properly split midnight-crossing schedules at day boundaries instead of showing disconnected duration lines
 - Schedule running 22:00-01:00 now correctly displays as 22:00-23:59:59 on today's dashboard (119 minutes)
