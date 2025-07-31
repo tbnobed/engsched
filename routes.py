@@ -52,7 +52,8 @@ def dashboard():
     
     # Get relevant ticket information with unread activity detection
     recent_tickets = Ticket.query.filter(
-        Ticket.status.in_(['open', 'in_progress', 'pending'])
+        Ticket.status.in_(['open', 'in_progress', 'pending']),
+        Ticket.archived == False
     ).order_by(Ticket.priority.desc(), Ticket.created_at.desc()).limit(10).all()
     
     # Add unread activity indicators for dashboard tickets
