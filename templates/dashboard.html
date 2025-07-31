@@ -88,7 +88,7 @@
                                         </thead>
                                         <tbody>
                                             {% for ticket in recent_tickets %}
-                                            <tr onclick="location.href='{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}'" style="cursor: pointer; {% if ticket.has_unread_activity %}background-color: rgba(255, 215, 0, 0.1); border-left: 4px solid #ffc107;{% endif %}">
+                                            <tr onclick="location.href='{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}'" style="cursor: pointer; {% if ticket.has_unread_activity(current_user.id) %}background-color: rgba(255, 215, 0, 0.1); border-left: 4px solid #ffc107;{% endif %}">
                                                 <td>
                                                     <span class="badge badge-priority-{{ ticket.priority }}">
                                                         {% if ticket.priority == 0 %}Low
@@ -99,7 +99,7 @@
                                                 </td>
                                                 <td>
                                                     {{ ticket.title[:50] }}{% if ticket.title|length > 50 %}...{% endif %}
-                                                    {% if ticket.has_unread_activity %}
+                                                    {% if ticket.has_unread_activity(current_user.id) %}
                                                         <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.6rem; padding: 0.15rem 0.3rem; animation: pulse 2s infinite;">NEW</span>
                                                     {% endif %}
                                                 </td>

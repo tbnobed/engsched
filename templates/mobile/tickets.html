@@ -52,7 +52,7 @@
                            class="text-decoration-none">
                             #{{ ticket.id }} - {{ ticket.title }}
                         </a>
-                        {% if ticket.has_unread_activity %}
+                        {% if ticket.has_unread_activity(current_user.id) %}
                         <span class="badge bg-danger ms-1 pulsing-badge">NEW</span>
                         {% endif %}
                     </h6>

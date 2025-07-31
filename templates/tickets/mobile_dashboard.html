@@ -122,7 +122,7 @@
                 {% if tickets %}
                     {% for ticket in tickets %}
                         <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" 
-                           class="list-group-item list-group-item-action p-3 mb-3 ticket-card {% if ticket['has_unread_activity'] %}unread-ticket{% endif %}"
+                           class="list-group-item list-group-item-action p-3 mb-3 ticket-card {% if ticket.has_unread_activity(current_user.id) %}unread-ticket{% endif %}"
                            style="border-radius: 12px; 
                            border: 1px solid {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#e0e0e0{% else %}#273449{% endif %};
                            box-shadow: 0 4px 8px rgba(0,0,0,0.08); 
@@ -155,7 +155,7 @@
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <h6 class="mb-0 fw-bold me-2">{{ ticket.title }}</h6>
-                                {% if ticket['has_unread_activity'] %}
+                                {% if ticket.has_unread_activity(current_user.id) %}
                                     <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.3rem;">NEW</span>
                                 {% endif %}
                             </div>

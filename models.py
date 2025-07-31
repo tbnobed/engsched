@@ -250,9 +250,11 @@ class Ticket(db.Model):
         """Check if ticket has been viewed by ANY user (global NEW badge logic)"""
         from app import app
         
+        app.logger.debug(f"🔍 BADGE CHECK: Ticket #{self.id} ({self.title}) - Checking NEW badge visibility...")
+        
         # NEVER show NEW badges on resolved or closed tickets
         if self.status in ['resolved', 'closed']:
-            app.logger.debug(f"Ticket #{self.id}: No NEW badge - status is {self.status}")
+            app.logger.debug(f"Ticket #{self.id}: ❌ No NEW badge - status is {self.status}")
             return False
         
         # Check if ANY user has viewed this ticket in multiple ways:
@@ -275,15 +277,24 @@ class Ticket(db.Model):
         has_view_history = any_view_history is not None  
         has_management = any_management_action is not None
         
-        app.logger.debug(f"Ticket #{self.id}: View check - TicketView: {has_been_viewed}, ViewHistory: {has_view_history}, Management: {has_management}")
+        app.logger.debug(f"🔍 Ticket #{self.id}: Status='{self.status}' | TicketView: {has_been_viewed} | ViewHistory: {has_view_history} | Management: {has_management}")
+        
+        if any_ticket_view:
+            app.logger.debug(f"🔍 Ticket #{self.id}: Found TicketView entry - user_id: {any_ticket_view.user_id}, viewed_at: {any_ticket_view.last_viewed_at}")
+        
+        if any_view_history:
+            app.logger.debug(f"🔍 Ticket #{self.id}: Found view history - user_id: {any_view_history.user_id}, action: {any_view_history.action}, created_at: {any_view_history.created_at}")
+        
+        if any_management_action:
+            app.logger.debug(f"🔍 Ticket #{self.id}: Found management action - user_id: {any_management_action.user_id}, action: {any_management_action.action}, created_at: {any_management_action.created_at}")
         
         if not (has_been_viewed or has_view_history or has_management):
             # NO ONE has interacted with this ticket yet, so show NEW badge
-            app.logger.debug(f"Ticket #{self.id}: ✅ SHOWING NEW badge - no interactions found")
+            app.logger.debug(f"🔍 Ticket #{self.id}: ✅ SHOWING NEW badge - no interactions found")
             return True
         
         # Someone has interacted with this ticket, so no NEW badge needed
-        app.logger.debug(f"Ticket #{self.id}: ❌ NO NEW badge - someone has interacted with it")
+        app.logger.debug(f"🔍 Ticket #{self.id}: ❌ HIDING NEW badge - someone has interacted with it")
         return False
     
     def mark_as_viewed(self, user_id: int):

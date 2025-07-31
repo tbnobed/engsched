@@ -174,14 +174,14 @@
                             </thead>
                             <tbody>
                                 {% for ticket in tickets %}
-                                <tr class="{% if ticket['has_unread_activity'] %}table-warning{% endif %}">
+                                <tr class="{% if ticket.has_unread_activity(current_user.id) %}table-warning{% endif %}">
                                     <td>#{{ ticket['id'] }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket['id']) }}" class="text-decoration-none me-2">
                                                 {{ ticket['title'] }}
                                             </a>
-                                            {% if ticket['has_unread_activity'] %}
+                                            {% if ticket.has_unread_activity(current_user.id) %}
                                                 <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.3rem;">NEW</span>
                                             {% endif %}
                                         </div>

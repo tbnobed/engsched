@@ -56,35 +56,9 @@ def dashboard():
         Ticket.archived == False
     ).order_by(Ticket.priority.desc(), Ticket.created_at.desc()).limit(10).all()
     
-    # Add unread activity indicators for dashboard tickets
-    for ticket in recent_tickets:
-        try:
-            # Check if this user has viewed this ticket
-            ticket_view = TicketView.query.filter_by(
-                user_id=current_user.id,
-                ticket_id=ticket.id
-            ).first()
-            
-            if ticket_view:
-                # Check for activity since last view
-                ticket.has_unread_activity = (
-                    ticket.updated_at > ticket_view.last_viewed_at or
-                    TicketComment.query.filter(
-                        TicketComment.ticket_id == ticket.id,
-                        TicketComment.created_at > ticket_view.last_viewed_at
-                    ).count() > 0 or
-                    TicketHistory.query.filter(
-                        TicketHistory.ticket_id == ticket.id,
-                        TicketHistory.created_at > ticket_view.last_viewed_at
-                    ).count() > 0
-                )
-            else:
-                # User has never viewed this ticket - it's new to them
-                ticket.has_unread_activity = True
-        except Exception as e:
-            app.logger.error(f"Error checking unread activity for ticket {ticket.id}: {e}")
-            # Default to showing as unread if there's an error
-            ticket.has_unread_activity = True
+    # Add unread activity indicators using the new universal badge system
+    # NEW badges now disappear when ANY technician interacts with the ticket
+    pass  # The template will call ticket.has_unread_activity(current_user.id) method directly
     
     # Get schedules using expanded date range to catch cross-timezone schedules
     # Then filter by start date in user's timezone to prevent duplicates
