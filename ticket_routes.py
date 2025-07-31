@@ -1101,6 +1101,15 @@ def assign_ticket(ticket_id):
         
         app.logger.info(f"Updating ticket #{ticket.id} assigned_to: {ticket.assigned_to}")
         
+        # Mark ticket as viewed by the person doing the assignment
+        # This removes the NEW badge since the ticket has been actively managed
+        try:
+            ticket.mark_as_viewed(current_user.id)
+            app.logger.debug(f"Marked ticket #{ticket.id} as viewed by user {current_user.id}")
+        except Exception as e:
+            app.logger.warning(f"Failed to mark ticket #{ticket.id} as viewed: {str(e)}")
+            # Don't let this affect the main functionality
+        
         # Save the ticket assignment first
         db.session.commit()
         
@@ -1172,6 +1181,16 @@ def assign_ticket(ticket_id):
         # Unassigning ticket
         ticket.assigned_to = None
         app.logger.info(f"Unassigned ticket #{ticket.id}")
+        
+        # Mark ticket as viewed by the person doing the unassignment
+        # This removes the NEW badge since the ticket has been actively managed
+        try:
+            ticket.mark_as_viewed(current_user.id)
+            app.logger.debug(f"Marked ticket #{ticket.id} as viewed by user {current_user.id}")
+        except Exception as e:
+            app.logger.warning(f"Failed to mark ticket #{ticket.id} as viewed: {str(e)}")
+            # Don't let this affect the main functionality
+        
         db.session.commit()
         
         # Create history entry directly
