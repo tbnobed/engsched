@@ -228,15 +228,13 @@
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-/* Use exact same CSS variables as calendar page from light-theme.css */
+/* Only basic layout - let external CSS handle colors and borders */
 .calendar-grid {
     display: flex;
     overflow-x: auto;
     min-height: 600px;
     max-height: calc(100vh - 200px);
     overflow-y: auto;
-    background-color: var(--light-border) !important;
-    border: 1px solid var(--light-border) !important;
     border-radius: 5px;
     margin-bottom: 20px;
     width: 100%;
@@ -247,13 +245,11 @@
     position: sticky;
     left: 0;
     z-index: 1;
-    background-color: var(--light-panel) !important;
 }
 
 .day-column {
     width: calc((100% - 50px) / 7);
     position: relative;
-    background-color: var(--light-panel) !important;
 }
 
 .day-column:last-child {
@@ -265,21 +261,8 @@
 }
 
 .day-header {
-    background: linear-gradient(135deg, #f1f5f9, #f8fafc) !important;
-    color: var(--light-text) !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
-    padding: 12px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.3px !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
     text-align: center;
     cursor: pointer;
-}
-
-.day-header.today {
-    background: linear-gradient(135deg, #171A21, #617073) !important;
-    color: white !important;
-    border-bottom: none !important;
 }
 
 .hour-slot {
@@ -287,8 +270,6 @@
     text-align: center;
     font-size: 0.8rem;
     padding-top: 5px;
-    border-bottom: 1px solid var(--light-border) !important;
-    color: var(--light-text-secondary) !important;
 }
 
 .day-slots {
@@ -299,8 +280,6 @@
     height: 60px;
     cursor: pointer;
     transition: background-color 0.2s;
-    background-color: rgba(0, 0, 0, 0.01) !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
 }
 
 .time-slot:hover {

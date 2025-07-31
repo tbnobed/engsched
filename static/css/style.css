@@ -172,12 +172,10 @@ div[style*="gradient"] {
     content: '';
     display: block;
     height: 40px; /* Match day header height exactly */
-    border-bottom: 2px solid #dee2e6;
 }
 
 .time-slot {
     height: 60px;
-    border-bottom: 1px solid #eee;
     cursor: pointer;
     transition: background-color 0.2s;
 }
