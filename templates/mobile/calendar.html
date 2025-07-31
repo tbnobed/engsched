@@ -752,6 +752,14 @@ html[data-bs-theme="dark"] .hour-line {
     box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
 }
 
+/* Ensure time label text is white in both light and dark themes */
+html[data-bs-theme="light"] .time-label,
+html[data-bs-theme="dark"] .time-label,
+body.light-theme .time-label,
+body.dark-theme .time-label {
+    color: white !important;
+}
+
 /* Empty Timeline State */
 .empty-timeline {
     text-align: center;
