@@ -2110,26 +2110,31 @@ def personal_schedule():
         week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
         week_start -= timedelta(days=week_start.weekday())
 
-    # Convert to UTC for database query
+    # Get schedules using expanded date range to catch cross-timezone schedules
+    # Then filter and split for cross-timezone schedules like main calendar does
     week_start_utc = week_start.astimezone(pytz.UTC)
     week_end_utc = (week_start + timedelta(days=7)).astimezone(pytz.UTC)
-
-    # Query schedules in UTC
-    schedules = Schedule.query.filter(
+    
+    # Expand query range to catch schedules that might cross into this week from different timezones
+    expanded_start_utc = (week_start - timedelta(days=1)).astimezone(pytz.UTC)
+    expanded_end_utc = (week_start + timedelta(days=8)).astimezone(pytz.UTC)
+    
+    raw_schedules = Schedule.query.filter(
         Schedule.technician_id == current_user.id,
-        Schedule.start_time >= week_start_utc,
-        Schedule.start_time < week_end_utc
+        Schedule.start_time >= expanded_start_utc,
+        Schedule.start_time <= expanded_end_utc
     ).order_by(Schedule.start_time).all()
-
-    # Convert schedule times to user's timezone
+    
+    # Apply timezone-aware filtering and splitting for cross-timezone schedules
     user_tz = current_user.get_timezone_obj()
-    for schedule in schedules:
-        # Ensure times are timezone-aware in UTC
+    schedules = []
+    for schedule in raw_schedules:
+        # Ensure timezone awareness for all schedule times
         if schedule.start_time.tzinfo is None:
             schedule.start_time = pytz.UTC.localize(schedule.start_time)
         if schedule.end_time.tzinfo is None:
             schedule.end_time = pytz.UTC.localize(schedule.end_time)
-
+        
         # Special handling for all-day time-off events to prevent timezone date shifting
         if schedule.time_off and schedule.all_day:
             # For all-day events, we need to determine the intended calendar date
@@ -2147,25 +2152,88 @@ def personal_schedule():
             chicago_midnight = chicago_tz.localize(datetime.combine(chicago_display.date(), time(0, 0)))
             if utc_time == chicago_midnight.astimezone(pytz.UTC):
                 intended_date = chicago_display.date()
-                app.logger.debug(f"Mobile personal schedule all-day OOO {schedule.id}: Detected Chicago-created entry for {intended_date}")
+                app.logger.debug(f"Personal schedule all-day OOO {schedule.id}: Detected Chicago-created entry for {intended_date}")
             else:
-                # Otherwise, use the current user's timezone date
+                # Otherwise, use the user's timezone date
                 intended_date = utc_time.astimezone(user_tz).date()
-                app.logger.debug(f"Mobile personal schedule all-day OOO {schedule.id}: Using user timezone date {intended_date}")
+                app.logger.debug(f"Personal schedule all-day OOO {schedule.id}: Using user timezone date {intended_date}")
             
-            # Display as all-day in user's timezone for the intended date
-            schedule.start_time = user_tz.localize(datetime.combine(intended_date, time(0, 0)))
-            schedule.end_time = user_tz.localize(datetime.combine(intended_date, time(23, 59)))
-            app.logger.debug(f"Mobile personal schedule all-day display fix for schedule {schedule.id}: {intended_date} → {schedule.start_time} to {schedule.end_time}")
+            # Only include if the intended date falls within the week
+            week_dates = [(week_start + timedelta(days=i)).date() for i in range(7)]
+            if intended_date in week_dates:
+                # Apply timezone-aware display time conversion
+                schedule.start_time = user_tz.localize(datetime.combine(intended_date, time(0, 0)))
+                schedule.end_time = user_tz.localize(datetime.combine(intended_date, time(23, 59)))
+                schedules.append(schedule)
+                app.logger.debug(f"Personal schedule all-day OOO {schedule.id}: Included for {intended_date}")
+            else:
+                app.logger.debug(f"Personal schedule all-day OOO {schedule.id}: Filtered out - intended date {intended_date} not in week")
         else:
-            # Ensure times are timezone-aware in UTC before converting
-            if schedule.start_time.tzinfo is None:
-                schedule.start_time = pytz.UTC.localize(schedule.start_time)
-            if schedule.end_time.tzinfo is None:
-                schedule.end_time = pytz.UTC.localize(schedule.end_time)
+            # Regular schedules - convert to user timezone and check for midnight crossing
+            start_user_tz = schedule.start_time.astimezone(user_tz)
+            end_user_tz = schedule.end_time.astimezone(user_tz)
             
-            schedule.start_time = schedule.start_time.astimezone(user_tz)
-            schedule.end_time = schedule.end_time.astimezone(user_tz)
+            # Check if this schedule crosses midnight in user's timezone
+            if start_user_tz.date() != end_user_tz.date():
+                # Schedule crosses midnight - split into separate entries for each day
+                start_date = start_user_tz.date()
+                end_date = end_user_tz.date()
+                
+                # Week dates
+                week_dates = [(week_start + timedelta(days=i)).date() for i in range(7)]
+                
+                if start_date in week_dates:
+                    # Today's portion: start time to midnight (00:00 next day)
+                    midnight_today = user_tz.localize(datetime.combine(start_date, time(23, 59, 59)))
+                    # Create a shallow copy to preserve relationships
+                    today_schedule = Schedule(
+                        id=schedule.id,
+                        technician_id=schedule.technician_id,
+                        start_time=start_user_tz,
+                        end_time=midnight_today,
+                        description=schedule.description,
+                        location_id=schedule.location_id,
+                        time_off=schedule.time_off,
+                        all_day=schedule.all_day
+                    )
+                    # Copy the relationships
+                    today_schedule.technician = schedule.technician
+                    today_schedule.location = schedule.location
+                    schedules.append(today_schedule)
+                    app.logger.debug(f"Personal schedule midnight-crossing schedule {schedule.id}: {start_date} {start_user_tz.time()} to 23:59:59 (start date portion)")
+                
+                if end_date in week_dates:
+                    # Tomorrow's schedule extending from yesterday: midnight to end time
+                    midnight_start = user_tz.localize(datetime.combine(end_date, time(0, 0)))
+                    # Create a shallow copy to preserve relationships
+                    tomorrow_schedule = Schedule(
+                        id=schedule.id,
+                        technician_id=schedule.technician_id,
+                        start_time=midnight_start,
+                        end_time=end_user_tz,
+                        description=schedule.description,
+                        location_id=schedule.location_id,
+                        time_off=schedule.time_off,
+                        all_day=schedule.all_day
+                    )
+                    # Copy the relationships
+                    tomorrow_schedule.technician = schedule.technician
+                    tomorrow_schedule.location = schedule.location
+                    schedules.append(tomorrow_schedule)
+                    app.logger.debug(f"Personal schedule midnight-crossing schedule {schedule.id}: {end_date} 00:00:00 to {end_user_tz.time()} (end date portion)")
+                
+                if start_date not in week_dates and end_date not in week_dates:
+                    app.logger.debug(f"Personal schedule {schedule.id}: Filtered out - starts on {start_date}, ends on {end_date}, neither in current week")
+            else:
+                # Schedule doesn't cross midnight - normal handling
+                week_dates = [(week_start + timedelta(days=i)).date() for i in range(7)]
+                if start_user_tz.date() in week_dates:
+                    schedule.start_time = start_user_tz
+                    schedule.end_time = end_user_tz
+                    schedules.append(schedule)
+                    app.logger.debug(f"Personal schedule {schedule.id}: {start_user_tz.date()} {start_user_tz.time()} to {end_user_tz.time()}")
+                else:
+                    app.logger.debug(f"Personal schedule {schedule.id}: Filtered out - on {start_user_tz.date()}, not in current week")
 
     form = ScheduleForm()
     form.technician.choices = [(current_user.id, current_user.username)]
