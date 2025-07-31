@@ -903,19 +903,13 @@ function positionSchedules() {
                 
                 if (column >= maxColumns) column = 0;
                 
-                // Calculate truly even distribution across full timeline width
-                const timelineFullWidth = 500; // Expand to use more space
-                const startPos = 50; // Start position
-                const endPos = 450; // End position
-                const availableSpan = endPos - startPos; // Total span for distribution
+                // Calculate proper horizontal distribution to prevent overlapping
+                const timelineFullWidth = 550; // Use full available timeline width
+                const columnWidth = 133; // Fixed width per column (550/4 = 137.5, use 133 for spacing)
+                const startMargin = 17; // Starting left margin
                 
-                let leftPosition;
-                if (maxColumns === 1) {
-                    leftPosition = (startPos + endPos) / 2; // Center single item
-                } else {
-                    // Even distribution: first at startPos, last at endPos, others evenly between
-                    leftPosition = startPos + (column * availableSpan / (maxColumns - 1));
-                }
+                // Simple column-based positioning to prevent overlaps
+                const leftPosition = startMargin + (column * columnWidth);
                 
                 // Get event container for positioning
                 const eventContainer = event.closest('.day-slots');

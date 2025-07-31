@@ -180,7 +180,7 @@ def unauthorized():
 
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Authentication required'}), 401
-    return redirect(url_for('login', next=request.url))
+    return redirect(url_for('auth.login', next=request.url))
 
 # Favicon and Apple Touch Icon routes
 @app.route('/favicon.ico')
