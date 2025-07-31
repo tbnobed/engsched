@@ -850,7 +850,7 @@ tbody tr:hover {
 }
 
 .hour-slot {
-  border-bottom: 1px solid var(--dark-border) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
   color: var(--dark-text-secondary) !important;
 }
 
