@@ -810,7 +810,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const userTimezone = window.userTimezone || 'UTC';
         
         // Create time in user's timezone using Intl API
-        let currentHour, currentMinute, timeString;
+        let currentHour, currentMinute, currentSecond, timeString;
         
         try {
             // Get the current time in the user's timezone including seconds for precision
@@ -826,7 +826,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const [hour, minute, second] = timeInUserTimezone.split(':').map(Number);
             currentHour = hour;
             currentMinute = minute;
-            const currentSecond = second;
+            currentSecond = second;
             
             // Format time for display (12-hour format to match main clock)
             timeString = new Intl.DateTimeFormat('en-US', {
