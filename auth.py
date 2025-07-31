@@ -14,7 +14,7 @@ def login():
         if is_mobile_device():
             return redirect('/mobile/dashboard')
         else:
-            return redirect(url_for('tickets.tickets_dashboard'))
+            return redirect(url_for('dashboard'))
     
     # Add debug logging for the session
     from app import app
@@ -99,8 +99,8 @@ def login():
                 app.logger.debug("Mobile device detected after login - redirecting to mobile dashboard")
                 return redirect('/mobile/dashboard')
             else:
-                app.logger.debug("Desktop device detected after login - redirecting to tickets dashboard")
-                return redirect(url_for('tickets.tickets_dashboard'))
+                app.logger.debug("Desktop device detected after login - redirecting to dashboard")
+                return redirect(url_for('dashboard'))
             
         app.logger.warning(f"Invalid credentials for login input: {login_input}")
         flash('Invalid username/email or password')
