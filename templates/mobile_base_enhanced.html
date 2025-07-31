@@ -522,7 +522,17 @@
             {% if current_user.is_authenticated %}
             <div class="dropdown">
                 <button class="btn btn-link p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border: none; background: none; {% if current_user.theme_preference == 'light' %}color: #495057;{% else %}color: #ffffff;{% endif %}">
-                    <i data-feather="user" style="width: 22px; height: 22px;"></i>
+                    {% if current_user.profile_picture %}
+                    <img src="{{ url_for('static', filename=current_user.profile_picture) }}" 
+                         alt="{{ current_user.username }}" 
+                         class="rounded-circle" 
+                         style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.3);">
+                    {% else %}
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                         style="width: 32px; height: 32px; background-color: {{ current_user.color or '#7A93AC' }}; font-size: 14px; border: 2px solid rgba(255, 255, 255, 0.3);">
+                        {{ current_user.username[:2].upper() }}
+                    </div>
+                    {% endif %}
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" style="{% if current_user.theme_preference != 'light' %}background: #2d2d2d; border: 1px solid #3a3a3a;{% endif %}">
                     <li><h6 class="dropdown-header" style="{% if current_user.theme_preference != 'light' %}color: #ffffff;{% endif %}">{{ current_user.username }}</h6></li>
