@@ -222,6 +222,28 @@
 </div>
 
 <style>
+:root {
+    --border-color: #dee2e6;
+    --calendar-bg: #ffffff;
+    --today-highlight: rgba(0, 123, 255, 0.1);
+    --calendar-header-start: #f8f9fa;
+    --calendar-header-end: #e9ecef;
+    --calendar-today-header-start: #007bff;
+    --calendar-today-header-end: #0056b3;
+    --calendar-today-text: #ffffff;
+}
+
+[data-theme="dark"] {
+    --border-color: #495057;
+    --calendar-bg: #343a40;
+    --today-highlight: rgba(0, 123, 255, 0.2);
+    --calendar-header-start: #495057;
+    --calendar-header-end: #343a40;
+    --calendar-today-header-start: #007bff;
+    --calendar-today-header-end: #0056b3;
+    --calendar-today-text: #ffffff;
+}
+
 .calendar-container {
     background-color: var(--calendar-bg);
     padding: 20px;
