@@ -1142,8 +1142,8 @@ document.addEventListener('DOMContentLoaded', function() {
         feather.replace();
     }, 100);
     
-    // Update current time line every 10 seconds for better sync with main clock
-    setInterval(updateCurrentTimeLine, 10000);
+    // Update current time line every second to match main clock precision
+    setInterval(updateCurrentTimeLine, 1000);
 });
 
 // Re-position timeline elements on window resize for responsive design
@@ -1210,7 +1210,7 @@ function updateCurrentTimeLine() {
     timeLine.style.display = 'block';
     timeLine.setAttribute('data-time', timeString);
     
-    console.log('Current time line updated (user timezone):', `${currentHour}:${currentMinute.toString().padStart(2, '0')}:${currentSecond.toString().padStart(2, '0')}`, 'position:', topPosition);
+    console.log('Timeline sync check:', `${currentHour}:${currentMinute.toString().padStart(2, '0')}:${currentSecond.toString().padStart(2, '0')}`, 'position:', topPosition, 'totalMinutes:', totalMinutes.toFixed(2));
 }
 </script>
 </div>
