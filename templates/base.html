@@ -574,14 +574,14 @@
                         <span class="d-none d-md-inline">Quick Links</span>
                         <span class="d-md-none">Links</span>
                     </h6>
-                    {% set quick_links = get_quick_links() %}
+                    {% set quick_links = get_quick_links()[:10] %}  {# Limit to 10 links #}
                     {% if quick_links %}
-                        <div style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; flex-grow: 1; align-content: flex-start;">
+                        <div class="quick-links-responsive-grid" style="display: grid; gap: 4px; justify-content: center; flex-grow: 1; align-content: flex-start; grid-template-columns: repeat({{ quick_links|length if quick_links|length <= 5 else 5 }}, 1fr);">
                             {% for link in quick_links %}
-                            <a href="{{ link.url }}" target="_blank" class="btn btn-sm top-bar-quick-link" style="color: var(--dark-text); padding: 3px 6px; border-radius: 6px; background: rgba(175, 179, 247, 0.1); border: 1px solid rgba(175, 179, 247, 0.2); font-size: 0.7rem; text-decoration: none; transition: all 0.2s ease;">
-                                <i data-feather="{{ link.icon }}" style="width: 10px; height: 10px;" class="me-1"></i>
+                            <a href="{{ link.url }}" target="_blank" class="btn btn-sm top-bar-quick-link responsive-quick-link" style="color: var(--dark-text); padding: 4px 8px; border-radius: 8px; background: rgba(175, 179, 247, 0.15); border: 1px solid rgba(175, 179, 247, 0.3); font-size: 0.75rem; text-decoration: none; transition: all 0.2s ease; min-height: 32px; display: flex; align-items: center; justify-content: center;">
+                                <i data-feather="{{ link.icon }}" style="width: 12px; height: 12px;" class="me-1"></i>
                                 <span class="d-none d-lg-inline">{{ link.title }}</span>
-                                <span class="d-lg-none">{{ link.title[:8] }}{% if link.title|length > 8 %}...{% endif %}</span>
+                                <span class="d-lg-none">{{ link.title[:6] }}{% if link.title|length > 6 %}...{% endif %}</span>
                             </a>
                             {% endfor %}
                         </div>
@@ -627,6 +627,58 @@
             color: var(--dark-text) !important;
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+        }
+        
+        /* Responsive Quick Links Grid */
+        .quick-links-responsive-grid {
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        .responsive-quick-link {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+        
+        /* Responsive breakpoints for Quick Links */
+        @media (max-width: 576px) {
+            .quick-links-responsive-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 2px !important;
+            }
+            .responsive-quick-link {
+                font-size: 0.65rem !important;
+                padding: 2px 4px !important;
+                min-height: 24px !important;
+            }
+            .responsive-quick-link i {
+                width: 10px !important;
+                height: 10px !important;
+            }
+        }
+        
+        @media (min-width: 577px) and (max-width: 768px) {
+            .quick-links-responsive-grid {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+            .responsive-quick-link {
+                font-size: 0.7rem !important;
+                padding: 3px 6px !important;
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .responsive-quick-link {
+                font-size: 0.8rem !important;
+                padding: 6px 12px !important;
+                min-height: 36px !important;
+            }
+            .responsive-quick-link i {
+                width: 14px !important;
+                height: 14px !important;
+            }
         }
         
         /* Grid item styling for different sections */
