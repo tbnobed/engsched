@@ -1031,17 +1031,21 @@ function positionSchedules() {
                     const topOffset = ((eventStartInSlot - slotStartMinutes) / 60) * 60;
                     const height = Math.max(((eventEndInSlot - eventStartInSlot) / 60) * 60, 10);
                     
+                    // Handle midnight wrapping for positioning
+                    const displayHour = hour >= 24 ? hour - 24 : hour;
+                    const finalTop = displayHour * 60 + topOffset;
+                    
+                    console.log(`Creating duration line for hour ${hour} (display ${displayHour}): top=${finalTop}px, height=${height}px`);
+                    
                     // Create duration line
                     const durationLine = document.createElement('div');
                     durationLine.className = 'dashboard-timeline-duration-line';
                     // Position duration line at the center of the column
                     const durationLineLeft = leftPosition - 3; // Already centered, subtract half line width
                     
-                    // Handle midnight wrapping for positioning
-                    const displayHour = hour >= 24 ? hour - 24 : hour;
                     durationLine.style.cssText = `
                         position: absolute;
-                        top: ${displayHour * 60 + topOffset}px;
+                        top: ${finalTop}px;
                         left: ${durationLineLeft}px;
                         width: 6px;
                         height: ${height}px;
