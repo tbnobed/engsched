@@ -1020,8 +1020,8 @@ function positionSchedules() {
                 
                 console.log(`Creating timeline elements for slots ${startSlot} to ${endSlot}`);
                 
-                // Create duration lines for each hour slot
-                for (let hour = startSlot; hour < Math.min(endSlot, 24); hour++) {
+                // Create duration lines for each hour slot (handle midnight crossings)
+                for (let hour = startSlot; hour < endSlot; hour++) {
                     const slotStartMinutes = hour * 60;
                     const slotEndMinutes = (hour + 1) * 60;
                     const eventStartInSlot = Math.max(startTotalMinutes, slotStartMinutes);
@@ -1037,9 +1037,11 @@ function positionSchedules() {
                     // Position duration line at the center of the column
                     const durationLineLeft = leftPosition - 3; // Already centered, subtract half line width
                     
+                    // Handle midnight wrapping for positioning
+                    const displayHour = hour >= 24 ? hour - 24 : hour;
                     durationLine.style.cssText = `
                         position: absolute;
-                        top: ${hour * 60 + topOffset}px;
+                        top: ${displayHour * 60 + topOffset}px;
                         left: ${durationLineLeft}px;
                         width: 6px;
                         height: ${height}px;
