@@ -1458,8 +1458,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeTimeline();
     updateCurrentTimeLine();
     
-    // Update current time line every minute
-    setInterval(updateCurrentTimeLine, 60000);
+    // Update current time line every second to match dashboard precision
+    setInterval(updateCurrentTimeLine, 1000);
 });
 
 function initializeTimeline() {
@@ -1711,23 +1711,26 @@ function updateCurrentTimeLine() {
             timeZone: userTimezone,
             hour: 'numeric',
             minute: 'numeric',
+            second: 'numeric',
             hour12: false
         });
         const parts = formatter.formatToParts(now);
         const userHour = parseInt(parts.find(p => p.type === 'hour').value);
         const userMinute = parseInt(parts.find(p => p.type === 'minute').value);
+        const userSecond = parseInt(parts.find(p => p.type === 'second').value);
         
-        // Create a date object representing current time in user timezone
-        currentTimeInUserTz = { hours: userHour, minutes: userMinute };
+        // Create a date object representing current time in user timezone including seconds
+        currentTimeInUserTz = { hours: userHour, minutes: userMinute, seconds: userSecond };
         console.log('Current time in user timezone:', userHour + ':' + userMinute.toString().padStart(2, '0'));
     } catch (e) {
         // Fallback to local time if timezone is invalid
         console.log('Timezone conversion failed, using local time');
-        currentTimeInUserTz = { hours: now.getHours(), minutes: now.getMinutes() };
+        currentTimeInUserTz = { hours: now.getHours(), minutes: now.getMinutes(), seconds: now.getSeconds() };
     }
     
     const currentHour = currentTimeInUserTz.hours;
     const currentMinute = currentTimeInUserTz.minutes;
+    const currentSecond = currentTimeInUserTz.seconds;
     
     // Get today's date in user timezone for comparison
     const todayInUserTz = new Date(now.toLocaleString("en-US", {timeZone: userTimezone}));
@@ -1737,11 +1740,11 @@ function updateCurrentTimeLine() {
     console.log('Comparing dates - Today:', todayName, 'Displayed:', displayedDate);
     
     if (displayedDate === todayName) {
-        // Calculate position for current time - each hour slot is 60px tall
-        // Position = (hour * 60px) + (minutes * 1px per minute within the hour)
-        const topPosition = (currentHour * 60) + currentMinute;
+        // Calculate position with second-level precision for smoother updates
+        const totalMinutes = currentHour * 60 + currentMinute + (currentSecond / 60);
+        const topPosition = Math.round(totalMinutes);
         
-        console.log('Positioning current time line at:', topPosition, 'px for time', currentHour + ':' + currentMinute.toString().padStart(2, '0'), 'Total minutes:', currentHour * 60 + currentMinute);
+        console.log('Mobile timeline sync check:', `${currentHour}:${currentMinute.toString().padStart(2, '0')}:${currentSecond.toString().padStart(2, '0')}`, 'position:', topPosition, 'totalMinutes:', totalMinutes.toFixed(2));
         
         // Update the time display in the "Now" badge
         const hour12 = currentHour === 0 ? 12 : (currentHour > 12 ? currentHour - 12 : currentHour);

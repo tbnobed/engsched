@@ -813,24 +813,27 @@ document.addEventListener('DOMContentLoaded', function() {
         let currentHour, currentMinute, timeString;
         
         try {
-            // Get the current time in the user's timezone
+            // Get the current time in the user's timezone including seconds for precision
             const timeInUserTimezone = new Intl.DateTimeFormat('en-US', {
                 timeZone: userTimezone,
                 hour: '2-digit',
                 minute: '2-digit',
+                second: '2-digit',
                 hour12: false
             }).format(now);
             
-            // Parse the formatted time
-            const [hour, minute] = timeInUserTimezone.split(':').map(Number);
+            // Parse the formatted time including seconds
+            const [hour, minute, second] = timeInUserTimezone.split(':').map(Number);
             currentHour = hour;
             currentMinute = minute;
+            const currentSecond = second;
             
-            // Format time for display
+            // Format time for display (12-hour format to match main clock)
             timeString = new Intl.DateTimeFormat('en-US', {
                 timeZone: userTimezone,
                 hour: '2-digit',
                 minute: '2-digit',
+                second: '2-digit',
                 hour12: true
             }).format(now);
             
@@ -839,22 +842,24 @@ document.addEventListener('DOMContentLoaded', function() {
             // Fallback to local time
             currentHour = now.getHours();
             currentMinute = now.getMinutes();
-            timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const currentSecond = now.getSeconds();
+            timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
         
-        // Calculate position: each hour is 60px, so we need to find the exact position
-        const hourPixels = 60; // Height of each hour slot
-        const totalMinutes = currentHour * 60 + currentMinute;
-        const topPosition = (totalMinutes / 60) * hourPixels;
+        // Calculate position with second-level precision for smoother updates
+        const totalMinutes = currentHour * 60 + currentMinute + (currentSecond / 60);
+        const topPosition = Math.round(totalMinutes); // Round to nearest pixel
         
         timeLines.forEach(timeLine => {
             timeLine.style.top = `${topPosition}px`;
             timeLine.style.display = 'block';
             timeLine.setAttribute('data-time', timeString);
         });
+        
+        console.log('Calendar timeline sync check:', `${currentHour}:${currentMinute.toString().padStart(2, '0')}:${currentSecond.toString().padStart(2, '0')}`, 'position:', topPosition, 'totalMinutes:', totalMinutes.toFixed(2));
     }
     
-    // Initialize current time line and update it every minute
+    // Initialize current time line and update it every second to match dashboard precision
     updateCurrentTimeLine();
-    setInterval(updateCurrentTimeLine, 60000);
+    setInterval(updateCurrentTimeLine, 1000);
 });
