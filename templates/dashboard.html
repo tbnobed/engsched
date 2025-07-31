@@ -929,7 +929,7 @@ function positionSchedules() {
                     console.log('Processing all-day OOO event with profile picture');
                     
                     const profilePic = document.createElement('img');
-                    profilePic.src = event.dataset.userProfilePicture || '/static/default-avatar.png';
+                    profilePic.src = event.dataset.profilePicture ? `/static/uploads/profile_pictures/${event.dataset.profilePicture}` : '/static/default-avatar.png';
                     profilePic.className = 'dashboard-timeline-profile-pic';
                     profilePic.style.cssText = `
                         position: absolute;
