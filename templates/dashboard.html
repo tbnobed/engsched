@@ -903,15 +903,21 @@ function positionSchedules() {
                 
                 if (column >= maxColumns) column = 0;
                 
-                // Calculate proper horizontal distribution within container boundaries
-                const timelineFullWidth = 400; // Safe container width to prevent overflow
-                const profileWidth = 66; // Profile picture width
-                const safeMargin = profileWidth / 2; // Half profile width margin on each side
-                const availableWidth = timelineFullWidth - (2 * safeMargin); // Available space for positioning
-                const columnWidth = Math.floor(availableWidth / maxColumns); // Equal spacing per column
+                // Calculate even distribution across full timeline width with safe boundaries
+                const timelineFullWidth = 500; // Full timeline container width
+                const profileWidth = 66; // Profile picture width  
+                const safeStartMargin = 50; // Safe left margin to prevent cutoff
+                const safeEndMargin = 50; // Safe right margin to prevent cutoff
+                const availableSpan = timelineFullWidth - safeStartMargin - safeEndMargin - profileWidth; // Space for distribution
                 
-                // Position within safe boundaries to prevent cutoff
-                const leftPosition = safeMargin + (column * columnWidth);
+                // Distribute evenly across the available span
+                let leftPosition;
+                if (maxColumns === 1) {
+                    leftPosition = safeStartMargin + (availableSpan / 2); // Center single item
+                } else {
+                    // Even distribution from start to end of available span
+                    leftPosition = safeStartMargin + (column * (availableSpan / (maxColumns - 1)));
+                }
                 
                 // Get event container for positioning
                 const eventContainer = event.closest('.day-slots');
