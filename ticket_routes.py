@@ -1306,15 +1306,22 @@ def edit_ticket(ticket_id):
 @login_required
 def delete_ticket(ticket_id):
     """Delete a ticket (admin only)"""
-    app.logger.debug(f"Delete ticket #{ticket_id} requested by user {current_user.username} (admin: {current_user.is_admin})")
+    app.logger.info(f"=== DELETE TICKET REQUEST === Ticket #{ticket_id} by user {current_user.username} (admin: {current_user.is_admin}) - Method: {request.method}")
+    app.logger.debug(f"Request form data: {dict(request.form)}")
+    app.logger.debug(f"Request headers: {dict(request.headers)}")
     
     if not current_user.is_admin:
         app.logger.warning(f"Non-admin user {current_user.username} attempted to delete ticket #{ticket_id}")
         flash('You do not have permission to delete tickets', 'error')
         return mobile_aware_redirect('tickets.tickets_dashboard')
-        
+    
+    import time
+    step_start = time.time()
+    app.logger.info(f"STEP 1: Admin check passed in {time.time() - step_start:.3f}s")
+    
+    step_start = time.time()    
     ticket = Ticket.query.get_or_404(ticket_id)
-    app.logger.debug(f"Found ticket #{ticket_id}: '{ticket.title}'")
+    app.logger.info(f"STEP 2: Ticket lookup completed in {time.time() - step_start:.3f}s - Found: '{ticket.title}'")
     
     try:
         # Store data for logging
@@ -1322,23 +1329,32 @@ def delete_ticket(ticket_id):
         ticket_id_copy = ticket.id
         
         # Delete related records first to avoid foreign key constraint issues
-        app.logger.debug(f"Deleting related records for ticket #{ticket_id}")
+        step_start = time.time()
+        app.logger.info(f"STEP 3: Starting related record deletion for ticket #{ticket_id}")
         
         # Delete ticket views
+        view_start = time.time()
         deleted_views = TicketView.query.filter_by(ticket_id=ticket_id).delete()
-        app.logger.debug(f"Deleted {deleted_views} ticket_view records for ticket #{ticket_id}")
+        app.logger.info(f"STEP 3a: Deleted {deleted_views} ticket_view records in {time.time() - view_start:.3f}s")
         
         # Delete ticket history
+        history_start = time.time()
         deleted_history = TicketHistory.query.filter_by(ticket_id=ticket_id).delete()
-        app.logger.debug(f"Deleted {deleted_history} ticket_history records for ticket #{ticket_id}")
+        app.logger.info(f"STEP 3b: Deleted {deleted_history} ticket_history records in {time.time() - history_start:.3f}s")
         
         # Delete ticket comments
+        comment_start = time.time()
         deleted_comments = TicketComment.query.filter_by(ticket_id=ticket_id).delete()
-        app.logger.debug(f"Deleted {deleted_comments} ticket_comment records for ticket #{ticket_id}")
+        app.logger.info(f"STEP 3c: Deleted {deleted_comments} ticket_comment records in {time.time() - comment_start:.3f}s")
         
         # Now delete the ticket itself
+        ticket_start = time.time()
         db.session.delete(ticket)
+        app.logger.info(f"STEP 4: Ticket marked for deletion in {time.time() - ticket_start:.3f}s")
+        
+        commit_start = time.time()
         db.session.commit()
+        app.logger.info(f"STEP 5: Database commit completed in {time.time() - commit_start:.3f}s")
         
         app.logger.info(f"Ticket #{ticket_id_copy} ('{ticket_title}') and all related records deleted by {current_user.username}")
         flash(f'Ticket #{ticket_id_copy} has been permanently deleted', 'success')
