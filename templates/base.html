@@ -578,10 +578,10 @@
                     {% if quick_links %}
                         <div class="quick-links-responsive-grid" style="display: grid; gap: 4px; justify-content: center; flex-grow: 1; align-content: flex-start; grid-template-columns: repeat({{ quick_links|length if quick_links|length <= 5 else 5 }}, 1fr);">
                             {% for link in quick_links %}
-                            <a href="{{ link.url }}" target="_blank" class="btn btn-sm top-bar-quick-link responsive-quick-link" style="color: var(--dark-text); padding: 4px 8px; border-radius: 8px; background: rgba(175, 179, 247, 0.15); border: 1px solid rgba(175, 179, 247, 0.3); font-size: 0.75rem; text-decoration: none; transition: all 0.2s ease; min-height: 32px; display: flex; align-items: center; justify-content: center;">
-                                <i data-feather="{{ link.icon }}" style="width: 12px; height: 12px;" class="me-1"></i>
+                            <a href="{{ link.url }}" target="_blank" class="btn btn-sm top-bar-quick-link responsive-quick-link" style="color: var(--dark-text); padding: 6px 10px; border-radius: 8px; background: rgba(175, 179, 247, 0.15); border: 1px solid rgba(175, 179, 247, 0.3); font-size: 0.8rem; text-decoration: none; transition: all 0.2s ease; min-height: 34px; display: flex; align-items: center; justify-content: center; font-weight: 500;">
+                                <i data-feather="{{ link.icon }}" style="width: 13px; height: 13px;" class="me-1"></i>
                                 <span class="d-none d-lg-inline">{{ link.title }}</span>
-                                <span class="d-lg-none">{{ link.title[:6] }}{% if link.title|length > 6 %}...{% endif %}</span>
+                                <span class="d-lg-none">{{ link.title[:8] }}{% if link.title|length > 8 %}...{% endif %}</span>
                             </a>
                             {% endfor %}
                         </div>
@@ -642,20 +642,20 @@
             font-weight: 500;
         }
         
-        /* Responsive breakpoints for Quick Links */
+        /* Responsive breakpoints for Quick Links with proportional text sizing */
         @media (max-width: 576px) {
             .quick-links-responsive-grid {
                 grid-template-columns: repeat(2, 1fr) !important;
-                gap: 2px !important;
+                gap: 3px !important;
             }
             .responsive-quick-link {
-                font-size: 0.65rem !important;
-                padding: 2px 4px !important;
-                min-height: 24px !important;
+                font-size: 0.7rem !important;
+                padding: 4px 6px !important;
+                min-height: 28px !important;
             }
             .responsive-quick-link i {
-                width: 10px !important;
-                height: 10px !important;
+                width: 11px !important;
+                height: 11px !important;
             }
         }
         
@@ -664,20 +664,50 @@
                 grid-template-columns: repeat(3, 1fr) !important;
             }
             .responsive-quick-link {
-                font-size: 0.7rem !important;
-                padding: 3px 6px !important;
+                font-size: 0.75rem !important;
+                padding: 5px 8px !important;
+                min-height: 30px !important;
+            }
+            .responsive-quick-link i {
+                width: 12px !important;
+                height: 12px !important;
+            }
+        }
+        
+        @media (min-width: 769px) and (max-width: 1199px) {
+            .responsive-quick-link {
+                font-size: 0.8rem !important;
+                padding: 6px 10px !important;
+                min-height: 34px !important;
+            }
+            .responsive-quick-link i {
+                width: 13px !important;
+                height: 13px !important;
             }
         }
         
         @media (min-width: 1200px) {
             .responsive-quick-link {
-                font-size: 0.8rem !important;
-                padding: 6px 12px !important;
-                min-height: 36px !important;
+                font-size: 0.85rem !important;
+                padding: 8px 14px !important;
+                min-height: 38px !important;
+                font-weight: 600 !important;
             }
             .responsive-quick-link i {
-                width: 14px !important;
-                height: 14px !important;
+                width: 15px !important;
+                height: 15px !important;
+            }
+        }
+        
+        @media (min-width: 1400px) {
+            .responsive-quick-link {
+                font-size: 0.9rem !important;
+                padding: 10px 16px !important;
+                min-height: 42px !important;
+            }
+            .responsive-quick-link i {
+                width: 16px !important;
+                height: 16px !important;
             }
         }
         
