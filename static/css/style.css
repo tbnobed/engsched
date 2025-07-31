@@ -182,6 +182,11 @@ div[style*="gradient"] {
     transition: background-color 0.2s;
 }
 
+/* Remove bottom border from the last time slot to prevent gray line at bottom */
+.time-slot:last-child {
+    border-bottom: none;
+}
+
 .time-slot:hover {
     background-color: rgba(0, 123, 255, 0.1);
 }

@@ -322,6 +322,11 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
+/* Remove bottom border from the last time slot in dark mode to prevent gray line at bottom */
+[data-bs-theme="dark"] .time-slot:last-child {
+    border-bottom: none !important;
+}
+
 .time-slot:hover {
     background-color: rgba(0, 123, 255, 0.1);
 }
