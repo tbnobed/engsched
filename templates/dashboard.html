@@ -1034,8 +1034,8 @@ function positionSchedules() {
                     // Create duration line
                     const durationLine = document.createElement('div');
                     durationLine.className = 'dashboard-timeline-duration-line';
-                    // Position duration line at the same horizontal position as the profile (centered)
-                    const durationLineLeft = leftPosition + (profileWidth/2) - 3; // Profile center offset minus half line width
+                    // Position duration line at the center of the column
+                    const durationLineLeft = leftPosition - 3; // Already centered, subtract half line width
                     
                     durationLine.style.cssText = `
                         position: absolute;
@@ -1103,7 +1103,7 @@ function positionSchedules() {
                 const profileTop = startTotalMinutes + Math.max(0, totalHeight/2 - (profileWidth/2));
                 
                 profilePic.style.top = `${profileTop}px`;
-                profilePic.style.left = `${leftPosition - (profileWidth/2)}px`; // Center profile on timeline position
+                profilePic.style.left = `${leftPosition - (profileWidth/2)}px`; // Center profile on column position
                 
                 console.log(`Profile positioned at top: ${profileTop}px, left: ${leftPosition - (profileWidth/2)}px`);
                 
@@ -1141,8 +1141,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Re-position timeline elements on window resize for responsive design
 window.addEventListener('resize', function() {
     console.log('Window resized - repositioning timeline elements');
-    // Clear existing timeline elements
-    document.querySelectorAll('.dashboard-timeline-profile-pic, .timeline-duration-line').forEach(el => el.remove());
+    // Clear existing timeline elements more thoroughly
+    document.querySelectorAll('.dashboard-timeline-profile-pic, .dashboard-timeline-duration-line, .dashboard-timeline-profile').forEach(el => el.remove());
     // Reposition with new dimensions after short delay
     setTimeout(() => {
         positionSchedules();
