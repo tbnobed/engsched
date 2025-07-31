@@ -931,6 +931,7 @@ def calendar():
             # Regular schedules - convert to viewing timezone and check for midnight crossing
             start_user_tz = schedule.start_time.astimezone(viewing_tz)
             end_user_tz = schedule.end_time.astimezone(viewing_tz)
+            app.logger.debug(f"Calendar schedule {schedule.id}: {start_user_tz.date()} {start_user_tz.time()} to {end_user_tz.time()} (time_off={schedule.time_off}, all_day={schedule.all_day})")
             
             # Check if this schedule crosses midnight in user's timezone
             if start_user_tz.date() != end_user_tz.date():
