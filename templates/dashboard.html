@@ -941,12 +941,12 @@ function positionSchedules() {
                     durationLine.style.cssText = `
                         position: absolute;
                         top: ${hour * 60 + topOffset}px;
-                        left: ${20 + column * 60}px;
-                        width: 4px;
+                        left: ${20 + column * 90}px;
+                        width: 6px;
                         height: ${height}px;
                         background-color: ${userColor};
                         z-index: 4;
-                        border-radius: 2px;
+                        border-radius: 3px;
                     `;
                     
                     eventContainer.appendChild(durationLine);
@@ -963,25 +963,25 @@ function positionSchedules() {
                 
                 // Create profile picture with actual image or initials fallback
                 if (profilePicturePath && profilePicturePath.trim() !== '') {
-                    // Use actual profile picture
+                    // Use actual profile picture (50% larger)
                     profilePic.style.cssText = `
-                        width: 44px;
-                        height: 44px;
+                        width: 66px;
+                        height: 66px;
                         border-radius: 50%;
                         background-image: url('/static/${profilePicturePath}');
                         background-size: cover;
                         background-position: center;
-                        border: 2px solid white;
+                        border: 3px solid white;
                         position: absolute;
                         z-index: 5;
                         cursor: pointer;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        box-shadow: 0 3px 12px rgba(0,0,0,0.4);
                     `;
                 } else {
-                    // Use initials with user color background
+                    // Use initials with user color background (50% larger)
                     profilePic.style.cssText = `
-                        width: 44px;
-                        height: 44px;
+                        width: 66px;
+                        height: 66px;
                         border-radius: 50%;
                         background-color: ${userColor};
                         display: flex;
@@ -989,24 +989,24 @@ function positionSchedules() {
                         justify-content: center;
                         color: white;
                         font-weight: bold;
-                        font-size: 16px;
-                        border: 2px solid white;
+                        font-size: 24px;
+                        border: 3px solid white;
                         position: absolute;
                         z-index: 5;
                         cursor: pointer;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        box-shadow: 0 3px 12px rgba(0,0,0,0.4);
                     `;
                     profilePic.textContent = initials;
                 }
                 
-                // Position profile picture at the middle of the schedule duration
+                // Position profile picture at the middle of the schedule duration (adjusted for larger size)
                 const totalHeight = endTotalMinutes - startTotalMinutes;
-                const profileTop = startTotalMinutes + Math.max(0, totalHeight/2 - 22);
+                const profileTop = startTotalMinutes + Math.max(0, totalHeight/2 - 33);
                 
                 profilePic.style.top = `${profileTop}px`;
-                profilePic.style.left = `${20 + column * 60 - 22}px`;
+                profilePic.style.left = `${20 + column * 90 - 33}px`;
                 
-                console.log(`Profile positioned at top: ${profileTop}px, left: ${20 + column * 60 - 22}px`);
+                console.log(`Profile positioned at top: ${profileTop}px, left: ${20 + column * 90 - 33}px`);
                 
                 eventContainer.appendChild(profilePic);
                 
