@@ -1062,9 +1062,9 @@ function positionSchedules() {
                 const profileTop = startTotalMinutes + Math.max(0, totalHeight/2 - 33);
                 
                 profilePic.style.top = `${profileTop}px`;
-                profilePic.style.left = `${leftPosition - 33}px`;
+                profilePic.style.left = `${leftPosition - 3}px`; // Center profile on duration line (leftPosition + 30 - 33 = leftPosition - 3)
                 
-                console.log(`Profile positioned at top: ${profileTop}px, left: ${leftPosition - 33}px`);
+                console.log(`Profile positioned at top: ${profileTop}px, left: ${leftPosition - 3}px`);
                 
                 eventContainer.appendChild(profilePic);
                 
