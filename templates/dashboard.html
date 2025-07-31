@@ -1020,8 +1020,14 @@ function positionSchedules() {
                 
                 console.log(`Creating timeline elements for slots ${startSlot} to ${endSlot}`);
                 
-                // Create duration lines for each hour slot (handle midnight crossings)
+                // Create duration lines for each hour slot (only show same-day portion)
                 for (let hour = startSlot; hour < endSlot; hour++) {
+                    // Skip hours that would wrap to next day (24+)
+                    if (hour >= 24) {
+                        console.log(`Skipping hour ${hour} - next day portion, should be handled by backend split`);
+                        continue;
+                    }
+                    
                     const slotStartMinutes = hour * 60;
                     const slotEndMinutes = (hour + 1) * 60;
                     const eventStartInSlot = Math.max(startTotalMinutes, slotStartMinutes);
@@ -1031,11 +1037,7 @@ function positionSchedules() {
                     const topOffset = ((eventStartInSlot - slotStartMinutes) / 60) * 60;
                     const height = Math.max(((eventEndInSlot - eventStartInSlot) / 60) * 60, 10);
                     
-                    // Handle midnight wrapping for positioning
-                    const displayHour = hour >= 24 ? hour - 24 : hour;
-                    const finalTop = displayHour * 60 + topOffset;
-                    
-                    console.log(`Creating duration line for hour ${hour} (display ${displayHour}): top=${finalTop}px, height=${height}px`);
+                    console.log(`Creating duration line for hour ${hour}: top=${hour * 60 + topOffset}px, height=${height}px`);
                     
                     // Create duration line
                     const durationLine = document.createElement('div');
@@ -1045,7 +1047,7 @@ function positionSchedules() {
                     
                     durationLine.style.cssText = `
                         position: absolute;
-                        top: ${finalTop}px;
+                        top: ${hour * 60 + topOffset}px;
                         left: ${durationLineLeft}px;
                         width: 6px;
                         height: ${height}px;
