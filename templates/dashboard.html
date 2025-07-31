@@ -418,6 +418,36 @@
     .table-responsive {
         font-size: 0.875rem;
     }
+    
+    /* Timeline adjustments for mobile */
+    .dashboard-timeline-profile-pic {
+        width: 48px !important;
+        height: 48px !important;
+    }
+    
+    .timeline-duration-line {
+        width: 4px !important;
+    }
+}
+
+@media (min-width: 1200px) {
+    /* Enhanced spacing on larger screens */
+    .dashboard-timeline-profile-pic {
+        width: 72px !important;
+        height: 72px !important;
+    }
+    
+    .timeline-duration-line {
+        width: 8px !important;
+    }
+}
+
+@media (min-width: 1400px) {
+    /* Ultra-wide screen adjustments */
+    .dashboard-timeline-profile-pic {
+        width: 80px !important;
+        height: 80px !important;
+    }
 }
 </style>
 
@@ -900,12 +930,30 @@ function positionSchedules() {
                     return;
                 }
                 
-                // Calculate even distribution across full timeline width
+                // Calculate even distribution across full timeline width - screen size aware
                 const timelineContainer = eventContainer.querySelector('.timeline-container') || eventContainer;
-                const containerWidth = timelineContainer.offsetWidth || 800; // Get actual container width or fallback
-                const profileWidth = 66; // Profile picture width  
-                const safeStartMargin = 40; // Minimal left margin
-                const safeEndMargin = 40; // Minimal right margin
+                const containerRect = timelineContainer.getBoundingClientRect();
+                const containerWidth = containerRect.width || timelineContainer.offsetWidth || Math.min(window.innerWidth * 0.9, 1200); // Screen-aware width
+                
+                // Responsive sizing based on screen width
+                let profileWidth, safeStartMargin, safeEndMargin;
+                if (window.innerWidth >= 1400) {
+                    profileWidth = 80;
+                    safeStartMargin = 50;
+                    safeEndMargin = 50;
+                } else if (window.innerWidth >= 1200) {
+                    profileWidth = 72;
+                    safeStartMargin = 45;
+                    safeEndMargin = 45;
+                } else if (window.innerWidth <= 768) {
+                    profileWidth = 48;
+                    safeStartMargin = 30;
+                    safeEndMargin = 30;
+                } else {
+                    profileWidth = 66; // Default
+                    safeStartMargin = 40;
+                    safeEndMargin = 40;
+                }
                 const availableSpan = containerWidth - safeStartMargin - safeEndMargin - profileWidth; // Full available space
                 
                 // Distribute evenly across the full available span
@@ -927,9 +975,9 @@ function positionSchedules() {
                     profilePic.style.cssText = `
                         position: absolute;
                         top: 30px;
-                        left: ${leftPosition - 33}px;
-                        width: 66px;
-                        height: 66px;
+                        left: ${leftPosition - (profileWidth/2)}px;
+                        width: ${profileWidth}px;
+                        height: ${profileWidth}px;
                         border-radius: 50%;
                         border: 3px solid ${userColor};
                         z-index: 5;
@@ -987,7 +1035,7 @@ function positionSchedules() {
                     const durationLine = document.createElement('div');
                     durationLine.className = 'dashboard-timeline-duration-line';
                     // Position duration line at the same horizontal position as the profile (centered)
-                    const durationLineLeft = leftPosition + 30; // Profile center offset (66px width / 2 = 33, adjust to 30 for 6px line)
+                    const durationLineLeft = leftPosition + (profileWidth/2) - 3; // Profile center offset minus half line width
                     
                     durationLine.style.cssText = `
                         position: absolute;
@@ -1014,10 +1062,10 @@ function positionSchedules() {
                 
                 // Create profile picture with actual image or initials fallback
                 if (profilePicturePath && profilePicturePath.trim() !== '') {
-                    // Use actual profile picture (50% larger)
+                    // Use actual profile picture (responsive size)
                     profilePic.style.cssText = `
-                        width: 66px;
-                        height: 66px;
+                        width: ${profileWidth}px;
+                        height: ${profileWidth}px;
                         border-radius: 50%;
                         background-image: url('/static/${profilePicturePath}');
                         background-size: cover;
@@ -1029,10 +1077,10 @@ function positionSchedules() {
                         box-shadow: 0 3px 12px rgba(0,0,0,0.4);
                     `;
                 } else {
-                    // Use initials with user color background (50% larger)
+                    // Use initials with user color background (responsive size)
                     profilePic.style.cssText = `
-                        width: 66px;
-                        height: 66px;
+                        width: ${profileWidth}px;
+                        height: ${profileWidth}px;
                         border-radius: 50%;
                         background-color: ${userColor};
                         display: flex;
@@ -1040,7 +1088,7 @@ function positionSchedules() {
                         justify-content: center;
                         color: white;
                         font-weight: bold;
-                        font-size: 24px;
+                        font-size: ${Math.round(profileWidth * 0.36)}px;
                         border: 3px solid white;
                         position: absolute;
                         z-index: 5;
@@ -1050,14 +1098,14 @@ function positionSchedules() {
                     profilePic.textContent = initials;
                 }
                 
-                // Position profile picture at the middle of the schedule duration (adjusted for larger size)
+                // Position profile picture at the middle of the schedule duration (responsive)
                 const totalHeight = endTotalMinutes - startTotalMinutes;
-                const profileTop = startTotalMinutes + Math.max(0, totalHeight/2 - 33);
+                const profileTop = startTotalMinutes + Math.max(0, totalHeight/2 - (profileWidth/2));
                 
                 profilePic.style.top = `${profileTop}px`;
-                profilePic.style.left = `${leftPosition - 3}px`; // Center profile on duration line (leftPosition + 30 - 33 = leftPosition - 3)
+                profilePic.style.left = `${leftPosition - (profileWidth/2)}px`; // Center profile on timeline position
                 
-                console.log(`Profile positioned at top: ${profileTop}px, left: ${leftPosition - 3}px`);
+                console.log(`Profile positioned at top: ${profileTop}px, left: ${leftPosition - (profileWidth/2)}px`);
                 
                 eventContainer.appendChild(profilePic);
                 
@@ -1088,6 +1136,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update current time line every minute
     setInterval(updateCurrentTimeLine, 60000);
+});
+
+// Re-position timeline elements on window resize for responsive design
+window.addEventListener('resize', function() {
+    console.log('Window resized - repositioning timeline elements');
+    // Clear existing timeline elements
+    document.querySelectorAll('.dashboard-timeline-profile-pic, .timeline-duration-line').forEach(el => el.remove());
+    // Reposition with new dimensions after short delay
+    setTimeout(() => {
+        positionSchedules();
+    }, 100);
 });
 
 // Function to update current time line position (using user's timezone)
