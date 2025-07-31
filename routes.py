@@ -169,7 +169,7 @@ def dashboard():
                     schedule.start_time = start_user_tz
                     schedule.end_time = end_user_tz
                     today_schedules.append(schedule)
-                    app.logger.debug(f"Dashboard schedule {schedule.id}: {today} {start_user_tz.time()} to {end_user_tz.time()}")
+                    app.logger.debug(f"Dashboard schedule {schedule.id}: {today} {start_user_tz.time()} to {end_user_tz.time()} (time_off={schedule.time_off}, all_day={schedule.all_day})")
                 else:
                     app.logger.debug(f"Dashboard schedule {schedule.id}: Filtered out - on {start_user_tz.date()}, not today {today}")
     
