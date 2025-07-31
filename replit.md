@@ -9,6 +9,14 @@ This is a comprehensive web application for managing technician schedules and ti
 Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
+Recent Updates (July 31, 2025):
+- ✅ COMPLETED: Profile Picture Display Fix for Timeline OOO Events - Corrected Path Concatenation Issue
+- Fixed critical JavaScript path issue where profile picture data already included "uploads/profile_pictures/" causing double path concatenation
+- Updated timeline JavaScript to use correct path: `/static/${event.dataset.profilePicture}` instead of doubled path
+- Removed fallback avatar system per user preference - only displays actual profile pictures when available
+- OOO events now correctly display user profile pictures with "OOO ALL DAY" labels in timeline view
+- Enhanced timeline spacing with 400px distribution span for better visual organization
+
 Recent Updates (July 30, 2025):
 - ✅ COMPLETED: Complete Blue-Gray Palette Implementation - Sophisticated Color Scheme Across All Sections
 - Applied sophisticated blue-gray palette (171A21, 617073, 7A93AC, 92BCEA, AFB3F7) throughout entire application
