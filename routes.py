@@ -863,15 +863,18 @@ def calendar():
         week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
         week_start -= timedelta(days=week_start.weekday())
 
-    # Convert to UTC for database query
+    # Get schedules using expanded date range to catch cross-timezone schedules
+    # Then filter and split for cross-timezone schedules like dashboard does
     week_start_utc = week_start.astimezone(pytz.UTC)
     week_end_utc = (week_start + timedelta(days=7)).astimezone(pytz.UTC)
-
-    # Query schedules in UTC with optional location filter
-    # Use overlap logic: schedule overlaps with week if it starts before week ends and ends after week starts
+    
+    # Expand query range to catch schedules that might cross into this week from different timezones
+    expanded_start_utc = (week_start - timedelta(days=1)).astimezone(pytz.UTC)
+    expanded_end_utc = (week_start + timedelta(days=8)).astimezone(pytz.UTC)
+    
     query = Schedule.query.filter(
-        Schedule.start_time < week_end_utc,
-        Schedule.end_time > week_start_utc
+        Schedule.start_time >= expanded_start_utc,
+        Schedule.start_time <= expanded_end_utc
     )
 
     if location_filter:
@@ -880,7 +883,98 @@ def calendar():
     # Order by start_time to ensure chronological display
     query = query.order_by(Schedule.start_time)
 
-    schedules = query.all()
+    raw_schedules = query.all()
+    
+    # Apply timezone-aware filtering and splitting for cross-timezone schedules
+    schedules = []
+    for schedule in raw_schedules:
+        # Ensure timezone awareness for all schedule times
+        if schedule.start_time.tzinfo is None:
+            schedule.start_time = pytz.UTC.localize(schedule.start_time)
+        if schedule.end_time.tzinfo is None:
+            schedule.end_time = pytz.UTC.localize(schedule.end_time)
+        
+        # Special handling for all-day time-off events to prevent timezone date shifting
+        if schedule.time_off and schedule.all_day:
+            # For all-day events, we need to determine the intended calendar date
+            # Since existing entries were created in Chicago time, we reverse-engineer the date
+            utc_time = schedule.start_time.astimezone(pytz.UTC)
+            
+            # Try to determine the original calendar date by checking common US timezones
+            chicago_tz = pytz.timezone('America/Chicago')
+            pacific_tz = pytz.timezone('America/Los_Angeles')
+            
+            chicago_display = utc_time.astimezone(chicago_tz)
+            pacific_display = utc_time.astimezone(pacific_tz)
+            
+            # If the UTC time matches Chicago midnight conversion pattern, use Chicago date
+            chicago_midnight = chicago_tz.localize(datetime.combine(chicago_display.date(), time(0, 0)))
+            if utc_time == chicago_midnight.astimezone(pytz.UTC):
+                intended_date = chicago_display.date()
+                app.logger.debug(f"Calendar all-day OOO {schedule.id}: Detected Chicago-created entry for {intended_date}")
+            else:
+                # Otherwise, use the viewing timezone date
+                intended_date = utc_time.astimezone(viewing_tz).date()
+                app.logger.debug(f"Calendar all-day OOO {schedule.id}: Using viewing timezone date {intended_date}")
+            
+            # Only include if the intended date falls within the week
+            week_dates = [(week_start + timedelta(days=i)).date() for i in range(7)]
+            if intended_date in week_dates:
+                # Apply timezone-aware display time conversion
+                schedule.start_time = viewing_tz.localize(datetime.combine(intended_date, time(0, 0)))
+                schedule.end_time = viewing_tz.localize(datetime.combine(intended_date, time(23, 59)))
+                schedules.append(schedule)
+                app.logger.debug(f"Calendar all-day OOO {schedule.id}: Included for {intended_date}")
+            else:
+                app.logger.debug(f"Calendar all-day OOO {schedule.id}: Filtered out - intended date {intended_date} not in week")
+        else:
+            # Regular schedules - convert to viewing timezone and check for midnight crossing
+            start_user_tz = schedule.start_time.astimezone(viewing_tz)
+            end_user_tz = schedule.end_time.astimezone(viewing_tz)
+            
+            # Check if this schedule crosses midnight in user's timezone
+            if start_user_tz.date() != end_user_tz.date():
+                # Schedule crosses midnight - split into separate entries for each day
+                start_date = start_user_tz.date()
+                end_date = end_user_tz.date()
+                
+                # Week dates
+                week_dates = [(week_start + timedelta(days=i)).date() for i in range(7)]
+                
+                if start_date in week_dates:
+                    # Today's portion: start time to midnight (00:00 next day)
+                    midnight_today = viewing_tz.localize(datetime.combine(start_date, time(23, 59, 59)))
+                    # Create a copy for today's portion
+                    import copy
+                    today_schedule = copy.deepcopy(schedule)
+                    today_schedule.start_time = start_user_tz
+                    today_schedule.end_time = midnight_today
+                    schedules.append(today_schedule)
+                    app.logger.debug(f"Calendar midnight-crossing schedule {schedule.id}: {start_date} {start_user_tz.time()} to 23:59:59 (start date portion)")
+                
+                if end_date in week_dates:
+                    # Tomorrow's schedule extending from yesterday: midnight to end time
+                    midnight_start = viewing_tz.localize(datetime.combine(end_date, time(0, 0)))
+                    # Create a copy for tomorrow's portion
+                    import copy
+                    tomorrow_schedule = copy.deepcopy(schedule)
+                    tomorrow_schedule.start_time = midnight_start
+                    tomorrow_schedule.end_time = end_user_tz
+                    schedules.append(tomorrow_schedule)
+                    app.logger.debug(f"Calendar midnight-crossing schedule {schedule.id}: {end_date} 00:00:00 to {end_user_tz.time()} (end date portion)")
+                
+                if start_date not in week_dates and end_date not in week_dates:
+                    app.logger.debug(f"Calendar schedule {schedule.id}: Filtered out - starts on {start_date}, ends on {end_date}, neither in current week")
+            else:
+                # Schedule doesn't cross midnight - normal handling
+                week_dates = [(week_start + timedelta(days=i)).date() for i in range(7)]
+                if start_user_tz.date() in week_dates:
+                    schedule.start_time = start_user_tz
+                    schedule.end_time = end_user_tz
+                    schedules.append(schedule)
+                    app.logger.debug(f"Calendar schedule {schedule.id}: {start_user_tz.date()} {start_user_tz.time()} to {end_user_tz.time()}")
+                else:
+                    app.logger.debug(f"Calendar schedule {schedule.id}: Filtered out - on {start_user_tz.date()}, not in current week")
     
     # Debug logging
     app.logger.debug(f"Calendar query found {len(schedules)} schedules")
@@ -900,43 +994,7 @@ def calendar():
     
 
 
-    # Convert schedule times to viewing timezone
-    for schedule in schedules:
-        if schedule.start_time.tzinfo is None:
-            schedule.start_time = pytz.UTC.localize(schedule.start_time)
-        if schedule.end_time.tzinfo is None:
-            schedule.end_time = pytz.UTC.localize(schedule.end_time)
 
-        # Special handling for all-day time-off events to prevent timezone date shifting
-        if schedule.time_off and schedule.all_day:
-            # For all-day events, we need to determine the intended calendar date
-            # Since existing entries were created in Chicago time, we reverse-engineer the date
-            utc_time = schedule.start_time.astimezone(pytz.UTC)
-            
-            # Try to determine the original calendar date by checking common US timezones
-            chicago_tz = pytz.timezone('America/Chicago')
-            pacific_tz = pytz.timezone('America/Los_Angeles')
-            
-            chicago_display = utc_time.astimezone(chicago_tz)
-            pacific_display = utc_time.astimezone(pacific_tz)
-            
-            # If the UTC time matches Chicago midnight conversion pattern, use Chicago date
-            chicago_midnight = chicago_tz.localize(datetime.combine(chicago_display.date(), time(0, 0)))
-            if utc_time == chicago_midnight.astimezone(pytz.UTC):
-                intended_date = chicago_display.date()
-                app.logger.debug(f"All-day OOO {schedule.id}: Detected Chicago-created entry for {intended_date}")
-            else:
-                # Otherwise, use the viewing timezone date
-                intended_date = utc_time.astimezone(viewing_tz).date()
-                app.logger.debug(f"All-day OOO {schedule.id}: Using viewing timezone date {intended_date}")
-            
-            # Display as all-day in viewing timezone for the intended date
-            schedule.start_time = viewing_tz.localize(datetime.combine(intended_date, time(0, 0)))
-            schedule.end_time = viewing_tz.localize(datetime.combine(intended_date, time(23, 59)))
-            app.logger.debug(f"All-day display fix for schedule {schedule.id}: {intended_date} → {schedule.start_time} to {schedule.end_time}")
-        else:
-            schedule.start_time = schedule.start_time.astimezone(viewing_tz)
-            schedule.end_time = schedule.end_time.astimezone(viewing_tz)
 
     form = ScheduleForm()
     if current_user.is_admin:
