@@ -33,7 +33,7 @@
         </div>
     </div>
 
-    <div class="calendar-grid">
+    <div class="week-view">
         <div class="time-column">
             {% for hour in range(24) %}
                 <div class="hour-slot">{{ "%02d:00"|format(hour) }}</div>
@@ -223,32 +223,15 @@
 
 <style>
 .calendar-container {
+    background-color: var(--calendar-bg);
     padding: 20px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-/* Only basic layout - let external CSS handle colors and borders */
-.calendar-grid {
-    display: flex;
-    overflow-x: auto;
-    min-height: 600px;
-    max-height: calc(100vh - 200px);
-    overflow-y: auto;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    width: 100%;
-}
-
-.time-column {
-    width: 50px;
-    position: sticky;
-    left: 0;
-    z-index: 1;
-}
-
 .day-column {
     width: calc((100% - 50px) / 7);
+    border-right: 1px solid var(--border-color);
     position: relative;
 }
 
@@ -257,16 +240,48 @@
 }
 
 .day-column.today {
-    background-color: rgba(0, 123, 255, 0.1);
+    background-color: var(--today-highlight);
 }
 
 .day-header {
+    padding: 10px;
     text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(to bottom, var(--calendar-header-start), var(--calendar-header-end));
+    border-radius: 4px 4px 0 0;
     cursor: pointer;
+}
+
+.day-header.today {
+    background: linear-gradient(to bottom, var(--calendar-today-header-start), var(--calendar-today-header-end));
+    color: var(--calendar-today-text);
+}
+
+.week-view {
+    display: flex;
+    overflow-x: auto;
+    min-height: 600px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.time-column {
+    width: 50px;
+    border-right: 1px solid var(--border-color);
+    position: sticky;
+    left: 0;
+    background-color: var(--calendar-bg);
+    z-index: 1;
 }
 
 .hour-slot {
     height: 60px;
+    border-bottom: 1px solid var(--border-color);
     text-align: center;
     font-size: 0.8rem;
     padding-top: 5px;
@@ -278,6 +293,7 @@
 
 .time-slot {
     height: 60px;
+    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background-color 0.2s;
 }
@@ -288,7 +304,16 @@
 
 /* Schedule event styling is now handled in main style.css */
 
-/* Event positioning is handled by JavaScript instead of inline CSS */
+/* Make sure events are positioned correctly using JavaScript */
+{% for day in range(7) %}
+{% set current_date = week_start + timedelta(days=day) %}
+{% for schedule in schedules if schedule.start_time.date() == current_date.date() %}
+.day-column:nth-child({{ day + 2 }}) .schedule-event[data-schedule-id="{{ schedule.id }}"] {
+    top: {{ ((schedule.start_time.hour * 60 + schedule.start_time.minute) / 60) * 60 }}px;
+    height: {{ (((schedule.end_time - schedule.start_time).total_seconds() / 3600) * 60) }}px;
+}
+{% endfor %}
+{% endfor %}
 
 .schedule-time {
     font-weight: bold;
