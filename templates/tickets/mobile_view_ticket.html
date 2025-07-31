@@ -295,7 +295,21 @@
 
     function deleteTicket(ticketId) {
         if (confirm('Are you sure you want to delete this ticket? This action cannot be undone.')) {
-            window.location.href = "{{ url_for('tickets.delete_ticket', ticket_id=0) }}".replace('/0/delete', `/${ticketId}/delete`);
+            // Create a form for proper POST submission with CSRF token
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{{ url_for('tickets.delete_ticket', ticket_id=0) }}".replace('/0/delete', `/${ticketId}/delete`);
+            
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = "{{ csrf_token() }}";
+            form.appendChild(csrfInput);
+            
+            // Submit the form
+            document.body.appendChild(form);
+            form.submit();
         }
     }
 

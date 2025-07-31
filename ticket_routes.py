@@ -1303,19 +1303,9 @@ def edit_ticket(ticket_id):
 
 
 @tickets.route('/tickets/<int:ticket_id>/delete', methods=['GET', 'POST'])
-@csrf.exempt  # Temporarily bypass CSRF for testing
 @login_required
 def delete_ticket(ticket_id):
     """Delete a ticket (admin only)"""
-    print(f"=== DELETE TICKET REQUEST RECEIVED === Ticket #{ticket_id} by user {current_user.username}")
-    app.logger.info(f"=== DELETE TICKET REQUEST === Ticket #{ticket_id} by user {current_user.username} (admin: {current_user.is_admin}) - Method: {request.method}")
-    app.logger.debug(f"Request form data: {dict(request.form)}")
-    app.logger.debug(f"Request headers: {dict(request.headers)}")
-    
-    # Force immediate log flush
-    import sys
-    sys.stdout.flush()
-    sys.stderr.flush()
     
     if not current_user.is_admin:
         app.logger.warning(f"Non-admin user {current_user.username} attempted to delete ticket #{ticket_id}")
