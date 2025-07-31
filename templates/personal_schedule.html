@@ -297,14 +297,14 @@
 
 .hour-slot {
     height: 60px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     text-align: center;
     font-size: 0.8rem;
     padding-top: 5px;
 }
 
 [data-bs-theme="dark"] .hour-slot {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .day-slots {
@@ -313,23 +313,12 @@
 
 .time-slot {
     height: 60px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
 [data-bs-theme="dark"] .time-slot {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-}
-
-/* Force consistent grid line colors - override any conflicting styles */
-.time-column .hour-slot:nth-child(23),
-.time-column .hour-slot:nth-child(24) {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
-}
-
-[data-bs-theme="dark"] .time-column .hour-slot:nth-child(23),
-[data-bs-theme="dark"] .time-column .hour-slot:nth-child(24) {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
@@ -980,51 +969,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
-    // Force consistent grid line colors - fix 23:00 line issue
-    function fixGridLineColors() {
-        // Remove any dashboard timeline elements that might be interfering
-        document.querySelectorAll('.dashboard-timeline-duration-line, .dashboard-timeline-profile').forEach(el => {
-            el.remove();
-            console.log('Removed interfering dashboard timeline element:', el.className);
-        });
-        
-        const hourSlots = document.querySelectorAll('.time-column .hour-slot');
-        const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-        const borderColor = isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-        
-        hourSlots.forEach((slot, index) => {
-            slot.style.setProperty('border-bottom', `1px solid ${borderColor}`, 'important');
-            slot.style.setProperty('box-shadow', 'none', 'important');
-            slot.style.setProperty('outline', 'none', 'important');
-            
-            // Extra specific fix for the 23:00 line (index 23)
-            if (index === 23) {
-                slot.style.setProperty('border-bottom', `1px solid ${borderColor}`, 'important');
-                slot.style.setProperty('border-top', 'none', 'important');
-                console.log('Applied specific 23:00 line fix with color:', borderColor);
-            }
-        });
-        
-        console.log('Grid line colors fixed - applied', borderColor, 'to', hourSlots.length, 'hour slots');
-    }
-    
-    // Apply fixes after DOM is ready and after theme changes
-    fixGridLineColors();
-    
-    // Also fix when theme changes
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'data-bs-theme') {
-                setTimeout(fixGridLineColors, 100);
-            }
-        });
-    });
-    
-    observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-bs-theme']
-    });
 });
 
 // Update end time options based on start time selection
