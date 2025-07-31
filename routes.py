@@ -191,6 +191,97 @@ def dashboard():
                          today=today,
                          user_timezone=current_user.get_timezone())
 
+@app.route('/api/team-stats')
+@login_required
+def api_team_stats():
+    """Fetch team statistics for dashboard"""
+    try:
+        user_tz = pytz.timezone(current_user.get_timezone())
+        today = datetime.now(user_tz)
+        today_date = today.date()
+        
+        # 1. Active Tickets Summary
+        active_tickets = Ticket.query.filter(
+            Ticket.status.in_(['open', 'in_progress', 'pending'])
+        ).all()
+        
+        tickets_by_status = {
+            'open': len([t for t in active_tickets if t.status == 'open']),
+            'in_progress': len([t for t in active_tickets if t.status == 'in_progress']),
+            'pending': len([t for t in active_tickets if t.status == 'pending']),
+            'total': len(active_tickets)
+        }
+        
+        # 2. Team Availability - technicians currently working
+        current_time_utc = datetime.now(pytz.UTC)
+        currently_working = User.query.join(Schedule).filter(
+            Schedule.start_time <= current_time_utc,
+            Schedule.end_time > current_time_utc,
+            ~Schedule.time_off
+        ).distinct().count()
+        
+        total_technicians = User.query.count()
+        
+        # 3. Today's Schedule Coverage - total scheduled hours today
+        today_start_local = user_tz.localize(datetime.combine(today_date, time.min))
+        today_end_local = user_tz.localize(datetime.combine(today_date, time.max))
+        today_start_utc = today_start_local.astimezone(pytz.UTC)
+        today_end_utc = today_end_local.astimezone(pytz.UTC)
+        
+        today_schedules = Schedule.query.filter(
+            Schedule.start_time >= today_start_utc,
+            Schedule.end_time <= today_end_utc,
+            ~Schedule.time_off
+        ).all()
+        
+        total_scheduled_hours = 0
+        for schedule in today_schedules:
+            start_local = schedule.start_time.astimezone(user_tz)
+            end_local = schedule.end_time.astimezone(user_tz)
+            # Only count hours within today
+            if start_local.date() == today_date and end_local.date() == today_date:
+                duration = end_local - start_local
+                total_scheduled_hours += duration.total_seconds() / 3600
+        
+        # 4. Upcoming Time Off - next 7 days
+        week_end = today + timedelta(days=7)
+        week_end_utc = user_tz.localize(datetime.combine(week_end.date(), time.max)).astimezone(pytz.UTC)
+        
+        upcoming_time_off = Schedule.query.filter(
+            Schedule.start_time >= current_time_utc,
+            Schedule.start_time <= week_end_utc,
+            Schedule.time_off == True
+        ).count()
+        
+        return jsonify({
+            'success': True,
+            'stats': {
+                'active_tickets': tickets_by_status,
+                'team_availability': {
+                    'currently_working': currently_working,
+                    'total_technicians': total_technicians,
+                    'percentage': round((currently_working / max(total_technicians, 1)) * 100, 1)
+                },
+                'schedule_coverage': {
+                    'total_hours': round(total_scheduled_hours, 1),
+                    'schedules_count': len(today_schedules)
+                },
+                'upcoming_time_off': {
+                    'count': upcoming_time_off,
+                    'days_ahead': 7
+                }
+            },
+            'updated_at': datetime.now(user_tz).isoformat()
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Error fetching team stats: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': 'Unable to fetch team statistics',
+            'message': str(e)
+        }), 500
+
 @app.route('/api/studio-bookings')
 @login_required
 def api_studio_bookings():

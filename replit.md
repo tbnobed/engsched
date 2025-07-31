@@ -10,6 +10,13 @@ Preferred communication style: Simple, everyday language.
 Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality while preserving dropdown menu interactions.
 
 Recent Updates (July 31, 2025):
+- ✅ COMPLETED: Team Statistics Dashboard Enhancement - Replaced Quick Links with Real-Time Team Insights
+- Replaced Quick Links section with four key team statistics: Team Availability, Active Tickets, Schedule Coverage, and Upcoming Time Off
+- Created comprehensive /api/team-stats endpoint providing timezone-aware statistics calculations
+- Implemented auto-refreshing statistics display with 2-minute update intervals
+- Statistics show: available technicians (X/Y format), active ticket count, today's scheduled hours, and upcoming PTO count
+- Enhanced dashboard with color-coded stat cards: green (availability), red (tickets), blue (hours), orange (PTO)
+- Team Statistics provide real-time operational insights replacing static quick links functionality
 - ✅ COMPLETED: CRITICAL Midnight-Crossing False Split Bug Fixed - Eliminated False "OOO ALL DAY" Display
 - Fixed critical bug where schedules ending exactly at midnight (00:00) were incorrectly treated as crossing midnight
 - Added condition `and end_user_tz.time() != time(0, 0)` to both calendar and dashboard routes to prevent false midnight crossings

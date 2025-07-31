@@ -566,27 +566,43 @@
                 </div>
             </div>
             
-            <!-- Quick Links -->
+            <!-- Team Statistics -->
             <div class="col-12 col-sm-6 col-lg-3">
                 <div class="d-flex flex-column h-100" style="background: linear-gradient(135deg, rgba(146, 188, 234, 0.2), rgba(175, 179, 247, 0.15)); border-radius: 8px; padding: 10px; border-left: 4px solid #92BCEA;">
                     <h6 class="mb-2 text-center" style="color: var(--dark-text); font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;">
-                        <i data-feather="external-link" style="width: 14px; height: 14px; margin-right: 4px; color: #AFB3F7;"></i>
-                        <span class="d-none d-md-inline">Quick Links</span>
-                        <span class="d-md-none">Links</span>
+                        <i data-feather="bar-chart-2" style="width: 14px; height: 14px; margin-right: 4px; color: #AFB3F7;"></i>
+                        <span class="d-none d-md-inline">Team Stats</span>
+                        <span class="d-md-none">Stats</span>
                     </h6>
-                    {% set quick_links = get_quick_links()[:10] %}  {# Limit to 10 links #}
-                    {% if quick_links %}
-                        <div class="quick-links-responsive-grid" data-link-count="{{ quick_links|length }}" style="display: grid; gap: 4px; justify-content: center; flex-grow: 1; align-content: flex-start; grid-template-columns: repeat({{ quick_links|length if quick_links|length <= 5 else 5 }}, 1fr);">
-                            {% for link in quick_links %}
-                            <a href="{{ link.url }}" target="_blank" class="btn btn-sm top-bar-quick-link responsive-quick-link" data-title="{{ link.title }}" style="color: var(--dark-text); padding: 6px 10px; border-radius: 8px; background: rgba(175, 179, 247, 0.15); border: 1px solid rgba(175, 179, 247, 0.3); text-decoration: none; transition: all 0.2s ease; min-height: 34px; display: flex; align-items: center; justify-content: center; font-weight: 500;">
-                                <i data-feather="{{ link.icon }}" class="quick-link-icon me-1"></i>
-                                <span class="quick-link-text">{{ link.title }}</span>
-                            </a>
-                            {% endfor %}
+                    <div id="team-stats-content" style="display: grid; gap: 6px; justify-content: center; flex-grow: 1; align-content: flex-start; grid-template-columns: 1fr 1fr;">
+                        <!-- Team Availability -->
+                        <div class="stat-card" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 6px; padding: 8px; text-align: center;">
+                            <i data-feather="users" style="width: 12px; height: 12px; color: #22c55e; margin-bottom: 4px;"></i>
+                            <div class="stat-number" id="team-availability" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1;">-</div>
+                            <div class="stat-label" style="font-size: 0.65rem; color: var(--dark-text); opacity: 0.8;">Available</div>
                         </div>
-                    {% else %}
-                        <p class="text-muted text-center" style="font-size: 0.75rem; margin: 0; flex-grow: 1; display: flex; align-items: center; justify-content: center;">No links</p>
-                    {% endif %}
+                        
+                        <!-- Active Tickets -->
+                        <div class="stat-card" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 8px; text-align: center;">
+                            <i data-feather="alert-circle" style="width: 12px; height: 12px; color: #ef4444; margin-bottom: 4px;"></i>
+                            <div class="stat-number" id="active-tickets" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1;">-</div>
+                            <div class="stat-label" style="font-size: 0.65rem; color: var(--dark-text); opacity: 0.8;">Active</div>
+                        </div>
+                        
+                        <!-- Schedule Coverage -->
+                        <div class="stat-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; padding: 8px; text-align: center;">
+                            <i data-feather="clock" style="width: 12px; height: 12px; color: #3b82f6; margin-bottom: 4px;"></i>
+                            <div class="stat-number" id="schedule-hours" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1;">-</div>
+                            <div class="stat-label" style="font-size: 0.65rem; color: var(--dark-text); opacity: 0.8;">Hours</div>
+                        </div>
+                        
+                        <!-- Upcoming Time Off -->
+                        <div class="stat-card" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 8px; text-align: center;">
+                            <i data-feather="calendar" style="width: 12px; height: 12px; color: #f59e0b; margin-bottom: 4px;"></i>
+                            <div class="stat-number" id="upcoming-pto" style="font-size: 0.9rem; font-weight: 700; color: var(--dark-text); line-height: 1;">-</div>
+                            <div class="stat-label" style="font-size: 0.65rem; color: var(--dark-text); opacity: 0.8;">PTO</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -619,6 +635,37 @@
     <script src="{{ url_for('static', filename='js/calendar.js') }}?v={{ now.timestamp() | int }}&refresh=true&grid=2col"></script>
     
     <script>
+        // Team Statistics Auto-Refresh
+        function loadTeamStats() {
+            fetch('/api/team-stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const stats = data.stats;
+                        
+                        // Update Team Availability
+                        document.getElementById('team-availability').textContent = 
+                            `${stats.team_availability.currently_working}/${stats.team_availability.total_technicians}`;
+                        
+                        // Update Active Tickets
+                        document.getElementById('active-tickets').textContent = stats.active_tickets.total;
+                        
+                        // Update Schedule Coverage (today's hours)
+                        document.getElementById('schedule-hours').textContent = stats.schedule_coverage.total_hours;
+                        
+                        // Update Upcoming Time Off
+                        document.getElementById('upcoming-pto').textContent = stats.upcoming_time_off.count;
+                        
+                        console.log('Team stats refreshed successfully');
+                    } else {
+                        console.error('Failed to load team stats:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching team stats:', error);
+                });
+        }
+
         // Dynamic Quick Links Text Scaling
         function scaleQuickLinksText() {
             const container = document.querySelector('.quick-links-responsive-grid');
@@ -684,6 +731,14 @@
             
             // Re-scale on window resize
             window.addEventListener('resize', debounce(scaleQuickLinksText, 250));
+            
+            // Load team stats initially
+            if (document.getElementById('team-stats-content')) {
+                loadTeamStats();
+                
+                // Auto-refresh team stats every 2 minutes
+                setInterval(loadTeamStats, 120000);
+            }
         });
         
         // Debounce function to prevent excessive resize calls
