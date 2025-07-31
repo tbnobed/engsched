@@ -222,39 +222,42 @@
 </div>
 
 <style>
-:root {
-    --border-color: #dee2e6;
-    --calendar-bg: #ffffff;
-    --today-highlight: rgba(0, 123, 255, 0.1);
-    --calendar-header-start: #f8f9fa;
-    --calendar-header-end: #e9ecef;
-    --calendar-today-header-start: #007bff;
-    --calendar-today-header-end: #0056b3;
-    --calendar-today-text: #ffffff;
-}
-
-[data-theme="dark"] {
-    --border-color: #495057;
-    --calendar-bg: #343a40;
-    --today-highlight: rgba(0, 123, 255, 0.2);
-    --calendar-header-start: #495057;
-    --calendar-header-end: #343a40;
-    --calendar-today-header-start: #007bff;
-    --calendar-today-header-end: #0056b3;
-    --calendar-today-text: #ffffff;
-}
-
+/* Use the same calendar grid structure as the main calendar page */
 .calendar-container {
-    background-color: var(--calendar-bg);
     padding: 20px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
+/* Apply the same calendar-grid class structure as calendar.html */
+.week-view {
+    display: flex;
+    overflow-x: auto;
+    min-height: 600px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    width: 100%;
+    /* Use same background as calendar-grid from light-theme.css */
+    background-color: var(--light-border) !important;
+    border: 1px solid var(--light-border) !important;
+}
+
+.time-column {
+    width: 50px;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    /* Match calendar page styling */
+    background-color: var(--light-panel) !important;
+}
+
 .day-column {
     width: calc((100% - 50px) / 7);
-    border-right: 1px solid var(--border-color);
     position: relative;
+    /* Match calendar page styling */
+    background-color: var(--light-panel) !important;
 }
 
 .day-column:last-child {
@@ -262,51 +265,37 @@
 }
 
 .day-column.today {
-    background-color: var(--today-highlight);
+    background-color: rgba(0, 123, 255, 0.1);
 }
 
 .day-header {
-    padding: 10px;
+    padding: 12px !important;
     text-align: center;
-    font-weight: bold;
-    border-bottom: 1px solid var(--border-color);
-    background: linear-gradient(to bottom, var(--calendar-header-start), var(--calendar-header-end));
-    border-radius: 4px 4px 0 0;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px !important;
     cursor: pointer;
+    /* Match calendar page day-header styling from light-theme.css */
+    background: linear-gradient(135deg, #f1f5f9, #f8fafc) !important;
+    color: var(--light-text) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
 }
 
 .day-header.today {
-    background: linear-gradient(to bottom, var(--calendar-today-header-start), var(--calendar-today-header-end));
-    color: var(--calendar-today-text);
-}
-
-.week-view {
-    display: flex;
-    overflow-x: auto;
-    min-height: 600px;
-    max-height: calc(100vh - 200px);
-    overflow-y: auto;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    margin-bottom: 20px;
-    width: 100%;
-}
-
-.time-column {
-    width: 50px;
-    border-right: 1px solid var(--border-color);
-    position: sticky;
-    left: 0;
-    background-color: var(--calendar-bg);
-    z-index: 1;
+    /* Match calendar page today styling */
+    background: linear-gradient(135deg, #171A21, #617073) !important;
+    color: white !important;
+    border-bottom: none !important;
 }
 
 .hour-slot {
     height: 60px;
-    border-bottom: 1px solid var(--border-color);
     text-align: center;
     font-size: 0.8rem;
     padding-top: 5px;
+    /* Match calendar page hour-slot styling from light-theme.css */
+    border-bottom: 1px solid var(--light-border) !important;
+    color: var(--light-text-secondary) !important;
 }
 
 .day-slots {
@@ -315,13 +304,50 @@
 
 .time-slot {
     height: 60px;
-    border-bottom: 1px solid var(--border-color);
     cursor: pointer;
     transition: background-color 0.2s;
+    /* Match calendar page time-slot styling from light-theme.css */
+    background-color: rgba(0, 0, 0, 0.01) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
 }
 
 .time-slot:hover {
     background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Dark theme support - match calendar page dark theme styling */
+[data-theme="dark"] .week-view {
+    background-color: var(--dark-border) !important;
+    border: 1px solid var(--dark-border) !important;
+}
+
+[data-theme="dark"] .time-column {
+    background-color: var(--dark-panel) !important;
+}
+
+[data-theme="dark"] .day-column {
+    background-color: var(--dark-panel) !important;
+}
+
+[data-theme="dark"] .day-header {
+    background: linear-gradient(135deg, #2d2d2d, #3a3a3a) !important;
+    color: var(--dark-text) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .day-header.today {
+    background: linear-gradient(135deg, #171A21, #617073) !important;
+    color: white !important;
+}
+
+[data-theme="dark"] .hour-slot {
+    border-bottom: 1px solid var(--dark-border) !important;
+    color: var(--dark-text-secondary) !important;
+}
+
+[data-theme="dark"] .time-slot {
+    background-color: rgba(255, 255, 255, 0.01) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
 }
 
 /* Schedule event styling is now handled in main style.css */
