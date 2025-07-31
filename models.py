@@ -247,35 +247,21 @@ class Ticket(db.Model):
         return "Unknown"
     
     def has_unread_activity(self, user_id: int) -> bool:
-        """Check if ticket has activity since user last viewed it"""
+        """Check if ticket has been viewed by ANY user (global NEW badge logic)"""
         # NEVER show NEW badges on resolved or closed tickets
         if self.status in ['resolved', 'closed']:
             return False
-            
-        # Get user's last view time for this ticket
-        ticket_view = TicketView.query.filter_by(
-            user_id=user_id, 
-            ticket_id=self.id
-        ).first()
         
-        if not ticket_view:
-            # User has never viewed this ticket, so it's "unread"
+        # Check if ANY user has viewed this ticket
+        # If any technician has viewed/managed this ticket, the NEW badge should disappear for everyone
+        any_ticket_view = TicketView.query.filter_by(ticket_id=self.id).first()
+        
+        if not any_ticket_view:
+            # NO ONE has viewed this ticket yet, so show NEW badge
             return True
         
-        # Check for comments after last view
-        recent_comments = self.comments.filter(
-            TicketComment.created_at > ticket_view.last_viewed_at
-        ).count()
-        
-        # Check for history entries after last view
-        recent_history = self.history.filter(
-            TicketHistory.created_at > ticket_view.last_viewed_at
-        ).count()
-        
-        # Check if ticket was updated after last view
-        ticket_updated = self.updated_at > ticket_view.last_viewed_at
-        
-        return recent_comments > 0 or recent_history > 0 or ticket_updated
+        # Someone has viewed this ticket, so no NEW badge needed
+        return False
     
     def mark_as_viewed(self, user_id: int):
         """Mark ticket as viewed by user"""
