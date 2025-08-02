@@ -246,7 +246,8 @@ class Ticket(db.Model):
             return self.creator.username
         return "Unknown"
     
-    def has_unread_activity(self, user_id: int) -> bool:
+    @property
+    def has_unread_activity(self) -> bool:
         """Check if ticket has been viewed by ANY user (global NEW badge logic)"""
         from app import app
         
