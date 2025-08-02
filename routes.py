@@ -4362,27 +4362,8 @@ def mobile_tickets():
     # Get tickets ordered by priority and creation date
     tickets = query.order_by(Ticket.priority.desc(), Ticket.created_at.desc()).all()
     
-    # Add unread activity indicators
-    for ticket in tickets:
-        try:
-            ticket_view = TicketView.query.filter_by(
-                user_id=current_user.id,
-                ticket_id=ticket.id
-            ).first()
-            
-            if ticket_view:
-                ticket.has_unread_activity = (
-                    ticket.updated_at > ticket_view.last_viewed_at or
-                    TicketComment.query.filter(
-                        TicketComment.ticket_id == ticket.id,
-                        TicketComment.created_at > ticket_view.last_viewed_at
-                    ).count() > 0
-                )
-            else:
-                ticket.has_unread_activity = True
-        except Exception as e:
-            app.logger.error(f"Error checking unread activity for ticket {ticket.id}: {str(e)}")
-            ticket.has_unread_activity = False
+    # Unread activity indicators are now handled by the has_unread_activity property
+    # No need to manually set this - the property calculates it automatically
     
     return render_template('mobile/tickets.html', 
                          tickets=tickets,
