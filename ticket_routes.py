@@ -384,7 +384,7 @@ def tickets_dashboard():
     for ticket in tickets:
         # Create a simple dict with only the data we need
         # Check NEW badge status with debug logging
-        new_badge_status = ticket.has_unread_activity(current_user.id)
+        new_badge_status = ticket.has_unread_activity
         app.logger.debug(f"🔍 TICKET #{ticket.id} NEW BADGE CHECK: {new_badge_status}")
         
         ticket_dict = {
