@@ -6,7 +6,7 @@ from datetime import datetime
 import pytz
 from sqlalchemy import text, or_
 from app import app, is_mobile_device  # Import app for logging and mobile detection
-from email_utils import send_ticket_assigned_notification, send_ticket_comment_notification, send_ticket_status_notification
+from email_utils import send_ticket_assigned_notification, send_ticket_comment_notification, send_ticket_status_notification, send_new_ticket_notification
 
 def mobile_aware_redirect(endpoint, **kwargs):
     """Helper function to redirect based on mobile context"""
@@ -559,6 +559,23 @@ def create_ticket():
             # Commit both changes
             db.session.commit()
             app.logger.info(f"Successfully created ticket {ticket.id} with history entry")
+            
+            # Send new ticket notification to all users
+            try:
+                app.logger.info(f"Sending new ticket notification to all users for ticket #{ticket.id}")
+                notification_result = send_new_ticket_notification(
+                    ticket=ticket,
+                    created_by=current_user
+                )
+                
+                if notification_result:
+                    app.logger.info("New ticket notification sent successfully to all users!")
+                else:
+                    app.logger.warning("Failed to send new ticket notification to all users")
+            except Exception as e:
+                app.logger.error(f"Exception sending new ticket notification: {str(e)}")
+                import traceback
+                app.logger.error(f"Exception traceback: {traceback.format_exc()}")
             
             # Send email notification if the ticket is assigned to someone
             if ticket.assigned_to:

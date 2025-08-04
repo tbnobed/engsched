@@ -115,6 +115,126 @@ def send_email(
     finally:
         current_app.logger.info("=== Email sending process completed ===")
 
+def send_new_ticket_notification(ticket: Ticket, created_by: User) -> bool:
+    """
+    Send a notification to all users when a new ticket is created
+    """
+    from flask import has_app_context, current_app
+    
+    try:
+        current_app.logger.info(f"==== Starting new ticket notification for ticket #{ticket.id} ====")
+        
+        # Get all users with email addresses
+        all_users = User.query.filter(User.email.isnot(None), User.email != '').all()
+        
+        if not all_users:
+            current_app.logger.warning("No users with email addresses found")
+            return False
+            
+        # Build recipient list - all users except the creator (they already know about it)
+        recipients = []
+        for user in all_users:
+            if user.id != created_by.id:  # Don't notify the creator
+                recipients.append(user.email)
+                
+        current_app.logger.info(f"Sending new ticket notification to {len(recipients)} users: {recipients}")
+        
+        if not recipients:
+            current_app.logger.info("No recipients to notify (only creator found)")
+            return True  # Not an error, just no one to notify
+        
+        # Build ticket URL
+        domain = current_app.config.get('EMAIL_DOMAIN', 'localhost:5000')
+        scheme = current_app.config.get('PREFERRED_URL_SCHEME', 'http')
+        ticket_url = f"{scheme}://{domain}/tickets/{ticket.id}"
+        
+        # Priority labels
+        priority_labels = {
+            1: 'Low',
+            2: 'Medium', 
+            3: 'High',
+            4: 'Urgent'
+        }
+        priority_str = priority_labels.get(ticket.priority, 'Unknown')
+        
+        # Get category name
+        category_name = ticket.category.name if ticket.category else 'Uncategorized'
+        
+        # Get assigned user name
+        assigned_to_name = "Unassigned"
+        if ticket.assigned_to:
+            assigned_user = User.query.get(ticket.assigned_to)
+            if assigned_user:
+                assigned_to_name = assigned_user.username
+        
+        # Build email subject and content
+        subject = f"🎫 New Ticket Created: {ticket.title}"
+        
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="color: #333; margin: 0 0 10px 0;">🎫 New Ticket Created</h2>
+                <p style="color: #666; margin: 0;">A new ticket has been created in the system</p>
+            </div>
+            
+            <div style="background-color: white; padding: 20px; border: 1px solid #dee2e6; border-radius: 8px;">
+                <h3 style="color: #333; margin: 0 0 15px 0;">{ticket.title}</h3>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong>Description:</strong><br>
+                    <div style="background-color: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 5px;">
+                        {ticket.description or 'No description provided'}
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <strong>Ticket ID:</strong> #{ticket.id}<br>
+                        <strong>Category:</strong> {category_name}<br>
+                        <strong>Priority:</strong> <span style="font-weight: bold; color: {'#dc3545' if ticket.priority >= 3 else '#ffc107' if ticket.priority == 2 else '#28a745'};">{priority_str}</span>
+                    </div>
+                    <div>
+                        <strong>Created by:</strong> {created_by.username}<br>
+                        <strong>Assigned to:</strong> {assigned_to_name}<br>
+                        <strong>Status:</strong> {ticket.status.title()}
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 25px;">
+                    <a href="{ticket_url}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                        View Ticket
+                    </a>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
+                <p>This is an automated notification from the Technician Scheduler System</p>
+            </div>
+        </div>
+        """
+        
+        # Send the email
+        success = send_email(
+            to_emails=recipients,
+            subject=subject,
+            html_content=html_content
+        )
+        
+        if success:
+            current_app.logger.info(f"Successfully sent new ticket notification for ticket #{ticket.id}")
+        else:
+            current_app.logger.error(f"Failed to send new ticket notification for ticket #{ticket.id}")
+            
+        return success
+        
+    except Exception as e:
+        current_app.logger.error(f"Exception sending new ticket notification: {str(e)}")
+        import traceback
+        current_app.logger.error(f"Traceback: {traceback.format_exc()}")
+        return False
+    finally:
+        current_app.logger.info("==== New ticket notification process completed ====")
+
 def send_schedule_notification(
     schedule: Schedule,
     action: str,
