@@ -175,9 +175,10 @@ def api_team_stats():
         today = datetime.now(user_tz)
         today_date = today.date()
         
-        # 1. Active Tickets Summary
+        # 1. Active Tickets Summary (exclude archived tickets)
         active_tickets = Ticket.query.filter(
-            Ticket.status.in_(['open', 'in_progress', 'pending'])
+            Ticket.status.in_(['open', 'in_progress', 'pending']),
+            ~Ticket.archived
         ).all()
         
         tickets_by_status = {
