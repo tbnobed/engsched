@@ -82,9 +82,9 @@ class EmailSettingsForm(FlaskForm):
     admin_email_group = StringField('Admin Email Group', 
                                   validators=[DataRequired(), Email(), Length(max=120)],
                                   default='alerts@obedtv.com')
-    notify_on_create = BooleanField('Send notifications for new schedules', default=True)
-    notify_on_update = BooleanField('Send notifications for schedule updates', default=True)
-    notify_on_delete = BooleanField('Send notifications for schedule deletions', default=True)
+    notify_on_create = BooleanField('Send notifications for new tickets and schedules', default=True)
+    notify_on_update = BooleanField('Send notifications for ticket updates and schedule changes', default=True)
+    notify_on_delete = BooleanField('Send notifications for ticket and schedule deletions', default=True)
 
 class TicketForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=200)])
