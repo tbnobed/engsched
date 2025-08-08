@@ -855,6 +855,33 @@ def add_comment(ticket_id):
             app.logger.error(f"Error adding comment: {str(e)}")
             import traceback
             app.logger.error(f"Comment exception traceback: {traceback.format_exc()}")
+            
+            # Check if this is a sequence error and auto-fix it
+            if "duplicate key value violates unique constraint" in str(e) and "ticket_comment_pkey" in str(e):
+                try:
+                    app.logger.info("Detected comment sequence issue, attempting to fix...")
+                    # Reset the sequence to the correct value
+                    db.session.execute(text("SELECT setval('ticket_comment_id_seq', (SELECT COALESCE(MAX(id), 0) + 1 FROM ticket_comment), false);"))
+                    db.session.commit()
+                    app.logger.info("Comment sequence fixed successfully")
+                    
+                    # Retry the comment insertion
+                    comment = TicketComment(
+                        ticket_id=ticket.id,
+                        user_id=current_user.id,
+                        content=form.content.data,
+                        created_at=datetime.now(pytz.UTC),
+                        updated_at=datetime.now(pytz.UTC)
+                    )
+                    db.session.add(comment)
+                    db.session.commit()
+                    app.logger.info(f"Comment successfully added after sequence fix for ticket #{ticket.id}")
+                    flash('Comment added successfully', 'success')
+                    return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
+                except Exception as retry_error:
+                    app.logger.error(f"Failed to auto-fix sequence error: {str(retry_error)}")
+                    db.session.rollback()
+            
             flash('Error adding comment', 'error')
     
     return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
