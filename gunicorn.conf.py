@@ -8,8 +8,8 @@ bind = "0.0.0.0:5000"
 
 # Worker processes
 workers = 2
-worker_class = "sync"
-threads = 4
+worker_class = "gthread"
+threads = 8
 worker_connections = 1000
 timeout = 120
 keepalive = 5
