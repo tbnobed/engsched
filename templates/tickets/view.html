@@ -142,17 +142,17 @@
                     </div>
 
                     <!-- Add Comment Form -->
-                    <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data" id="comment-form">
                         {{ comment_form.hidden_tag() }}
                         <div class="mb-3">
-                            {{ comment_form.content(class="form-control", rows="3", placeholder="Add a comment...") }}
+                            {{ comment_form.content(class="form-control", rows="3", placeholder="Add a comment...", id="content") }}
                         </div>
                         <div class="mb-3">
                             <label for="attachment" class="form-label">Attach File (optional)</label>
                             {{ comment_form.attachment(class="form-control") }}
                             <div class="form-text">Any file type supported (images, PDFs, documents, etc.)</div>
                         </div>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="submit-comment-btn">
                             <i data-feather="message-square"></i> Add Comment
                         </button>
                     </form>
@@ -287,10 +287,12 @@
         });
         
         // Sync content to textarea on form submit
-        const form = textarea.closest('form');
-        form.addEventListener('submit', function() {
-            textarea.value = quill.root.innerHTML;
-        });
+        const form = document.getElementById('comment-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                textarea.value = quill.root.innerHTML;
+            });
+        }
     });
 
 
