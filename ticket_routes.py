@@ -534,6 +534,27 @@ def create_ticket():
             # Add ticket to session
             db.session.add(ticket)
             db.session.flush()  # This assigns the ID but doesn't commit
+            
+            # Handle file upload if present
+            if form.attachment.data:
+                file = form.attachment.data
+                if file and file.filename:
+                    # Secure the filename and add timestamp
+                    from werkzeug.utils import secure_filename
+                    import os
+                    filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    unique_filename = f"{timestamp}_ticket{ticket.id}_{filename}"
+                    
+                    # Save the file
+                    upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
+                    os.makedirs(upload_dir, exist_ok=True)
+                    file_path = os.path.join(upload_dir, unique_filename)
+                    file.save(file_path)
+                    
+                    # Store the filename in the database
+                    ticket.attachment = unique_filename
+                    app.logger.info(f"Saved ticket attachment: {unique_filename}")
 
             app.logger.debug(f"Created ticket with ID: {ticket.id}")
 
@@ -812,6 +833,29 @@ def add_comment(ticket_id):
                 updated_at=datetime.now(pytz.UTC)
             )
             db.session.add(comment)
+            db.session.flush()  # Get the comment ID
+            
+            # Handle file upload if present
+            if form.attachment.data:
+                file = form.attachment.data
+                if file and file.filename:
+                    # Secure the filename and add timestamp
+                    from werkzeug.utils import secure_filename
+                    import os
+                    filename = secure_filename(file.filename)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    unique_filename = f"{timestamp}_comment{comment.id}_{filename}"
+                    
+                    # Save the file
+                    upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
+                    os.makedirs(upload_dir, exist_ok=True)
+                    file_path = os.path.join(upload_dir, unique_filename)
+                    file.save(file_path)
+                    
+                    # Store the filename in the database
+                    comment.attachment = unique_filename
+                    app.logger.info(f"Saved comment attachment: {unique_filename}")
+            
             db.session.commit()
             app.logger.debug(f"Added comment to ticket #{ticket.id}")
             
