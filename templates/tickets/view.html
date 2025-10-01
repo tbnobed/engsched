@@ -264,63 +264,43 @@
             }
         });
         
-        console.log('Quill editor initialized');
-        
         // Handle image upload
-        try {
-            quill.getModule('toolbar').addHandler('image', function() {
-                const input = document.createElement('input');
-                input.setAttribute('type', 'file');
-                input.setAttribute('accept', 'image/png, image/jpeg, image/jpg, image/gif, image/webp');
-                input.click();
-                
-                input.onchange = function() {
-                    const file = input.files[0];
-                    if (file) {
-                        const formData = new FormData();
-                        formData.append('file', file);
-                        
-                        fetch('{{ url_for("editor_upload_image") }}', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': csrfToken
-                            },
-                            body: formData
-                        })
-                        .then(response => response.json())
-                        .then(result => {
-                            const range = quill.getSelection();
-                            quill.insertEmbed(range.index, 'image', result.location);
-                        })
-                        .catch(error => {
-                            console.error('Error uploading image:', error);
-                            alert('Failed to upload image');
-                        });
-                    }
-                };
-            });
-        } catch (error) {
-            console.error('Error setting up image handler:', error);
-        }
+        quill.getModule('toolbar').addHandler('image', function() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/png, image/jpeg, image/jpg, image/gif, image/webp');
+            input.click();
+            
+            input.onchange = function() {
+                const file = input.files[0];
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    fetch('{{ url_for("editor_upload_image") }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        const range = quill.getSelection();
+                        quill.insertEmbed(range.index, 'image', result.location);
+                    })
+                    .catch(error => {
+                        console.error('Error uploading image:', error);
+                        alert('Failed to upload image');
+                    });
+                }
+            };
+        });
         
         // Sync content to textarea on form submit
         form.addEventListener('submit', function(e) {
-            console.log('Form submit event triggered');
-            try {
-                textarea.value = quill.root.innerHTML;
-                console.log('Textarea value set to:', textarea.value);
-            } catch (error) {
-                console.error('Error syncing content:', error);
-            }
-        }, false);
-        
-        // Also add a direct button click handler as backup
-        const submitBtn = document.getElementById('submit-comment-btn');
-        if (submitBtn) {
-            submitBtn.addEventListener('click', function(e) {
-                console.log('Submit button clicked');
-            }, false);
-        }
+            textarea.value = quill.root.innerHTML;
+        });
     });
 
 

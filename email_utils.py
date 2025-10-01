@@ -500,12 +500,26 @@ def send_ticket_comment_notification(
         
         subject = f"[Ticket #{ticket.id}] - {ticket.title}"
         
+        # Check if comment has an attachment and build download link
+        attachment_html = ""
+        if comment.attachment:
+            # Extract original filename from attachment (format: YYYYMMDD_HHMMSS_commentXX_originalname.ext)
+            original_filename = comment.attachment.split('_', 2)[-1] if '_' in comment.attachment else comment.attachment
+            attachment_url = f"{scheme}://{domain}/tickets/attachments/{comment.attachment}"
+            attachment_html = f"""
+            <div style="margin-top: 15px; padding: 10px; background-color: #e9ecef; border-radius: 4px;">
+                <strong>📎 Attachment:</strong> 
+                <a href="{attachment_url}" style="color: #007bff; text-decoration: none;">{original_filename}</a>
+            </div>
+            """
+        
         html_content = f"""
         <h3>New Comment on Ticket #{ticket.id}</h3>
         <p><strong>{commented_by.username}</strong> added a comment to a ticket assigned to you:</p>
         <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;">
             {comment.content}
         </div>
+        {attachment_html}
         <h4>Ticket Details</h4>
         <ul>
             <li><strong>Title:</strong> {ticket.title}</li>
