@@ -100,7 +100,7 @@
                     <div class="ticket-attachment mt-3">
                         <h5>Attached File:</h5>
                         <a href="{{ url_for('tickets.download_attachment', filename=ticket.attachment) }}" 
-                           class="btn btn-outline-primary"
+                           class="btn btn-sm btn-outline-primary"
                            target="_blank" rel="noopener" download>
                             <i data-feather="download"></i> Download {{ ticket.attachment.split('_', 2)[-1] }}
                         </a>
