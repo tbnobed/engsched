@@ -587,16 +587,33 @@ def send_ticket_comment_notification(
         processed_comment_content, inline_attachments = extract_inline_images_from_html(comment.content or '')
         logger.info(f"Extracted {len(inline_attachments)} inline image(s) from comment")
         
-        # Check if comment has an attachment and build download link
+        # Check if comment has attachment(s) and build download link(s)
         attachment_html = ""
         if comment.attachment:
-            # Extract original filename from attachment (format: YYYYMMDD_HHMMSS_commentXX_originalname.ext)
-            original_filename = comment.attachment.split('_', 2)[-1] if '_' in comment.attachment else comment.attachment
-            attachment_url = f"{scheme}://{domain}/tickets/attachments/{comment.attachment}"
+            import json
+            attachments_list = []
+            
+            # Check if it's a JSON array (multiple attachments) or single attachment
+            if comment.attachment.startswith('['):
+                try:
+                    attachments_list = json.loads(comment.attachment)
+                except json.JSONDecodeError:
+                    attachments_list = [comment.attachment]
+            else:
+                attachments_list = [comment.attachment]
+            
+            # Build HTML for each attachment
+            attachment_links = []
+            for attachment_file in attachments_list:
+                # Extract original filename (format: YYYYMMDD_HHMMSS_commentXX_idx_originalname.ext or YYYYMMDD_HHMMSS_commentXX_originalname.ext)
+                original_filename = attachment_file.split('_', 3)[-1] if attachment_file.count('_') >= 3 else attachment_file.split('_', 2)[-1] if '_' in attachment_file else attachment_file
+                attachment_url = f"{scheme}://{domain}/tickets/attachment/{attachment_file}"
+                attachment_links.append(f'<a href="{attachment_url}" style="color: #007bff; text-decoration: none; margin-right: 10px;">{original_filename}</a>')
+            
             attachment_html = f"""
             <div style="margin-top: 15px; padding: 10px; background-color: #e9ecef; border-radius: 4px;">
-                <strong>📎 Attachment:</strong> 
-                <a href="{attachment_url}" style="color: #007bff; text-decoration: none;">{original_filename}</a>
+                <strong>📎 Attachment{'s' if len(attachments_list) > 1 else ''}:</strong><br>
+                {' '.join(attachment_links)}
             </div>
             """
         
