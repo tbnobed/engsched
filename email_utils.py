@@ -520,9 +520,20 @@ def send_ticket_comment_notification(
             </div>
             """
         
+        # Check if comment contains inline images (data URIs)
+        has_inline_images = 'data:image' in comment.content if comment.content else False
+        inline_image_note = ""
+        if has_inline_images:
+            inline_image_note = """
+            <div style="margin: 10px 0; padding: 10px; background-color: #fff3cd; border-left: 4px solid #ffc107; font-size: 14px;">
+                📷 <strong>Note:</strong> This comment contains inline images. View the full ticket to see all images and formatting.
+            </div>
+            """
+        
         html_content = f"""
         <h3>New Comment on Ticket #{ticket.id}</h3>
         <p><strong>{commented_by.username}</strong> added a comment to a ticket assigned to you:</p>
+        {inline_image_note}
         <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;">
             {comment.content}
         </div>
