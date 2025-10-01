@@ -587,10 +587,16 @@ def send_ticket_comment_notification(
         processed_comment_content, inline_attachments = extract_inline_images_from_html(comment.content or '')
         logger.info(f"Extracted {len(inline_attachments)} inline image(s) from comment")
         
-        # Check if comment has attachment(s) and build download link(s)
+        # Check if comment has attachment(s) and add them as email attachments
         attachment_html = ""
+        file_attachments = []
+        
         if comment.attachment:
             import json
+            import os
+            import base64
+            import mimetypes
+            
             attachments_list = []
             
             # Check if it's a JSON array (multiple attachments) or single attachment
@@ -602,20 +608,48 @@ def send_ticket_comment_notification(
             else:
                 attachments_list = [comment.attachment]
             
-            # Build HTML for each attachment
-            attachment_links = []
+            # Load each attachment file and add to email attachments
+            upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
+            attachment_names = []
+            
             for attachment_file in attachments_list:
                 # Extract original filename (format: YYYYMMDD_HHMMSS_commentXX_idx_originalname.ext or YYYYMMDD_HHMMSS_commentXX_originalname.ext)
                 original_filename = attachment_file.split('_', 3)[-1] if attachment_file.count('_') >= 3 else attachment_file.split('_', 2)[-1] if '_' in attachment_file else attachment_file
-                attachment_url = f"{scheme}://{domain}/tickets/attachment/{attachment_file}"
-                attachment_links.append(f'<a href="{attachment_url}" style="color: #007bff; text-decoration: none; margin-right: 10px;">{original_filename}</a>')
+                attachment_names.append(original_filename)
+                
+                # Read the actual file and add to attachments
+                file_path = os.path.join(upload_dir, attachment_file)
+                if os.path.exists(file_path):
+                    try:
+                        with open(file_path, 'rb') as f:
+                            file_data = f.read()
+                            file_base64 = base64.b64encode(file_data).decode('utf-8')
+                            
+                            # Detect MIME type
+                            mimetype, _ = mimetypes.guess_type(original_filename)
+                            if not mimetype:
+                                mimetype = 'application/octet-stream'
+                            
+                            file_attachments.append({
+                                'content': file_base64,
+                                'filename': original_filename,
+                                'type': mimetype,
+                                'disposition': 'attachment'
+                            })
+                            logger.info(f"Added attachment to email: {original_filename}")
+                    except Exception as e:
+                        logger.error(f"Failed to read attachment file {attachment_file}: {str(e)}")
+                else:
+                    logger.warning(f"Attachment file not found: {file_path}")
             
-            attachment_html = f"""
-            <div style="margin-top: 15px; padding: 10px; background-color: #e9ecef; border-radius: 4px;">
-                <strong>📎 Attachment{'s' if len(attachments_list) > 1 else ''}:</strong><br>
-                {' '.join(attachment_links)}
-            </div>
-            """
+            # Show attachment info in email body
+            if attachment_names:
+                attachment_html = f"""
+                <div style="margin-top: 15px; padding: 10px; background-color: #e9ecef; border-radius: 4px;">
+                    <strong>📎 Attachment{'s' if len(attachment_names) > 1 else ''} included in this email:</strong><br>
+                    {', '.join(attachment_names)}
+                </div>
+                """
         
         html_content = f"""
         <h3>New Comment on Ticket #{ticket.id}</h3>
@@ -634,11 +668,14 @@ def send_ticket_comment_notification(
         </p>
         """
         
+        # Combine inline images and file attachments
+        all_attachments = inline_attachments + file_attachments if inline_attachments or file_attachments else None
+        
         success = send_email(
             to_emails=recipients,
             subject=subject,
             html_content=html_content,
-            attachments=inline_attachments if inline_attachments else None
+            attachments=all_attachments
         )
         
         if not success:
