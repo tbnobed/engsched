@@ -96,6 +96,15 @@
                     <div class="ticket-description mb-4">
                         {{ ticket['description']|nl2br }}
                     </div>
+                    {% if ticket.attachment %}
+                    <div class="ticket-attachment mt-3">
+                        <h5>Attached Image:</h5>
+                        <img src="{{ url_for('static', filename='uploads/ticket_attachments/' + ticket.attachment) }}" 
+                             class="img-fluid rounded" 
+                             style="max-width: 100%; max-height: 500px;" 
+                             alt="Ticket attachment">
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -118,15 +127,28 @@
                                 {% endif %}
                             </div>
                             <p class="mb-0">{{ comment['content']|nl2br }}</p>
+                            {% if comment.attachment %}
+                            <div class="comment-attachment mt-2">
+                                <img src="{{ url_for('static', filename='uploads/ticket_attachments/' + comment.attachment) }}" 
+                                     class="img-fluid rounded" 
+                                     style="max-width: 400px; max-height: 300px;" 
+                                     alt="Comment attachment">
+                            </div>
+                            {% endif %}
                         </div>
                         {% endfor %}
                     </div>
 
                     <!-- Add Comment Form -->
-                    <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}">
+                    <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data">
                         {{ comment_form.hidden_tag() }}
                         <div class="mb-3">
                             {{ comment_form.content(class="form-control", rows="3", placeholder="Add a comment...") }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="attachment" class="form-label">Attach Image (optional)</label>
+                            {{ comment_form.attachment(class="form-control") }}
+                            <div class="form-text">Supported formats: JPG, PNG, GIF, WEBP</div>
                         </div>
                         <button type="submit" class="btn btn-primary">
                             <i data-feather="message-square"></i> Add Comment
