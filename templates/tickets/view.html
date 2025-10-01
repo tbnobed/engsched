@@ -228,10 +228,21 @@
     document.addEventListener('DOMContentLoaded', function() {
         feather.replace();
         
-        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        // Get the comment form first
+        const form = document.getElementById('comment-form');
+        if (!form) {
+            console.error('Comment form not found');
+            return;
+        }
+        
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
         
         // Hide the original textarea
         const textarea = document.getElementById('content');
+        if (!textarea) {
+            console.error('Content textarea not found');
+            return;
+        }
         textarea.style.display = 'none';
         
         // Create editor container
@@ -252,6 +263,8 @@
                 ]
             }
         });
+        
+        console.log('Quill editor initialized');
         
         // Handle image upload
         quill.getModule('toolbar').addHandler('image', function() {
@@ -287,12 +300,11 @@
         });
         
         // Sync content to textarea on form submit
-        const form = document.getElementById('comment-form');
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                textarea.value = quill.root.innerHTML;
-            });
-        }
+        form.addEventListener('submit', function(e) {
+            console.log('Form submit event triggered');
+            textarea.value = quill.root.innerHTML;
+            console.log('Textarea value set to:', textarea.value);
+        });
     });
 
 
