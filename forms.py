@@ -98,9 +98,15 @@ class TicketForm(FlaskForm):
     ], coerce=int)
     assigned_to = SelectField('Assign To', coerce=int, validators=[Optional()])
     due_date = DateField('Due Date', format='%Y-%m-%d', validators=[Optional()])
+    attachment = FileField('Attach Image', 
+                          validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 
+                                                'Only image files are allowed (JPG, PNG, GIF, WEBP)')])
 
 class TicketCommentForm(FlaskForm):
     content = TextAreaField('Comment', validators=[DataRequired()])
+    attachment = FileField('Attach Image', 
+                          validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 
+                                                'Only image files are allowed (JPG, PNG, GIF, WEBP)')])
 
 class TicketCategoryForm(FlaskForm):
     name = StringField('Category Name', validators=[DataRequired(), Length(max=100)])
