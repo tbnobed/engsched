@@ -1817,15 +1817,18 @@ def download_attachment(filename):
     """Download a ticket attachment with proper headers to force download"""
     from flask import send_from_directory
     import os
+    import re
     
     upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
     
-    # Extract the original filename (everything after the second underscore)
+    # Extract the original filename
     # Format is: YYYYMMDD_HHMMSS_ticketXX_originalname.ext or YYYYMMDD_HHMMSS_commentXX_originalname.ext
-    parts = filename.split('_', 2)
-    if len(parts) >= 3:
-        original_filename = parts[2]
+    # We need to remove the timestamp and ticket/comment prefix
+    match = re.search(r'(?:ticket|comment)\d+_(.*)', filename)
+    if match:
+        original_filename = match.group(1)
     else:
+        # Fallback: just use the filename as-is
         original_filename = filename
     
     return send_from_directory(
