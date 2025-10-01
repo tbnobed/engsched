@@ -1814,16 +1814,16 @@ def batch_archive_tickets():
 @tickets.route('/tickets/attachment/<path:filename>')
 @login_required
 def download_attachment(filename):
-    """Download a ticket attachment with streaming for non-blocking downloads"""
-    from flask import Response, stream_with_context
+    """Download a ticket attachment with proper headers to force download"""
+    from flask import send_from_directory
     import os
     import re
     import mimetypes
     
     upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
-    file_path = os.path.join(upload_dir, filename)
     
     # Security check
+    file_path = os.path.join(upload_dir, filename)
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         return "File not found", 404
     
@@ -1836,20 +1836,13 @@ def download_attachment(filename):
     if not mimetype:
         mimetype = 'application/octet-stream'
     
-    def generate():
-        """Generator function to stream file in chunks"""
-        with open(file_path, 'rb') as f:
-            while True:
-                chunk = f.read(8192)  # Read 8KB at a time
-                if not chunk:
-                    break
-                yield chunk
-    
-    response = Response(stream_with_context(generate()), mimetype=mimetype)
-    response.headers['Content-Disposition'] = f'attachment; filename="{original_filename}"'
-    response.headers['Content-Length'] = os.path.getsize(file_path)
-    response.headers['X-Accel-Buffering'] = 'no'  # Disable buffering
-    
-    return response
+    return send_from_directory(
+        upload_dir,
+        filename,
+        as_attachment=True,
+        download_name=original_filename,
+        mimetype=mimetype,
+        conditional=True
+    )
 
 
