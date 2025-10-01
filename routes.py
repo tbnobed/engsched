@@ -462,11 +462,37 @@ def inbound_email_webhook():
             text_content = email_data.get('text', '')
             html_content = email_data.get('html', '')
             to_email = email_data.get('to', '')
-            attachments = []  # No attachment support in fallback mode
+            
+            # Handle attachments in form data mode
+            attachments = []
+            attachment_info = email_data.get('attachment-info', '')
+            if attachment_info:
+                try:
+                    import json
+                    attachment_data = json.loads(attachment_info)
+                    app.logger.info(f"Found {len(attachment_data)} attachments in form data")
+                    
+                    # Get attachment files from request
+                    for idx, att_meta in enumerate(attachment_data):
+                        filename = att_meta.get('filename', f'attachment{idx+1}')
+                        attachment_key = f'attachment{idx+1}'
+                        
+                        if attachment_key in request.files:
+                            file_obj = request.files[attachment_key]
+                            file_data = file_obj.read()
+                            attachments.append({
+                                'filename': filename,
+                                'data': file_data,
+                                'content_type': att_meta.get('type', 'application/octet-stream')
+                            })
+                            app.logger.info(f"Loaded attachment from form: {filename}")
+                except Exception as e:
+                    app.logger.error(f"Failed to parse attachments from form data: {str(e)}")
         
         app.logger.info(f"Email from: {from_email}, subject: {subject}, to: {to_email}")
         app.logger.debug(f"Text content length: {len(text_content)}, HTML content length: {len(html_content)}")
         app.logger.debug(f"Email data fields: {list(email_data.keys())}")
+        app.logger.info(f"Attachments extracted: {len(attachments)} files")
         
         # Log all available fields for debugging
         for key, value in email_data.items():
