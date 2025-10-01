@@ -7,6 +7,31 @@ import pytz
 from sqlalchemy import text, or_
 from app import app, is_mobile_device  # Import app for logging and mobile detection
 from email_utils import send_ticket_assigned_notification, send_ticket_comment_notification, send_ticket_status_notification, send_new_ticket_notification
+import bleach
+
+def sanitize_html(html_content):
+    """Sanitize HTML content to prevent XSS while allowing safe formatting and images"""
+    allowed_tags = [
+        'p', 'br', 'strong', 'em', 'b', 'i', 'u', 'ul', 'ol', 'li', 
+        'blockquote', 'a', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'span', 'div'
+    ]
+    allowed_attrs = {
+        'a': ['href', 'target', 'rel'],
+        'img': ['src', 'alt', 'title', 'width', 'height'],
+        '*': ['class']
+    }
+    allowed_protocols = ['http', 'https']
+    
+    cleaned = bleach.clean(
+        html_content,
+        tags=allowed_tags,
+        attributes=allowed_attrs,
+        protocols=allowed_protocols,
+        strip=True
+    )
+    
+    return cleaned
 
 def mobile_aware_redirect(endpoint, **kwargs):
     """Helper function to redirect based on mobile context"""
@@ -523,7 +548,7 @@ def create_ticket():
             
             ticket = Ticket(
                 title=form.title.data,
-                description=form.description.data,
+                description=sanitize_html(form.description.data),
                 category_id=form.category_id.data,
                 priority=form.priority.data,
                 created_by=current_user.id,
@@ -828,7 +853,7 @@ def add_comment(ticket_id):
             comment = TicketComment(
                 ticket_id=ticket.id,
                 user_id=current_user.id,
-                content=form.content.data,
+                content=sanitize_html(form.content.data),
                 created_at=datetime.now(pytz.UTC),
                 updated_at=datetime.now(pytz.UTC)
             )
@@ -913,7 +938,7 @@ def add_comment(ticket_id):
                     comment = TicketComment(
                         ticket_id=ticket.id,
                         user_id=current_user.id,
-                        content=form.content.data,
+                        content=sanitize_html(form.content.data),
                         created_at=datetime.now(pytz.UTC),
                         updated_at=datetime.now(pytz.UTC)
                     )
