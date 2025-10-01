@@ -25,6 +25,7 @@ COPY pyproject.toml .
 # Install Python packages from pyproject.toml dependencies
 RUN pip install --no-cache-dir \
     apscheduler>=3.11.0 \
+    bleach>=6.2.0 \
     email-validator>=2.2.0 \
     flask>=3.1.0 \
     flask-login>=0.6.3 \
@@ -33,6 +34,7 @@ RUN pip install --no-cache-dir \
     gunicorn>=23.0.0 \
     markupsafe>=3.0.2 \
     openpyxl>=3.1.5 \
+    pillow>=11.0.0 \
     psycopg2-binary>=2.9.10 \
     python-dotenv>=1.0.1 \
     pytz>=2024.2 \
