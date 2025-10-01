@@ -903,22 +903,21 @@ def add_comment(ticket_id):
                 # Continue anyway since comment was added successfully
                 pass
             
-            # Send notification email if the ticket is assigned to someone
-            if ticket.assigned_to and ticket.assigned_to != current_user.id:
-                try:
-                    app.logger.debug(f"Sending comment notification for ticket #{ticket.id}")
-                    
-                    # The email function will create an app context if needed
-                    send_ticket_comment_notification(
-                        ticket=ticket,
-                        comment=comment,
-                        commented_by=current_user
-                    )
-                except Exception as e:
-                    app.logger.error(f"Failed to send comment notification: {str(e)}")
-                    import traceback
-                    app.logger.error(f"Exception traceback: {traceback.format_exc()}")
-                    # Continue anyway - the comment was saved
+            # Send notification email to all relevant parties
+            try:
+                app.logger.debug(f"Sending comment notification for ticket #{ticket.id}")
+                
+                # The email function will create an app context if needed
+                send_ticket_comment_notification(
+                    ticket=ticket,
+                    comment=comment,
+                    commented_by=current_user
+                )
+            except Exception as e:
+                app.logger.error(f"Failed to send comment notification: {str(e)}")
+                import traceback
+                app.logger.error(f"Exception traceback: {traceback.format_exc()}")
+                # Continue anyway - the comment was saved
             
             flash('Comment added successfully', 'success')
         except Exception as e:
