@@ -34,8 +34,36 @@ BEGIN
     END IF;
 END $$;
 
+-- Add attachment columns to ticket and ticket_comment tables for file upload support
+DO $$
+BEGIN
+    -- Add attachment column to ticket table if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'ticket' 
+        AND column_name = 'attachment'
+    ) THEN
+        ALTER TABLE ticket ADD COLUMN attachment VARCHAR(255);
+        RAISE NOTICE 'Added attachment column to ticket table';
+    ELSE
+        RAISE NOTICE 'Attachment column already exists in ticket table';
+    END IF;
+
+    -- Add attachment column to ticket_comment table if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'ticket_comment' 
+        AND column_name = 'attachment'
+    ) THEN
+        ALTER TABLE ticket_comment ADD COLUMN attachment VARCHAR(255);
+        RAISE NOTICE 'Added attachment column to ticket_comment table';
+    ELSE
+        RAISE NOTICE 'Attachment column already exists in ticket_comment table';
+    END IF;
+END $$;
+
 -- Log the update
 DO $$
 BEGIN
-    RAISE NOTICE 'Database schema updates completed: TicketView table and quick_link description column';
+    RAISE NOTICE 'Database schema updates completed: TicketView table, quick_link description column, and attachment columns';
 END $$;

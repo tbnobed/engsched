@@ -72,7 +72,9 @@ CREATE TABLE ticket (
     external_email VARCHAR(255),
     external_name VARCHAR(255),
     email_notifications BOOLEAN DEFAULT TRUE,
-    email_thread_id VARCHAR(100)
+    email_thread_id VARCHAR(100),
+    -- File attachment support
+    attachment VARCHAR(255)
 );
 
 -- Ticket view tracking table for unread activity indicators
@@ -90,7 +92,9 @@ CREATE TABLE ticket_comment (
     user_id INTEGER REFERENCES "user"(id),
     content TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    -- File attachment support
+    attachment VARCHAR(255)
 );
 
 CREATE TABLE ticket_history (
