@@ -161,6 +161,29 @@
             <div class="ticket-description">
                 {{ ticket['description']|safe }}
             </div>
+            {% if ticket.attachment %}
+            <div class="ticket-attachment mt-3">
+                <h6><i data-feather="paperclip" class="feather-small"></i> Attached File{{ 's' if ticket.attachment.startswith('[') else '' }}:</h6>
+                {% if ticket.attachment.startswith('[') %}
+                    {# Multiple attachments stored as JSON array #}
+                    {% set attachments = ticket.attachment|from_json %}
+                    {% for filename in attachments %}
+                    <a href="{{ url_for('tickets.download_attachment', filename=filename) }}" 
+                       class="btn btn-sm btn-outline-primary me-2 mb-2"
+                       target="_blank" rel="noopener" download>
+                        <i data-feather="download" class="feather-small"></i> {{ filename.split('_', 3)[-1] if filename.count('_') >= 3 else filename.split('_', 2)[-1] if '_' in filename else filename }}
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    {# Single attachment (legacy format) #}
+                    <a href="{{ url_for('tickets.download_attachment', filename=ticket.attachment) }}" 
+                       class="btn btn-sm btn-outline-primary"
+                       target="_blank" rel="noopener" download>
+                        <i data-feather="download" class="feather-small"></i> {{ ticket.attachment.split('_', 2)[-1] if '_' in ticket.attachment else ticket.attachment }}
+                    </a>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -229,6 +252,28 @@
                     <div class="mb-0 {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}text-dark{% else %}text-light{% endif %}">
                         {{ comment['content']|safe }}
                     </div>
+                    {% if comment.attachment %}
+                    <div class="comment-attachment mt-2">
+                        {% if comment.attachment.startswith('[') %}
+                            {# Multiple attachments stored as JSON array #}
+                            {% set attachments = comment.attachment|from_json %}
+                            {% for filename in attachments %}
+                            <a href="{{ url_for('tickets.download_attachment', filename=filename) }}" 
+                               class="btn btn-sm btn-outline-primary me-2 mb-2"
+                               target="_blank" rel="noopener" download>
+                                <i data-feather="download" class="feather-small"></i> {{ filename.split('_', 3)[-1] if filename.count('_') >= 3 else filename.split('_', 2)[-1] if '_' in filename else filename }}
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            {# Single attachment (legacy format) #}
+                            <a href="{{ url_for('tickets.download_attachment', filename=comment.attachment) }}" 
+                               class="btn btn-sm btn-outline-primary"
+                               target="_blank" rel="noopener" download>
+                                <i data-feather="download" class="feather-small"></i> {{ comment.attachment.split('_', 2)[-1] if '_' in comment.attachment else comment.attachment }}
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
                 {% else %}
                 <p class="text-muted text-center">No comments yet</p>
@@ -236,10 +281,15 @@
             </div>
 
             <!-- Add Comment Form -->
-            <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}">
+            <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data">
                 {{ comment_form.hidden_tag() }}
                 <div class="mb-3">
                     {{ comment_form.content(class="form-control", rows="3", placeholder="Add a comment...") }}
+                </div>
+                <div class="mb-3">
+                    <label for="attachment" class="form-label"><i data-feather="paperclip" class="feather-small"></i> Attach File (optional)</label>
+                    {{ comment_form.attachment(class="form-control form-control-sm") }}
+                    <div class="form-text small">Any file type supported</div>
                 </div>
                 <button type="submit" class="btn btn-primary">
                     <i data-feather="message-square"></i> Add Comment
