@@ -511,12 +511,37 @@ def inbound_email_webhook():
             if existing_ticket:
                 app.logger.info(f"Found existing ticket #{ticket_id}, adding comment instead of creating new ticket")
                 
-                # Clean up the description for the comment
+                # Clean up the description for the comment - extract only the new reply content
                 description = text_content.strip() if text_content else ""
                 if not description and html_content:
                     import re
                     html_clean = re.sub('<[^<]+?>', '', html_content)
                     description = html_clean.strip()
+                
+                # Extract only the new reply content, not the quoted/forwarded text
+                if description:
+                    # Common email reply patterns to split on
+                    reply_separators = [
+                        r'\r?\n\r?\nOn .+wrote:',  # "On [date], [person] wrote:"
+                        r'\r?\n\r?\n[-_]{3,}',  # Horizontal separators
+                        r'\r?\n\r?\nFrom:',  # Email headers
+                        r'\r?\n\r?\n>',  # Quoted text markers
+                        r'\r?\n\r?\nSent from',  # Mobile signatures
+                        r'\r?\n\r?\nGet Outlook for',  # Outlook signatures
+                    ]
+                    
+                    # Try each separator pattern
+                    for separator in reply_separators:
+                        match = re.split(separator, description, maxsplit=1, flags=re.IGNORECASE)
+                        if len(match) > 1:
+                            description = match[0].strip()
+                            app.logger.debug(f"Extracted reply content using pattern: {separator[:30]}...")
+                            break
+                    
+                    # Also remove lines that start with ">" (quoted text)
+                    lines = description.split('\n')
+                    clean_lines = [line for line in lines if not line.strip().startswith('>')]
+                    description = '\n'.join(clean_lines).strip()
                 
                 if not description:
                     description = "Reply received with no readable content"
