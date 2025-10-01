@@ -26,7 +26,7 @@
             <!-- Backup/Export and Import Section -->
             <div class="text-center mb-2">
                 <div class="btn-group" role="group">
-                    <a href="{{ url_for('export_recurring_templates') }}" class="btn btn-outline-primary btn-sm" id="export-btn" onclick="showExportLoading()">
+                    <a href="{{ url_for('export_recurring_templates') }}" class="btn btn-outline-primary btn-sm" id="export-btn" onclick="showExportLoading()" target="_blank" rel="noopener" download>
                         <i data-feather="download" style="width: 12px; height: 12px;" class="me-1"></i>
                         Export Templates
                     </a>
