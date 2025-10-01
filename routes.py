@@ -21,12 +21,53 @@ import requests
 from werkzeug.utils import secure_filename
 from email_utils import send_schedule_notification
 from flask import session
+import bleach
 
 @app.route('/')
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     return redirect(url_for('auth.login'))
+
+@app.route('/editor/upload-image', methods=['POST'])
+@login_required
+def editor_upload_image():
+    """Handle image uploads from TinyMCE rich text editor"""
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    
+    ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
+    MAX_FILE_SIZE = 5 * 1024 * 1024
+    
+    filename_lower = file.filename.lower()
+    if not any(filename_lower.endswith('.' + ext) for ext in ALLOWED_EXTENSIONS):
+        return jsonify({'error': 'Invalid file type. Allowed: JPG, PNG, GIF, WEBP'}), 400
+    
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
+    
+    if file_size > MAX_FILE_SIZE:
+        return jsonify({'error': 'File too large. Maximum size: 5MB'}), 400
+    
+    upload_dir = os.path.join(app.root_path, 'static', 'uploads', 'ticket_attachments')
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    safe_filename = secure_filename(file.filename)
+    unique_filename = f"{timestamp}_{random_suffix}_{safe_filename}"
+    
+    filepath = os.path.join(upload_dir, unique_filename)
+    file.save(filepath)
+    
+    image_url = url_for('static', filename=f'uploads/ticket_attachments/{unique_filename}')
+    
+    return jsonify({'location': image_url})
 
 @app.route('/dashboard')
 @login_required
