@@ -199,6 +199,9 @@ class Ticket(db.Model):
     external_name = db.Column(db.String(100), nullable=True)   # Name of external user
     email_notifications = db.Column(db.Boolean, default=True)  # Whether to send email notifications
     email_thread_id = db.Column(db.String(50), nullable=True)  # Unique thread ID for email replies
+    
+    # Attachment field for image uploads
+    attachment = db.Column(db.String(255), nullable=True)  # Filename of uploaded image
 
     comments = db.relationship('TicketComment', backref='ticket', lazy='dynamic', cascade='all, delete-orphan')
     history = db.relationship('TicketHistory', backref='ticket', lazy='dynamic', cascade='all, delete-orphan')
@@ -337,6 +340,8 @@ class Ticket(db.Model):
             'external_name': self.external_name,
             'email_notifications': self.email_notifications,
             'email_thread_id': self.email_thread_id,
+            # Attachment
+            'attachment': self.attachment,
             # Add references
             'category_name': self.category.name if self.category else None,
             'creator_username': self.creator.username if self.creator else None,
@@ -354,6 +359,9 @@ class TicketComment(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC))
     updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC), onupdate=lambda: datetime.now(pytz.UTC))
+    
+    # Attachment field for image uploads
+    attachment = db.Column(db.String(255), nullable=True)  # Filename of uploaded image
 
     user = db.relationship('User', backref='ticket_comments')
     
@@ -364,6 +372,7 @@ class TicketComment(db.Model):
             'ticket_id': self.ticket_id,
             'user_id': self.user_id,
             'content': self.content,
+            'attachment': self.attachment,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'username': self.user.username if self.user else None
