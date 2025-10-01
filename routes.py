@@ -512,11 +512,18 @@ def inbound_email_webhook():
                 app.logger.info(f"Found existing ticket #{ticket_id}, adding comment instead of creating new ticket")
                 
                 # Clean up the description for the comment - extract only the new reply content
-                description = text_content.strip() if text_content else ""
-                if not description and html_content:
-                    import re
-                    html_clean = re.sub('<[^<]+?>', '', html_content)
-                    description = html_clean.strip()
+                # Prefer HTML content to preserve formatting, fallback to text if no HTML
+                description = ""
+                use_html = False
+                
+                if html_content:
+                    # Use HTML content to preserve formatting
+                    description = html_content.strip()
+                    use_html = True
+                elif text_content:
+                    # Fallback to plain text and convert to HTML paragraphs
+                    description = text_content.strip()
+                    use_html = False
                 
                 # Extract only the new reply content, not the quoted/forwarded text
                 if description:
@@ -538,13 +545,32 @@ def inbound_email_webhook():
                             app.logger.debug(f"Extracted reply content using pattern: {separator[:30]}...")
                             break
                     
-                    # Also remove lines that start with ">" (quoted text)
-                    lines = description.split('\n')
-                    clean_lines = [line for line in lines if not line.strip().startswith('>')]
-                    description = '\n'.join(clean_lines).strip()
+                    # Remove lines that start with ">" (quoted text)
+                    if use_html:
+                        # For HTML, remove blockquote and quoted divs
+                        import re
+                        description = re.sub(r'<blockquote[^>]*>.*?</blockquote>', '', description, flags=re.DOTALL)
+                        description = re.sub(r'<div[^>]*class=["\'][^"\']*quote[^"\']*["\'][^>]*>.*?</div>', '', description, flags=re.DOTALL)
+                    else:
+                        # For plain text, remove lines starting with >
+                        lines = description.split('\n')
+                        clean_lines = [line for line in lines if not line.strip().startswith('>')]
+                        description = '\n'.join(clean_lines).strip()
+                        # Convert plain text to HTML paragraphs
+                        description = '<p>' + description.replace('\n\n', '</p><p>').replace('\n', '<br>') + '</p>'
                 
-                if not description:
-                    description = "Reply received with no readable content"
+                # Sanitize HTML to prevent XSS
+                if description:
+                    allowed_tags = ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'code', 'img', 'div', 'span', 'b', 'i']
+                    allowed_attrs = {
+                        '*': ['style', 'class'],
+                        'a': ['href', 'title', 'target'],
+                        'img': ['src', 'alt', 'title', 'width', 'height', 'style']
+                    }
+                    description = bleach.clean(description, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+                
+                if not description or description.isspace():
+                    description = "<p>Reply received with no readable content</p>"
                 
                 # Extract sender info
                 sender_name = from_email
