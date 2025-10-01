@@ -661,14 +661,33 @@ def inbound_email_webhook():
             else:
                 app.logger.warning(f"Ticket #{ticket_id} referenced in reply not found, creating new ticket instead")
         
-        # Clean up the description - prefer text over HTML, or extract from HTML
-        description = text_content.strip() if text_content else ""
-        if not description and html_content:
-            # Try to extract text from HTML
-            import re
-            # Remove HTML tags and get clean text
-            html_clean = re.sub('<[^<]+?>', '', html_content)
-            description = html_clean.strip()
+        # Clean up the description - prefer HTML to preserve formatting, fallback to text
+        description = ""
+        use_html = False
+        
+        if html_content:
+            # Use HTML content to preserve formatting
+            description = html_content.strip()
+            use_html = True
+        elif text_content:
+            # Fallback to plain text and convert to HTML paragraphs
+            description = text_content.strip()
+            use_html = False
+        
+        # Convert plain text to HTML if needed
+        if description and not use_html:
+            # Convert plain text to HTML with proper paragraphs and line breaks
+            description = '<p>' + description.replace('\n\n', '</p><p>').replace('\n', '<br>') + '</p>'
+        
+        # Sanitize HTML to prevent XSS while preserving formatting
+        if description:
+            allowed_tags = ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'code', 'img', 'div', 'span', 'b', 'i']
+            allowed_attrs = {
+                '*': ['style', 'class'],
+                'a': ['href', 'title', 'target'],
+                'img': ['src', 'alt', 'title', 'width', 'height', 'style']
+            }
+            description = bleach.clean(description, tags=allowed_tags, attributes=allowed_attrs, strip=True)
         
         # For forwarded emails, look for original content patterns
         if description and ('forwarded' in description.lower() or 'fwd:' in subject.lower() or 'fw:' in subject.lower()):
@@ -687,7 +706,7 @@ def inbound_email_webhook():
                 if match:
                     original_content = match.group(1).strip()
                     if original_content:
-                        description = f"[FORWARDED EMAIL]\nOriginal Content:\n{original_content}\n\n[Full Forward Details]\n{description}"
+                        description = f"<p><strong>[FORWARDED EMAIL]</strong></p><p>Original Content:</p><p>{original_content}</p><p><strong>[Full Forward Details]</strong></p>{description}"
                     break
         
         # Handle forwarded emails that might have content in different fields
@@ -700,20 +719,20 @@ def inbound_email_webhook():
             # Build description from available metadata
             metadata_parts = []
             if envelope:
-                metadata_parts.append(f"Envelope: {envelope}")
+                metadata_parts.append(f"<p>Envelope: {envelope}</p>")
             if headers:
-                metadata_parts.append(f"Headers: {headers}")
+                metadata_parts.append(f"<p>Headers: {headers}</p>")
             if attachments != '0':
-                metadata_parts.append(f"Attachments: {attachments}")
+                metadata_parts.append(f"<p>Attachments: {attachments}</p>")
             
-            description = "\n".join(metadata_parts) if metadata_parts else "Email received with no readable content"
+            description = "".join(metadata_parts) if metadata_parts else "<p>Email received with no readable content</p>"
         
         # Ensure we have some description
         if not description or description.isspace():
             if 'fwd:' in subject.lower() or 'fw:' in subject.lower():
-                description = f"Forwarded email - original content may be in attachments or non-text format\n\nNote: Check email headers and metadata above for routing information."
+                description = "<p>Forwarded email - original content may be in attachments or non-text format</p><p>Note: Check email headers and metadata above for routing information.</p>"
             else:
-                description = f"Email received with no readable content - may contain attachments or be in unsupported format"
+                description = "<p>Email received with no readable content - may contain attachments or be in unsupported format</p>"
         
         # Extract sender name from email
         sender_name = from_email
@@ -763,7 +782,7 @@ def inbound_email_webhook():
         
         new_ticket = Ticket(
             title=subject,
-            description=f"Email from: {sender_name} ({from_email})\n\n{description}",
+            description=f"<p><strong>Email from:</strong> {sender_name} ({from_email})</p>{description}",
             category_id=default_category.id,
             priority=1,  # Medium priority by default
             status='open',
