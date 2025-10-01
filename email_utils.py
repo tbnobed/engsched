@@ -1,12 +1,63 @@
 import os
 import logging
+import re
+import base64
+import uuid
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content
-from typing import List, Optional
+from sendgrid.helpers.mail import Mail, Email, To, Content, Attachment, FileContent, FileName, FileType, Disposition, ContentId
+from typing import List, Optional, Dict, Tuple
 from models import Schedule, EmailSettings, Ticket, User, TicketComment
 from flask import current_app, url_for
 
 logger = logging.getLogger(__name__)
+
+def extract_inline_images_from_html(html_content: str) -> Tuple[str, List[Dict]]:
+    """
+    Extract inline images (data URIs) from HTML and replace with CID references
+    Returns: (processed_html, inline_attachments)
+    """
+    if not html_content:
+        return html_content, []
+    
+    inline_attachments = []
+    processed_html = html_content
+    
+    # Pattern to match data URI images in img tags
+    img_pattern = r'<img[^>]+src=["\']data:image/(png|jpeg|jpg|gif|webp);base64,([^"\']+)["\'][^>]*>'
+    
+    matches = list(re.finditer(img_pattern, html_content, re.IGNORECASE))
+    
+    for idx, match in enumerate(matches):
+        mime_type = match.group(1).lower()
+        if mime_type == 'jpg':
+            mime_type = 'jpeg'
+        base64_data = match.group(2).strip()
+        
+        # Generate unique content ID
+        content_id = f"inline-image-{uuid.uuid4().hex[:12]}"
+        
+        # Create filename
+        filename = f"inline-{idx}.{mime_type}"
+        
+        # Store attachment info
+        inline_attachments.append({
+            'content': base64_data,
+            'filename': filename,
+            'type': f'image/{mime_type}',
+            'content_id': content_id,
+            'disposition': 'inline'
+        })
+        
+        # Replace the data URI with CID reference
+        original_img = match.group(0)
+        new_img = re.sub(
+            r'src=["\']data:image/[^;]+;base64,[^"\']+["\']',
+            f'src="cid:{content_id}"',
+            original_img
+        )
+        processed_html = processed_html.replace(original_img, new_img)
+    
+    return processed_html, inline_attachments
 
 def get_email_settings() -> EmailSettings:
     """Get the current email settings or create default settings if none exist"""
@@ -22,10 +73,12 @@ def send_email(
     to_emails: List[str],
     subject: str,
     html_content: str,
-    from_email: str = None
+    from_email: str = None,
+    attachments: Optional[List[Dict]] = None
 ) -> bool:
     """
     Send an email using SendGrid
+    attachments: List of dicts with keys: content (base64), filename, type, content_id (optional), disposition (optional)
     Returns True if successful, False otherwise
     """
     current_app.logger.info("=== Starting email sending process ===")
@@ -55,6 +108,8 @@ def send_email(
         current_app.logger.info(f"Recipients: {to_emails}")
         current_app.logger.info(f"From: {from_email}")
         current_app.logger.info(f"Subject: {subject}")
+        if attachments:
+            current_app.logger.info(f"Attachments: {len(attachments)} file(s)")
         
         # Create the email message
         current_app.logger.info("Creating SendGrid Mail object")
@@ -69,6 +124,27 @@ def send_email(
         except Exception as mail_error:
             current_app.logger.error(f"Error creating Mail object: {str(mail_error)}")
             return False
+        
+        # Add attachments if provided
+        if attachments:
+            current_app.logger.info(f"Adding {len(attachments)} attachment(s) to email")
+            for att in attachments:
+                try:
+                    attachment = Attachment()
+                    attachment.file_content = FileContent(att['content'])
+                    attachment.file_name = FileName(att['filename'])
+                    attachment.file_type = FileType(att['type'])
+                    
+                    if 'disposition' in att:
+                        attachment.disposition = Disposition(att['disposition'])
+                    if 'content_id' in att:
+                        attachment.content_id = ContentId(att['content_id'])
+                        current_app.logger.debug(f"Added inline attachment: {att['filename']} with CID: {att['content_id']}")
+                    
+                    message.add_attachment(attachment)
+                except Exception as att_error:
+                    current_app.logger.error(f"Error adding attachment {att.get('filename', 'unknown')}: {str(att_error)}")
+                    # Continue with other attachments
 
         # Initialize SendGrid client
         current_app.logger.info("Initializing SendGrid client")
@@ -507,6 +583,10 @@ def send_ticket_comment_notification(
         
         subject = f"[Ticket #{ticket.id}] - {ticket.title}"
         
+        # Extract inline images from comment content and convert to CID attachments
+        processed_comment_content, inline_attachments = extract_inline_images_from_html(comment.content or '')
+        logger.info(f"Extracted {len(inline_attachments)} inline image(s) from comment")
+        
         # Check if comment has an attachment and build download link
         attachment_html = ""
         if comment.attachment:
@@ -520,22 +600,11 @@ def send_ticket_comment_notification(
             </div>
             """
         
-        # Check if comment contains inline images (data URIs)
-        has_inline_images = 'data:image' in comment.content if comment.content else False
-        inline_image_note = ""
-        if has_inline_images:
-            inline_image_note = """
-            <div style="margin: 10px 0; padding: 10px; background-color: #fff3cd; border-left: 4px solid #ffc107; font-size: 14px;">
-                📷 <strong>Note:</strong> This comment contains inline images. View the full ticket to see all images and formatting.
-            </div>
-            """
-        
         html_content = f"""
         <h3>New Comment on Ticket #{ticket.id}</h3>
         <p><strong>{commented_by.username}</strong> added a comment to a ticket assigned to you:</p>
-        {inline_image_note}
         <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;">
-            {comment.content}
+            {processed_comment_content}
         </div>
         {attachment_html}
         <h4>Ticket Details</h4>
@@ -551,7 +620,8 @@ def send_ticket_comment_notification(
         success = send_email(
             to_emails=recipients,
             subject=subject,
-            html_content=html_content
+            html_content=html_content,
+            attachments=inline_attachments if inline_attachments else None
         )
         
         if not success:
