@@ -142,7 +142,7 @@
                     </div>
 
                     <!-- Add Comment Form -->
-                    <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data" id="comment-form">
+                    <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data" id="comment-form" novalidate>
                         {{ comment_form.hidden_tag() }}
                         <div class="mb-3">
                             {{ comment_form.content(class="form-control", rows="3", placeholder="Add a comment...", id="content") }}
