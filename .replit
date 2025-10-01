@@ -51,5 +51,9 @@ args = "gunicorn --bind 0.0.0.0:5000 --workers 2 --threads 4 --timeout 120 --acc
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 42975
+externalPort = 3000
+
 [agent]
 integrations = ["python_sendgrid==1.0.0"]

@@ -419,14 +419,29 @@ def inbound_email_webhook():
             subject = msg.get('Subject', 'No Subject')
             to_email = msg.get('To', '')
             
-            # Extract body content
+            # Extract body content and attachments
             text_content = ''
             html_content = ''
+            attachments = []
             
             if msg.is_multipart():
                 for part in msg.walk():
                     content_type = part.get_content_type()
-                    if content_type == 'text/plain':
+                    content_disposition = str(part.get('Content-Disposition', ''))
+                    
+                    # Check if it's an attachment
+                    if 'attachment' in content_disposition or part.get_filename():
+                        filename = part.get_filename()
+                        if filename:
+                            payload = part.get_payload(decode=True)
+                            if payload:
+                                attachments.append({
+                                    'filename': filename,
+                                    'data': payload,
+                                    'content_type': content_type
+                                })
+                                app.logger.info(f"Found attachment: {filename}")
+                    elif content_type == 'text/plain':
                         text_content = part.get_payload(decode=True).decode('utf-8', errors='ignore')
                     elif content_type == 'text/html':
                         html_content = part.get_payload(decode=True).decode('utf-8', errors='ignore')
@@ -447,6 +462,7 @@ def inbound_email_webhook():
             text_content = email_data.get('text', '')
             html_content = email_data.get('html', '')
             to_email = email_data.get('to', '')
+            attachments = []  # No attachment support in fallback mode
         
         app.logger.info(f"Email from: {from_email}, subject: {subject}, to: {to_email}")
         app.logger.debug(f"Text content length: {len(text_content)}, HTML content length: {len(html_content)}")
@@ -513,6 +529,35 @@ def inbound_email_webhook():
                     commenter_name = f"{sender_name} (external)"
                 
                 db.session.add(new_comment)
+                db.session.flush()  # Get comment ID for attachment naming
+                
+                # Save first attachment if present
+                if attachments and len(attachments) > 0:
+                    try:
+                        from werkzeug.utils import secure_filename
+                        import os
+                        attachment_info = attachments[0]  # Save first attachment only
+                        filename = secure_filename(attachment_info['filename'])
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        stored_filename = f"{timestamp}_comment{new_comment.id}_{filename}"
+                        
+                        # Ensure upload directory exists
+                        upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
+                        os.makedirs(upload_dir, exist_ok=True)
+                        
+                        # Save the file
+                        file_path = os.path.join(upload_dir, stored_filename)
+                        with open(file_path, 'wb') as f:
+                            f.write(attachment_info['data'])
+                        
+                        new_comment.attachment = stored_filename
+                        app.logger.info(f"Saved email attachment for comment: {stored_filename}")
+                        
+                        if len(attachments) > 1:
+                            app.logger.warning(f"Email had {len(attachments)} attachments, only first one saved")
+                    except Exception as attach_error:
+                        app.logger.error(f"Failed to save comment attachment: {str(attach_error)}")
+                
                 db.session.commit()
                 
                 app.logger.info(f"Added comment to ticket #{ticket_id} from {commenter_name}")
@@ -654,6 +699,35 @@ def inbound_email_webhook():
         )
         
         db.session.add(new_ticket)
+        db.session.flush()  # Get ticket ID for attachment naming
+        
+        # Save first attachment if present
+        if attachments and len(attachments) > 0:
+            try:
+                from werkzeug.utils import secure_filename
+                import os
+                attachment_info = attachments[0]  # Save first attachment only
+                filename = secure_filename(attachment_info['filename'])
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                stored_filename = f"{timestamp}_ticket{new_ticket.id}_{filename}"
+                
+                # Ensure upload directory exists
+                upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
+                os.makedirs(upload_dir, exist_ok=True)
+                
+                # Save the file
+                file_path = os.path.join(upload_dir, stored_filename)
+                with open(file_path, 'wb') as f:
+                    f.write(attachment_info['data'])
+                
+                new_ticket.attachment = stored_filename
+                app.logger.info(f"Saved email attachment for new ticket: {stored_filename}")
+                
+                if len(attachments) > 1:
+                    app.logger.warning(f"Email had {len(attachments)} attachments, only first one saved")
+            except Exception as attach_error:
+                app.logger.error(f"Failed to save ticket attachment: {str(attach_error)}")
+        
         db.session.commit()
         
         app.logger.info(f"Created ticket #{new_ticket.id} from email: {subject}")

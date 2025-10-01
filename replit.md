@@ -27,7 +27,7 @@ Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality 
 - **Calendar & Scheduling**: Weekly calendar view with user-specific timezone support, technician schedule management, location-based filtering, time-off tracking (including all-day OOO), and conflict prevention for scheduling. Supports 30-minute increments.
 - **Ticket Management**: Full lifecycle management (open, in-progress, pending, resolved, closed), priority and category system, comment history, assignment, unread activity indicators, and email notifications. All users can modify tickets, only admins can delete.
 - **User Management**: Profile management with timezone preferences, theme selection, and color-coded identification.
-- **Email Notifications**: Comprehensive system for ticket assignments, status changes, comments, and schedule alterations, including external user support with email reply detection and consistent threading.
+- **Email Notifications**: Comprehensive system for ticket assignments, status changes, comments, and schedule alterations, including external user support with email reply detection and consistent threading. Email attachments are automatically extracted and saved when creating tickets or adding comments via email.
 - **Mobile Support**: Dedicated mobile interface with bottom navigation, optimized templates, and daily calendar view.
 - **Team Chat Integration**: Auto-launching chat with stay-on-top functionality and UI interaction preservation.
 - **Quick Links Management**: Customizable quick links with icon selection and administrative editing capabilities.
