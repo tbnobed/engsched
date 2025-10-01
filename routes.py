@@ -828,7 +828,27 @@ def inbound_email_webhook():
         
         app.logger.info(f"Created ticket #{new_ticket.id} from email: {subject}")
         
-        # Send confirmation email to ALL users (internal and external)
+        # Send new ticket notification to all team members
+        try:
+            from email_utils import send_new_ticket_notification
+            creator = User.query.get(created_by_id)
+            if creator:
+                app.logger.info(f"Sending new ticket notification to all users for ticket #{new_ticket.id}")
+                notification_result = send_new_ticket_notification(
+                    ticket=new_ticket,
+                    created_by=creator
+                )
+                
+                if notification_result:
+                    app.logger.info("New ticket notification sent successfully to all users!")
+                else:
+                    app.logger.warning("Failed to send new ticket notification to all users")
+        except Exception as e:
+            app.logger.error(f"Exception sending new ticket notification: {str(e)}")
+            import traceback
+            app.logger.error(f"Exception traceback: {traceback.format_exc()}")
+        
+        # Send confirmation email to the sender (internal and external)
         try:
             from email_utils import send_email
             confirmation_subject = f"[Ticket #{new_ticket.id}] - {subject}"
