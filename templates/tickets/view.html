@@ -98,11 +98,20 @@
                     </div>
                     {% if ticket.attachment %}
                     <div class="ticket-attachment mt-3">
-                        <h5>Attached Image:</h5>
+                        <h5>Attached File:</h5>
+                        {% set ext = ticket.attachment.split('.')[-1].lower() %}
+                        {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
                         <img src="{{ url_for('static', filename='uploads/ticket_attachments/' + ticket.attachment) }}" 
                              class="img-fluid rounded" 
                              style="max-width: 100%; max-height: 500px;" 
                              alt="Ticket attachment">
+                        {% else %}
+                        <a href="{{ url_for('static', filename='uploads/ticket_attachments/' + ticket.attachment) }}" 
+                           class="btn btn-outline-primary" 
+                           download>
+                            <i data-feather="download"></i> Download {{ ticket.attachment.split('_', 2)[-1] }}
+                        </a>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -129,10 +138,19 @@
                             <div class="mb-0">{{ comment['content']|safe }}</div>
                             {% if comment.attachment %}
                             <div class="comment-attachment mt-2">
+                                {% set ext = comment.attachment.split('.')[-1].lower() %}
+                                {% if ext in ['jpg', 'jpeg', 'png', 'gif', 'webp'] %}
                                 <img src="{{ url_for('static', filename='uploads/ticket_attachments/' + comment.attachment) }}" 
                                      class="img-fluid rounded" 
                                      style="max-width: 400px; max-height: 300px;" 
                                      alt="Comment attachment">
+                                {% else %}
+                                <a href="{{ url_for('static', filename='uploads/ticket_attachments/' + comment.attachment) }}" 
+                                   class="btn btn-sm btn-outline-primary" 
+                                   download>
+                                    <i data-feather="download"></i> {{ comment.attachment.split('_', 2)[-1] }}
+                                </a>
+                                {% endif %}
                             </div>
                             {% endif %}
                         </div>
@@ -146,9 +164,9 @@
                             {{ comment_form.content(class="form-control", rows="3", placeholder="Add a comment...") }}
                         </div>
                         <div class="mb-3">
-                            <label for="attachment" class="form-label">Attach Image (optional)</label>
+                            <label for="attachment" class="form-label">Attach File (optional)</label>
                             {{ comment_form.attachment(class="form-control") }}
-                            <div class="form-text">Supported formats: JPG, PNG, GIF, WEBP</div>
+                            <div class="form-text">Any file type supported (images, PDFs, documents, etc.)</div>
                         </div>
                         <button type="submit" class="btn btn-primary">
                             <i data-feather="message-square"></i> Add Comment

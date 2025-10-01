@@ -60,12 +60,12 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="attachment" class="form-label">Attach Image (optional)</label>
+                            <label for="attachment" class="form-label">Attach File (optional)</label>
                             {{ form.attachment(class="form-control" + (" is-invalid" if form.attachment.errors else "")) }}
                             {% for error in form.attachment.errors %}
                             <div class="invalid-feedback">{{ error }}</div>
                             {% endfor %}
-                            <div class="form-text">Supported formats: JPG, PNG, GIF, WEBP</div>
+                            <div class="form-text">Any file type supported (images, PDFs, documents, etc.)</div>
                         </div>
 
                         <div class="d-flex justify-content-between">
