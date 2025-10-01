@@ -460,20 +460,27 @@ def send_ticket_comment_notification(
     try:
         logger.debug(f"Starting comment notification for ticket #{ticket.id}")
         
-        # Get the assigned technician (if any)
+        # Get the ticket creator - they should always be notified of comments
         recipients = []
-        if ticket.assigned_to:
+        creator = User.query.get(ticket.created_by)
+        if creator and creator.email and creator.id != commented_by.id:
+            recipients.append(creator.email)
+            logger.debug(f"Added ticket creator email to recipients: {creator.email}")
+        
+        # Get the assigned technician (if any)
+        if ticket.assigned_to and ticket.assigned_to != commented_by.id:
             technician = User.query.get(ticket.assigned_to)
-            if technician and technician.email:
+            if technician and technician.email and technician.email not in recipients:
                 recipients.append(technician.email)
                 logger.debug(f"Added technician email to recipients: {technician.email}")
-            else:
+            elif not technician:
                 logger.warning(f"Could not find valid email for technician ID {ticket.assigned_to}")
         
         # Include external user if this is an external ticket
         if ticket.is_external_user() and ticket.external_email and ticket.email_notifications:
-            recipients.append(ticket.external_email)
-            logger.debug(f"Added external user email to recipients: {ticket.external_email}")
+            if ticket.external_email not in recipients:
+                recipients.append(ticket.external_email)
+                logger.debug(f"Added external user email to recipients: {ticket.external_email}")
         
         # Skip if no recipients
         if not recipients:
