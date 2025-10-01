@@ -608,32 +608,35 @@ def inbound_email_webhook():
                 db.session.add(new_comment)
                 db.session.flush()  # Get comment ID for attachment naming
                 
-                # Save first attachment if present
+                # Save all attachments
                 if attachments and len(attachments) > 0:
                     try:
                         from werkzeug.utils import secure_filename
                         import os
-                        attachment_info = attachments[0]  # Save first attachment only
-                        filename = secure_filename(attachment_info['filename'])
-                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                        stored_filename = f"{timestamp}_comment{new_comment.id}_{filename}"
+                        import json
                         
-                        # Ensure upload directory exists
+                        saved_attachments = []
                         upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
                         os.makedirs(upload_dir, exist_ok=True)
                         
-                        # Save the file
-                        file_path = os.path.join(upload_dir, stored_filename)
-                        with open(file_path, 'wb') as f:
-                            f.write(attachment_info['data'])
+                        for idx, attachment_info in enumerate(attachments):
+                            filename = secure_filename(attachment_info['filename'])
+                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            stored_filename = f"{timestamp}_comment{new_comment.id}_{idx}_{filename}"
+                            
+                            # Save the file
+                            file_path = os.path.join(upload_dir, stored_filename)
+                            with open(file_path, 'wb') as f:
+                                f.write(attachment_info['data'])
+                            
+                            saved_attachments.append(stored_filename)
+                            app.logger.info(f"Saved email attachment {idx+1}/{len(attachments)}: {stored_filename}")
                         
-                        new_comment.attachment = stored_filename
-                        app.logger.info(f"Saved email attachment for comment: {stored_filename}")
-                        
-                        if len(attachments) > 1:
-                            app.logger.warning(f"Email had {len(attachments)} attachments, only first one saved")
+                        # Store all attachments as JSON array
+                        new_comment.attachment = json.dumps(saved_attachments)
+                        app.logger.info(f"Saved {len(attachments)} attachments for comment")
                     except Exception as attach_error:
-                        app.logger.error(f"Failed to save comment attachment: {str(attach_error)}")
+                        app.logger.error(f"Failed to save comment attachments: {str(attach_error)}")
                 
                 db.session.commit()
                 
@@ -797,32 +800,35 @@ def inbound_email_webhook():
         db.session.add(new_ticket)
         db.session.flush()  # Get ticket ID for attachment naming
         
-        # Save first attachment if present
+        # Save all attachments
         if attachments and len(attachments) > 0:
             try:
                 from werkzeug.utils import secure_filename
                 import os
-                attachment_info = attachments[0]  # Save first attachment only
-                filename = secure_filename(attachment_info['filename'])
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                stored_filename = f"{timestamp}_ticket{new_ticket.id}_{filename}"
+                import json
                 
-                # Ensure upload directory exists
+                saved_attachments = []
                 upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
                 os.makedirs(upload_dir, exist_ok=True)
                 
-                # Save the file
-                file_path = os.path.join(upload_dir, stored_filename)
-                with open(file_path, 'wb') as f:
-                    f.write(attachment_info['data'])
+                for idx, attachment_info in enumerate(attachments):
+                    filename = secure_filename(attachment_info['filename'])
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    stored_filename = f"{timestamp}_ticket{new_ticket.id}_{idx}_{filename}"
+                    
+                    # Save the file
+                    file_path = os.path.join(upload_dir, stored_filename)
+                    with open(file_path, 'wb') as f:
+                        f.write(attachment_info['data'])
+                    
+                    saved_attachments.append(stored_filename)
+                    app.logger.info(f"Saved email attachment {idx+1}/{len(attachments)}: {stored_filename}")
                 
-                new_ticket.attachment = stored_filename
-                app.logger.info(f"Saved email attachment for new ticket: {stored_filename}")
-                
-                if len(attachments) > 1:
-                    app.logger.warning(f"Email had {len(attachments)} attachments, only first one saved")
+                # Store all attachments as JSON array
+                new_ticket.attachment = json.dumps(saved_attachments)
+                app.logger.info(f"Saved {len(attachments)} attachments for new ticket")
             except Exception as attach_error:
-                app.logger.error(f"Failed to save ticket attachment: {str(attach_error)}")
+                app.logger.error(f"Failed to save ticket attachments: {str(attach_error)}")
         
         db.session.commit()
         

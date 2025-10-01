@@ -48,6 +48,17 @@ def hex_to_rgb_filter(hex_color):
     except (ValueError, IndexError):
         return "128, 128, 128"  # Default gray
 
+@app.template_filter('from_json')
+def from_json_filter(s):
+    """Parse JSON string to Python object"""
+    import json
+    if not s:
+        return []
+    try:
+        return json.loads(s)
+    except (json.JSONDecodeError, TypeError):
+        return []
+
 # Function to detect mobile devices
 def is_mobile_device():
     """Check if the user is using a mobile device"""
