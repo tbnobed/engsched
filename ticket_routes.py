@@ -749,6 +749,7 @@ def view_ticket(ticket_id):
         'created_at': ticket_obj.created_at,
         'updated_at': ticket_obj.updated_at,
         'due_date': ticket_obj.due_date,
+        'attachment': ticket_obj.attachment,
         'category': {
             'id': ticket_obj.category.id,
             'name': ticket_obj.category.name
@@ -757,6 +758,7 @@ def view_ticket(ticket_id):
             'id': comment.id,
             'content': comment.content,
             'created_at': comment.created_at,
+            'attachment': comment.attachment,
             'user': {
                 'id': comment.user.id,
                 'username': comment.user.username,
