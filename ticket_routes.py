@@ -1818,6 +1818,7 @@ def download_attachment(filename):
     from flask import send_from_directory
     import os
     import re
+    import mimetypes
     
     upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
     
@@ -1831,11 +1832,17 @@ def download_attachment(filename):
         # Fallback: just use the filename as-is
         original_filename = filename
     
+    # Detect MIME type
+    mimetype, _ = mimetypes.guess_type(original_filename)
+    if not mimetype:
+        mimetype = 'application/octet-stream'
+    
     return send_from_directory(
         upload_dir,
         filename,
         as_attachment=True,
-        download_name=original_filename
+        download_name=original_filename,
+        mimetype=mimetype
     )
 
 

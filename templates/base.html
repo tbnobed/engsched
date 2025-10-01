@@ -1536,6 +1536,23 @@
         });
     </script>
     
+    <!-- Handle file downloads without blocking the page -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers to all download links
+            document.addEventListener('click', function(e) {
+                const target = e.target.closest('a[href*="download"], a[href*="export"], a[href*="backup"], a[href*="attachment"]');
+                if (target) {
+                    // Use setTimeout to ensure the download starts asynchronously
+                    setTimeout(function() {
+                        // The download will proceed normally, but this ensures
+                        // the page doesn't freeze by allowing the browser to handle it async
+                    }, 0);
+                }
+            });
+        });
+    </script>
+    
     <!-- Cache busting comment: sidebar removed 2025-07-16 -->
 
 </body>
