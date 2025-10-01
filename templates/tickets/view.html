@@ -220,68 +220,74 @@
 {% include 'tickets/modals/update_status.html' %}
 {% include 'tickets/modals/edit_ticket.html' %}
 
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         feather.replace();
         
         const csrfToken = document.querySelector('input[name="csrf_token"]').value;
         
-        tinymce.init({
-            selector: '#content',
-            height: 250,
-            menubar: false,
-            plugins: [
-                'lists', 'link', 'image', 'paste', 'autoresize'
-            ],
-            toolbar: 'undo redo | formatselect | bold italic | bullist numlist | link image | removeformat',
-            automatic_uploads: true,
-            images_upload_url: '{{ url_for("editor_upload_image") }}',
-            images_upload_handler: function (blobInfo, success, failure, progress) {
-                const xhr = new XMLHttpRequest();
-                xhr.withCredentials = false;
-                xhr.open('POST', '{{ url_for("editor_upload_image") }}');
-                
-                xhr.setRequestHeader('X-CSRFToken', csrfToken);
-                
-                xhr.upload.onprogress = function (e) {
-                    progress(e.loaded / e.total * 100);
-                };
-                
-                xhr.onload = function() {
-                    if (xhr.status === 403) {
-                        failure('HTTP Error: ' + xhr.status, { remove: true });
-                        return;
-                    }
+        // Hide the original textarea
+        const textarea = document.getElementById('content');
+        textarea.style.display = 'none';
+        
+        // Create editor container
+        const editorContainer = document.createElement('div');
+        editorContainer.id = 'comment-editor-container';
+        editorContainer.style.height = '250px';
+        textarea.parentNode.insertBefore(editorContainer, textarea);
+        
+        // Initialize Quill
+        const quill = new Quill('#comment-editor-container', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
+        
+        // Handle image upload
+        quill.getModule('toolbar').addHandler('image', function() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/png, image/jpeg, image/jpg, image/gif, image/webp');
+            input.click();
+            
+            input.onchange = function() {
+                const file = input.files[0];
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('file', file);
                     
-                    if (xhr.status < 200 || xhr.status >= 300) {
-                        failure('HTTP Error: ' + xhr.status);
-                        return;
-                    }
-                    
-                    const json = JSON.parse(xhr.responseText);
-                    
-                    if (!json || typeof json.location != 'string') {
-                        failure('Invalid JSON: ' + xhr.responseText);
-                        return;
-                    }
-                    
-                    success(json.location);
-                };
-                
-                xhr.onerror = function () {
-                    failure('Image upload failed due to a XHR Transport error. Code: ' + xhr.status);
-                };
-                
-                const formData = new FormData();
-                formData.append('file', blobInfo.blob(), blobInfo.filename());
-                
-                xhr.send(formData);
-            },
-            paste_data_images: true,
-            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; }',
-            branding: false,
-            promotion: false
+                    fetch('{{ url_for("editor_upload_image") }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        const range = quill.getSelection();
+                        quill.insertEmbed(range.index, 'image', result.location);
+                    })
+                    .catch(error => {
+                        console.error('Error uploading image:', error);
+                        alert('Failed to upload image');
+                    });
+                }
+            };
+        });
+        
+        // Sync content to textarea on form submit
+        const form = textarea.closest('form');
+        form.addEventListener('submit', function() {
+            textarea.value = quill.root.innerHTML;
         });
     });
 
