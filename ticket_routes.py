@@ -1811,4 +1811,28 @@ def batch_archive_tickets():
     
     return mobile_aware_redirect('tickets.tickets_dashboard')
 
+@tickets.route('/tickets/attachment/<path:filename>')
+@login_required
+def download_attachment(filename):
+    """Download a ticket attachment with proper headers to force download"""
+    from flask import send_from_directory
+    import os
+    
+    upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
+    
+    # Extract the original filename (everything after the second underscore)
+    # Format is: YYYYMMDD_HHMMSS_ticketXX_originalname.ext or YYYYMMDD_HHMMSS_commentXX_originalname.ext
+    parts = filename.split('_', 2)
+    if len(parts) >= 3:
+        original_filename = parts[2]
+    else:
+        original_filename = filename
+    
+    return send_from_directory(
+        upload_dir,
+        filename,
+        as_attachment=True,
+        download_name=original_filename
+    )
+
 

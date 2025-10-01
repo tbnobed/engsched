@@ -99,9 +99,8 @@
                     {% if ticket.attachment %}
                     <div class="ticket-attachment mt-3">
                         <h5>Attached File:</h5>
-                        <a href="{{ url_for('static', filename='uploads/ticket_attachments/' + ticket.attachment) }}" 
-                           class="btn btn-outline-primary" 
-                           download>
+                        <a href="{{ url_for('tickets.download_attachment', filename=ticket.attachment) }}" 
+                           class="btn btn-outline-primary">
                             <i data-feather="download"></i> Download {{ ticket.attachment.split('_', 2)[-1] }}
                         </a>
                     </div>
@@ -130,9 +129,8 @@
                             <div class="mb-0">{{ comment['content']|safe }}</div>
                             {% if comment.attachment %}
                             <div class="comment-attachment mt-2">
-                                <a href="{{ url_for('static', filename='uploads/ticket_attachments/' + comment.attachment) }}" 
-                                   class="btn btn-sm btn-outline-primary" 
-                                   download>
+                                <a href="{{ url_for('tickets.download_attachment', filename=comment.attachment) }}" 
+                                   class="btn btn-sm btn-outline-primary">
                                     <i data-feather="download"></i> {{ comment.attachment.split('_', 2)[-1] }}
                                 </a>
                             </div>
