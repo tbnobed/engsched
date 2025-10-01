@@ -18,17 +18,21 @@ def sanitize_html(html_content):
     ]
     allowed_attrs = {
         'a': ['href', 'target', 'rel'],
-        'img': ['src', 'alt', 'title', 'width', 'height'],
+        'img': ['src', 'alt', 'title', 'width', 'height', 'style'],
         '*': ['class']
     }
-    allowed_protocols = ['http', 'https']
+    allowed_protocols = ['http', 'https', 'data']  # Allow data URIs for inline images
+    
+    # Allow safe CSS properties for images
+    allowed_styles = ['width', 'height', 'max-width', 'max-height', 'display', 'margin', 'padding']
     
     cleaned = bleach.clean(
         html_content,
         tags=allowed_tags,
         attributes=allowed_attrs,
         protocols=allowed_protocols,
-        strip=True
+        strip=True,
+        styles=allowed_styles
     )
     
     return cleaned
