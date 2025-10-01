@@ -499,6 +499,87 @@ def inbound_email_webhook():
             if key not in ['text', 'html', 'email']:  # Don't log large content fields
                 app.logger.debug(f"Email field '{key}': {str(value)[:200]}...")
         
+        # FILTER OUT AUTO-REPLIES
+        def is_auto_reply(msg_obj, from_addr, subj):
+            """
+            Detect if an email is an auto-reply/out-of-office message
+            Returns True if auto-reply detected, False otherwise
+            """
+            import re
+            
+            # Check email headers (if MIME message object is available)
+            if msg_obj:
+                # RFC 3834 standard auto-reply header
+                auto_submitted = msg_obj.get('Auto-Submitted', '').lower()
+                if auto_submitted and auto_submitted != 'no':
+                    app.logger.info(f"Auto-reply detected: Auto-Submitted header = '{auto_submitted}'")
+                    return True
+                
+                # Microsoft Exchange auto-reply suppression headers
+                x_auto_response = msg_obj.get('X-Auto-Response-Suppress', '').lower()
+                if 'all' in x_auto_response or 'oof' in x_auto_response:
+                    app.logger.info(f"Auto-reply detected: X-Auto-Response-Suppress header = '{x_auto_response}'")
+                    return True
+                
+                # Generic auto-reply headers
+                x_autoreply = msg_obj.get('X-Autoreply', '').lower()
+                if x_autoreply in ['yes', 'true', '1']:
+                    app.logger.info(f"Auto-reply detected: X-Autoreply header = '{x_autoreply}'")
+                    return True
+                
+                # Precedence header
+                precedence = msg_obj.get('Precedence', '').lower()
+                if precedence in ['auto_reply', 'bulk', 'junk', 'list']:
+                    app.logger.info(f"Auto-reply detected: Precedence header = '{precedence}'")
+                    return True
+            
+            # Check subject line for auto-reply patterns
+            auto_reply_subject_patterns = [
+                r'out of (the )?office',
+                r'\bOOO\b',
+                r'automatic reply',
+                r'auto[\s-]?reply',
+                r'away from (my )?desk',
+                r'vacation response',
+                r'I am (currently )?away',
+                r'delivery status notification',
+                r'returned mail',
+                r'undeliverable',
+                r'mail delivery (failed|subsystem)',
+                r'postmaster',
+                r'failure notice'
+            ]
+            
+            for pattern in auto_reply_subject_patterns:
+                if re.search(pattern, subj, re.IGNORECASE):
+                    app.logger.info(f"Auto-reply detected: subject matches pattern '{pattern}'")
+                    return True
+            
+            # Check from address for no-reply patterns
+            no_reply_patterns = [
+                r'noreply@',
+                r'no-reply@',
+                r'donotreply@',
+                r'do-not-reply@',
+                r'mailer-daemon@',
+                r'postmaster@',
+                r'bounce@',
+                r'bounces@'
+            ]
+            
+            for pattern in no_reply_patterns:
+                if re.search(pattern, from_addr, re.IGNORECASE):
+                    app.logger.info(f"Auto-reply detected: from address matches pattern '{pattern}'")
+                    return True
+            
+            return False
+        
+        # Check if this is an auto-reply and ignore if so
+        msg_object = msg if raw_email else None
+        if is_auto_reply(msg_object, from_email, subject):
+            app.logger.info(f"Ignoring auto-reply email from {from_email} with subject '{subject}'")
+            return jsonify({'status': 'ignored', 'reason': 'auto-reply detected'}), 200
+        
         # CHECK FOR REPLY TO EXISTING TICKET FIRST
         import re
         ticket_reply_match = re.search(r'\[Ticket #(\d+)\]', subject, re.IGNORECASE)
