@@ -276,7 +276,7 @@ function exportSchedules() {
         return;
     }
 
-    window.location.href = `/admin/export_schedules?start_date=${startDate}&end_date=${endDate}`;
+    window.open(`/admin/export_schedules?start_date=${startDate}&end_date=${endDate}`, '_blank');
 }
 </script>
 {% endblock %}

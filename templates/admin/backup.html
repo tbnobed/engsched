@@ -23,7 +23,7 @@
                         <li>Email settings</li>
                     </ul>
                     <div class="d-grid">
-                        <a href="{{ url_for('download_backup') }}" class="btn btn-primary" id="backup-btn" onclick="showBackupLoading()">
+                        <a href="{{ url_for('download_backup') }}" class="btn btn-primary" id="backup-btn" onclick="showBackupLoading()" target="_blank" rel="noopener" download>
                             <i data-feather="download"></i> Download Backup
                         </a>
                         <div id="backup-loading" class="text-center mt-2" style="display: none;">
