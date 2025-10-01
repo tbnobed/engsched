@@ -159,7 +159,7 @@
                 <strong>Created by:</strong> {{ ticket['creator']['username'] }} on {{ ticket['created_at'].strftime('%Y-%m-%d %H:%M') }}
             </p>
             <div class="ticket-description">
-                {{ ticket['description']|nl2br }}
+                {{ ticket['description']|safe }}
             </div>
         </div>
     </div>
@@ -226,9 +226,9 @@
                         </button>
                         {% endif %}
                     </div>
-                    <p class="mb-0 {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}text-dark{% else %}text-light{% endif %}">
-                        {{ comment['content']|nl2br }}
-                    </p>
+                    <div class="mb-0 {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}text-dark{% else %}text-light{% endif %}">
+                        {{ comment['content']|safe }}
+                    </div>
                 </div>
                 {% else %}
                 <p class="text-muted text-center">No comments yet</p>
