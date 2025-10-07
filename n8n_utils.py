@@ -5,6 +5,60 @@ from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 
+def format_ai_analysis(analysis_data: Dict[str, Any]) -> str:
+    """
+    Format AI analysis data into HTML for display in comments
+    
+    Args:
+        analysis_data: Dictionary containing AI analysis fields
+        
+    Returns:
+        Formatted HTML string
+    """
+    html_parts = []
+    
+    # Add summary if available
+    if analysis_data.get('summary'):
+        html_parts.append(f"<p><strong>📋 Summary:</strong><br>{analysis_data['summary']}</p>")
+    
+    # Add possible causes if available
+    if analysis_data.get('possible_causes'):
+        causes = analysis_data['possible_causes']
+        if isinstance(causes, list):
+            html_parts.append("<p><strong>🔍 Possible Causes:</strong></p><ul>")
+            for cause in causes:
+                html_parts.append(f"<li>{cause}</li>")
+            html_parts.append("</ul>")
+    
+    # Add suggested solutions if available
+    if analysis_data.get('suggested_solutions'):
+        solutions = analysis_data['suggested_solutions']
+        if isinstance(solutions, list):
+            html_parts.append("<p><strong>💡 Suggested Solutions:</strong></p><ol>")
+            for solution in solutions:
+                html_parts.append(f"<li>{solution}</li>")
+            html_parts.append("</ol>")
+    
+    # Add references if available
+    if analysis_data.get('references'):
+        references = analysis_data['references']
+        if isinstance(references, list) and references:
+            html_parts.append("<p><strong>📚 References:</strong></p><ul>")
+            for ref in references:
+                html_parts.append(f"<li><a href='{ref}' target='_blank'>{ref}</a></li>")
+            html_parts.append("</ul>")
+    
+    # Add confidence level if available
+    if analysis_data.get('confidence'):
+        html_parts.append(f"<p><strong>📊 Confidence Level:</strong> {analysis_data['confidence']}</p>")
+    
+    # Add response/main analysis if available
+    if analysis_data.get('response'):
+        html_parts.append(f"<p><strong>💬 Analysis:</strong><br>{analysis_data['response']}</p>")
+    
+    return ''.join(html_parts)
+
+
 def send_ticket_to_n8n(ticket_id: int, title: str, description: str) -> Optional[str]:
     """
     Send ticket information to n8n webhook for AI analysis
@@ -15,7 +69,7 @@ def send_ticket_to_n8n(ticket_id: int, title: str, description: str) -> Optional
         description: The ticket description
         
     Returns:
-        The AI-generated response text, or None if the request fails
+        The formatted AI analysis HTML, or None if the request fails
     """
     webhook_url = os.environ.get('N8N_WEBHOOK_URL')
     
@@ -51,38 +105,57 @@ def send_ticket_to_n8n(ticket_id: int, title: str, description: str) -> Optional
                 response_data = response.json()
                 logger.info(f"Parsed JSON response: {response_data}")
                 
-                # Extract the AI response text
+                # Extract the AI analysis data
                 # Handle different possible response formats
-                ai_response = None
+                analysis_data = None
+                
                 if isinstance(response_data, dict):
-                    # Try standard fields first
-                    ai_response = response_data.get('response') or response_data.get('analysis') or response_data.get('message')
-                    
-                    # If not found, try OpenAI chat completion format
-                    if not ai_response and 'choices' in response_data:
+                    # Check if it's OpenAI chat completion format
+                    if 'choices' in response_data:
                         try:
                             choices = response_data.get('choices', [])
                             if choices and len(choices) > 0:
                                 message = choices[0].get('message', {})
                                 content = message.get('content')
-                                # Content might be a dict with 'response' field
+                                # Content should be a dict with structured fields
                                 if isinstance(content, dict):
-                                    ai_response = content.get('response') or content.get('analysis') or content.get('message')
+                                    analysis_data = content
                                 elif isinstance(content, str):
-                                    ai_response = content
+                                    # If content is a string, wrap it in a dict
+                                    analysis_data = {'response': content}
                         except (IndexError, KeyError, TypeError) as e:
                             logger.warning(f"Error extracting from OpenAI format: {e}")
+                    else:
+                        # Standard format - response_data is already the analysis
+                        analysis_data = response_data
                             
                 elif isinstance(response_data, str):
-                    ai_response = response_data
-                else:
-                    ai_response = str(response_data)
+                    # Plain text response
+                    analysis_data = {'response': response_data}
                 
-                if ai_response:
-                    logger.info(f"Successfully received AI analysis for ticket #{ticket_id}")
-                    return ai_response
+                # Format and return the analysis
+                if analysis_data:
+                    # Check if we have any meaningful data
+                    has_data = any([
+                        analysis_data.get('summary'),
+                        analysis_data.get('possible_causes'),
+                        analysis_data.get('suggested_solutions'),
+                        analysis_data.get('references'),
+                        analysis_data.get('confidence'),
+                        analysis_data.get('response'),
+                        analysis_data.get('analysis'),
+                        analysis_data.get('message')
+                    ])
+                    
+                    if has_data:
+                        formatted_analysis = format_ai_analysis(analysis_data)
+                        logger.info(f"Successfully received and formatted AI analysis for ticket #{ticket_id}")
+                        return formatted_analysis
+                    else:
+                        logger.warning(f"n8n webhook returned response but no recognizable AI data. Keys: {list(analysis_data.keys())}")
+                        return None
                 else:
-                    logger.warning(f"n8n webhook returned response but no AI text found. Response keys: {list(response_data.keys()) if isinstance(response_data, dict) else 'N/A'}")
+                    logger.warning(f"n8n webhook returned response but could not extract analysis data")
                     return None
                     
             except ValueError as e:
