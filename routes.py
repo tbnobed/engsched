@@ -646,6 +646,24 @@ def inbound_email_webhook():
                         description = '\n'.join(clean_lines).strip()
                         # Convert plain text to HTML paragraphs
                         description = '<p>' + description.replace('\n\n', '</p><p>').replace('\n', '<br>') + '</p>'
+                    
+                    # Remove email signatures
+                    signature_patterns = [
+                        r'(?:\r?\n|\A)--\s*\r?\n.*',  # Standard signature separator
+                        r'(?:\r?\n|\A)_{3,}.*',  # Underscore separators
+                        r'(?:\r?\n|\A)Sent from my (iPhone|iPad|Android|Samsung|Mobile).*',
+                        r'(?:\r?\n|\A)Get Outlook for (iOS|Android).*',
+                        r'(?:\r?\n|\A)Sent from (Mail|Outlook|Gmail) for Windows.*',
+                        r'(?:\r?\n|\A)Best regards?,?\r?\n.*',
+                        r'(?:\r?\n|\A)Thanks?,?\r?\n.*',
+                        r'(?:\r?\n|\A)Cheers,?\r?\n.*',
+                        r'(?:\r?\n|\A)Sincerely,?\r?\n.*',
+                    ]
+                    
+                    for pattern in signature_patterns:
+                        description = re.sub(pattern, '', description, flags=re.DOTALL | re.IGNORECASE)
+                    
+                    description = description.strip()
                 
                 # Sanitize HTML to prevent XSS
                 if description:
@@ -779,6 +797,26 @@ def inbound_email_webhook():
             description = re.sub(r'<script[^>]*>.*?</script>', '', description, flags=re.DOTALL | re.IGNORECASE)
             # Remove head tags and their content
             description = re.sub(r'<head[^>]*>.*?</head>', '', description, flags=re.DOTALL | re.IGNORECASE)
+        
+        # Remove email signatures
+        if description:
+            import re
+            signature_patterns = [
+                r'(?:\r?\n|\A)--\s*\r?\n.*',  # Standard signature separator
+                r'(?:\r?\n|\A)_{3,}.*',  # Underscore separators
+                r'(?:\r?\n|\A)Sent from my (iPhone|iPad|Android|Samsung|Mobile).*',
+                r'(?:\r?\n|\A)Get Outlook for (iOS|Android).*',
+                r'(?:\r?\n|\A)Sent from (Mail|Outlook|Gmail) for Windows.*',
+                r'(?:\r?\n|\A)Best regards?,?\r?\n.*',
+                r'(?:\r?\n|\A)Thanks?,?\r?\n.*',
+                r'(?:\r?\n|\A)Cheers,?\r?\n.*',
+                r'(?:\r?\n|\A)Sincerely,?\r?\n.*',
+            ]
+            
+            for pattern in signature_patterns:
+                description = re.sub(pattern, '', description, flags=re.DOTALL | re.IGNORECASE)
+            
+            description = description.strip()
         
         # Sanitize HTML to prevent XSS while preserving formatting
         if description:
