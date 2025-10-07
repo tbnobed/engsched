@@ -270,7 +270,7 @@ def auto_generate_recurring_schedules_job():
             generated_templates = []
             
             for template in templates:
-                # Check if it's time to generate new schedules
+                # Check if it's time to generate new schedules (weekly timing for automatic job)
                 should_generate = False
                 
                 if not template.last_generated:
@@ -279,9 +279,11 @@ def auto_generate_recurring_schedules_job():
                 else:
                     # Calculate time since last generation
                     time_since_last = datetime.now(pytz.UTC) - template.last_generated
-                    if time_since_last.days >= 7:  # Generate weekly
+                    if time_since_last.days >= 7:  # Generate weekly for automatic runs
                         should_generate = True
                         app.logger.info(f"Template '{template.template_name}' last generated {time_since_last.days} days ago, generating now")
+                    else:
+                        app.logger.info(f"Template '{template.template_name}' last generated {time_since_last.days} days ago, skipping (need 7+ days)")
                 
                 if should_generate:
                     try:

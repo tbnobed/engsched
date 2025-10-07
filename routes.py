@@ -4342,6 +4342,9 @@ def auto_generate_recurring_schedules():
         return jsonify({'error': 'Access denied'}), 403
     
     try:
+        # Check if this is a forced manual generation (from button click) or automatic
+        force_generate = request.json.get('force', True) if request.is_json else True
+        
         # Find all active templates that need schedule generation
         templates = RecurringScheduleTemplate.query.filter_by(active=True, auto_generate=True).all()
         
@@ -4350,16 +4353,22 @@ def auto_generate_recurring_schedules():
         
         for template in templates:
             # Check if it's time to generate new schedules
-            # Generate if never generated before, or if last generated was more than a week ago
             should_generate = False
             
-            if not template.last_generated:
+            if force_generate:
+                # Manual trigger - always generate
                 should_generate = True
+                app.logger.info(f"Force generating schedules for template '{template.template_name}'")
+            elif not template.last_generated:
+                # Never generated before
+                should_generate = True
+                app.logger.info(f"Template '{template.template_name}' never generated, generating now")
             else:
-                # Calculate time since last generation
+                # Calculate time since last generation for automatic runs
                 time_since_last = datetime.now(pytz.UTC) - template.last_generated
-                if time_since_last.days >= 7:  # Generate weekly
+                if time_since_last.days >= 7:  # Generate weekly for automatic runs
                     should_generate = True
+                    app.logger.info(f"Template '{template.template_name}' last generated {time_since_last.days} days ago, generating now")
             
             if should_generate:
                 try:
