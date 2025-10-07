@@ -606,6 +606,42 @@ def create_ticket():
             db.session.commit()
             app.logger.info(f"Successfully created ticket {ticket.id} with history entry")
             
+            # Send ticket to n8n webhook for AI analysis
+            try:
+                from n8n_utils import send_ticket_to_n8n
+                app.logger.info(f"Sending ticket #{ticket.id} to n8n for AI analysis")
+                
+                ai_response = send_ticket_to_n8n(
+                    ticket_id=ticket.id,
+                    title=ticket.title,
+                    description=ticket.description
+                )
+                
+                if ai_response:
+                    app.logger.info(f"Received AI analysis for ticket #{ticket.id}, adding as system comment")
+                    
+                    # Get system user (admin user) for the comment
+                    system_user = User.query.filter_by(is_admin=True).first()
+                    if system_user:
+                        # Create system comment without triggering email notification
+                        system_comment = TicketComment(
+                            ticket_id=ticket.id,
+                            user_id=system_user.id,
+                            content=f"<p><strong>🤖 AI Analysis:</strong></p>{ai_response}",
+                            created_at=datetime.now(pytz.UTC)
+                        )
+                        db.session.add(system_comment)
+                        db.session.commit()
+                        app.logger.info(f"Added AI analysis comment to ticket #{ticket.id} (no email sent)")
+                    else:
+                        app.logger.warning("No admin user found to post AI analysis comment")
+                else:
+                    app.logger.info(f"No AI response received for ticket #{ticket.id}")
+            except Exception as e:
+                app.logger.error(f"Error in n8n AI analysis for ticket #{ticket.id}: {str(e)}")
+                import traceback
+                app.logger.error(f"n8n exception traceback: {traceback.format_exc()}")
+            
             # Send new ticket notification to all users
             try:
                 app.logger.info(f"Sending new ticket notification to all users for ticket #{ticket.id}")

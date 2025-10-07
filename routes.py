@@ -915,6 +915,42 @@ def inbound_email_webhook():
         
         app.logger.info(f"Created ticket #{new_ticket.id} from email: {subject}")
         
+        # Send ticket to n8n webhook for AI analysis
+        try:
+            from n8n_utils import send_ticket_to_n8n
+            app.logger.info(f"Sending ticket #{new_ticket.id} to n8n for AI analysis")
+            
+            ai_response = send_ticket_to_n8n(
+                ticket_id=new_ticket.id,
+                title=new_ticket.title,
+                description=new_ticket.description
+            )
+            
+            if ai_response:
+                app.logger.info(f"Received AI analysis for ticket #{new_ticket.id}, adding as system comment")
+                
+                # Get system user (admin user) for the comment
+                system_user = User.query.filter_by(is_admin=True).first()
+                if system_user:
+                    # Create system comment without triggering email notification
+                    system_comment = TicketComment(
+                        ticket_id=new_ticket.id,
+                        user_id=system_user.id,
+                        content=f"<p><strong>🤖 AI Analysis:</strong></p>{ai_response}",
+                        created_at=datetime.now(pytz.UTC)
+                    )
+                    db.session.add(system_comment)
+                    db.session.commit()
+                    app.logger.info(f"Added AI analysis comment to ticket #{new_ticket.id} (no email sent)")
+                else:
+                    app.logger.warning("No admin user found to post AI analysis comment")
+            else:
+                app.logger.info(f"No AI response received for ticket #{new_ticket.id}")
+        except Exception as e:
+            app.logger.error(f"Error in n8n AI analysis for ticket #{new_ticket.id}: {str(e)}")
+            import traceback
+            app.logger.error(f"n8n exception traceback: {traceback.format_exc()}")
+        
         # Send new ticket notification to all team members
         try:
             from email_utils import send_new_ticket_notification
