@@ -43,9 +43,13 @@ def send_ticket_to_n8n(ticket_id: int, title: str, description: str) -> Optional
         
         # Check if request was successful
         if response.status_code == 200:
+            # Log raw response for debugging
+            logger.info(f"Raw response from n8n for ticket #{ticket_id}: {response.text[:500] if response.text else 'EMPTY'}")
+            
             # Parse the response
             try:
                 response_data = response.json()
+                logger.info(f"Parsed JSON response: {response_data}")
                 
                 # Extract the AI response text
                 # Handle different possible response formats
@@ -60,11 +64,12 @@ def send_ticket_to_n8n(ticket_id: int, title: str, description: str) -> Optional
                     logger.info(f"Successfully received AI analysis for ticket #{ticket_id}")
                     return ai_response
                 else:
-                    logger.warning(f"n8n webhook returned empty response for ticket #{ticket_id}")
+                    logger.warning(f"n8n webhook returned response but no AI text found. Response keys: {list(response_data.keys()) if isinstance(response_data, dict) else 'N/A'}")
                     return None
                     
             except ValueError as e:
                 # Response is not JSON, treat as plain text
+                logger.info(f"Response is not JSON, treating as plain text")
                 ai_response = response.text
                 if ai_response:
                     logger.info(f"Received plain text AI analysis for ticket #{ticket_id}")
