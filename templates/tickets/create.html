@@ -166,11 +166,24 @@
             const form = textarea.closest('form');
             if (form) {
                 form.addEventListener('submit', function(e) {
+                    console.log('Form submit triggered');
                     textarea.value = quill.root.innerHTML;
+                    console.log('Textarea value set to:', textarea.value);
                 });
+                
+                // Also sync before any validation
+                form.addEventListener('invalid', function(e) {
+                    console.log('Form invalid event:', e);
+                    textarea.value = quill.root.innerHTML;
+                }, true);
             } else {
                 console.error('Form not found');
             }
+            
+            // Make sure the description field gets filled on any editor change
+            quill.on('text-change', function() {
+                textarea.value = quill.root.innerHTML;
+            });
         } catch (error) {
             console.error('Error initializing Quill editor:', error);
             // Make sure the textarea is visible if there's an error
