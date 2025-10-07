@@ -4343,7 +4343,10 @@ def auto_generate_recurring_schedules():
     
     try:
         # Check if this is a forced manual generation (from button click) or automatic
-        force_generate = request.json.get('force', True) if request.is_json else True
+        # Manual button clicks send regular POST, automatic job would send JSON with force=False
+        force_generate = True  # Default to force for manual button clicks
+        if request.is_json and request.json:
+            force_generate = request.json.get('force', True)
         
         # Find all active templates that need schedule generation
         templates = RecurringScheduleTemplate.query.filter_by(active=True, auto_generate=True).all()
