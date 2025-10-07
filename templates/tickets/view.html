@@ -131,7 +131,11 @@
                         <div class="comment mb-3">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
+                                    {% if comment['content'].startswith('<p><strong>🤖 AI Analysis') %}
+                                    <strong>AI Assistant</strong>
+                                    {% else %}
                                     <strong>{{ comment['user']['username'] }}</strong>
+                                    {% endif %}
                                     <small class="text-muted">{{ comment['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
                                 </div>
                                 {% if current_user.is_admin or current_user.id == comment['user']['id'] %}

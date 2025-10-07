@@ -239,7 +239,11 @@
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
                             <strong class="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}text-dark{% else %}text-white{% endif %}">
+                                {% if comment['content'].startswith('<p><strong>🤖 AI Analysis') %}
+                                AI Assistant
+                                {% else %}
                                 {{ comment['user']['username'] }}
+                                {% endif %}
                             </strong>
                             <small class="text-muted d-block">{{ comment['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
                         </div>
