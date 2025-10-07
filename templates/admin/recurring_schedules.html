@@ -212,7 +212,8 @@ function autoGenerateSchedules() {
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': '{{ csrf_token() }}'
-            }
+            },
+            body: JSON.stringify({})
         })
         .then(response => response.json())
         .then(data => {
