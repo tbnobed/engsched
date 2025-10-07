@@ -330,27 +330,69 @@ def auto_generate_recurring_schedules_job():
             db.session.rollback()
             app.logger.error(f"Error in automatic recurring schedule generation: {str(e)}")
 
-# Set up the background scheduler
-scheduler = BackgroundScheduler()
+# Set up the background scheduler with file-based locking to ensure only one instance runs
+import fcntl
+import os
 
-# Schedule the auto-generation to run every Sunday at 2:00 AM
-scheduler.add_job(
-    func=auto_generate_recurring_schedules_job,
-    trigger="cron",
-    day_of_week="sun",
-    hour=2,
-    minute=0,
-    id='auto_generate_schedules',
-    name='Auto-generate recurring schedules',
-    replace_existing=True
-)
+scheduler = None
+lock_file = None
 
-# Start the scheduler
-scheduler.start()
-app.logger.info("Automatic recurring schedule generator started - runs every Sunday at 2:00 AM")
+def start_scheduler_with_lock():
+    """Start the scheduler only if we can acquire the lock file"""
+    global scheduler, lock_file
+    
+    try:
+        # Create a lock file to ensure only one scheduler runs
+        lock_file_path = '/tmp/scheduler.lock'
+        lock_file = open(lock_file_path, 'w')
+        
+        # Try to acquire an exclusive lock (non-blocking)
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        
+        # If we got here, we have the lock - start the scheduler
+        scheduler = BackgroundScheduler()
+        
+        # Schedule the auto-generation to run every Sunday at 2:00 AM
+        scheduler.add_job(
+            func=auto_generate_recurring_schedules_job,
+            trigger="cron",
+            day_of_week="sun",
+            hour=2,
+            minute=0,
+            id='auto_generate_schedules',
+            name='Auto-generate recurring schedules',
+            replace_existing=True
+        )
+        
+        scheduler.start()
+        app.logger.info("✅ Automatic recurring schedule generator started - runs every Sunday at 2:00 AM (lock acquired)")
+        
+        # Shut down the scheduler when exiting the app
+        def cleanup():
+            if scheduler:
+                scheduler.shutdown()
+            if lock_file:
+                try:
+                    fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+                    lock_file.close()
+                    os.remove(lock_file_path)
+                except:
+                    pass
+        
+        atexit.register(cleanup)
+        
+    except IOError:
+        # Another process has the lock, this worker should not run the scheduler
+        app.logger.info("ℹ️  Scheduler already running in another worker, skipping initialization in this worker")
+        if lock_file:
+            lock_file.close()
+    except Exception as e:
+        app.logger.error(f"Error starting scheduler: {str(e)}")
+        if lock_file:
+            lock_file.close()
 
-# Shut down the scheduler when exiting the app
-atexit.register(lambda: scheduler.shutdown())
+# Start the scheduler with lock
+start_scheduler_with_lock()
 
 # Import and register blueprints
 from routes import *
