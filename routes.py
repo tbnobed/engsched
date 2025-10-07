@@ -633,6 +633,12 @@ def inbound_email_webhook():
                         import re
                         description = re.sub(r'<blockquote[^>]*>.*?</blockquote>', '', description, flags=re.DOTALL)
                         description = re.sub(r'<div[^>]*class=["\'][^"\']*quote[^"\']*["\'][^>]*>.*?</div>', '', description, flags=re.DOTALL)
+                        # Remove style tags and their content
+                        description = re.sub(r'<style[^>]*>.*?</style>', '', description, flags=re.DOTALL | re.IGNORECASE)
+                        # Remove script tags and their content
+                        description = re.sub(r'<script[^>]*>.*?</script>', '', description, flags=re.DOTALL | re.IGNORECASE)
+                        # Remove head tags and their content
+                        description = re.sub(r'<head[^>]*>.*?</head>', '', description, flags=re.DOTALL | re.IGNORECASE)
                     else:
                         # For plain text, remove lines starting with >
                         lines = description.split('\n')
@@ -763,6 +769,16 @@ def inbound_email_webhook():
         if description and not use_html:
             # Convert plain text to HTML with proper paragraphs and line breaks
             description = '<p>' + description.replace('\n\n', '</p><p>').replace('\n', '<br>') + '</p>'
+        
+        # Remove unwanted HTML elements before sanitization
+        if description and use_html:
+            import re
+            # Remove style tags and their content
+            description = re.sub(r'<style[^>]*>.*?</style>', '', description, flags=re.DOTALL | re.IGNORECASE)
+            # Remove script tags and their content
+            description = re.sub(r'<script[^>]*>.*?</script>', '', description, flags=re.DOTALL | re.IGNORECASE)
+            # Remove head tags and their content
+            description = re.sub(r'<head[^>]*>.*?</head>', '', description, flags=re.DOTALL | re.IGNORECASE)
         
         # Sanitize HTML to prevent XSS while preserving formatting
         if description:
