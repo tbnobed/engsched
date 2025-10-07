@@ -83,70 +83,102 @@
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-        
-        // Hide the original textarea
-        const textarea = document.getElementById('description');
-        textarea.style.display = 'none';
-        
-        // Create editor container
-        const editorContainer = document.createElement('div');
-        editorContainer.id = 'editor-container';
-        editorContainer.style.height = '400px';
-        textarea.parentNode.insertBefore(editorContainer, textarea);
-        
-        // Initialize Quill
-        const quill = new Quill('#editor-container', {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ 'header': [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link', 'image'],
-                    ['clean']
-                ]
+        try {
+            // Get CSRF token
+            const csrfTokenElement = document.querySelector('input[name="csrf_token"]');
+            if (!csrfTokenElement) {
+                console.error('CSRF token not found');
+                return;
             }
-        });
-        
-        // Handle image upload
-        quill.getModule('toolbar').addHandler('image', function() {
-            const input = document.createElement('input');
-            input.setAttribute('type', 'file');
-            input.setAttribute('accept', 'image/png, image/jpeg, image/jpg, image/gif, image/webp');
-            input.click();
+            const csrfToken = csrfTokenElement.value;
             
-            input.onchange = function() {
-                const file = input.files[0];
-                if (file) {
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    
-                    fetch('{{ url_for("editor_upload_image") }}', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': csrfToken
-                        },
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        const range = quill.getSelection();
-                        quill.insertEmbed(range.index, 'image', result.location);
-                    })
-                    .catch(error => {
-                        console.error('Error uploading image:', error);
-                        alert('Failed to upload image');
-                    });
+            // Get the original textarea
+            const textarea = document.getElementById('description');
+            if (!textarea) {
+                console.error('Description textarea not found');
+                return;
+            }
+            
+            // Hide the original textarea
+            textarea.style.display = 'none';
+            
+            // Create editor container
+            const editorContainer = document.createElement('div');
+            editorContainer.id = 'editor-container';
+            editorContainer.style.height = '400px';
+            textarea.parentNode.insertBefore(editorContainer, textarea);
+            
+            // Check if Quill is loaded
+            if (typeof Quill === 'undefined') {
+                console.error('Quill editor library not loaded');
+                textarea.style.display = 'block';
+                return;
+            }
+            
+            // Initialize Quill
+            const quill = new Quill('#editor-container', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link', 'image'],
+                        ['clean']
+                    ]
                 }
-            };
-        });
-        
-        // Sync content to textarea on form submit
-        const form = textarea.closest('form');
-        form.addEventListener('submit', function() {
-            textarea.value = quill.root.innerHTML;
-        });
+            });
+            
+            // Handle image upload
+            quill.getModule('toolbar').addHandler('image', function() {
+                const input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                input.setAttribute('accept', 'image/png, image/jpeg, image/jpg, image/gif, image/webp');
+                input.click();
+                
+                input.onchange = function() {
+                    const file = input.files[0];
+                    if (file) {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        
+                        fetch('{{ url_for("editor_upload_image") }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrfToken
+                            },
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            const range = quill.getSelection();
+                            quill.insertEmbed(range.index, 'image', result.location);
+                        })
+                        .catch(error => {
+                            console.error('Error uploading image:', error);
+                            alert('Failed to upload image');
+                        });
+                    }
+                };
+            });
+            
+            // Sync content to textarea on form submit
+            const form = textarea.closest('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    textarea.value = quill.root.innerHTML;
+                });
+            } else {
+                console.error('Form not found');
+            }
+        } catch (error) {
+            console.error('Error initializing Quill editor:', error);
+            // Make sure the textarea is visible if there's an error
+            const textarea = document.getElementById('description');
+            if (textarea) {
+                textarea.style.display = 'block';
+            }
+        }
     });
 </script>
 {% endblock %}
