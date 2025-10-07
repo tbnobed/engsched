@@ -71,6 +71,12 @@ def send_ticket_to_n8n(ticket_id: int, title: str, description: str) -> Optional
     Returns:
         The formatted AI analysis HTML, or None if the request fails
     """
+    # Check if AI analysis is enabled
+    ai_enabled = os.environ.get('AI_ANALYSIS_ENABLED', 'false').lower() == 'true'
+    if not ai_enabled:
+        logger.info("AI analysis is disabled via AI_ANALYSIS_ENABLED environment variable")
+        return None
+    
     webhook_url = os.environ.get('N8N_WEBHOOK_URL')
     
     if not webhook_url:

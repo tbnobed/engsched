@@ -26,6 +26,9 @@ services:
       - CHAT_ENABLED=${CHAT_ENABLED:-true}
       - CHAT_URL=${CHAT_URL:-https://chat.obedtv.com}
       - STUDIO_BOOKING_API_URL=${STUDIO_BOOKING_API_URL:-https://plex.bookstud.io}
+      # AI Analysis Configuration
+      - AI_ANALYSIS_ENABLED=${AI_ANALYSIS_ENABLED:-false}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
     env_file:
       - .env
     volumes:

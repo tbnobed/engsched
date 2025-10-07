@@ -35,7 +35,7 @@ Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality 
 - **Profile Pictures**: Upload and display of user profile pictures across various sections like sidebar, admin table, and OOO events.
 - **Dashboard Enhancements**: Real-time team statistics (availability, active tickets, schedule coverage, time off), dynamic timeline, and studio bookings display with timezone awareness.
 - **Backup & Restore**: System for exporting and importing complete application data, including users, schedules, tickets, and recurring templates.
-- **AI-Powered Ticket Analysis**: Automatic webhook integration with n8n for AI-powered ticket analysis - sends new ticket data to configured webhook and posts AI response as system comment without triggering email notifications.
+- **AI-Powered Ticket Analysis**: Optional webhook integration with n8n for AI-powered ticket analysis (controlled via `AI_ANALYSIS_ENABLED` environment variable). When enabled, sends new ticket data to configured webhook and posts comprehensive AI response (summary, possible causes, suggested solutions, references, confidence level) as system comment marked with 🤖 icon without triggering email notifications.
 
 ## External Dependencies
 
