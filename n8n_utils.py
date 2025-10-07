@@ -53,8 +53,26 @@ def send_ticket_to_n8n(ticket_id: int, title: str, description: str) -> Optional
                 
                 # Extract the AI response text
                 # Handle different possible response formats
+                ai_response = None
                 if isinstance(response_data, dict):
+                    # Try standard fields first
                     ai_response = response_data.get('response') or response_data.get('analysis') or response_data.get('message')
+                    
+                    # If not found, try OpenAI chat completion format
+                    if not ai_response and 'choices' in response_data:
+                        try:
+                            choices = response_data.get('choices', [])
+                            if choices and len(choices) > 0:
+                                message = choices[0].get('message', {})
+                                content = message.get('content')
+                                # Content might be a dict with 'response' field
+                                if isinstance(content, dict):
+                                    ai_response = content.get('response') or content.get('analysis') or content.get('message')
+                                elif isinstance(content, str):
+                                    ai_response = content
+                        except (IndexError, KeyError, TypeError) as e:
+                            logger.warning(f"Error extracting from OpenAI format: {e}")
+                            
                 elif isinstance(response_data, str):
                     ai_response = response_data
                 else:
