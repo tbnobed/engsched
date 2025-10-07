@@ -92,10 +92,11 @@ def dashboard():
     today_end_utc = today_end_local.astimezone(pytz.UTC)
     
     # Get relevant ticket information with unread activity detection
+    # Sort by date first so new tickets always appear, then by priority for grouping
     recent_tickets = Ticket.query.filter(
         Ticket.status.in_(['open', 'in_progress', 'pending']),
         Ticket.archived == False
-    ).order_by(Ticket.priority.desc(), Ticket.created_at.desc()).limit(10).all()
+    ).order_by(Ticket.created_at.desc(), Ticket.priority.desc()).limit(10).all()
     
     # Add unread activity indicators using the new universal badge system
     # NEW badges now disappear when ANY technician interacts with the ticket
