@@ -130,10 +130,14 @@
                     </div>
                 </div>
 
-                <div class="d-flex gap-1 mb-3">
+                <div class="d-flex gap-1 mb-2 flex-wrap">
                     <button type="button" class="btn btn-outline-primary btn-sm" onclick="mFillStandard()">9-5</button>
                     <button type="button" class="btn btn-outline-info btn-sm" onclick="mFillEarly()">7-3</button>
                     <button type="button" class="btn btn-outline-danger btn-sm" onclick="mClearAll()">Clear</button>
+                </div>
+                <div class="d-flex gap-1 mb-3 flex-wrap">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="mCopyToWeekdays()">Mon → Weekdays</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="mCopyToAllDays()">Mon → All Days</button>
                 </div>
 
                 {% set days = [
@@ -231,6 +235,18 @@ function mFillEarly() {
 }
 function mClearAll() {
     ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].forEach(function(d) { mClearDay(d); });
+}
+function mCopyToWeekdays() {
+    var srcStart = document.getElementById('m_monday_start').value;
+    var srcEnd = document.getElementById('m_monday_end').value;
+    if (!srcStart || !srcEnd) { alert('Set Monday\'s times first, then copy.'); return; }
+    ['tuesday','wednesday','thursday','friday'].forEach(function(d) { mSetDay(d, srcStart, srcEnd); });
+}
+function mCopyToAllDays() {
+    var srcStart = document.getElementById('m_monday_start').value;
+    var srcEnd = document.getElementById('m_monday_end').value;
+    if (!srcStart || !srcEnd) { alert('Set Monday\'s times first, then copy.'); return; }
+    ['tuesday','wednesday','thursday','friday','saturday','sunday'].forEach(function(d) { mSetDay(d, srcStart, srcEnd); });
 }
 </script>
 

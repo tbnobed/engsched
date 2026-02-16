@@ -102,7 +102,7 @@
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2 mb-3">
+                        <div class="d-flex gap-2 mb-3 flex-wrap">
                             <button type="button" class="btn btn-outline-primary btn-sm" onclick="fillStandardWeek()">
                                 <i data-feather="zap" style="width: 14px; height: 14px;" class="me-1"></i>
                                 Standard Week (9-5)
@@ -110,6 +110,14 @@
                             <button type="button" class="btn btn-outline-info btn-sm" onclick="fillEarlyWeek()">
                                 <i data-feather="clock" style="width: 14px; height: 14px;" class="me-1"></i>
                                 Early Week (7-3)
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToWeekdays()">
+                                <i data-feather="copy" style="width: 14px; height: 14px;" class="me-1"></i>
+                                Copy Mon → Weekdays
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyToAllDays()">
+                                <i data-feather="copy" style="width: 14px; height: 14px;" class="me-1"></i>
+                                Copy Mon → All Days
                             </button>
                             <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearAllDays()">
                                 <i data-feather="x" style="width: 14px; height: 14px;" class="me-1"></i>
@@ -284,6 +292,32 @@ function clearAllDays() {
         endSel.disabled = true;
         startSel.value = '';
         endSel.value = '';
+    });
+}
+
+function copyToWeekdays() {
+    var srcStart = document.getElementById('monday_start').value;
+    var srcEnd = document.getElementById('monday_end').value;
+    if (!srcStart || !srcEnd) { alert('Set Monday\'s times first, then copy.'); return; }
+    ['tuesday', 'wednesday', 'thursday', 'friday'].forEach(function(day) {
+        document.getElementById(day + '_check').checked = true;
+        var s = document.getElementById(day + '_start');
+        var e = document.getElementById(day + '_end');
+        s.disabled = false; e.disabled = false;
+        s.value = srcStart; e.value = srcEnd;
+    });
+}
+
+function copyToAllDays() {
+    var srcStart = document.getElementById('monday_start').value;
+    var srcEnd = document.getElementById('monday_end').value;
+    if (!srcStart || !srcEnd) { alert('Set Monday\'s times first, then copy.'); return; }
+    ['tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].forEach(function(day) {
+        document.getElementById(day + '_check').checked = true;
+        var s = document.getElementById(day + '_start');
+        var e = document.getElementById(day + '_end');
+        s.disabled = false; e.disabled = false;
+        s.value = srcStart; e.value = srcEnd;
     });
 }
 </script>
