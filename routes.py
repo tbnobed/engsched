@@ -1315,15 +1315,20 @@ def save_self_schedule():
         # Generate schedules if auto-generate is enabled
         if template.active and template.auto_generate:
             try:
-                schedules = template.generate_schedules()
+                schedules, updated_count = template.generate_schedules()
+                for schedule in schedules:
+                    db.session.add(schedule)
+                template.last_generated = datetime.now(pytz.UTC)
+                db.session.commit()
+                parts = []
                 if schedules:
-                    for schedule in schedules:
-                        db.session.add(schedule)
-                    template.last_generated = datetime.now(pytz.UTC)
-                    db.session.commit()
-                    flash(f'Schedule saved and {len(schedules)} upcoming schedule entries generated!')
+                    parts.append(f'{len(schedules)} new entries created')
+                if updated_count:
+                    parts.append(f'{updated_count} existing entries updated')
+                if parts:
+                    flash(f'Schedule saved! {", ".join(parts)}.')
                 else:
-                    flash('Schedule saved! No new entries needed (already up to date).')
+                    flash('Schedule saved! All entries are already up to date.')
             except Exception as gen_error:
                 app.logger.error(f"Error generating schedules: {str(gen_error)}")
                 flash('Schedule template saved, but there was an issue generating entries.')
@@ -4316,14 +4321,12 @@ def generate_recurring_schedule(template_id):
         return render_template('admin/confirm_generate.html', template=template)
     
     try:
-        # Generate schedules with OOO conflict prevention
-        schedules = template.generate_schedules()
+        schedules, updated_count = template.generate_schedules()
         
-        if not schedules:
+        if not schedules and not updated_count:
             flash('No new schedules to generate. Either all schedules already exist or there are OOO conflicts preventing generation.', 'info')
             return redirect(url_for('recurring_schedules'))
         
-        # Count potential OOO conflicts (for information purposes)
         from datetime import date, timedelta
         start_date = date.today()
         end_date = start_date + timedelta(weeks=template.weeks_ahead)
@@ -4336,16 +4339,19 @@ def generate_recurring_schedule(template_id):
             Schedule.start_time <= pytz.UTC.localize(datetime.combine(end_date, datetime.max.time()))
         ).count()
         
-        # Add schedules to database
         for schedule in schedules:
             db.session.add(schedule)
         
-        # Update last generated timestamp
         template.last_generated = datetime.now(pytz.UTC)
         
         db.session.commit()
         
-        success_msg = f'Generated {len(schedules)} new schedule entries from template "{template.template_name}"!'
+        parts = []
+        if schedules:
+            parts.append(f'{len(schedules)} new entries created')
+        if updated_count:
+            parts.append(f'{updated_count} existing entries updated')
+        success_msg = f'Schedule "{template.template_name}": {", ".join(parts)}!'
         if ooo_conflicts > 0:
             success_msg += f' (Skipped {ooo_conflicts} days due to OOO conflicts)'
         
@@ -4369,10 +4375,8 @@ def preview_recurring_schedule(template_id):
     template = RecurringScheduleTemplate.query.get_or_404(template_id)
     
     try:
-        # Generate preview schedules without saving
-        schedules = template.generate_schedules()
+        schedules, updated_count = template.generate_schedules()
         
-        # Convert to dictionary format for easy display
         schedule_preview = []
         for schedule in schedules:
             # Convert UTC times to user's timezone for display
@@ -4463,20 +4467,20 @@ def auto_generate_recurring_schedules():
             
             if should_generate:
                 try:
-                    schedules = template.generate_schedules()
+                    schedules, updated_count = template.generate_schedules()
                     
-                    if schedules:
+                    if schedules or updated_count:
                         for schedule in schedules:
                             db.session.add(schedule)
                         
                         template.last_generated = datetime.now(pytz.UTC)
-                        total_generated += len(schedules)
+                        total_generated += len(schedules) + updated_count
                         generated_templates.append({
                             'template_name': template.template_name,
                             'technician': template.technician.username,
-                            'schedules_generated': len(schedules)
+                            'schedules_generated': len(schedules) + updated_count
                         })
-                        app.logger.info(f"Generated {len(schedules)} schedules for template '{template.template_name}'")
+                        app.logger.info(f"Generated {len(schedules)} new, updated {updated_count} for template '{template.template_name}'")
                     else:
                         app.logger.warning(f"No schedules generated for template '{template.template_name}'")
                         

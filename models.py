@@ -586,6 +586,7 @@ class RecurringScheduleTemplate(db.Model):
             monday = start_date + timedelta(days=days_until_monday)
         
         generated_schedules = []
+        updated_count = 0
         
         for week in range(weeks):
             week_start = monday + timedelta(weeks=week)
@@ -596,25 +597,19 @@ class RecurringScheduleTemplate(db.Model):
                 start_time_str, end_time_str = self.get_day_schedule(day_name)
                 
                 if start_time_str and end_time_str:
-                    # Calculate the actual date for this day
                     day_date = week_start + timedelta(days=day_idx)
                     
-                    # Parse time strings and create datetime objects
                     start_hour, start_minute = map(int, start_time_str.split(':'))
                     end_hour, end_minute = map(int, end_time_str.split(':'))
                     
-                    # Get technician's timezone
                     tech_tz = pytz.timezone(self.technician.get_timezone())
                     
-                    # Create datetime objects in technician's timezone
                     start_datetime = tech_tz.localize(datetime.combine(day_date, datetime.min.time().replace(hour=start_hour, minute=start_minute)))
                     end_datetime = tech_tz.localize(datetime.combine(day_date, datetime.min.time().replace(hour=end_hour, minute=end_minute)))
                     
-                    # Convert to UTC for database storage
                     start_datetime_utc = start_datetime.astimezone(pytz.UTC)
                     end_datetime_utc = end_datetime.astimezone(pytz.UTC)
                     
-                    # Check for OOO conflicts: Don't create schedules on days with OOO entries
                     date_start = pytz.UTC.localize(datetime.combine(day_date, datetime.min.time()))
                     date_end = pytz.UTC.localize(datetime.combine(day_date, datetime.max.time()))
                     
@@ -640,6 +635,7 @@ class RecurringScheduleTemplate(db.Model):
                         existing_schedule.start_time = start_datetime_utc
                         existing_schedule.end_time = end_datetime_utc
                         existing_schedule.location_id = self.location_id
+                        updated_count += 1
                     else:
                         schedule = Schedule(
                             technician_id=self.technician_id,
@@ -651,7 +647,7 @@ class RecurringScheduleTemplate(db.Model):
                         )
                         generated_schedules.append(schedule)
         
-        return generated_schedules
+        return generated_schedules, updated_count
     
     def to_dict(self):
         """Serialize recurring schedule template data"""

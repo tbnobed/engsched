@@ -287,21 +287,21 @@ def auto_generate_recurring_schedules_job():
                 
                 if should_generate:
                     try:
-                        schedules = template.generate_schedules()
+                        schedules, updated_count = template.generate_schedules()
                         
-                        if schedules:
+                        if schedules or updated_count:
                             for schedule in schedules:
                                 db.session.add(schedule)
                             
                             template.last_generated = datetime.now(pytz.UTC)
-                            total_generated += len(schedules)
+                            total_generated += len(schedules) + updated_count
                             
                             generated_templates.append({
                                 'template_name': template.template_name,
                                 'technician': template.technician.username,
-                                'schedules_generated': len(schedules)
+                                'schedules_generated': len(schedules) + updated_count
                             })
-                            app.logger.info(f"Generated {len(schedules)} schedules for template '{template.template_name}'")
+                            app.logger.info(f"Generated {len(schedules)} new, updated {updated_count} for template '{template.template_name}'")
                         else:
                             # Check for OOO conflicts to provide better logging
                             from datetime import date, timedelta
