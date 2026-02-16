@@ -72,6 +72,9 @@
                                             {% if template.auto_generate %}
                                                 <span class="badge bg-info ms-2">Auto-Generate</span>
                                             {% endif %}
+                                            {% if template.self_service %}
+                                                <span class="badge bg-warning text-dark ms-1">Self-Service</span>
+                                            {% endif %}
                                         </td>
                                         <td>
                                             <span class="badge" style="background-color: {{ template.technician.color }}20; color: {{ template.technician.color }};">

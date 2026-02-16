@@ -52,7 +52,7 @@
         </div>
     </div>
 
-    <div class="card">
+    <div class="card mb-4">
         <div class="card-header">
             <h5 class="mb-0">Change Password</h5>
         </div>
@@ -75,7 +75,164 @@
             </form>
         </div>
     </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i data-feather="calendar" style="width: 18px; height: 18px;" class="me-1"></i>
+                My Weekly Schedule
+            </h5>
+            {% if self_schedule %}
+            <span class="badge bg-{{ 'success' if self_schedule.active else 'secondary' }}" style="font-size: 0.7rem;">
+                {{ 'Active' if self_schedule.active else 'Inactive' }}
+            </span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">Set your regular working hours. The system will auto-generate your schedule.</p>
+            
+            <form method="POST" action="{{ url_for('save_self_schedule') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Location</label>
+                    <select name="location_id" class="form-select form-select-sm">
+                        <option value="0">-- No Location --</option>
+                        {% for loc in locations %}
+                        <option value="{{ loc.id }}" {% if self_schedule and self_schedule.location_id == loc.id %}selected{% endif %}>{{ loc.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Weeks Ahead</label>
+                        <select name="weeks_ahead" class="form-select form-select-sm">
+                            <option value="1" {% if self_schedule and self_schedule.weeks_ahead == 1 %}selected{% endif %}>1 week</option>
+                            <option value="2" {% if not self_schedule or self_schedule.weeks_ahead == 2 %}selected{% endif %}>2 weeks</option>
+                            <option value="3" {% if self_schedule and self_schedule.weeks_ahead == 3 %}selected{% endif %}>3 weeks</option>
+                            <option value="4" {% if self_schedule and self_schedule.weeks_ahead == 4 %}selected{% endif %}>4 weeks</option>
+                        </select>
+                    </div>
+                    <div class="col-6 d-flex align-items-end">
+                        <div>
+                            <div class="form-check form-switch mb-1">
+                                <input class="form-check-input" type="checkbox" name="schedule_active" id="m_schedule_active"
+                                       {% if not self_schedule or self_schedule.active %}checked{% endif %}>
+                                <label class="form-check-label small" for="m_schedule_active">Active</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="auto_generate" id="m_auto_generate"
+                                       {% if not self_schedule or self_schedule.auto_generate %}checked{% endif %}>
+                                <label class="form-check-label small" for="m_auto_generate">Auto-Generate</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-1 mb-3">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="mFillStandard()">9-5</button>
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="mFillEarly()">7-3</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="mClearAll()">Clear</button>
+                </div>
+
+                {% set days = [
+                    ('monday', 'Mon'),
+                    ('tuesday', 'Tue'),
+                    ('wednesday', 'Wed'),
+                    ('thursday', 'Thu'),
+                    ('friday', 'Fri'),
+                    ('saturday', 'Sat'),
+                    ('sunday', 'Sun')
+                ] %}
+                {% for day_key, day_label in days %}
+                {% set start_val = '' %}
+                {% set end_val = '' %}
+                {% set day_active = false %}
+                {% if self_schedule %}
+                    {% set start_val = self_schedule[day_key + '_start'] or '' %}
+                    {% set end_val = self_schedule[day_key + '_end'] or '' %}
+                    {% set day_active = start_val != '' and end_val != '' %}
+                {% endif %}
+                <div class="d-flex align-items-center mb-2 gap-2">
+                    <div class="form-check" style="width: 65px; min-width: 65px;">
+                        <input class="form-check-input m-day-check" type="checkbox"
+                               name="{{ day_key }}_enabled" id="m_{{ day_key }}_check"
+                               {% if day_active %}checked{% endif %}
+                               onchange="mToggleDay('{{ day_key }}')">
+                        <label class="form-check-label small" for="m_{{ day_key }}_check">{{ day_label }}</label>
+                    </div>
+                    <select class="form-select form-select-sm" name="{{ day_key }}_start" id="m_{{ day_key }}_start"
+                            {% if not day_active %}disabled{% endif %} style="font-size: 0.8rem;">
+                        <option value="">--:--</option>
+                        {% for h in range(5, 22) %}
+                        {% for m in ['00', '30'] %}
+                        {% set t = '%02d:%s'|format(h, m) %}
+                        <option value="{{ t }}" {% if start_val == t %}selected{% endif %}>{{ t }}</option>
+                        {% endfor %}
+                        {% endfor %}
+                    </select>
+                    <span class="text-muted">&ndash;</span>
+                    <select class="form-select form-select-sm" name="{{ day_key }}_end" id="m_{{ day_key }}_end"
+                            {% if not day_active %}disabled{% endif %} style="font-size: 0.8rem;">
+                        <option value="">--:--</option>
+                        {% for h in range(5, 22) %}
+                        {% for m in ['00', '30'] %}
+                        {% set t = '%02d:%s'|format(h, m) %}
+                        <option value="{{ t }}" {% if end_val == t %}selected{% endif %}>{{ t }}</option>
+                        {% endfor %}
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-success btn-sm w-100 mt-2">
+                    <i data-feather="save" style="width: 14px; height: 14px;" class="me-1"></i>
+                    Save My Schedule
+                </button>
+                
+                {% if self_schedule and self_schedule.last_generated %}
+                <small class="text-muted d-block text-center mt-2">
+                    Last generated: {{ self_schedule.last_generated.strftime('%b %d, %Y %I:%M %p') }}
+                </small>
+                {% endif %}
+            </form>
+        </div>
+    </div>
 </div>
+
+<script>
+function mToggleDay(day) {
+    var cb = document.getElementById('m_' + day + '_check');
+    var s = document.getElementById('m_' + day + '_start');
+    var e = document.getElementById('m_' + day + '_end');
+    if (cb.checked) { s.disabled = false; e.disabled = false; }
+    else { s.disabled = true; e.disabled = true; s.value = ''; e.value = ''; }
+}
+function mSetDay(day, start, end) {
+    document.getElementById('m_' + day + '_check').checked = true;
+    var s = document.getElementById('m_' + day + '_start');
+    var e = document.getElementById('m_' + day + '_end');
+    s.disabled = false; e.disabled = false; s.value = start; e.value = end;
+}
+function mClearDay(day) {
+    document.getElementById('m_' + day + '_check').checked = false;
+    var s = document.getElementById('m_' + day + '_start');
+    var e = document.getElementById('m_' + day + '_end');
+    s.disabled = true; e.disabled = true; s.value = ''; e.value = '';
+}
+function mFillStandard() {
+    ['monday','tuesday','wednesday','thursday','friday'].forEach(function(d) { mSetDay(d, '09:00', '17:00'); });
+    ['saturday','sunday'].forEach(function(d) { mClearDay(d); });
+}
+function mFillEarly() {
+    ['monday','tuesday','wednesday','thursday','friday'].forEach(function(d) { mSetDay(d, '07:00', '15:00'); });
+    ['saturday','sunday'].forEach(function(d) { mClearDay(d); });
+}
+function mClearAll() {
+    ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].forEach(function(d) { mClearDay(d); });
+}
+</script>
 
 <style>
 .mobile-title {

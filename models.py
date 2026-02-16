@@ -461,6 +461,9 @@ class RecurringScheduleTemplate(db.Model):
     weeks_ahead = db.Column(db.Integer, default=2)  # Generate 2 weeks ahead
     last_generated = db.Column(db.DateTime(timezone=True))
     
+    # Self-service flag: True when created by technician from their profile
+    self_service = db.Column(db.Boolean, default=False)
+    
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC))
     updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC), onupdate=lambda: datetime.now(pytz.UTC))
     
@@ -662,5 +665,6 @@ class RecurringScheduleTemplate(db.Model):
             'weeks_ahead': self.weeks_ahead,
             'last_generated': self.last_generated.isoformat() if self.last_generated else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'self_service': self.self_service
         }

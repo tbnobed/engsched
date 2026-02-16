@@ -31,7 +31,7 @@ Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality 
 - **Mobile Support**: Dedicated mobile interface with bottom navigation, optimized templates, and daily calendar view.
 - **Team Chat Integration**: Auto-launching chat with stay-on-top functionality and UI interaction preservation.
 - **Quick Links Management**: Customizable quick links with icon selection and administrative editing capabilities.
-- **Automated Scheduling**: Recurring schedule generation based on templates, with an automatic background scheduler.
+- **Automated Scheduling**: Recurring schedule generation based on templates, with an automatic background scheduler. Technicians can also set their own weekly schedule from their profile page (self-service), which creates a personal recurring template that auto-generates calendar entries.
 - **Profile Pictures**: Upload and display of user profile pictures across various sections like sidebar, admin table, and OOO events.
 - **Dashboard Enhancements**: Real-time team statistics (availability, active tickets, schedule coverage, time off), dynamic timeline, and studio bookings display with timezone awareness.
 - **Backup & Restore**: System for exporting and importing complete application data, including users, schedules, tickets, and recurring templates.

@@ -3,8 +3,8 @@
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
+        <div class="col-md-8">
+            <div class="card mb-4">
                 <div class="card-header">
                     <h3>Profile Settings</h3>
                 </div>
@@ -48,7 +48,243 @@
                     </form>
                 </div>
             </div>
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i data-feather="calendar" class="me-2"></i>
+                        My Weekly Schedule
+                    </h3>
+                    {% if self_schedule %}
+                    <span class="badge bg-{{ 'success' if self_schedule.active else 'secondary' }}">
+                        {{ 'Active' if self_schedule.active else 'Inactive' }}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Set your regular working hours. The system will automatically generate your schedule on the calendar.</p>
+                    
+                    <form method="POST" action="{{ url_for('save_self_schedule') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Location</label>
+                                <select name="location_id" class="form-select">
+                                    <option value="0">-- No Location --</option>
+                                    {% for loc in locations %}
+                                    <option value="{{ loc.id }}" {% if self_schedule and self_schedule.location_id == loc.id %}selected{% endif %}>{{ loc.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Weeks Ahead</label>
+                                <select name="weeks_ahead" class="form-select">
+                                    <option value="1" {% if self_schedule and self_schedule.weeks_ahead == 1 %}selected{% endif %}>1 week</option>
+                                    <option value="2" {% if not self_schedule or self_schedule.weeks_ahead == 2 %}selected{% endif %}>2 weeks</option>
+                                    <option value="3" {% if self_schedule and self_schedule.weeks_ahead == 3 %}selected{% endif %}>3 weeks</option>
+                                    <option value="4" {% if self_schedule and self_schedule.weeks_ahead == 4 %}selected{% endif %}>4 weeks</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="schedule_active" id="schedule_active" 
+                                           {% if not self_schedule or self_schedule.active %}checked{% endif %}
+                                           style="width: 2.5rem; height: 1.25rem;">
+                                    <label class="form-check-label ms-2" for="schedule_active">Active</label>
+                                </div>
+                                <div class="form-check form-switch mb-2 ms-3">
+                                    <input class="form-check-input" type="checkbox" name="auto_generate" id="auto_generate"
+                                           {% if not self_schedule or self_schedule.auto_generate %}checked{% endif %}
+                                           style="width: 2.5rem; height: 1.25rem;">
+                                    <label class="form-check-label ms-2" for="auto_generate">Auto-Generate</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mb-3">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="fillStandardWeek()">
+                                <i data-feather="zap" style="width: 14px; height: 14px;" class="me-1"></i>
+                                Standard Week (9-5)
+                            </button>
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="fillEarlyWeek()">
+                                <i data-feather="clock" style="width: 14px; height: 14px;" class="me-1"></i>
+                                Early Week (7-3)
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearAllDays()">
+                                <i data-feather="x" style="width: 14px; height: 14px;" class="me-1"></i>
+                                Clear All
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-3">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 140px;">Day</th>
+                                        <th style="width: 140px;">Start</th>
+                                        <th style="width: 30px;"></th>
+                                        <th style="width: 140px;">End</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set days = [
+                                        ('monday', 'Monday'),
+                                        ('tuesday', 'Tuesday'),
+                                        ('wednesday', 'Wednesday'),
+                                        ('thursday', 'Thursday'),
+                                        ('friday', 'Friday'),
+                                        ('saturday', 'Saturday'),
+                                        ('sunday', 'Sunday')
+                                    ] %}
+                                    {% for day_key, day_label in days %}
+                                    {% set start_val = '' %}
+                                    {% set end_val = '' %}
+                                    {% set day_active = false %}
+                                    {% if self_schedule %}
+                                        {% set start_val = self_schedule[day_key + '_start'] or '' %}
+                                        {% set end_val = self_schedule[day_key + '_end'] or '' %}
+                                        {% set day_active = start_val != '' and end_val != '' %}
+                                    {% endif %}
+                                    <tr>
+                                        <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input day-checkbox" type="checkbox" 
+                                                       name="{{ day_key }}_enabled" id="{{ day_key }}_check"
+                                                       {% if day_active %}checked{% endif %}
+                                                       onchange="toggleDayRow('{{ day_key }}')"
+                                                       style="width: 18px; height: 18px;">
+                                                <label class="form-check-label ms-1" for="{{ day_key }}_check">
+                                                    {{ day_label }}
+                                                </label>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="{{ day_key }}_start" id="{{ day_key }}_start"
+                                                    {% if not day_active %}disabled{% endif %}>
+                                                <option value="">--:--</option>
+                                                {% for h in range(5, 22) %}
+                                                {% for m in ['00', '30'] %}
+                                                {% set t = '%02d:%s'|format(h, m) %}
+                                                <option value="{{ t }}" {% if start_val == t %}selected{% endif %}>{{ t }}</option>
+                                                {% endfor %}
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td class="text-center text-muted">&mdash;</td>
+                                        <td>
+                                            <select class="form-select form-select-sm" name="{{ day_key }}_end" id="{{ day_key }}_end"
+                                                    {% if not day_active %}disabled{% endif %}>
+                                                <option value="">--:--</option>
+                                                {% for h in range(5, 22) %}
+                                                {% for m in ['00', '30'] %}
+                                                {% set t = '%02d:%s'|format(h, m) %}
+                                                <option value="{{ t }}" {% if end_val == t %}selected{% endif %}>{{ t }}</option>
+                                                {% endfor %}
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            <i data-feather="save" style="width: 16px; height: 16px;" class="me-1"></i>
+                            Save My Schedule
+                        </button>
+                        
+                        {% if self_schedule and self_schedule.last_generated %}
+                        <small class="text-muted ms-3">
+                            Last generated: {{ self_schedule.last_generated.strftime('%b %d, %Y at %I:%M %p') }}
+                        </small>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+function toggleDayRow(day) {
+    var checkbox = document.getElementById(day + '_check');
+    var startSelect = document.getElementById(day + '_start');
+    var endSelect = document.getElementById(day + '_end');
+    
+    if (checkbox.checked) {
+        startSelect.disabled = false;
+        endSelect.disabled = false;
+    } else {
+        startSelect.disabled = true;
+        endSelect.disabled = true;
+        startSelect.value = '';
+        endSelect.value = '';
+    }
+}
+
+function fillStandardWeek() {
+    var weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+    var weekends = ['saturday', 'sunday'];
+    
+    weekdays.forEach(function(day) {
+        document.getElementById(day + '_check').checked = true;
+        var startSel = document.getElementById(day + '_start');
+        var endSel = document.getElementById(day + '_end');
+        startSel.disabled = false;
+        endSel.disabled = false;
+        startSel.value = '09:00';
+        endSel.value = '17:00';
+    });
+    
+    weekends.forEach(function(day) {
+        document.getElementById(day + '_check').checked = false;
+        var startSel = document.getElementById(day + '_start');
+        var endSel = document.getElementById(day + '_end');
+        startSel.disabled = true;
+        endSel.disabled = true;
+        startSel.value = '';
+        endSel.value = '';
+    });
+}
+
+function fillEarlyWeek() {
+    var weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+    var weekends = ['saturday', 'sunday'];
+    
+    weekdays.forEach(function(day) {
+        document.getElementById(day + '_check').checked = true;
+        var startSel = document.getElementById(day + '_start');
+        var endSel = document.getElementById(day + '_end');
+        startSel.disabled = false;
+        endSel.disabled = false;
+        startSel.value = '07:00';
+        endSel.value = '15:00';
+    });
+    
+    weekends.forEach(function(day) {
+        document.getElementById(day + '_check').checked = false;
+        var startSel = document.getElementById(day + '_start');
+        var endSel = document.getElementById(day + '_end');
+        startSel.disabled = true;
+        endSel.disabled = true;
+        startSel.value = '';
+        endSel.value = '';
+    });
+}
+
+function clearAllDays() {
+    var allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    allDays.forEach(function(day) {
+        document.getElementById(day + '_check').checked = false;
+        var startSel = document.getElementById(day + '_start');
+        var endSel = document.getElementById(day + '_end');
+        startSel.disabled = true;
+        endSel.disabled = true;
+        startSel.value = '';
+        endSel.value = '';
+    });
+}
+</script>
 {% endblock %}

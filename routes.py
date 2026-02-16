@@ -1219,20 +1219,27 @@ def profile():
     form = EditUserForm(obj=current_user)
     password_form = ChangePasswordForm()
     
-    # For debugging
-    print(f"is_mobile_device() in profile: {is_mobile_device()}")
-    is_mobile = is_mobile_device()  # Force evaluation
-    print(f"is_mobile value in profile: {is_mobile}")
+    # Get self-service schedule template for current user
+    self_schedule = RecurringScheduleTemplate.query.filter_by(
+        technician_id=current_user.id,
+        self_service=True
+    ).first()
     
-    if is_mobile_device():
-        # Use mobile template with timezone list
+    # Get active locations for the location selector
+    locations = Location.query.filter_by(active=True).order_by(Location.name).all()
+    
+    is_mobile = is_mobile_device()
+    
+    if is_mobile:
         return render_template('mobile_profile.html', 
                              form=form, 
                              password_form=password_form,
-                             timezones=pytz.common_timezones)
+                             timezones=pytz.common_timezones,
+                             self_schedule=self_schedule,
+                             locations=locations)
     
-    # Use desktop template
-    return render_template('profile.html', form=form, password_form=password_form)
+    return render_template('profile.html', form=form, password_form=password_form,
+                         self_schedule=self_schedule, locations=locations)
 
 @app.route('/profile/update', methods=['POST'])
 @login_required
@@ -1247,6 +1254,87 @@ def update_profile():
             db.session.rollback()
             app.logger.error(f"Error updating profile: {str(e)}")
             flash('Error updating profile. Please try again.')
+    return redirect(url_for('profile'))
+
+@app.route('/profile/save-schedule', methods=['POST'])
+@login_required
+def save_self_schedule():
+    """Save or update a technician's self-service schedule template"""
+    try:
+        # Find existing self-service template or create new one
+        template = RecurringScheduleTemplate.query.filter_by(
+            technician_id=current_user.id,
+            self_service=True
+        ).first()
+        
+        if not template:
+            template = RecurringScheduleTemplate(
+                technician_id=current_user.id,
+                template_name=f"{current_user.username} - My Schedule",
+                self_service=True,
+                active=True,
+                auto_generate=True,
+                weeks_ahead=2
+            )
+            db.session.add(template)
+        
+        # Update location - validate it exists and is active
+        location_id = request.form.get('location_id')
+        if location_id and location_id != '0':
+            loc = Location.query.filter_by(id=int(location_id), active=True).first()
+            template.location_id = loc.id if loc else None
+        else:
+            template.location_id = None
+        
+        # Update auto-generate settings
+        template.auto_generate = 'auto_generate' in request.form
+        weeks_ahead = request.form.get('weeks_ahead')
+        template.weeks_ahead = int(weeks_ahead) if weeks_ahead and weeks_ahead.isdigit() and 1 <= int(weeks_ahead) <= 4 else 2
+        
+        # Update active status
+        template.active = 'schedule_active' in request.form
+        
+        # Update day schedules with time validation
+        import re
+        time_pattern = re.compile(r'^([01]\d|2[0-1]):[0-5][0-9]$')
+        days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        for day in days:
+            day_enabled = f'{day}_enabled' in request.form
+            start_val = request.form.get(f'{day}_start', '').strip()
+            end_val = request.form.get(f'{day}_end', '').strip()
+            
+            if day_enabled and start_val and end_val and time_pattern.match(start_val) and time_pattern.match(end_val) and start_val < end_val:
+                setattr(template, f'{day}_start', start_val)
+                setattr(template, f'{day}_end', end_val)
+            else:
+                setattr(template, f'{day}_start', None)
+                setattr(template, f'{day}_end', None)
+        
+        db.session.commit()
+        
+        # Generate schedules if auto-generate is enabled
+        if template.active and template.auto_generate:
+            try:
+                schedules = template.generate_schedules()
+                if schedules:
+                    for schedule in schedules:
+                        db.session.add(schedule)
+                    template.last_generated = datetime.now(pytz.UTC)
+                    db.session.commit()
+                    flash(f'Schedule saved and {len(schedules)} upcoming schedule entries generated!')
+                else:
+                    flash('Schedule saved! No new entries needed (already up to date).')
+            except Exception as gen_error:
+                app.logger.error(f"Error generating schedules: {str(gen_error)}")
+                flash('Schedule template saved, but there was an issue generating entries.')
+        else:
+            flash('Schedule template saved!')
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error saving self-service schedule: {str(e)}")
+        flash('Error saving schedule. Please try again.')
+    
     return redirect(url_for('profile'))
 
 @app.route('/profile/change-password', methods=['POST'])
