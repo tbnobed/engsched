@@ -614,13 +614,6 @@ class RecurringScheduleTemplate(db.Model):
                     start_datetime_utc = start_datetime.astimezone(pytz.UTC)
                     end_datetime_utc = end_datetime.astimezone(pytz.UTC)
                     
-                    # Check if schedule already exists for this time slot
-                    existing_schedule = Schedule.query.filter_by(
-                        technician_id=self.technician_id,
-                        start_time=start_datetime_utc,
-                        end_time=end_datetime_utc
-                    ).first()
-                    
                     # Check for OOO conflicts: Don't create schedules on days with OOO entries
                     date_start = pytz.UTC.localize(datetime.combine(day_date, datetime.min.time()))
                     date_end = pytz.UTC.localize(datetime.combine(day_date, datetime.max.time()))
@@ -634,10 +627,20 @@ class RecurringScheduleTemplate(db.Model):
                     ).first()
                     
                     if ooo_conflict:
-                        # Skip this day due to OOO conflict
                         continue
                     
-                    if not existing_schedule:
+                    existing_schedule = Schedule.query.filter(
+                        Schedule.technician_id == self.technician_id,
+                        Schedule.time_off == False,
+                        Schedule.start_time >= date_start,
+                        Schedule.start_time <= date_end
+                    ).first()
+                    
+                    if existing_schedule:
+                        existing_schedule.start_time = start_datetime_utc
+                        existing_schedule.end_time = end_datetime_utc
+                        existing_schedule.location_id = self.location_id
+                    else:
                         schedule = Schedule(
                             technician_id=self.technician_id,
                             start_time=start_datetime_utc,
