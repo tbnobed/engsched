@@ -49,6 +49,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const techColMap = {};
             techIdsSeen.forEach((tid, idx) => { techColMap[tid] = idx; });
 
+            const totalTechs = techIdsSeen.length;
+            // Stagger step must exceed avatar visual diameter so no two avatars ever
+            // land close enough vertically to look like they overlap.
+            const STAGGER_PX = 38;
+            // Center the stagger group around the midpoint so avatars sit in the
+            // middle of the working day, cascading symmetrically up and down.
+            const groupSpan   = (totalTechs - 1) * STAGGER_PX;
+
             normalEvents.forEach(event => {
                 const startTime = new Date(event.dataset.startTime);
                 const endTime   = new Date(event.dataset.endTime);
@@ -58,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const top      = startHour * 60;
                 const height   = (endHour - startHour) * 60;
-                const colIndex = techColMap[event.dataset.technicianId];
+                const colIndex = techColMap[event.dataset.technicianId] || 0;
 
                 event.style.top    = `${top}px`;
                 event.style.height = `${height}px`;
@@ -98,10 +106,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     event.appendChild(avatar);
                 }
 
-                // Place avatar at the vertical midpoint of this schedule block
+                // Stagger avatar vertically: each technician's avatar is offset by
+                // colIndex * STAGGER_PX from the group centre (which sits at the
+                // midpoint of this event block).  Clamped so it stays on the line.
                 const avatarEl = event.querySelector('.sched-avatar');
                 if (avatarEl) {
-                    avatarEl.style.top = `${height / 2}px`;
+                    const midpoint     = height / 2;
+                    const staggerOffset = colIndex * STAGGER_PX - groupSpan / 2;
+                    const avatarTop    = Math.max(16, Math.min(height - 16, midpoint + staggerOffset));
+                    avatarEl.style.top = `${avatarTop}px`;
                 }
             });
         });
