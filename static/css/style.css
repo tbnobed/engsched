@@ -202,15 +202,13 @@ div[style*="gradient"] {
 }
 
 /* ── Calendar indicator-style events (thin line + avatar) ── */
+/* Positioning (top/left/width/height) is set by server-side inline styles — no overrides here */
 .calendar-container .schedule-event {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     min-height: 0 !important;
-    width: 38px !important;
-    left: auto !important;
-    right: auto !important;
     overflow: visible !important;
     cursor: pointer;
 }
