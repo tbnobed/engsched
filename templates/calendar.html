@@ -137,7 +137,8 @@
                          data-toggle="tooltip" data-html="true"
                          title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}&ndash;{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br>&#128205; {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
                         <div class="sched-line"></div>
-                        <div class="sched-avatar" style="top:{{ disp.get('avatar_top', disp.get('height',60)//2) }}px; background:{{ user_color }}; border-color:{{ user_color }};"
+                        <div class="sched-name">{{ schedule.technician.username }}</div>
+                        <div class="sched-avatar" style="top:{{ disp.get('avatar_top', disp.get('height',60)//2) }}px; border-color:{{ user_color }};"
                              title="{{ schedule.technician.username }}">
                             {% if schedule.technician.profile_picture %}
                                 <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}"
