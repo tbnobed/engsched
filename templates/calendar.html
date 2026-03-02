@@ -109,22 +109,48 @@
                 <div class="current-time-line" data-time=""></div>
                 {% endif %}
                 {% for schedule in schedules if schedule.start_time.date() == current_date.date() %}
+                {% set disp = schedule_display.get(schedule.id, {}) %}
+                {% if disp.get('is_ooo') %}
+                    {# ── OOO all-day banner ── #}
+                    <div class="schedule-event all-day-time-off"
+                         style="--user-color:#6a6d6c; top:{{ disp.ooo_top }}px; height:54px; left:0; right:0; width:100%; z-index:20;"
+                         data-schedule-id="{{ schedule.id }}"
+                         data-technician-id="{{ schedule.technician_id }}"
+                         data-start-time="{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-time-off="true" data-all-day="true">
+                        <div class="ooo-banner">
+                            <span>🏖️</span><strong>{{ disp.username }}</strong>&nbsp;&mdash;&nbsp;OOO ALL DAY
+                        </div>
+                    </div>
+                {% else %}
+                    {# ── Normal schedule indicator: thin line + staggered avatar ── #}
+                    {% set user_color = schedule.technician.color %}
                     <div class="schedule-event"
-                         style="--user-color: {{ '#6a6d6c' if schedule.time_off else schedule.technician.color }};"
+                         style="--user-color:{{ user_color }}; position:absolute; top:{{ disp.get('top',0) }}px; height:{{ disp.get('height',60) }}px; left:{{ disp.get('left',0) }}px; width:{{ slot_width }}px; z-index:10;"
                          data-schedule-id="{{ schedule.id }}"
                          data-technician-id="{{ schedule.technician_id }}"
                          data-start-time="{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
                          data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
                          data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
-                         data-all-day="{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}"
-                         data-toggle="tooltip"
-                         data-html="true"
+                         data-all-day="false"
+                         data-toggle="tooltip" data-html="true"
                          title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}&ndash;{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br>&#128205; {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
+                        <div class="sched-line"></div>
+                        <div class="sched-avatar" style="top:{{ disp.get('avatar_top', disp.get('height',60)//2) }}px; background:{{ user_color }}; border-color:{{ user_color }};"
+                             title="{{ schedule.technician.username }}">
+                            {% if schedule.technician.profile_picture %}
+                                <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}"
+                                     alt="{{ schedule.technician.username }}">
+                            {% else %}
+                                {{ schedule.technician.username[0].upper() }}
+                            {% endif %}
+                        </div>
                         <span class="schedule-username d-none">{{ schedule.technician.username }}</span>
-                        <span class="schedule-profile-pic d-none">{{ url_for('static', filename=schedule.technician.profile_picture) if schedule.technician.profile_picture else '' }}</span>
                         <span class="schedule-location d-none">{{ schedule.location.name if schedule.location else '' }}</span>
                         <span class="schedule-desc d-none">{{ schedule.description or '' }}</span>
                     </div>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>

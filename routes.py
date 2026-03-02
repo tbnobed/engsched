@@ -1609,7 +1609,63 @@ def calendar():
     
     # Check for force mobile parameter for testing
     force_mobile = request.args.get('mobile') == 'true'
-    
+
+    # ── Server-side column assignment ─────────────────────────────────────────
+    # Compute every pixel position in Python so the template can use plain inline
+    # styles — no JavaScript positioning needed, guaranteed no overlap.
+    _SLOT_W   = 48   # px per technician lane
+    _STAGGER  = 38   # vertical stagger between adjacent avatars (> avatar diameter)
+    _AV_HALF  = 16   # half of 32px avatar
+
+    from collections import defaultdict
+
+    # One sorted tech list per calendar day (using UTC date, same as template filter)
+    _day_techs = defaultdict(list)
+    for _s in schedules:
+        if not (_s.time_off and _s.all_day):
+            _d = _s.start_time.date()
+            if _s.technician_id not in _day_techs[_d]:
+                _day_techs[_d].append(_s.technician_id)
+    for _d in _day_techs:
+        _day_techs[_d].sort()
+
+    _day_ooo = defaultdict(int)   # ooo banner index per day
+    schedule_display = {}
+    for _s in schedules:
+        if _s.time_off and _s.all_day:
+            _d = _s.start_time.date()
+            _ooo_idx = _day_ooo[_d]
+            _day_ooo[_d] += 1
+            schedule_display[_s.id] = {
+                'is_ooo': True,
+                'ooo_top': _ooo_idx * 58,
+                'username': _s.technician.username,
+            }
+        else:
+            _ls = _s.start_time.astimezone(viewing_tz)
+            _le = _s.end_time.astimezone(viewing_tz)
+            _sh = _ls.hour + _ls.minute / 60
+            _eh = _le.hour + _le.minute / 60
+            if _eh == 0:
+                _eh = 24
+            _top    = int(_sh * 60)
+            _height = max(30, int((_eh - _sh) * 60))
+            _d      = _s.start_time.date()
+            _tlist  = _day_techs[_d]
+            _cidx   = _tlist.index(_s.technician_id) if _s.technician_id in _tlist else 0
+            _total  = len(_tlist)
+            _span   = (_total - 1) * _STAGGER
+            _av_top = max(_AV_HALF, min(_height - _AV_HALF,
+                          _height // 2 + _cidx * _STAGGER - _span // 2))
+            schedule_display[_s.id] = {
+                'is_ooo':    False,
+                'left':      _cidx * _SLOT_W,
+                'top':       _top,
+                'height':    _height,
+                'avatar_top': _av_top,
+            }
+    # ─────────────────────────────────────────────────────────────────────────
+
     # Check if user is on a mobile device and redirect to mobile dashboard
     if is_mobile_device() or force_mobile:
         print("Mobile device detected in calendar - redirecting to mobile dashboard")
@@ -1617,6 +1673,8 @@ def calendar():
     else:
         return render_template('calendar.html', 
                             schedules=schedules,
+                            schedule_display=schedule_display,
+                            slot_width=_SLOT_W,
                             week_start=week_start,
                             week_end=week_start + timedelta(days=7),
                             form=form,
