@@ -5,217 +5,97 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Bootstrap modal
     const scheduleModal = new bootstrap.Modal(document.getElementById('scheduleModal'));
 
-    // Calculate schedule positions and handle overlaps
+    // Position schedule indicators (thin line + avatar) in each day column
     function positionSchedules() {
-        const daySlots = document.querySelectorAll('.day-slots');
-        daySlots.forEach(daySlot => {
-            const events = daySlot.querySelectorAll('.schedule-event');
-            const eventArray = Array.from(events);
+        const SLOT_WIDTH = 40;   // px width per technician lane
+        const AVATAR_SIZE = 34;  // px diameter of profile picture circle
 
-            // Sort events by start time
-            eventArray.sort((a, b) => {
-                const aStart = new Date(a.dataset.startTime);
-                const bStart = new Date(b.dataset.startTime);
-                return aStart - bStart;
-            });
+        document.querySelectorAll('.day-slots').forEach(daySlot => {
+            const allEvents = Array.from(daySlot.querySelectorAll('.schedule-event'));
 
-            // Find overlapping groups
-            const overlappingGroups = [];
+            // Split OOO all-day banners from normal schedule indicators
+            const oooEvents    = allEvents.filter(e => e.dataset.allDay === 'true' && e.dataset.timeOff === 'true');
+            const normalEvents = allEvents.filter(e => !(e.dataset.allDay === 'true' && e.dataset.timeOff === 'true'));
 
-            eventArray.forEach(event => {
-                let foundGroup = false;
-                const eventStart = new Date(event.dataset.startTime);
-                const eventEnd = new Date(event.dataset.endTime);
+            // ── OOO all-day banners ───────────────────────────────────────
+            oooEvents.forEach((event, idx) => {
+                event.style.top     = `${idx * 58}px`;
+                event.style.height  = '54px';
+                event.style.left    = '0';
+                event.style.right   = '0';
+                event.style.width   = '100%';
+                event.style.zIndex  = 20;
+                event.classList.add('all-day-time-off');
 
-                // Normalize end time - treat 00:00 as 24:00
-                const normalizedEndHour = eventEnd.getHours() === 0 && eventEnd.getMinutes() === 0 
-                    ? 24 
-                    : eventEnd.getHours() + eventEnd.getMinutes() / 60;
-
-                // Check if event overlaps with any existing group
-                for (let group of overlappingGroups) {
-                    const overlapsWithGroup = group.some(existingEvent => {
-                        const existingStart = new Date(existingEvent.dataset.startTime);
-                        const existingEnd = new Date(existingEvent.dataset.endTime);
-                        const existingEndHour = existingEnd.getHours() === 0 && existingEnd.getMinutes() === 0 
-                            ? 24 
-                            : existingEnd.getHours() + existingEnd.getMinutes() / 60;
-
-                        return (
-                            eventStart < (existingEndHour === 24 ? new Date(existingEnd).setHours(24, 0, 0) : existingEnd) && 
-                            (normalizedEndHour === 24 ? new Date(eventEnd).setHours(24, 0, 0) : eventEnd) > existingStart
-                        );
-                    });
-
-                    if (overlapsWithGroup) {
-                        group.push(event);
-                        foundGroup = true;
-                        break;
-                    }
-                }
-
-                // If no overlapping group found, create new group
-                if (!foundGroup) {
-                    overlappingGroups.push([event]);
-                }
-
-                // Merge overlapping groups
-                for (let i = overlappingGroups.length - 1; i > 0; i--) {
-                    for (let j = i - 1; j >= 0; j--) {
-                        const groupOverlaps = overlappingGroups[i].some(event1 => 
-                            overlappingGroups[j].some(event2 => {
-                                const start1 = new Date(event1.dataset.startTime);
-                                const end1 = new Date(event1.dataset.endTime);
-                                const end1Hour = end1.getHours() === 0 && end1.getMinutes() === 0 ? 24 : end1.getHours() + end1.getMinutes() / 60;
-
-                                const start2 = new Date(event2.dataset.startTime);
-                                const end2 = new Date(event2.dataset.endTime);
-                                const end2Hour = end2.getHours() === 0 && end2.getMinutes() === 0 ? 24 : end2.getHours() + end2.getMinutes() / 60;
-
-                                return (
-                                    start1 < (end2Hour === 24 ? new Date(end2).setHours(24, 0, 0) : end2) && 
-                                    (end1Hour === 24 ? new Date(end1).setHours(24, 0, 0) : end1) > start2
-                                );
-                            })
-                        );
-
-                        if (groupOverlaps) {
-                            overlappingGroups[j] = [...overlappingGroups[j], ...overlappingGroups[i]];
-                            overlappingGroups.splice(i, 1);
-                            break;
-                        }
-                    }
+                if (!event.querySelector('.ooo-banner')) {
+                    const usernameEl = event.querySelector('.schedule-username');
+                    const username   = usernameEl ? usernameEl.textContent.trim() : '';
+                    const banner     = document.createElement('div');
+                    banner.className = 'ooo-banner';
+                    banner.innerHTML = `<span>🏖️</span><strong>${username}</strong>&nbsp;&mdash;&nbsp;OOO ALL DAY`;
+                    event.appendChild(banner);
                 }
             });
 
-            // Position events vertically and handle overlaps
-            eventArray.forEach(event => {
-                const startTime = new Date(event.dataset.startTime);
-                const endTime = new Date(event.dataset.endTime);
-                const startHour = startTime.getHours() + startTime.getMinutes() / 60;
-                let endHour = endTime.getHours() + endTime.getMinutes() / 60;
-                const isTimeOff = event.dataset.timeOff === 'true';
-
-                // Special handling for all-day time-off events using data attribute
-                const isAllDay = event.dataset.allDay === 'true';
-                if (isTimeOff && isAllDay) {
-                    // Position as compact "OOO all day" entry in 00:00 slot only
-                    event.style.top = '0px';
-                    event.style.height = '60px'; // Height of one time slot
-                    event.classList.add('all-day-time-off');
-                    
-                    // Apply enhanced styling for better visibility
-                    event.style.setProperty('border', '2px dashed #cc5500', 'important');
-                    event.style.setProperty('background', 'linear-gradient(135deg, #fff4e6 0%, #ffe8cc 100%)', 'important');
-                    event.style.setProperty('border-radius', '8px', 'important');
-                    event.style.setProperty('box-shadow', '0 2px 8px rgba(204, 85, 0, 0.3)', 'important');
-                    
-                    // Add vacation emoji icon
-                    if (!event.querySelector('.vacation-icon')) {
-                        const icon = document.createElement('span');
-                        icon.className = 'vacation-icon';
-                        icon.textContent = '🏖️';
-                        icon.style.cssText = 'position: absolute; top: 2px; right: 4px; font-size: 14px; opacity: 0.7;';
-                        event.appendChild(icon);
-                    }
-                    
-                    // Update the display text to show "OOO all day"
-                    const scheduleTitle = event.querySelector('.schedule-title');
-                    if (scheduleTitle) {
-                        const username = scheduleTitle.textContent.replace(' - Time Off', '');
-                        scheduleTitle.textContent = username + ' - OOO ALL DAY';
-                        scheduleTitle.style.setProperty('font-weight', 'bold', 'important');
-                        scheduleTitle.style.setProperty('color', 'white', 'important');
-                        scheduleTitle.style.setProperty('text-shadow', '1px 1px 2px rgba(0, 0, 0, 0.3)', 'important');
-                        scheduleTitle.style.setProperty('text-transform', 'uppercase', 'important');
-                        scheduleTitle.style.setProperty('letter-spacing', '0.5px', 'important');
-                    }
-                    
-                    // Hide the time display for all-day events
-                    const scheduleTime = event.querySelector('.schedule-time');
-                    if (scheduleTime) {
-                        scheduleTime.style.display = 'none';
-                    }
-                } else {
-                    // Normal event positioning
-                    // Special handling for midnight (00:00) as end time
-                    if (endHour === 0) {
-                        endHour = 24;
-                    }
-
-                    const top = startHour * 60;
-                    const height = (endHour - startHour) * 60;
-
-                    event.style.top = `${top}px`;
-                    event.style.height = `${height}px`;
-                }
+            // ── Normal schedule indicators ────────────────────────────────
+            // Sort by start time then by technician id for stable ordering
+            normalEvents.sort((a, b) => {
+                const diff = new Date(a.dataset.startTime) - new Date(b.dataset.startTime);
+                return diff !== 0 ? diff : (a.dataset.technicianId > b.dataset.technicianId ? 1 : -1);
             });
 
-            // Position overlapping events horizontally - handle same-start-time events specially
-            overlappingGroups.forEach(group => {
-                if (group.length > 1) {
-                    // Group events by start time within this overlap group
-                    const startTimeGroups = {};
-                    group.forEach(event => {
-                        const startTime = event.dataset.startTime;
-                        if (!startTimeGroups[startTime]) {
-                            startTimeGroups[startTime] = [];
-                        }
-                        startTimeGroups[startTime].push(event);
-                    });
-                    
-                    // Get all start time groups that have multiple events
-                    const sameTimeGroups = Object.values(startTimeGroups).filter(g => g.length > 1);
-                    
-                    // If we have events that start at the same time, handle them specially
-                    if (sameTimeGroups.length > 0) {
-                        let processedEvents = new Set();
-                        
-                        sameTimeGroups.forEach(sameTimeGroup => {
-                            // Divide these same-time events evenly across column width
-                            const eventWidth = Math.floor(100 / sameTimeGroup.length);
-                            const spacing = 1;
-                            
-                            sameTimeGroup.forEach((event, index) => {
-                                const leftPosition = index * eventWidth;
-                                const actualWidth = Math.min(eventWidth - spacing, 100 - leftPosition);
-                                
-                                event.style.width = `${Math.max(10, actualWidth)}%`;
-                                event.style.left = `${leftPosition}%`;
-                                event.style.right = 'auto';
-                                event.style.boxSizing = 'border-box';
-                                event.style.zIndex = 10 + index;
-                                
-                                processedEvents.add(event);
-                            });
-                        });
-                        
-                        // Handle remaining events (that don't have same start times) with offset positioning
-                        const remainingEvents = group.filter(event => !processedEvents.has(event));
-                        const offsetStep = 8;
-                        
-                        remainingEvents.forEach((event, index) => {
-                            const leftPosition = index * offsetStep;
-                            const maxWidth = 100 - leftPosition;
-                            event.style.width = `${Math.min(75, maxWidth)}%`;
-                            event.style.left = `${leftPosition}%`;
-                            event.style.right = 'auto';
-                            event.style.boxSizing = 'border-box';
-                            event.style.zIndex = 20 + index; // Higher z-index for overlapping events
-                        });
+            normalEvents.forEach((event, colIndex) => {
+                const startTime  = new Date(event.dataset.startTime);
+                const endTime    = new Date(event.dataset.endTime);
+                const startHour  = startTime.getHours() + startTime.getMinutes() / 60;
+                let   endHour    = endTime.getHours()   + endTime.getMinutes()   / 60;
+                if (endHour === 0) endHour = 24;
+
+                const top    = startHour * 60;
+                const height = (endHour - startHour) * 60;
+
+                event.style.top    = `${top}px`;
+                event.style.height = `${height}px`;
+                event.style.left   = `${colIndex * SLOT_WIDTH}px`;
+                event.style.width  = `${SLOT_WIDTH}px`;
+                event.style.right  = 'auto';
+                event.style.zIndex = 10;
+
+                // Create the vertical line
+                if (!event.querySelector('.sched-line')) {
+                    const line = document.createElement('div');
+                    line.className = 'sched-line';
+                    event.appendChild(line);
+                }
+
+                // Create the circular avatar
+                if (!event.querySelector('.sched-avatar')) {
+                    const avatar       = document.createElement('div');
+                    avatar.className   = 'sched-avatar';
+
+                    const profilePicEl = event.querySelector('.schedule-profile-pic');
+                    const usernameEl   = event.querySelector('.schedule-username');
+                    const profilePic   = profilePicEl ? profilePicEl.textContent.trim() : '';
+                    const username     = usernameEl   ? usernameEl.textContent.trim()   : '?';
+
+                    if (profilePic) {
+                        const img  = document.createElement('img');
+                        img.src    = profilePic;
+                        img.alt    = username;
+                        img.title  = username;
+                        avatar.appendChild(img);
                     } else {
-                        // No same-time events, use standard offset positioning
-                        const offsetStep = 8;
-                        group.forEach((event, index) => {
-                            const leftPosition = index * offsetStep;
-                            const maxWidth = 100 - leftPosition;
-                            event.style.width = `${Math.min(75, maxWidth)}%`;
-                            event.style.left = `${leftPosition}%`;
-                            event.style.right = 'auto';
-                            event.style.boxSizing = 'border-box';
-                            event.style.zIndex = 10 + index;
-                        });
+                        avatar.textContent = username.charAt(0).toUpperCase();
+                        avatar.title       = username;
                     }
+
+                    event.appendChild(avatar);
+                }
+
+                // Keep avatar vertically centered at the midpoint of the schedule
+                const avatarEl = event.querySelector('.sched-avatar');
+                if (avatarEl) {
+                    avatarEl.style.top = `${height / 2}px`;
                 }
             });
         });

@@ -119,27 +119,11 @@
                          data-all-day="{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}"
                          data-toggle="tooltip"
                          data-html="true"
-                         title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.strftime('%H:%M') }}-{{ schedule.end_time.strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br><i data-feather='map-pin'></i> {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
-                        <div class="schedule-header">
-                            <div class="schedule-title">
-                                {{ schedule.technician.username }}{% if schedule.time_off %} - Time Off{% endif %}
-                            </div>
-                            <div class="schedule-time">
-                                {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
-                            </div>
-                            {% if schedule.location %}
-                            <div class="schedule-location">
-                                <i data-feather="map-pin"></i>
-                                {{ schedule.location.name }}
-                            </div>
-                            {% endif %}
-                            {% if schedule.description and not schedule.time_off %}
-                            <div class="schedule-desc">{{ schedule.description }}</div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="schedule-body">
-                        </div>
+                         title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}&ndash;{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br>&#128205; {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
+                        <span class="schedule-username d-none">{{ schedule.technician.username }}</span>
+                        <span class="schedule-profile-pic d-none">{{ url_for('static', filename=schedule.technician.profile_picture) if schedule.technician.profile_picture else '' }}</span>
+                        <span class="schedule-location d-none">{{ schedule.location.name if schedule.location else '' }}</span>
+                        <span class="schedule-desc d-none">{{ schedule.description or '' }}</span>
                     </div>
                 {% endfor %}
             </div>
@@ -420,34 +404,7 @@
     min-height: 38px;
 }
 
-/* Enhanced styling for all-day time-off events */
-.all-day-time-off {
-    border: 2px dashed #cc5500 !important;
-    background: linear-gradient(135deg, #fff4e6 0%, #ffe8cc 100%) !important;
-    border-radius: 8px !important;
-    box-shadow: 0 2px 8px rgba(204, 85, 0, 0.3) !important;
-    animation: subtle-pulse 3s ease-in-out infinite;
-}
-
-.all-day-time-off .schedule-title {
-    font-weight: bold !important;
-    color: white !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-size: 0.9rem !important;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.all-day-time-off::before {
-    content: '🏖️';
-    position: absolute;
-    top: 2px;
-    right: 4px;
-    font-size: 14px;
-    opacity: 0.7;
-}
-
-/* Dark theme styling for all-day time-off */
+/* Dark theme override for OOO all-day banners */
 [data-bs-theme="dark"] .all-day-time-off,
 .dark-theme .all-day-time-off {
     background: linear-gradient(135deg, #4a3a2c 0%, #3d2e1f 100%) !important;
@@ -455,22 +412,9 @@
     box-shadow: 0 2px 8px rgba(255, 153, 51, 0.3) !important;
 }
 
-[data-bs-theme="dark"] .all-day-time-off .schedule-title,
-.dark-theme .all-day-time-off .schedule-title {
-    color: white !important;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-/* Subtle pulse animation */
-@keyframes subtle-pulse {
-    0%, 100% { 
-        transform: scale(1);
-        box-shadow: 0 2px 8px rgba(204, 85, 0, 0.3);
-    }
-    50% { 
-        transform: scale(1.02);
-        box-shadow: 0 3px 12px rgba(204, 85, 0, 0.4);
-    }
+[data-bs-theme="dark"] .ooo-banner,
+.dark-theme .ooo-banner {
+    color: #ffcc88 !important;
 }
 </style>
 
