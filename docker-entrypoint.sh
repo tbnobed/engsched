@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-# Function to wait for the PostgreSQL database to be ready
 wait_for_postgres() {
   echo "Waiting for PostgreSQL to be ready..."
   
@@ -26,36 +25,26 @@ wait_for_postgres() {
   return 1
 }
 
-# Wait for PostgreSQL before starting the application
 if [ "$1" = "gunicorn" ] || [ "$1" = "python" ] || [ "$1" = "flask" ]; then
   wait_for_postgres
   
-  # Check if database schema needs updating
-  echo "Checking database schema..."
-  if [ -f "/app/update_database_schema.sql" ]; then
-    echo "Running database schema updates..."
-    PGPASSWORD="$POSTGRES_PASSWORD" psql -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /app/update_database_schema.sql
+  echo "============================================"
+  echo "Running comprehensive schema verification..."
+  echo "============================================"
+  if [ -f "/app/ensure_schema.sql" ]; then
+    PGPASSWORD="$POSTGRES_PASSWORD" psql -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /app/ensure_schema.sql
     if [ $? -eq 0 ]; then
-      echo "Database schema updated successfully"
+      echo "Schema verification completed successfully"
     else
-      echo "Database schema update failed - continuing anyway"
+      echo "WARNING: Schema verification had errors - continuing anyway"
     fi
+  else
+    echo "WARNING: ensure_schema.sql not found - skipping schema verification"
   fi
-  
-  # Check if quick_link description column migration needs to run
-  if [ -f "/app/add_quick_link_description_column.sql" ]; then
-    echo "Running quick_link description column migration..."
-    PGPASSWORD="$POSTGRES_PASSWORD" psql -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /app/add_quick_link_description_column.sql
-    if [ $? -eq 0 ]; then
-      echo "Quick link description column migration completed successfully"
-    else
-      echo "Quick link description column migration failed - continuing anyway"
-    fi
-  fi
+  echo "============================================"
   
   echo "Starting the application with: $@"
   exec "$@"
 fi
 
-# If the command does not start with application commands (e.g., bash, sh), execute it directly
 exec "$@"

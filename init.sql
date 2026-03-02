@@ -135,6 +135,9 @@ CREATE TABLE recurring_schedule_template (
     weeks_ahead INTEGER DEFAULT 2,
     last_generated TIMESTAMP WITH TIME ZONE,
     
+    -- Self-service flag: true when created by technician from profile
+    self_service BOOLEAN DEFAULT FALSE,
+    
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
