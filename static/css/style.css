@@ -242,11 +242,11 @@ div[style*="gradient"] {
     position: absolute;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: var(--user-color);
-    border: 3px solid var(--user-color);
+    border: 2px solid var(--user-color);
     overflow: hidden;
     z-index: 5;
     box-shadow: 0 2px 8px rgba(0,0,0,0.45);
@@ -255,7 +255,7 @@ div[style*="gradient"] {
     justify-content: center;
     color: white;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 0;
     cursor: pointer;
     transition: transform 0.15s, box-shadow 0.15s;

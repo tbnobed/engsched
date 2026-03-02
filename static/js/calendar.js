@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Position schedule indicators (thin line + avatar) in each day column
     function positionSchedules() {
-        const SLOT_WIDTH = 40;   // px width per technician lane
-        const AVATAR_SIZE = 34;  // px diameter of profile picture circle
+        const SLOT_WIDTH  = 48;  // px per technician lane — wide enough avatars never touch
+        const AVATAR_SIZE = 32;  // px diameter — fits inside lane with clear margins
 
         document.querySelectorAll('.day-slots').forEach(daySlot => {
             const allEvents = Array.from(daySlot.querySelectorAll('.schedule-event'));
@@ -19,12 +19,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // ── OOO all-day banners ───────────────────────────────────────
             oooEvents.forEach((event, idx) => {
-                event.style.top     = `${idx * 58}px`;
-                event.style.height  = '54px';
-                event.style.left    = '0';
-                event.style.right   = '0';
-                event.style.width   = '100%';
-                event.style.zIndex  = 20;
+                event.style.top    = `${idx * 58}px`;
+                event.style.height = '54px';
+                event.style.left   = '0';
+                event.style.right  = '0';
+                event.style.width  = '100%';
+                event.style.zIndex = 20;
                 event.classList.add('all-day-time-off');
 
                 if (!event.querySelector('.ooo-banner')) {
@@ -38,21 +38,27 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             // ── Normal schedule indicators ────────────────────────────────
-            // Sort by start time then by technician id for stable ordering
-            normalEvents.sort((a, b) => {
-                const diff = new Date(a.dataset.startTime) - new Date(b.dataset.startTime);
-                return diff !== 0 ? diff : (a.dataset.technicianId > b.dataset.technicianId ? 1 : -1);
+            // One lane per TECHNICIAN — collect unique tech IDs sorted numerically
+            // so the same person always lands in the same column regardless of event order.
+            const techIdsSeen = [];
+            normalEvents.forEach(e => {
+                const tid = e.dataset.technicianId;
+                if (!techIdsSeen.includes(tid)) techIdsSeen.push(tid);
             });
+            techIdsSeen.sort((a, b) => parseInt(a) - parseInt(b));
+            const techColMap = {};
+            techIdsSeen.forEach((tid, idx) => { techColMap[tid] = idx; });
 
-            normalEvents.forEach((event, colIndex) => {
-                const startTime  = new Date(event.dataset.startTime);
-                const endTime    = new Date(event.dataset.endTime);
-                const startHour  = startTime.getHours() + startTime.getMinutes() / 60;
-                let   endHour    = endTime.getHours()   + endTime.getMinutes()   / 60;
+            normalEvents.forEach(event => {
+                const startTime = new Date(event.dataset.startTime);
+                const endTime   = new Date(event.dataset.endTime);
+                const startHour = startTime.getHours() + startTime.getMinutes() / 60;
+                let   endHour   = endTime.getHours()   + endTime.getMinutes()   / 60;
                 if (endHour === 0) endHour = 24;
 
-                const top    = startHour * 60;
-                const height = (endHour - startHour) * 60;
+                const top      = startHour * 60;
+                const height   = (endHour - startHour) * 60;
+                const colIndex = techColMap[event.dataset.technicianId];
 
                 event.style.top    = `${top}px`;
                 event.style.height = `${height}px`;
@@ -68,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     event.appendChild(line);
                 }
 
-                // Create the circular avatar
+                // Create the circular avatar (once per event element)
                 if (!event.querySelector('.sched-avatar')) {
                     const avatar       = document.createElement('div');
                     avatar.className   = 'sched-avatar';
@@ -79,10 +85,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     const username     = usernameEl   ? usernameEl.textContent.trim()   : '?';
 
                     if (profilePic) {
-                        const img  = document.createElement('img');
-                        img.src    = profilePic;
-                        img.alt    = username;
-                        img.title  = username;
+                        const img = document.createElement('img');
+                        img.src   = profilePic;
+                        img.alt   = username;
+                        img.title = username;
                         avatar.appendChild(img);
                     } else {
                         avatar.textContent = username.charAt(0).toUpperCase();
@@ -92,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     event.appendChild(avatar);
                 }
 
-                // Keep avatar vertically centered at the midpoint of the schedule
+                // Place avatar at the vertical midpoint of this schedule block
                 const avatarEl = event.querySelector('.sched-avatar');
                 if (avatarEl) {
                     avatarEl.style.top = `${height / 2}px`;
