@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "O8wYM_uenXGIkpq-zJYO4"
+uri = "file://attached_assets/backup_users_only.json"
+type = "unspecified"
+title = "Users-Only Backup (18 users)"
