@@ -2,8 +2,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Feather icons
     feather.replace();
 
-    // Initialize Bootstrap modal
-    const scheduleModal = new bootstrap.Modal(document.getElementById('scheduleModal'));
+    // Initialize Bootstrap modal with static backdrop to prevent closing on outside clicks
+    const scheduleModalEl = document.getElementById('scheduleModal');
+    const scheduleModal = scheduleModalEl ? bootstrap.Modal.getOrCreateInstance(scheduleModalEl, { backdrop: 'static' }) : null;
 
     function positionSchedules() {
         document.querySelectorAll('.schedule-event').forEach(function(el) {
