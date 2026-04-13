@@ -158,7 +158,7 @@
 
                         <div id="single_date_section" class="mb-3">
                             <label class="form-label">Date</label>
-                            <input type="date" id="schedule_date" class="form-control">
+                            <input type="date" id="schedule_date" name="schedule_date" class="form-control">
                         </div>
 
                         <div id="multi_date_section" class="mb-3" style="display:none;">
@@ -232,7 +232,7 @@
                         <div class="row mb-3">
                             <div class="col">
                                 <label class="form-label">Start Time</label>
-                                <select id="start_hour" class="form-control" onchange="updateEndTimeOptions()">
+                                <select id="start_hour" name="start_hour" class="form-control" onchange="updateEndTimeOptions()">
                                     {% for hour in range(24) %}
                                         <option value="{{ '%02d:00'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
                                         <option value="{{ '%02d:30'|format(hour) }}">{{ '%02d:30'|format(hour) }}</option>
@@ -241,7 +241,7 @@
                             </div>
                             <div class="col">
                                 <label class="form-label">End Time</label>
-                                <select id="end_hour" class="form-control">
+                                <select id="end_hour" name="end_hour" class="form-control">
                                     {% for hour in range(24) %}
                                         {% if hour > 0 %}
                                         <option value="{{ '%02d:00'|format(hour) }}">{{ '%02d:00'|format(hour) }}</option>
@@ -778,12 +778,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             return;
                         }
                         var sortedDates = selectedDates.slice().sort();
-                        if (!dateInput) { dateInput = sortedDates[0]; document.getElementById('schedule_date').value = dateInput; }
+                        dateInput = sortedDates[0];
+                        document.getElementById('schedule_date').value = dateInput;
                         document.getElementById('start_time_input').value = sortedDates[0] + ' ' + startHour + ':00';
                         document.getElementById('end_time_input').value = sortedDates[0] + ' ' + endHour + ':00';
-                        var allDates = selectedDates.slice();
-                        if (allDates.indexOf(dateInput) === -1) allDates.push(dateInput);
-                        document.getElementById('repeat_days_input').value = allDates.sort().join(',');
+                        document.getElementById('repeat_days_input').value = sortedDates.join(',');
                     } else if (schedMode === 'range') {
                         var rangeVal = document.getElementById('repeat_days_input').value;
                         if (!rangeVal) {
