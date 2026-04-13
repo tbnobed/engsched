@@ -1061,11 +1061,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Date(year, month - 1, day);
     }
     
-    function toggleRepeatDaysSelection() {
+    window.toggleRepeatDaysSelection = function() {
         initMiniCalendar();
-    }
+    };
 
-    function switchSchedMode(mode) {
+    window.switchSchedMode = function(mode) {
         document.getElementById('single_date_section').style.display = mode === 'single' ? '' : 'none';
         document.getElementById('multi_date_section').style.display  = mode === 'multi'  ? '' : 'none';
         document.getElementById('range_date_section').style.display  = mode === 'range'  ? '' : 'none';
@@ -1084,13 +1084,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (mode === 'single' || mode === 'range') {
             document.getElementById('repeat_days_input').value = '';
         }
-    }
+    };
 
     function _fmtDate(d) {
         return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     }
 
-    function quickSelect(preset) {
+    window.quickSelect = function(preset) {
         var today = new Date();
         var dow = today.getDay();
         var dates = [];
@@ -1115,14 +1115,14 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSelectedDatesDisplay();
         updateMiniCalendar();
         updateSelectedCount();
-    }
+    };
 
-    function updateSelectedCount() {
+    window.updateSelectedCount = function() {
         var el = document.getElementById('selected-count');
         if (el) el.textContent = selectedDates.length;
-    }
+    };
 
-    function updateRangePreview() {
+    window.updateRangePreview = function() {
         var startVal = document.getElementById('range_start').value;
         var endVal = document.getElementById('range_end').value;
         var preview = document.getElementById('range-preview');
@@ -1146,7 +1146,7 @@ document.addEventListener('DOMContentLoaded', function() {
         preview.innerHTML = '<strong>' + count + ' schedules</strong> will be created (' + labels.join(', ') + ')';
         document.getElementById('repeat_days_input').value = dates.join(',');
         document.getElementById('schedule_date').value = dates[0] || startVal;
-    }
+    };
     
     // Force consistent grid line colors - fix 23:00 line issue
     function fixGridLineColors() {
