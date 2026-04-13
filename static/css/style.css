@@ -313,6 +313,185 @@ div[style*="gradient"] {
     border-radius: 50%;
 }
 
+/* ── View toggle ── */
+.view-toggle .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.view-toggle .btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* ── Staff view header ── */
+.staff-header {
+    padding: 6px 4px !important;
+    height: auto !important;
+    min-height: 40px;
+}
+.staff-header-inner {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+}
+.staff-header-name {
+    font-size: 0.8em;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.staff-avatar-sm {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    border-radius: 50%;
+    border: 2px solid #888;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    color: white;
+    background: #1a1d21;
+}
+.staff-avatar-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+/* ── Horizontal view ── */
+.horiz-grid {
+    display: grid;
+    grid-template-columns: 160px repeat(7, 1fr);
+    gap: 1px;
+    background: #dee2e6;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.horiz-corner {
+    background: #f8f9fa;
+    padding: 8px;
+    font-weight: bold;
+    text-align: center;
+    position: sticky;
+    left: 0;
+    z-index: 3;
+}
+
+.horiz-day-header {
+    padding: 10px 4px;
+    background: #f8f9fa;
+    font-weight: bold;
+    text-align: center;
+    font-size: 0.85em;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+.horiz-day-header.today {
+    background-color: #007bff;
+    color: white;
+}
+
+.horiz-tech-label {
+    background: #f8f9fa;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.85em;
+    white-space: nowrap;
+    overflow: hidden;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    border-left: 3px solid var(--user-color);
+}
+
+.horiz-cell {
+    background: white;
+    position: relative;
+    min-height: 48px;
+    padding: 3px 0;
+}
+.horiz-cell.today {
+    background-color: rgba(0, 123, 255, 0.04);
+}
+
+.horiz-event {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    background: color-mix(in srgb, var(--user-color) 20%, transparent);
+    border: 1px solid color-mix(in srgb, var(--user-color) 40%, transparent);
+    border-left: 3px solid var(--user-color);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: background 0.15s;
+    z-index: 1;
+}
+.horiz-event:hover {
+    background: color-mix(in srgb, var(--user-color) 30%, transparent);
+    z-index: 5;
+}
+.horiz-event-time {
+    font-size: 9px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.horiz-ooo {
+    position: relative;
+    left: auto;
+    width: 100%;
+    top: auto;
+    bottom: auto;
+    background: linear-gradient(135deg, #fff4e6 0%, #ffe8cc 100%);
+    border: 1px dashed #cc5500;
+    border-left: 3px solid #cc5500;
+    color: #6c4a00;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 4px 6px;
+}
+
+/* ── Dark mode overrides for new views ── */
+[data-bs-theme="dark"] .horiz-grid,
+body.dark-mode .horiz-grid {
+    background: #2d2d2d;
+}
+[data-bs-theme="dark"] .horiz-corner,
+[data-bs-theme="dark"] .horiz-day-header,
+[data-bs-theme="dark"] .horiz-tech-label,
+body.dark-mode .horiz-corner,
+body.dark-mode .horiz-day-header,
+body.dark-mode .horiz-tech-label {
+    background: #1e1e2e;
+    color: #e0e0e0;
+}
+[data-bs-theme="dark"] .horiz-cell,
+body.dark-mode .horiz-cell {
+    background: #252535;
+}
+[data-bs-theme="dark"] .horiz-cell.today,
+body.dark-mode .horiz-cell.today {
+    background: rgba(0, 123, 255, 0.08);
+}
+
 /* OOO all-day banner — full-width compact strip */
 .calendar-container .schedule-event.all-day-time-off {
     background: linear-gradient(135deg, #fff4e6 0%, #ffe8cc 100%) !important;

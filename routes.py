@@ -1610,6 +1610,17 @@ def calendar():
     # Check for force mobile parameter for testing
     force_mobile = request.args.get('mobile') == 'true'
 
+    calendar_view = request.args.get('view', 'week')
+    if calendar_view not in ('week', 'staff', 'horizontal'):
+        calendar_view = 'week'
+
+    # Build unique technician list for staff view
+    _week_techs = {}
+    for _s in schedules:
+        if _s.technician_id not in _week_techs and _s.technician:
+            _week_techs[_s.technician_id] = _s.technician
+    staff_list = sorted(_week_techs.values(), key=lambda u: u.username.lower())
+
     # ── Server-side column assignment ─────────────────────────────────────────
     # Each technician gets an equal-width lane within the day column.
     # Lanes use percentage-based widths so they scale with screen size.
@@ -1683,6 +1694,8 @@ def calendar():
                             today=datetime.now(viewing_tz),
                             user_timezone=str(viewing_tz),
                             viewing_tz_param=viewing_tz_param,
+                            calendar_view=calendar_view,
+                            staff_list=staff_list,
                             datetime=datetime,
                             timedelta=timedelta)
 
@@ -1692,6 +1705,17 @@ def new_schedule():
     # Get the week_start parameter to maintain the same view
     week_start = request.args.get('week_start') or request.form.get('week_start')
     personal_view = request.args.get('personal_view') == 'true' or request.form.get('personal_view') == 'true'
+    cal_view = request.form.get('calendar_view')
+
+    def _cal_redirect(week_start=week_start, **extra):
+        """Build redirect preserving calendar_view."""
+        kw = {}
+        if week_start:
+            kw['week_start'] = week_start
+        if cal_view and cal_view in ('staff', 'horizontal'):
+            kw['view'] = cal_view
+        kw.update(extra)
+        return redirect(url_for('calendar', **kw))
     
     form = ScheduleForm()
 
@@ -2205,7 +2229,7 @@ def new_schedule():
                 if personal_view:
                     return redirect(url_for('personal_schedule', week_start=week_start))
                 else:
-                    return redirect(url_for('calendar', week_start=week_start))
+                    return _cal_redirect()
 
         except Exception as e:
             db.session.rollback()
@@ -2227,7 +2251,7 @@ def new_schedule():
                 if personal_view:
                     return redirect(url_for('personal_schedule', week_start=week_start))
                 else:
-                    return redirect(url_for('calendar', week_start=week_start))
+                    return _cal_redirect()
 
     # Check if user is on mobile device and redirect to appropriate mobile route
     if is_mobile_device():
@@ -2239,7 +2263,7 @@ def new_schedule():
         if personal_view:
             return redirect(url_for('personal_schedule', week_start=week_start))
         else:
-            return redirect(url_for('calendar', week_start=week_start))
+            return _cal_redirect()
 
 @app.route('/schedule/delete/<int:schedule_id>')
 @login_required
@@ -2259,13 +2283,21 @@ def delete_schedule(schedule_id):
                      request.args.get('return_to') == 'personal_schedule' or 
                      request.form.get('return_to') == 'personal_schedule')
     app.logger.debug(f"Personal view: {personal_view}")
+
+    del_view = request.args.get('view')
+    def _del_cal_redirect():
+        kw = {}
+        if week_start:
+            kw['week_start'] = week_start
+        if del_view and del_view in ('staff', 'horizontal'):
+            kw['view'] = del_view
+        return redirect(url_for('calendar', **kw))
     
     # Try to get the schedule, but don't force a 404 if not found
     schedule = Schedule.query.get(schedule_id)
     if not schedule:
         app.logger.warning(f"Schedule with ID {schedule_id} not found")
         flash('Schedule not found or already deleted.')
-        # Check if user is on mobile device and redirect to appropriate mobile route
         if is_mobile_device():
             if personal_view:
                 return redirect(url_for('mobile_personal_schedule', week_start=week_start))
@@ -2275,13 +2307,12 @@ def delete_schedule(schedule_id):
             if personal_view:
                 return redirect(url_for('personal_schedule', week_start=week_start))
             else:
-                return redirect(url_for('calendar', week_start=week_start))
+                return _del_cal_redirect()
     
     app.logger.debug(f"Schedule found: {schedule.id}, technician_id: {schedule.technician_id}")
 
     if schedule.technician_id != current_user.id and not current_user.is_admin:
         flash('You do not have permission to delete this schedule.')
-        # Check if user is on mobile device and redirect to appropriate mobile route
         if is_mobile_device():
             if personal_view:
                 return redirect(url_for('mobile_personal_schedule', week_start=week_start))
@@ -2291,7 +2322,7 @@ def delete_schedule(schedule_id):
             if personal_view:
                 return redirect(url_for('personal_schedule', week_start=week_start))
             else:
-                return redirect(url_for('calendar', week_start=week_start))
+                return _del_cal_redirect()
 
     try:
         send_schedule_notification(schedule, 'deleted', f"Schedule deleted by {current_user.username}")
@@ -2303,8 +2334,6 @@ def delete_schedule(schedule_id):
         flash('Error deleting schedule.')
         app.logger.error(f"Error deleting schedule: {str(e)}")
 
-    # Redirect back to the same week view
-    # Check if user is on mobile device and redirect to appropriate mobile route
     if is_mobile_device():
         if personal_view:
             return redirect(url_for('mobile_personal_schedule', week_start=week_start))
@@ -2314,7 +2343,7 @@ def delete_schedule(schedule_id):
         if personal_view:
             return redirect(url_for('personal_schedule', week_start=week_start))
         else:
-            return redirect(url_for('calendar', week_start=week_start))
+            return _del_cal_redirect()
 
 @app.route('/schedule/copy_previous_week', methods=['POST'])
 @login_required

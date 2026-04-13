@@ -39,23 +39,23 @@
                 Next Month <i data-feather="chevrons-right"></i>
             </a>
             {% else %}
-            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location) }}" 
+            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location, view=calendar_view if calendar_view != 'week' else None) }}" 
                class="btn btn-outline-secondary me-2">
                 <i data-feather="chevrons-left"></i> Previous Month
             </a>
-            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location) }}" 
+            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location, view=calendar_view if calendar_view != 'week' else None) }}" 
                class="btn btn-outline-primary me-2">
                 <i data-feather="chevron-left"></i> Previous Week
             </a>
-            <a href="{{ url_for('calendar', location_id=selected_location) }}" 
+            <a href="{{ url_for('calendar', location_id=selected_location, view=calendar_view if calendar_view != 'week' else None) }}" 
                class="btn btn-outline-primary me-2">
                 Current Week
             </a>
-            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location) }}"
+            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location, view=calendar_view if calendar_view != 'week' else None) }}"
                class="btn btn-outline-primary me-2">
                 Next Week <i data-feather="chevron-right"></i>
             </a>
-            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location) }}"
+            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location, view=calendar_view if calendar_view != 'week' else None) }}"
                class="btn btn-outline-secondary me-2">
                 Next Month <i data-feather="chevrons-right"></i>
             </a>
@@ -72,8 +72,22 @@
         </div>
     </div>
 
+    {# ── View toggle ── #}
+    <div class="d-flex align-items-center mb-3">
+        <div class="btn-group view-toggle" role="group">
+            <button type="button" class="btn btn-sm {{ 'btn-primary' if calendar_view == 'week' else 'btn-outline-secondary' }}" onclick="switchView('week')" title="Week view – days as columns">
+                <i data-feather="columns"></i> Week
+            </button>
+            <button type="button" class="btn btn-sm {{ 'btn-primary' if calendar_view == 'staff' else 'btn-outline-secondary' }}" onclick="switchView('staff')" title="Staff view – one column per person">
+                <i data-feather="users"></i> Staff
+            </button>
+            <button type="button" class="btn btn-sm {{ 'btn-primary' if calendar_view == 'horizontal' else 'btn-outline-secondary' }}" onclick="switchView('horizontal')" title="Horizontal view – time left-to-right">
+                <i data-feather="align-left"></i> Horizontal
+            </button>
+        </div>
+    </div>
+
     <script>
-        // Pass timezone from server to client
         window.userTimezone = '{{ user_timezone }}';
         
         function applyLocationFilter(locationId) {
@@ -85,8 +99,20 @@
             }
             window.location.href = currentUrl.toString();
         }
+
+        function switchView(view) {
+            const currentUrl = new URL(window.location.href);
+            if (view === 'week') {
+                currentUrl.searchParams.delete('view');
+            } else {
+                currentUrl.searchParams.set('view', view);
+            }
+            window.location.href = currentUrl.toString();
+        }
     </script>
 
+    {% if calendar_view == 'week' %}
+    {# ════════════════════  WEEK VIEW (default)  ════════════════════ #}
     <div class="calendar-grid">
         <div class="time-column">
             {% for hour in range(24) %}
@@ -111,7 +137,6 @@
                 {% for schedule in schedules if schedule.start_time.date() == current_date.date() %}
                 {% set disp = schedule_display.get(schedule.id, {}) %}
                 {% if disp.get('is_ooo') %}
-                    {# ── OOO all-day banner ── #}
                     <div class="schedule-event all-day-time-off"
                          style="--user-color:#6a6d6c; top:{{ disp.ooo_top }}px; height:54px; left:0; right:0; width:100%; z-index:20;"
                          data-schedule-id="{{ schedule.id }}"
@@ -124,7 +149,6 @@
                         </div>
                     </div>
                 {% else %}
-                    {# ── Normal schedule: colored bar lane + avatar ── #}
                     {% set user_color = schedule.technician.color %}
                     <div class="schedule-event sched-bar"
                          style="--user-color:{{ user_color }}; position:absolute; top:{{ disp.get('top',0) }}px; height:{{ disp.get('height',60) }}px; left:{{ disp.get('left_pct',0) }}%; width:{{ disp.get('width_pct',100) }}%; z-index:10;"
@@ -144,8 +168,7 @@
                         <div class="sched-avatar" style="top:{{ disp.get('avatar_top', disp.get('height',60)//2) }}px; border-color:{{ user_color }};"
                              title="{{ schedule.technician.username }}">
                             {% if schedule.technician.profile_picture %}
-                                <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}"
-                                     alt="{{ schedule.technician.username }}">
+                                <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}" alt="{{ schedule.technician.username }}">
                             {% else %}
                                 {{ schedule.technician.username[0].upper() }}
                             {% endif %}
@@ -161,6 +184,135 @@
         {% endfor %}
     </div>
 
+    {% elif calendar_view == 'staff' %}
+    {# ════════════════════  STAFF VIEW – one column per technician  ════════════════════ #}
+    <div class="calendar-grid staff-grid" style="grid-template-columns: 80px repeat({{ staff_list|length }}, 1fr);">
+        <div class="time-column">
+            {% for hour in range(24) %}
+                <div class="hour-slot">{{ "%02d:00"|format(hour) }}</div>
+            {% endfor %}
+        </div>
+
+        {% for tech in staff_list %}
+        <div class="day-column staff-column" style="--user-color:{{ tech.color }};">
+            <div class="day-header staff-header">
+                <div class="staff-header-inner">
+                    <div class="staff-avatar-sm" style="border-color:{{ tech.color }};">
+                        {% if tech.profile_picture %}
+                            <img src="{{ url_for('static', filename=tech.profile_picture) }}" alt="{{ tech.username }}">
+                        {% else %}
+                            {{ tech.username[0].upper() }}
+                        {% endif %}
+                    </div>
+                    <span class="staff-header-name">{{ tech.username }}</span>
+                </div>
+            </div>
+            <div class="day-slots staff-slots" data-date="{{ today.strftime('%Y-%m-%d') }}" data-technician-id="{{ tech.id }}">
+                {% for hour in range(24) %}
+                    <div class="time-slot" data-hour="{{ '%02d'|format(hour) }}"></div>
+                {% endfor %}
+                {% for schedule in schedules if schedule.technician_id == tech.id %}
+                {% set disp = schedule_display.get(schedule.id, {}) %}
+                {% if not disp.get('is_ooo') %}
+                    <div class="schedule-event sched-bar"
+                         style="--user-color:{{ tech.color }}; position:absolute; top:{{ disp.get('top',0) }}px; height:{{ disp.get('height',60) }}px; left:2px; right:2px; width:auto; z-index:10;"
+                         data-schedule-id="{{ schedule.id }}"
+                         data-technician-id="{{ schedule.technician_id }}"
+                         data-start-time="{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
+                         data-all-day="false"
+                         data-toggle="tooltip" data-html="true"
+                         title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%a %m/%d/%y') }}</span><br>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}&ndash;{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br>&#128205; {{ schedule.location.name }}{% endif %}</div>">
+                        <div class="sched-bar-fill"></div>
+                        <div class="sched-bar-label">
+                            <span class="sched-bar-name">{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%a %m/%d') }}</span>
+                            <span class="sched-bar-time">{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}–{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}</span>
+                        </div>
+                        <span class="schedule-username d-none">{{ schedule.technician.username }}</span>
+                        <span class="schedule-location d-none">{{ schedule.location.name if schedule.location else '' }}</span>
+                        <span class="schedule-desc d-none">{{ schedule.description or '' }}</span>
+                    </div>
+                {% else %}
+                    <div class="schedule-event all-day-time-off"
+                         style="--user-color:#6a6d6c; top:{{ disp.ooo_top }}px; height:54px; left:0; right:0; width:100%; z-index:20;"
+                         data-schedule-id="{{ schedule.id }}"
+                         data-technician-id="{{ schedule.technician_id }}"
+                         data-start-time="{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-time-off="true" data-all-day="true">
+                        <div class="ooo-banner">
+                            <span>🏖️</span><strong>OOO</strong>
+                        </div>
+                    </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% elif calendar_view == 'horizontal' %}
+    {# ════════════════════  HORIZONTAL VIEW – technician rows, days across  ════════════════════ #}
+    <div class="horiz-grid">
+        <div class="horiz-corner"></div>
+        {% for day in range(7) %}
+        {% set current_date = week_start + timedelta(days=day) %}
+        {% set is_today = current_date.date() == today.date() %}
+        <div class="horiz-day-header {{ 'today' if is_today else '' }}">
+            {{ current_date.strftime('%a %m/%d') }}
+        </div>
+        {% endfor %}
+
+        {% for tech in staff_list %}
+        <div class="horiz-tech-label" style="--user-color:{{ tech.color }};">
+            <div class="staff-avatar-sm" style="border-color:{{ tech.color }};">
+                {% if tech.profile_picture %}
+                    <img src="{{ url_for('static', filename=tech.profile_picture) }}" alt="{{ tech.username }}">
+                {% else %}
+                    {{ tech.username[0].upper() }}
+                {% endif %}
+            </div>
+            <span>{{ tech.username }}</span>
+        </div>
+        {% for day in range(7) %}
+        {% set current_date = week_start + timedelta(days=day) %}
+        {% set is_today = current_date.date() == today.date() %}
+        <div class="horiz-cell {{ 'today' if is_today else '' }}">
+            {% for schedule in schedules if schedule.technician_id == tech.id and schedule.start_time.date() == current_date.date() %}
+            {% set disp = schedule_display.get(schedule.id, {}) %}
+            {% if disp.get('is_ooo') %}
+                <div class="horiz-event horiz-ooo">
+                    🏖️ OOO
+                </div>
+            {% else %}
+                {% set s_start = schedule.start_time.astimezone(current_user.get_timezone_obj()) %}
+                {% set s_end = schedule.end_time.astimezone(current_user.get_timezone_obj()) %}
+                {% set day_start_h = s_start.hour + s_start.minute / 60 %}
+                {% set day_end_h = s_end.hour + s_end.minute / 60 %}
+                {% set left_pct = (day_start_h / 24 * 100)|round(2) %}
+                {% set width_pct = ((day_end_h - day_start_h) / 24 * 100)|round(2) %}
+                <div class="horiz-event"
+                     style="--user-color:{{ tech.color }}; left:{{ left_pct }}%; width:{{ width_pct }}%;"
+                     data-toggle="tooltip" data-html="true"
+                     title="<div class='hover-content'><strong>{{ tech.username }}</strong><br>{{ s_start.strftime('%H:%M') }}&ndash;{{ s_end.strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br>&#128205; {{ schedule.location.name }}{% endif %}</div>"
+                     data-schedule-id="{{ schedule.id }}"
+                     data-technician-id="{{ schedule.technician_id }}"
+                     data-start-time="{{ s_start.strftime('%Y-%m-%d %H:%M:%S') }}"
+                     data-end-time="{{ s_end.strftime('%Y-%m-%d %H:%M:%S') }}"
+                     data-time-off="{{ 'true' if schedule.time_off else 'false' }}">
+                    <span class="horiz-event-time">{{ s_start.strftime('%H:%M') }}–{{ s_end.strftime('%H:%M') }}</span>
+                    <span class="schedule-desc d-none">{{ schedule.description or '' }}</span>
+                    <span class="schedule-location d-none">{{ schedule.location.name if schedule.location else '' }}</span>
+                </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% endfor %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="modal fade" id="scheduleModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -174,6 +326,9 @@
                         <input type="hidden" id="schedule_id" name="schedule_id">
                         {% if request.args.get('week_start') %}
                         <input type="hidden" name="week_start" value="{{ request.args.get('week_start') }}">
+                        {% endif %}
+                        {% if calendar_view != 'week' %}
+                        <input type="hidden" name="calendar_view" value="{{ calendar_view }}">
                         {% endif %}
                         {% if current_user.is_admin %}
                         <div class="mb-3">
