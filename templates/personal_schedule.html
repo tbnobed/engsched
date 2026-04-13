@@ -33,7 +33,7 @@
         </div>
     </div>
 
-    <div class="calendar-grid">
+    <div class="calendar-grid calendar-container">
         <div class="time-column">
             {% for hour in range(24) %}
                 <div class="hour-slot">{{ "%02d:00"|format(hour) }}</div>
@@ -57,41 +57,51 @@
                 {% for schedule in schedules if 
                     (schedule.time_off and schedule.all_day and schedule.start_time.replace(tzinfo=None).date() == current_date.date()) or
                     (not (schedule.time_off and schedule.all_day) and schedule.start_time.date() == current_date.date()) %}
-                    <div class="schedule-event"
-                         style="--user-color: {{ '#6a6d6c' if schedule.time_off else current_user.color }};"
+                    {% if schedule.time_off and schedule.all_day %}
+                    <div class="schedule-event all-day-time-off"
+                         style="--user-color:#6a6d6c; left:0; right:0; width:100%; z-index:20;"
+                         data-schedule-id="{{ schedule.id }}"
+                         data-technician-id="{{ schedule.technician_id }}"
+                         data-start-time="{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-time-off="true" data-all-day="true"
+                         data-location-id="{{ schedule.location_id or '' }}"
+                         data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                        <div class="ooo-banner">
+                            <span>🏖️</span><strong>{{ schedule.technician.username }}</strong>&nbsp;&mdash;&nbsp;OOO ALL DAY
+                        </div>
+                    </div>
+                    {% else %}
+                    {% set user_color = '#6a6d6c' if schedule.time_off else current_user.color %}
+                    <div class="schedule-event sched-bar"
+                         style="--user-color:{{ user_color }}; left:0; right:0; width:100%; z-index:10;"
                          data-schedule-id="{{ schedule.id }}"
                          data-technician-id="{{ schedule.technician_id }}"
                          data-start-time="{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
                          data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
                          data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
-                         data-all-day="{{ 'true' if (schedule.time_off and schedule.all_day) else 'false' }}"
+                         data-all-day="false"
                          data-location-id="{{ schedule.location_id or '' }}"
-                         data-bs-toggle="modal"
-                         data-bs-target="#scheduleModal"
-                         data-toggle="tooltip"
-                         data-html="true"
-                         title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.strftime('%H:%M') }}-{{ schedule.end_time.strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br><i data-feather='map-pin'></i> {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
-                        <div class="schedule-header">
-                            <div class="schedule-title">
-                                {% if schedule.time_off %}Time Off{% else %}{{ schedule.technician.username }}{% endif %}
-                            </div>
-                            <div class="schedule-time">
-                                {{ schedule.start_time.strftime('%H:%M') }} - {{ schedule.end_time.strftime('%H:%M') }}
-                            </div>
-                            {% if schedule.location %}
-                            <div class="schedule-location">
-                                <i data-feather="map-pin" class="feather-small"></i>
-                                {{ schedule.location.name }}
-                            </div>
-                            {% endif %}
-                            {% if schedule.description and not schedule.time_off %}
-                            <div class="schedule-desc">{{ schedule.description }}</div>
-                            {% endif %}
+                         data-bs-toggle="modal" data-bs-target="#scheduleModal"
+                         data-toggle="tooltip" data-html="true"
+                         title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}&ndash;{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br>&#128205; {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
+                        <div class="sched-bar-fill"></div>
+                        <div class="sched-bar-label">
+                            <span class="sched-bar-name">{% if schedule.time_off %}Time Off{% else %}{{ schedule.technician.username }}{% endif %}</span>
+                            <span class="sched-bar-time">{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}–{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}</span>
                         </div>
-                        
-                        <div class="schedule-body">
+                        {% if schedule.technician.profile_picture %}
+                        <div class="sched-avatar" style="border-color:{{ user_color }};"
+                             title="{{ schedule.technician.username }}">
+                            <img src="{{ url_for('static', filename=schedule.technician.profile_picture) }}"
+                                 alt="{{ schedule.technician.username }}">
                         </div>
+                        {% endif %}
+                        <span class="schedule-username d-none">{{ schedule.technician.username }}</span>
+                        <span class="schedule-location d-none">{{ schedule.location.name if schedule.location else '' }}</span>
+                        <span class="schedule-desc d-none">{{ schedule.description or '' }}</span>
                     </div>
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>

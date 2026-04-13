@@ -27,9 +27,11 @@ document.addEventListener('DOMContentLoaded', function() {
             el.style.position = 'absolute';
             el.style.top = top + 'px';
             el.style.height = height + 'px';
-            el.style.left = '0';
-            el.style.right = '0';
-            el.style.zIndex = '5';
+            el.style.zIndex = '10';
+            var avatar = el.querySelector('.sched-avatar');
+            if (avatar) {
+                avatar.style.top = Math.round(height / 2) + 'px';
+            }
         });
     }
 
