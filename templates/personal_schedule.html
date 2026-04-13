@@ -30,6 +30,9 @@
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#scheduleModal">
                 <i data-feather="plus"></i> Add Schedule
             </button>
+            <button type="button" class="btn btn-outline-warning ms-2" id="bulk-select-toggle">
+                <i data-feather="check-square"></i> Select
+            </button>
         </div>
     </div>
 
@@ -97,6 +100,7 @@
                                  alt="{{ schedule.technician.username }}">
                         </div>
                         {% endif %}
+                        <div class="bulk-check"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                         <span class="schedule-username d-none">{{ schedule.technician.username }}</span>
                         <span class="schedule-location d-none">{{ schedule.location.name if schedule.location else '' }}</span>
                         <span class="schedule-desc d-none">{{ schedule.description or '' }}</span>
@@ -1245,5 +1249,120 @@ function updateEndTimeOptions() {
     endHour.appendChild(option1);
     endHour.appendChild(option2);
 }
+
+    // Bulk select mode for personal schedule
+    let bulkSelectActive = false;
+    const bulkSelected = new Set();
+    const bulkToggleBtn = document.getElementById('bulk-select-toggle');
+    const bulkBar = document.getElementById('bulk-action-bar');
+    const bulkCountEl = document.getElementById('bulk-count');
+    const calendarContainer = document.querySelector('.calendar-container');
+
+    function updateBulkCount() {
+        if (!bulkCountEl) return;
+        const n = bulkSelected.size;
+        bulkCountEl.textContent = n + ' selected';
+        if (bulkBar) bulkBar.classList.toggle('visible', n > 0);
+    }
+
+    function exitBulkMode() {
+        bulkSelectActive = false;
+        bulkSelected.clear();
+        if (calendarContainer) calendarContainer.classList.remove('bulk-select-mode');
+        document.querySelectorAll('.schedule-event.bulk-selected').forEach(el => el.classList.remove('bulk-selected'));
+        if (bulkBar) bulkBar.classList.remove('visible');
+        if (bulkToggleBtn) {
+            bulkToggleBtn.classList.remove('btn-warning');
+            bulkToggleBtn.classList.add('btn-outline-warning');
+            bulkToggleBtn.innerHTML = '<i data-feather="check-square"></i> Select';
+            feather.replace();
+        }
+        document.querySelectorAll('.schedule-event[data-schedule-id]').forEach(el => {
+            el.setAttribute('data-bs-toggle', 'modal');
+        });
+    }
+
+    if (bulkToggleBtn) {
+        bulkToggleBtn.addEventListener('click', function() {
+            if (bulkSelectActive) {
+                exitBulkMode();
+            } else {
+                bulkSelectActive = true;
+                if (calendarContainer) calendarContainer.classList.add('bulk-select-mode');
+                bulkToggleBtn.classList.remove('btn-outline-warning');
+                bulkToggleBtn.classList.add('btn-warning');
+                bulkToggleBtn.innerHTML = '<i data-feather="x"></i> Cancel Select';
+                feather.replace();
+                document.querySelectorAll('.schedule-event[data-bs-toggle]').forEach(el => {
+                    el.removeAttribute('data-bs-toggle');
+                });
+            }
+        });
+    }
+
+    document.querySelectorAll('.schedule-event[data-schedule-id]').forEach(el => {
+        el.addEventListener('click', function(e) {
+            if (!bulkSelectActive) return;
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            const sid = this.dataset.scheduleId;
+            if (!sid) return;
+            if (bulkSelected.has(sid)) {
+                bulkSelected.delete(sid);
+                this.classList.remove('bulk-selected');
+            } else {
+                bulkSelected.add(sid);
+                this.classList.add('bulk-selected');
+            }
+            updateBulkCount();
+        }, true);
+    });
+
+    const bulkSelectAllBtn = document.getElementById('bulk-select-all');
+    if (bulkSelectAllBtn) {
+        bulkSelectAllBtn.addEventListener('click', function() {
+            document.querySelectorAll('.schedule-event[data-schedule-id]').forEach(el => {
+                const sid = el.dataset.scheduleId;
+                if (sid) { bulkSelected.add(sid); el.classList.add('bulk-selected'); }
+            });
+            updateBulkCount();
+        });
+    }
+
+    const bulkCancelBtn = document.getElementById('bulk-cancel');
+    if (bulkCancelBtn) bulkCancelBtn.addEventListener('click', exitBulkMode);
+
+    const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', function() {
+            if (bulkSelected.size === 0) return;
+            if (!confirm('Delete ' + bulkSelected.size + ' schedule(s)? This cannot be undone.')) return;
+            const ids = Array.from(bulkSelected).map(Number);
+            fetch('/schedule/bulk-delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                },
+                body: JSON.stringify({ schedule_ids: ids })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) { window.location.reload(); }
+                else { alert('Error: ' + (data.error || 'Unknown error')); }
+            })
+            .catch(err => alert('Error: ' + err.message));
+        });
+    }
 </script>
+
+<div class="bulk-action-bar" id="bulk-action-bar">
+    <span class="bulk-count" id="bulk-count">0 selected</span>
+    <button type="button" class="btn btn-sm btn-outline-light" id="bulk-select-all">Select All</button>
+    <button type="button" class="btn btn-sm btn-danger" id="bulk-delete-btn">
+        <i data-feather="trash-2"></i> Delete Selected
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" id="bulk-cancel">Cancel</button>
+</div>
 {% endblock %}

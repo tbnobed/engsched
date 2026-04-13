@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Feather icons
     feather.replace();
 
+    let bulkSelectActive = false;
+
     // Initialize Bootstrap modal with static backdrop to prevent closing on outside clicks
     const scheduleModalEl = document.getElementById('scheduleModal');
     const scheduleModal = scheduleModalEl ? bootstrap.Modal.getOrCreateInstance(scheduleModalEl, { backdrop: 'static' }) : null;
@@ -39,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle schedule event clicks
     document.querySelectorAll('.schedule-event').forEach(event => {
         event.addEventListener('click', function(e) {
+            if (bulkSelectActive) return;
             e.stopPropagation();
             const scheduleId = this.dataset.scheduleId;
             const startTime = new Date(this.dataset.startTime);
@@ -133,7 +136,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Handle copy button click
-    document.getElementById('copy_button').addEventListener('click', function() {
+    const copyBtn = document.getElementById('copy_button');
+    if (copyBtn) copyBtn.addEventListener('click', function() {
         // Clear the schedule ID to create a new entry
         document.getElementById('schedule_id').value = '';
 
@@ -548,7 +552,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Handle delete button
-    document.getElementById('delete_button').addEventListener('click', function() {
+    const deleteBtn = document.getElementById('delete_button');
+    if (deleteBtn) deleteBtn.addEventListener('click', function() {
         if (confirm('Are you sure you want to delete this schedule?')) {
             const scheduleId = document.getElementById('schedule_id').value;
             
@@ -667,4 +672,119 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize current time line and update it every second to match dashboard precision
     updateCurrentTimeLine();
     setInterval(updateCurrentTimeLine, 1000);
+
+    // Bulk select mode (bulkSelectActive declared at top of DOMContentLoaded, used by event handlers above)
+    // Variable already hoisted above
+    const bulkSelected = new Set();
+    const bulkToggleBtn = document.getElementById('bulk-select-toggle');
+    const bulkBar = document.getElementById('bulk-action-bar');
+    const bulkCountEl = document.getElementById('bulk-count');
+    const calendarContainer = document.querySelector('.calendar-container');
+
+    function updateBulkCount() {
+        if (!bulkCountEl) return;
+        const n = bulkSelected.size;
+        bulkCountEl.textContent = n + ' selected';
+        if (bulkBar) {
+            bulkBar.classList.toggle('visible', n > 0);
+        }
+    }
+
+    function exitBulkMode() {
+        bulkSelectActive = false;
+        bulkSelected.clear();
+        if (calendarContainer) calendarContainer.classList.remove('bulk-select-mode');
+        document.querySelectorAll('.schedule-event.bulk-selected').forEach(function(el) {
+            el.classList.remove('bulk-selected');
+        });
+        if (bulkBar) bulkBar.classList.remove('visible');
+        if (bulkToggleBtn) {
+            bulkToggleBtn.classList.remove('btn-warning');
+            bulkToggleBtn.classList.add('btn-outline-warning');
+            bulkToggleBtn.innerHTML = '<i data-feather="check-square"></i> Select';
+            feather.replace();
+        }
+    }
+
+    if (bulkToggleBtn) {
+        bulkToggleBtn.addEventListener('click', function() {
+            if (bulkSelectActive) {
+                exitBulkMode();
+            } else {
+                bulkSelectActive = true;
+                if (calendarContainer) calendarContainer.classList.add('bulk-select-mode');
+                bulkToggleBtn.classList.remove('btn-outline-warning');
+                bulkToggleBtn.classList.add('btn-warning');
+                bulkToggleBtn.innerHTML = '<i data-feather="x"></i> Cancel Select';
+                feather.replace();
+            }
+        });
+    }
+
+    document.querySelectorAll('.schedule-event').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            if (!bulkSelectActive) return;
+            e.stopPropagation();
+            e.preventDefault();
+            const sid = this.dataset.scheduleId;
+            if (!sid) return;
+            if (bulkSelected.has(sid)) {
+                bulkSelected.delete(sid);
+                this.classList.remove('bulk-selected');
+            } else {
+                bulkSelected.add(sid);
+                this.classList.add('bulk-selected');
+            }
+            updateBulkCount();
+        }, true);
+    });
+
+    const bulkSelectAllBtn = document.getElementById('bulk-select-all');
+    if (bulkSelectAllBtn) {
+        bulkSelectAllBtn.addEventListener('click', function() {
+            document.querySelectorAll('.schedule-event').forEach(function(el) {
+                const sid = el.dataset.scheduleId;
+                if (sid) {
+                    bulkSelected.add(sid);
+                    el.classList.add('bulk-selected');
+                }
+            });
+            updateBulkCount();
+        });
+    }
+
+    const bulkCancelBtn = document.getElementById('bulk-cancel');
+    if (bulkCancelBtn) {
+        bulkCancelBtn.addEventListener('click', function() {
+            exitBulkMode();
+        });
+    }
+
+    const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', function() {
+            if (bulkSelected.size === 0) return;
+            if (!confirm('Delete ' + bulkSelected.size + ' schedule(s)? This cannot be undone.')) return;
+            const ids = Array.from(bulkSelected).map(Number);
+            fetch('/schedule/bulk-delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                },
+                body: JSON.stringify({ schedule_ids: ids })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error deleting schedules: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(function(err) {
+                alert('Error deleting schedules: ' + err.message);
+            });
+        });
+    }
 });

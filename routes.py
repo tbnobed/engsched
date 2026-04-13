@@ -5423,3 +5423,59 @@ def api_delete_schedule(schedule_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/schedule/bulk-delete', methods=['POST'])
+@login_required
+def bulk_delete_schedules():
+    """Delete multiple schedule entries at once"""
+    data = request.get_json()
+    if not data or 'schedule_ids' not in data:
+        return jsonify({'success': False, 'error': 'No schedule IDs provided'}), 400
+
+    schedule_ids = data['schedule_ids']
+    if not isinstance(schedule_ids, list) or len(schedule_ids) == 0:
+        return jsonify({'success': False, 'error': 'Invalid schedule IDs'}), 400
+
+    valid_ids = set()
+    for sid in schedule_ids:
+        try:
+            valid_ids.add(int(sid))
+        except (ValueError, TypeError):
+            continue
+
+    if len(valid_ids) == 0:
+        return jsonify({'success': False, 'error': 'No valid schedule IDs provided'}), 400
+
+    if len(valid_ids) > 200:
+        return jsonify({'success': False, 'error': 'Too many schedules selected'}), 400
+
+    deleted = 0
+    skipped = 0
+    to_delete = []
+    try:
+        for sid in valid_ids:
+            schedule = Schedule.query.get(sid)
+            if not schedule:
+                skipped += 1
+                continue
+            if schedule.technician_id != current_user.id and not current_user.is_admin:
+                skipped += 1
+                continue
+            to_delete.append(schedule)
+
+        for schedule in to_delete:
+            try:
+                send_schedule_notification(schedule, 'deleted', f"Schedule deleted by {current_user.username}")
+            except Exception:
+                pass
+            db.session.delete(schedule)
+            deleted += 1
+
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Bulk delete error: {e}")
+        return jsonify({'success': False, 'error': 'Failed to delete schedules'}), 500
+
+    return jsonify({'success': True, 'deleted': deleted, 'skipped': skipped})

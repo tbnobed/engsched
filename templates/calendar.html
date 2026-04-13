@@ -69,6 +69,9 @@
                 </button>
             </form>
             {% endif %}
+            <button type="button" class="btn btn-outline-warning ms-2" id="bulk-select-toggle">
+                <i data-feather="check-square"></i> Select
+            </button>
         </div>
     </div>
 
@@ -150,6 +153,7 @@
                                 {{ schedule.technician.username[0].upper() }}
                             {% endif %}
                         </div>
+                        <div class="bulk-check"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                         <span class="schedule-username d-none">{{ schedule.technician.username }}</span>
                         <span class="schedule-location d-none">{{ schedule.location.name if schedule.location else '' }}</span>
                         <span class="schedule-desc d-none">{{ schedule.description or '' }}</span>
@@ -662,4 +666,13 @@ function updateEndTimeOptions() {
     endHour.appendChild(o2);
 }
 </script>
+
+<div class="bulk-action-bar" id="bulk-action-bar">
+    <span class="bulk-count" id="bulk-count">0 selected</span>
+    <button type="button" class="btn btn-sm btn-outline-light" id="bulk-select-all">Select All</button>
+    <button type="button" class="btn btn-sm btn-danger" id="bulk-delete-btn">
+        <i data-feather="trash-2"></i> Delete Selected
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" id="bulk-cancel">Cancel</button>
+</div>
 {% endblock %}
