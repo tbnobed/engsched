@@ -196,47 +196,34 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentYear = currentDate.getFullYear();
     let primaryDate = null; // The main date selected in the schedule form
     
-    // Toggle repeat days section
     window.toggleRepeatDaysSelection = function() {
-        const repeatDaysContainer = document.getElementById('repeat_days_container');
-        const isChecked = document.getElementById('repeat_days_toggle').checked;
-        
-        repeatDaysContainer.style.display = isChecked ? 'block' : 'none';
-        
-        if (isChecked) {
-            // Initialize the calendar
-            initMiniCalendar();
-        } else {
-            // Clear selections except for the primary date
-            clearDateSelection(true);
-        }
+        initMiniCalendar();
     };
     
-    // Initialize the mini-calendar
+    window.selectedDates = selectedDates;
+    window.initMiniCalendar = initMiniCalendar;
+    window.renderSelectedDates = function() { updateSelectedDatesDisplay(); updateRepeatDaysInput(); };
+    window.renderCalendar = function() { generateCalendarDays(); };
+
+    let miniCalInitialized = false;
     function initMiniCalendar() {
-        // Set the primary date from the date input
         const dateInput = document.getElementById('schedule_date');
         primaryDate = dateInput.value;
-        
-        // Update month/year display
         updateCalendarHeader();
-        
-        // Generate calendar days
         generateCalendarDays();
-        
-        // Add event listeners for navigation
-        document.getElementById('prev-month').addEventListener('click', function() {
-            navigateMonth(-1);
-        });
-        
-        document.getElementById('next-month').addEventListener('click', function() {
-            navigateMonth(1);
-        });
-        
-        // Clear selection button
-        document.getElementById('clear-selection').addEventListener('click', function() {
-            clearDateSelection();
-        });
+
+        if (!miniCalInitialized) {
+            miniCalInitialized = true;
+            document.getElementById('prev-month').addEventListener('click', function() {
+                navigateMonth(-1);
+            });
+            document.getElementById('next-month').addEventListener('click', function() {
+                navigateMonth(1);
+            });
+            document.getElementById('clear-selection').addEventListener('click', function() {
+                clearDateSelection();
+            });
+        }
     }
     
     // Update the calendar header (month and year)
@@ -358,8 +345,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateSelectedDatesDisplay() {
         const container = document.getElementById('selected-dates-container');
         
+        if (typeof updateSelectedCount === 'function') updateSelectedCount();
         if (selectedDates.size === 0) {
-            container.innerHTML = '<span class="text-muted" id="no-dates-selected">No additional dates selected</span>';
+            container.innerHTML = '<span class="text-muted" id="no-dates-selected">Click dates on the calendar above</span>';
             return;
         }
         
@@ -414,22 +402,16 @@ document.addEventListener('DOMContentLoaded', function() {
         updateRepeatDaysInput();
     }
     
-    // Clear all selected dates
     function clearDateSelection(keepHidden = false) {
         selectedDates.clear();
-        
-        // Remove selected class from all visible days
         document.querySelectorAll('.day-item.selected').forEach(item => {
             item.classList.remove('selected');
         });
-        
-        // Update the display
         updateSelectedDatesDisplay();
-        
-        // Update the hidden input
         if (!keepHidden) {
             updateRepeatDaysInput();
         }
+        if (typeof updateSelectedCount === 'function') updateSelectedCount();
     }
     
     // Update the hidden input with selected dates
@@ -479,56 +461,61 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Date(year, month - 1, day);
     }
 
-    // Handle form submission
     document.getElementById('schedule_form').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const date = document.getElementById('schedule_date').value;
-        const startHour = document.getElementById('start_hour').value;
-        const endHour = document.getElementById('end_hour').value;
-        const isRepeatEnabled = document.getElementById('repeat_days_toggle').checked;
+        var schedModeEl = document.querySelector('input[name="sched_mode"]:checked');
+        var schedMode = schedModeEl ? schedModeEl.value : 'single';
 
-        // Update the primary date in case it changed
+        var date = document.getElementById('schedule_date').value;
+        var startHour = document.getElementById('start_hour').value;
+        var endHour = document.getElementById('end_hour').value;
+
         primaryDate = date;
-        
-        // Set the hidden datetime inputs for the first/main date
-        document.getElementById('start_time_input').value = `${date} ${startHour}`;
-        document.getElementById('end_time_input').value = `${date} ${endHour}`;
-        
-        // Handle repeat days if enabled
-        if (isRepeatEnabled) {
-            // Update the repeat days input with all selected dates
-            updateRepeatDaysInput();
-            
-            // Log selection for debugging
-            console.log('Repeat days selection:', Array.from(selectedDates));
-        } else {
-            // Clear the repeat days input
-            document.getElementById('repeat_days_input').value = '';
-        }
 
-        // Make sure the primary date is included in the input
-        // But only if we have at least one additional day selected
-        if (isRepeatEnabled && selectedDates.size > 0) {
-            let currentValue = document.getElementById('repeat_days_input').value;
-            if (!currentValue.includes(primaryDate)) {
-                if (currentValue) {
-                    currentValue += ',';
-                }
-                currentValue += primaryDate;
-                document.getElementById('repeat_days_input').value = currentValue;
+        if (schedMode === 'single') {
+            document.getElementById('start_time_input').value = date + ' ' + startHour;
+            document.getElementById('end_time_input').value = date + ' ' + endHour;
+            document.getElementById('repeat_days_input').value = '';
+        } else if (schedMode === 'multi') {
+            updateRepeatDaysInput();
+            if (selectedDates.size === 0) {
+                alert('Please select at least one date on the calendar.');
+                return;
             }
+            var allDates = Array.from(selectedDates).sort();
+            if (!date) date = allDates[0];
+            document.getElementById('schedule_date').value = date;
+            document.getElementById('start_time_input').value = allDates[0] + ' ' + startHour;
+            document.getElementById('end_time_input').value = allDates[0] + ' ' + endHour;
+            var currentVal = document.getElementById('repeat_days_input').value;
+            if (date && !currentVal.includes(date)) {
+                document.getElementById('repeat_days_input').value = currentVal ? currentVal + ',' + date : date;
+            }
+        } else if (schedMode === 'range') {
+            var rangeVal = document.getElementById('repeat_days_input').value;
+            if (!rangeVal) {
+                alert('Please select a valid date range with at least one weekday selected.');
+                return;
+            }
+            var rangeDates = rangeVal.split(',').filter(function(d){ return d; });
+            if (rangeDates.length === 0) {
+                alert('No dates match the selected range and weekdays.');
+                return;
+            }
+            document.getElementById('schedule_date').value = rangeDates[0];
+            document.getElementById('start_time_input').value = rangeDates[0] + ' ' + startHour;
+            document.getElementById('end_time_input').value = rangeDates[0] + ' ' + endHour;
         }
 
         console.log('Form submission:', {
-            date: date,
+            mode: schedMode,
+            date: document.getElementById('schedule_date').value,
             startHour: startHour,
             endHour: endHour,
-            repeatEnabled: isRepeatEnabled,
             repeatDays: document.getElementById('repeat_days_input').value
         });
 
-        // Submit the form
         this.submit();
     });
 
