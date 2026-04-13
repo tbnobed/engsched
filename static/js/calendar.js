@@ -107,55 +107,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    document.querySelectorAll('.horiz-event[data-schedule-id]').forEach(event => {
-        event.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const scheduleId = this.dataset.scheduleId;
-            const startTime = new Date(this.dataset.startTime);
-            const endTime = new Date(this.dataset.endTime);
-            const technicianId = this.dataset.technicianId;
-            const timeOff = this.dataset.timeOff === 'true';
-
-            document.getElementById('schedule_id').value = scheduleId;
-            const startTimeStr = this.dataset.startTime.split(' ')[0];
-            document.getElementById('schedule_date').value = startTimeStr;
-            const startFmt = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`;
-            const endFmt = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
-            document.getElementById('start_hour').value = startFmt;
-            document.getElementById('end_hour').value = endFmt;
-
-            const descEl = this.querySelector('.schedule-desc');
-            document.getElementById('description').value = descEl ? descEl.textContent : '';
-
-            const timeOffCheckbox = document.getElementById('time_off');
-            if (timeOffCheckbox) timeOffCheckbox.checked = timeOff;
-            const allDayCheckbox = document.getElementById('all_day');
-            if (allDayCheckbox) allDayCheckbox.checked = false;
-
-            const technicianSelect = document.getElementById('technician');
-            if (technicianSelect) technicianSelect.value = technicianId;
-
-            const locEl = this.querySelector('.schedule-location');
-            if (locEl && locEl.textContent.trim()) {
-                const locationSelect = document.getElementById('location_id');
-                if (locationSelect) {
-                    for (let i = 0; i < locationSelect.options.length; i++) {
-                        if (locationSelect.options[i].text.trim() === locEl.textContent.trim()) {
-                            locationSelect.selectedIndex = i;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            document.querySelector('.modal-title').textContent = 'Edit Schedule';
-            document.querySelector('button[type="submit"]').textContent = 'Update Schedule';
-            document.getElementById('delete_button').style.display = 'block';
-            document.getElementById('copy_button').style.display = 'block';
-            scheduleModal.show();
-        });
-    });
-
     // Handle copy button click
     document.getElementById('copy_button').addEventListener('click', function() {
         // Clear the schedule ID to create a new entry
@@ -586,19 +537,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (confirm('Are you sure you want to delete this schedule?')) {
             const scheduleId = document.getElementById('schedule_id').value;
             
+            // Get the current week_start from the URL
             const urlParams = new URLSearchParams(window.location.search);
             const weekStart = urlParams.get('week_start');
-            const calView = urlParams.get('view');
             
+            // Check if we're in personal view
             const isPersonalView = window.location.pathname.includes('/personal_schedule');
-            const deletePath = '/schedule/delete/';
+            const deletePath = isPersonalView ? '/schedule/delete/' : '/schedule/delete/';
             
-            const params = new URLSearchParams();
-            if (weekStart) params.set('week_start', weekStart);
-            if (isPersonalView) params.set('personal_view', 'true');
-            if (calView) params.set('view', calView);
-            const qs = params.toString();
-            window.location.href = `${deletePath}${scheduleId}${qs ? '?' + qs : ''}`;
+            // Redirect with the week_start parameter to maintain the same view
+            if (weekStart) {
+                window.location.href = `${deletePath}${scheduleId}?week_start=${weekStart}${isPersonalView ? '&personal_view=true' : ''}`;
+            } else {
+                window.location.href = `${deletePath}${scheduleId}${isPersonalView ? '?personal_view=true' : ''}`;
+            }
         }
     });
 

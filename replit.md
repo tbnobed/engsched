@@ -24,7 +24,7 @@ Chat Requirements: Auto-launch team chat and maintain stay-on-top functionality 
 
 ### Core Features
 - **Authentication System**: Case-insensitive email login, session management, remember-me functionality, and admin role-based access.
-- **Calendar & Scheduling**: Three calendar view modes — **Week** (days as columns, default), **Staff** (one column per technician, time down), and **Horizontal** (technician rows, days across with proportional time bars). Toggle via button group; view persists through navigation, create/update/delete. Includes user-specific timezone support, technician schedule management, location-based filtering, time-off tracking (including all-day OOO), and conflict prevention for scheduling. Supports 30-minute increments.
+- **Calendar & Scheduling**: Weekly calendar view with user-specific timezone support, technician schedule management, location-based filtering, time-off tracking (including all-day OOO), and conflict prevention for scheduling. Supports 30-minute increments.
 - **Ticket Management**: Full lifecycle management (open, in-progress, pending, resolved, closed), priority and category system, comment history, assignment, unread activity indicators, and email notifications. All users can modify tickets, only admins can delete.
 - **User Management**: Profile management with timezone preferences, theme selection, and color-coded identification.
 - **Email Notifications**: Comprehensive system for ticket assignments, status changes, comments, and schedule alterations, including external user support with email reply detection and consistent threading. Email attachments are automatically extracted and saved when creating tickets or adding comments via email.
