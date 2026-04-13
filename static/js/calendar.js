@@ -5,11 +5,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Bootstrap modal
     const scheduleModal = new bootstrap.Modal(document.getElementById('scheduleModal'));
 
-    // Position schedule indicators (thin line + avatar) in each day column
-    // All schedule positions (top, left, height, avatar_top) are now computed
-    // server-side in the route and rendered as inline styles in calendar.html.
-    // This function is kept as a no-op so existing call sites don't break.
-    function positionSchedules() {}
+    function positionSchedules() {
+        document.querySelectorAll('.schedule-event').forEach(function(el) {
+            if (el.style.top && el.style.top !== '') return;
+            var startStr = el.getAttribute('data-start-time');
+            var endStr = el.getAttribute('data-end-time');
+            if (!startStr || !endStr) return;
+            var start = new Date(startStr);
+            var end = new Date(endStr);
+            var startHour = start.getHours() + start.getMinutes() / 60;
+            var endHour = end.getHours() + end.getMinutes() / 60;
+            if (endHour <= startHour) endHour = 24;
+            var slotHeight = 60;
+            var parent = el.closest('.day-slots');
+            if (parent) {
+                var firstSlot = parent.querySelector('.time-slot');
+                if (firstSlot) slotHeight = firstSlot.offsetHeight || 60;
+            }
+            var top = startHour * slotHeight;
+            var height = (endHour - startHour) * slotHeight;
+            el.style.position = 'absolute';
+            el.style.top = top + 'px';
+            el.style.height = height + 'px';
+            el.style.left = '0';
+            el.style.right = '0';
+            el.style.zIndex = '5';
+        });
+    }
 
     // Handle schedule event clicks
     document.querySelectorAll('.schedule-event').forEach(event => {
