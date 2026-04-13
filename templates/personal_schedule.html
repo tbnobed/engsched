@@ -30,10 +30,12 @@
             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#scheduleModal">
                 <i data-feather="plus"></i> Add Schedule
             </button>
-            <button type="button" class="btn btn-outline-warning ms-2" id="bulk-select-toggle">
-                <i data-feather="check-square"></i> Select
-            </button>
         </div>
+    </div>
+    <div class="d-flex justify-content-end mb-2">
+        <button type="button" class="btn btn-outline-warning" id="bulk-select-toggle">
+            <i data-feather="check-square"></i> Select Multiple
+        </button>
     </div>
 
     <div class="calendar-grid calendar-container">
@@ -1274,7 +1276,7 @@ function updateEndTimeOptions() {
         if (bulkToggleBtn) {
             bulkToggleBtn.classList.remove('btn-warning');
             bulkToggleBtn.classList.add('btn-outline-warning');
-            bulkToggleBtn.innerHTML = '<i data-feather="check-square"></i> Select';
+            bulkToggleBtn.innerHTML = '<i data-feather="check-square"></i> Select Multiple';
             feather.replace();
         }
         document.querySelectorAll('.schedule-event[data-schedule-id]').forEach(el => {

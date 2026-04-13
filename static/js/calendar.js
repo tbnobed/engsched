@@ -701,7 +701,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (bulkToggleBtn) {
             bulkToggleBtn.classList.remove('btn-warning');
             bulkToggleBtn.classList.add('btn-outline-warning');
-            bulkToggleBtn.innerHTML = '<i data-feather="check-square"></i> Select';
+            bulkToggleBtn.innerHTML = '<i data-feather="check-square"></i> Select Multiple';
             feather.replace();
         }
     }
