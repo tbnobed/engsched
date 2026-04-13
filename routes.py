@@ -1413,6 +1413,7 @@ def admin_locations():
 def calendar():
     week_start = request.args.get('week_start')
     location_filter = request.args.get('location_id', type=int)
+    technician_filter = request.args.get('technician_id', type=int)
     
     # Get viewing timezone preference (CST, PST, or user's profile timezone)
     viewing_tz_param = request.args.get('viewing_tz', 'profile')
@@ -1449,6 +1450,9 @@ def calendar():
 
     if location_filter:
         query = query.filter(Schedule.location_id == location_filter)
+
+    if technician_filter:
+        query = query.filter(Schedule.technician_id == technician_filter)
         
     # Order by start_time to ensure chronological display
     query = query.order_by(Schedule.start_time)
@@ -1672,6 +1676,7 @@ def calendar():
         print("Mobile device detected in calendar - redirecting to mobile dashboard")
         return redirect('/mobile/dashboard')
     else:
+        all_technicians = User.query.order_by(User.username).all()
         return render_template('calendar.html', 
                             schedules=schedules,
                             schedule_display=schedule_display,
@@ -1680,6 +1685,8 @@ def calendar():
                             form=form,
                             locations=locations,
                             selected_location=location_filter,
+                            technicians=all_technicians,
+                            selected_technician=technician_filter,
                             today=datetime.now(viewing_tz),
                             user_timezone=str(viewing_tz),
                             viewing_tz_param=viewing_tz_param,

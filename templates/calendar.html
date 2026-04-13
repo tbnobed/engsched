@@ -6,11 +6,21 @@
         <div class="d-flex align-items-center">
             <h2>{{ week_start.strftime('%B %Y') }}</h2>
             <div class="ms-4">
-                <select id="locationFilter" class="form-select calendar-location-filter" onchange="applyLocationFilter(this.value)">
+                <select id="locationFilter" class="form-select calendar-location-filter" onchange="applyCalendarFilter()">
                     <option value="">All Locations</option>
                     {% for location in locations %}
                     <option value="{{ location.id }}" {% if selected_location == location.id %}selected{% endif %}>
                         {{ location.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="ms-2">
+                <select id="technicianFilter" class="form-select calendar-location-filter" onchange="applyCalendarFilter()">
+                    <option value="">All Technicians</option>
+                    {% for tech in technicians %}
+                    <option value="{{ tech.id }}" {% if selected_technician == tech.id %}selected{% endif %}>
+                        {{ tech.username }}
                     </option>
                     {% endfor %}
                 </select>
@@ -39,23 +49,23 @@
                 Next Month <i data-feather="chevrons-right"></i>
             </a>
             {% else %}
-            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location) }}" 
+            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location, technician_id=selected_technician) }}" 
                class="btn btn-outline-secondary me-2">
                 <i data-feather="chevrons-left"></i> Previous Month
             </a>
-            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location) }}" 
+            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location, technician_id=selected_technician) }}" 
                class="btn btn-outline-primary me-2">
                 <i data-feather="chevron-left"></i> Previous Week
             </a>
-            <a href="{{ url_for('calendar', location_id=selected_location) }}" 
+            <a href="{{ url_for('calendar', location_id=selected_location, technician_id=selected_technician) }}" 
                class="btn btn-outline-primary me-2">
                 Current Week
             </a>
-            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location) }}"
+            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location, technician_id=selected_technician) }}"
                class="btn btn-outline-primary me-2">
                 Next Week <i data-feather="chevron-right"></i>
             </a>
-            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location) }}"
+            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location, technician_id=selected_technician) }}"
                class="btn btn-outline-secondary me-2">
                 Next Month <i data-feather="chevrons-right"></i>
             </a>
@@ -81,12 +91,19 @@
         // Pass timezone from server to client
         window.userTimezone = '{{ user_timezone }}';
         
-        function applyLocationFilter(locationId) {
+        function applyCalendarFilter() {
             const currentUrl = new URL(window.location.href);
+            const locationId = document.getElementById('locationFilter').value;
+            const technicianId = document.getElementById('technicianFilter').value;
             if (locationId) {
                 currentUrl.searchParams.set('location_id', locationId);
             } else {
                 currentUrl.searchParams.delete('location_id');
+            }
+            if (technicianId) {
+                currentUrl.searchParams.set('technician_id', technicianId);
+            } else {
+                currentUrl.searchParams.delete('technician_id');
             }
             window.location.href = currentUrl.toString();
         }
