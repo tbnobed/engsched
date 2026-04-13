@@ -1611,15 +1611,13 @@ def calendar():
     force_mobile = request.args.get('mobile') == 'true'
 
     # ── Server-side column assignment ─────────────────────────────────────────
-    # Compute every pixel position in Python so the template can use plain inline
-    # styles — no JavaScript positioning needed, guaranteed no overlap.
-    _SLOT_W   = 48   # px per technician lane
-    _STAGGER  = 38   # vertical stagger between adjacent avatars (> avatar diameter)
+    # Each technician gets an equal-width lane within the day column.
+    # Lanes use percentage-based widths so they scale with screen size.
+    _GAP_PX   = 2    # gap between lanes in pixels
     _AV_HALF  = 16   # half of 32px avatar
 
     from collections import defaultdict
 
-    # One sorted tech list per calendar day (using UTC date, same as template filter)
     _day_techs = defaultdict(list)
     for _s in schedules:
         if not (_s.time_off and _s.all_day):
@@ -1629,7 +1627,7 @@ def calendar():
     for _d in _day_techs:
         _day_techs[_d].sort()
 
-    _day_ooo = defaultdict(int)   # ooo banner index per day
+    _day_ooo = defaultdict(int)
     schedule_display = {}
     for _s in schedules:
         if _s.time_off and _s.all_day:
@@ -1654,15 +1652,18 @@ def calendar():
             _tlist  = _day_techs[_d]
             _cidx   = _tlist.index(_s.technician_id) if _s.technician_id in _tlist else 0
             _total  = len(_tlist)
-            _span   = (_total - 1) * _STAGGER
-            _av_top = max(_AV_HALF, min(_height - _AV_HALF,
-                          _height // 2 + _cidx * _STAGGER - _span // 2))
+            _pct_w  = round(100.0 / _total, 4) if _total else 100
+            _pct_l  = round(_cidx * _pct_w, 4)
+            _av_top = min(_height - _AV_HALF, max(_AV_HALF, _height // 3))
             schedule_display[_s.id] = {
-                'is_ooo':    False,
-                'left':      _cidx * _SLOT_W,
-                'top':       _top,
-                'height':    _height,
+                'is_ooo':     False,
+                'left_pct':   _pct_l,
+                'width_pct':  _pct_w,
+                'top':        _top,
+                'height':     _height,
                 'avatar_top': _av_top,
+                'total':      _total,
+                'col_idx':    _cidx,
             }
     # ─────────────────────────────────────────────────────────────────────────
 
@@ -1674,7 +1675,6 @@ def calendar():
         return render_template('calendar.html', 
                             schedules=schedules,
                             schedule_display=schedule_display,
-                            slot_width=_SLOT_W,
                             week_start=week_start,
                             week_end=week_start + timedelta(days=7),
                             form=form,

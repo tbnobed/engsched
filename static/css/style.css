@@ -222,74 +222,87 @@ div[style*="gradient"] {
     box-shadow: none !important;
 }
 
-/* Thin colored vertical line with subtle glow */
-.sched-line {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    top: 0;
-    bottom: 0;
-    background: var(--user-color);
-    border-radius: 3px;
-    pointer-events: none;
-    box-shadow: 0 0 6px color-mix(in srgb, var(--user-color) 50%, transparent);
-    transition: width 0.15s, box-shadow 0.15s;
+/* ── Bar-style schedule lanes ── */
+.sched-bar {
+    padding: 0 1px;
+    box-sizing: border-box;
 }
 
-/* Brighten line when the parent event is hovered */
-.calendar-container .schedule-event:hover .sched-line {
-    width: 5px;
-    box-shadow: 0 0 12px color-mix(in srgb, var(--user-color) 70%, transparent);
-}
-
-/* Small name tag pinned to the top of the line */
-.sched-name {
+.sched-bar-fill {
     position: absolute;
-    top: -2px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 9px;
-    font-weight: 600;
-    color: #fff;
-    background: color-mix(in srgb, var(--user-color) 85%, #000);
-    padding: 1px 5px;
+    inset: 1px;
+    background: color-mix(in srgb, var(--user-color) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--user-color) 35%, transparent);
+    border-left: 3px solid var(--user-color);
     border-radius: 4px;
-    white-space: nowrap;
+    pointer-events: none;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.calendar-container .schedule-event.sched-bar:hover .sched-bar-fill {
+    background: color-mix(in srgb, var(--user-color) 28%, transparent);
+    border-color: color-mix(in srgb, var(--user-color) 55%, transparent);
+    border-left-color: var(--user-color);
+}
+
+.sched-bar-label {
+    position: absolute;
+    top: 4px;
+    left: 10px;
+    right: 4px;
     z-index: 6;
     pointer-events: none;
-    letter-spacing: 0.3px;
-    opacity: 0.85;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow: hidden;
+}
+
+.sched-bar-name {
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     line-height: 1.3;
 }
 
-/* Circular avatar centered on the line */
+.sched-bar-time {
+    font-size: 9px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.55);
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+/* Circular avatar inside bar */
 .sched-avatar {
     position: absolute;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: #1a1d21;
-    border: 3px solid var(--user-color);
+    border: 2px solid var(--user-color);
     overflow: hidden;
-    z-index: 5;
-    box-shadow: 0 0 0 2px rgba(0,0,0,0.4), 0 3px 10px rgba(0,0,0,0.5);
+    z-index: 8;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-weight: bold;
-    font-size: 12px;
-    letter-spacing: 0;
+    font-size: 11px;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-width 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .sched-avatar:hover {
-    transform: translate(-50%, -50%) scale(1.25);
-    box-shadow: 0 0 0 2px rgba(0,0,0,0.3), 0 0 14px color-mix(in srgb, var(--user-color) 60%, transparent), 0 6px 20px rgba(0,0,0,0.5);
+    transform: translate(-50%, -50%) scale(1.3);
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.3), 0 0 12px color-mix(in srgb, var(--user-color) 50%, transparent), 0 4px 16px rgba(0,0,0,0.5);
     z-index: 50;
 }
 
