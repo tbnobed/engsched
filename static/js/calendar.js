@@ -485,63 +485,66 @@ document.addEventListener('DOMContentLoaded', function() {
         return new Date(year, month - 1, day);
     }
 
-    document.getElementById('schedule_form').addEventListener('submit', function(e) {
-        e.preventDefault();
+    var schedFormEl = document.getElementById('schedule_form');
+    if (schedFormEl && !window.location.pathname.includes('/personal_schedule')) {
+        schedFormEl.addEventListener('submit', function(e) {
+            e.preventDefault();
 
-        var schedModeEl = document.querySelector('input[name="sched_mode"]:checked');
-        var schedMode = schedModeEl ? schedModeEl.value : 'single';
+            var schedModeEl = document.querySelector('input[name="sched_mode"]:checked');
+            var schedMode = schedModeEl ? schedModeEl.value : 'single';
 
-        var date = document.getElementById('schedule_date').value;
-        var startHour = document.getElementById('start_hour').value;
-        var endHour = document.getElementById('end_hour').value;
+            var date = document.getElementById('schedule_date').value;
+            var startHour = document.getElementById('start_hour').value;
+            var endHour = document.getElementById('end_hour').value;
 
-        primaryDate = date;
+            primaryDate = date;
 
-        if (schedMode === 'single') {
-            document.getElementById('start_time_input').value = date + ' ' + startHour;
-            document.getElementById('end_time_input').value = date + ' ' + endHour;
-            document.getElementById('repeat_days_input').value = '';
-        } else if (schedMode === 'multi') {
-            updateRepeatDaysInput();
-            if (selectedDates.size === 0) {
-                alert('Please select at least one date on the calendar.');
-                return;
+            if (schedMode === 'single') {
+                document.getElementById('start_time_input').value = date + ' ' + startHour;
+                document.getElementById('end_time_input').value = date + ' ' + endHour;
+                document.getElementById('repeat_days_input').value = '';
+            } else if (schedMode === 'multi') {
+                updateRepeatDaysInput();
+                if (selectedDates.size === 0) {
+                    alert('Please select at least one date on the calendar.');
+                    return;
+                }
+                var allDates = Array.from(selectedDates).sort();
+                if (!date) date = allDates[0];
+                document.getElementById('schedule_date').value = date;
+                document.getElementById('start_time_input').value = allDates[0] + ' ' + startHour;
+                document.getElementById('end_time_input').value = allDates[0] + ' ' + endHour;
+                var currentVal = document.getElementById('repeat_days_input').value;
+                if (date && !currentVal.includes(date)) {
+                    document.getElementById('repeat_days_input').value = currentVal ? currentVal + ',' + date : date;
+                }
+            } else if (schedMode === 'range') {
+                var rangeVal = document.getElementById('repeat_days_input').value;
+                if (!rangeVal) {
+                    alert('Please select a valid date range with at least one weekday selected.');
+                    return;
+                }
+                var rangeDates = rangeVal.split(',').filter(function(d){ return d; });
+                if (rangeDates.length === 0) {
+                    alert('No dates match the selected range and weekdays.');
+                    return;
+                }
+                document.getElementById('schedule_date').value = rangeDates[0];
+                document.getElementById('start_time_input').value = rangeDates[0] + ' ' + startHour;
+                document.getElementById('end_time_input').value = rangeDates[0] + ' ' + endHour;
             }
-            var allDates = Array.from(selectedDates).sort();
-            if (!date) date = allDates[0];
-            document.getElementById('schedule_date').value = date;
-            document.getElementById('start_time_input').value = allDates[0] + ' ' + startHour;
-            document.getElementById('end_time_input').value = allDates[0] + ' ' + endHour;
-            var currentVal = document.getElementById('repeat_days_input').value;
-            if (date && !currentVal.includes(date)) {
-                document.getElementById('repeat_days_input').value = currentVal ? currentVal + ',' + date : date;
-            }
-        } else if (schedMode === 'range') {
-            var rangeVal = document.getElementById('repeat_days_input').value;
-            if (!rangeVal) {
-                alert('Please select a valid date range with at least one weekday selected.');
-                return;
-            }
-            var rangeDates = rangeVal.split(',').filter(function(d){ return d; });
-            if (rangeDates.length === 0) {
-                alert('No dates match the selected range and weekdays.');
-                return;
-            }
-            document.getElementById('schedule_date').value = rangeDates[0];
-            document.getElementById('start_time_input').value = rangeDates[0] + ' ' + startHour;
-            document.getElementById('end_time_input').value = rangeDates[0] + ' ' + endHour;
-        }
 
-        console.log('Form submission:', {
-            mode: schedMode,
-            date: document.getElementById('schedule_date').value,
-            startHour: startHour,
-            endHour: endHour,
-            repeatDays: document.getElementById('repeat_days_input').value
+            console.log('Form submission:', {
+                mode: schedMode,
+                date: document.getElementById('schedule_date').value,
+                startHour: startHour,
+                endHour: endHour,
+                repeatDays: document.getElementById('repeat_days_input').value
+            });
+
+            this.submit();
         });
-
-        this.submit();
-    });
+    }
 
     // Handle delete button
     document.getElementById('delete_button').addEventListener('click', function() {
