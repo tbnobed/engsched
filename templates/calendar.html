@@ -185,72 +185,90 @@
     </div>
 
     {% elif calendar_view == 'staff' %}
-    {# ════════════════════  STAFF VIEW – one column per technician  ════════════════════ #}
-    <div class="calendar-grid staff-grid" style="grid-template-columns: 80px repeat({{ staff_list|length }}, 1fr);">
-        <div class="time-column">
-            {% for hour in range(24) %}
-                <div class="hour-slot">{{ "%02d:00"|format(hour) }}</div>
-            {% endfor %}
-        </div>
-
+    {# ════════════════════  STAFF VIEW – card-based, one column per technician  ════════════════════ #}
+    <div class="staff-view">
         {% for tech in staff_list %}
-        <div class="day-column staff-column" style="--user-color:{{ tech.color }};">
-            <div class="day-header staff-header">
-                <div class="staff-header-inner">
-                    <div class="staff-avatar-sm" style="border-color:{{ tech.color }};">
-                        {% if tech.profile_picture %}
-                            <img src="{{ url_for('static', filename=tech.profile_picture) }}" alt="{{ tech.username }}">
-                        {% else %}
-                            {{ tech.username[0].upper() }}
-                        {% endif %}
-                    </div>
-                    <span class="staff-header-name">{{ tech.username }}</span>
+        <div class="staff-col" style="--user-color:{{ tech.color }};">
+            <div class="staff-col-header">
+                <div class="staff-avatar-sm" style="border-color:{{ tech.color }};">
+                    {% if tech.profile_picture %}
+                        <img src="{{ url_for('static', filename=tech.profile_picture) }}" alt="{{ tech.username }}">
+                    {% else %}
+                        {{ tech.username[0].upper() }}
+                    {% endif %}
                 </div>
+                <span class="staff-col-name">{{ tech.username }}</span>
             </div>
-            <div class="day-slots staff-slots" data-date="{{ today.strftime('%Y-%m-%d') }}" data-technician-id="{{ tech.id }}">
-                {% for hour in range(24) %}
-                    <div class="time-slot" data-hour="{{ '%02d'|format(hour) }}"></div>
+            <div class="staff-col-body">
+                {% for day in range(7) %}
+                {% set current_date = week_start + timedelta(days=day) %}
+                {% set is_today = current_date.date() == today.date() %}
+                {% set day_scheds = [] %}
+                {% for schedule in schedules if schedule.technician_id == tech.id and schedule.start_time.date() == current_date.date() %}
+                    {% if day_scheds.append(schedule) %}{% endif %}
                 {% endfor %}
-                {% for schedule in schedules if schedule.technician_id == tech.id %}
-                {% set disp = schedule_display.get(schedule.id, {}) %}
-                {% if not disp.get('is_ooo') %}
-                    <div class="schedule-event sched-bar"
-                         style="--user-color:{{ tech.color }}; position:absolute; top:{{ disp.get('top',0) }}px; height:{{ disp.get('height',60) }}px; left:2px; right:2px; width:auto; z-index:10;"
+                {% if day_scheds %}
+                <div class="staff-day-group {{ 'today' if is_today else '' }}">
+                    <div class="staff-day-label">{{ current_date.strftime('%a %m/%d') }}</div>
+                    {% for schedule in day_scheds %}
+                    {% set disp = schedule_display.get(schedule.id, {}) %}
+                    {% set s_start = schedule.start_time.astimezone(current_user.get_timezone_obj()) %}
+                    {% set s_end = schedule.end_time.astimezone(current_user.get_timezone_obj()) %}
+                    {% if disp.get('is_ooo') %}
+                    <div class="staff-card staff-card-ooo schedule-event"
                          data-schedule-id="{{ schedule.id }}"
                          data-technician-id="{{ schedule.technician_id }}"
-                         data-start-time="{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
-                         data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-start-time="{{ s_start.strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-end-time="{{ s_end.strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-time-off="true" data-all-day="true">
+                        🏖️ OOO All Day
+                        <span class="schedule-desc d-none"></span>
+                        <span class="schedule-location d-none"></span>
+                    </div>
+                    {% else %}
+                    <div class="staff-card schedule-event"
+                         style="--user-color:{{ tech.color }};"
+                         data-schedule-id="{{ schedule.id }}"
+                         data-technician-id="{{ schedule.technician_id }}"
+                         data-start-time="{{ s_start.strftime('%Y-%m-%d %H:%M:%S') }}"
+                         data-end-time="{{ s_end.strftime('%Y-%m-%d %H:%M:%S') }}"
                          data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
-                         data-all-day="false"
-                         data-toggle="tooltip" data-html="true"
-                         title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%a %m/%d/%y') }}</span><br>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}&ndash;{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br>&#128205; {{ schedule.location.name }}{% endif %}</div>">
-                        <div class="sched-bar-fill"></div>
-                        <div class="sched-bar-label">
-                            <span class="sched-bar-name">{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%a %m/%d') }}</span>
-                            <span class="sched-bar-time">{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}–{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}</span>
-                        </div>
+                         data-all-day="false">
+                        <div class="staff-card-time">{{ s_start.strftime('%H:%M') }} – {{ s_end.strftime('%H:%M') }}</div>
+                        <div class="staff-card-hours">{{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|round(1) }}h</div>
+                        {% if schedule.location %}
+                        <div class="staff-card-loc">📍 {{ schedule.location.name }}</div>
+                        {% endif %}
+                        {% if schedule.description %}
+                        <div class="staff-card-desc">{{ schedule.description }}</div>
+                        {% endif %}
                         <span class="schedule-username d-none">{{ schedule.technician.username }}</span>
                         <span class="schedule-location d-none">{{ schedule.location.name if schedule.location else '' }}</span>
                         <span class="schedule-desc d-none">{{ schedule.description or '' }}</span>
                     </div>
-                {% else %}
-                    <div class="schedule-event all-day-time-off"
-                         style="--user-color:#6a6d6c; top:{{ disp.ooo_top }}px; height:54px; left:0; right:0; width:100%; z-index:20;"
-                         data-schedule-id="{{ schedule.id }}"
-                         data-technician-id="{{ schedule.technician_id }}"
-                         data-start-time="{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
-                         data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
-                         data-time-off="true" data-all-day="true">
-                        <div class="ooo-banner">
-                            <span>🏖️</span><strong>OOO</strong>
-                        </div>
-                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
                 {% endif %}
                 {% endfor %}
+                {% set has_any = [] %}
+                {% for schedule in schedules if schedule.technician_id == tech.id %}
+                    {% if has_any.append(1) %}{% endif %}
+                {% endfor %}
+                {% if not has_any %}
+                <div class="staff-empty">No schedules this week</div>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
     </div>
+
+    {% if not staff_list %}
+    <div class="text-center text-muted py-5">
+        <i data-feather="calendar" style="width:48px;height:48px;"></i>
+        <p class="mt-3">No schedules found for this week.</p>
+    </div>
+    {% endif %}
 
     {% elif calendar_view == 'horizontal' %}
     {# ════════════════════  HORIZONTAL VIEW – technician rows, days across  ════════════════════ #}

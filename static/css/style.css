@@ -324,24 +324,149 @@ div[style*="gradient"] {
     height: 14px;
 }
 
-/* ── Staff view header ── */
-.staff-header {
-    padding: 6px 4px !important;
-    height: auto !important;
-    min-height: 40px;
+/* ── Staff view (card-based) ── */
+.staff-view {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
 }
-.staff-header-inner {
+.staff-col {
+    min-width: 200px;
+    flex: 1;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.staff-col-header {
     display: flex;
     align-items: center;
-    gap: 6px;
-    justify-content: center;
-}
-.staff-header-name {
-    font-size: 0.8em;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border-bottom: 3px solid var(--user-color);
     font-weight: 600;
+    font-size: 0.9em;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+.staff-col-name {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+.staff-col-body {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+.staff-day-group {
+    border-radius: 6px;
+    padding: 6px;
+    background: rgba(0,0,0,0.02);
+}
+.staff-day-group.today {
+    background: rgba(0, 123, 255, 0.06);
+    border: 1px solid rgba(0, 123, 255, 0.2);
+}
+.staff-day-label {
+    font-size: 0.72em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    margin-bottom: 4px;
+    padding: 0 2px;
+}
+.staff-day-group.today .staff-day-label {
+    color: #007bff;
+}
+.staff-card {
+    background: color-mix(in srgb, var(--user-color) 12%, white);
+    border-left: 3px solid var(--user-color);
+    border-radius: 4px;
+    padding: 6px 8px;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+    margin-bottom: 4px;
+}
+.staff-card:last-child {
+    margin-bottom: 0;
+}
+.staff-card:hover {
+    background: color-mix(in srgb, var(--user-color) 22%, white);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+.staff-card-time {
+    font-weight: 600;
+    font-size: 0.85em;
+}
+.staff-card-hours {
+    font-size: 0.75em;
+    color: #6c757d;
+}
+.staff-card-loc {
+    font-size: 0.75em;
+    margin-top: 2px;
+}
+.staff-card-desc {
+    font-size: 0.72em;
+    color: #6c757d;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.staff-card-ooo {
+    background: linear-gradient(135deg, #fff4e6 0%, #ffe8cc 100%) !important;
+    border-left: 3px solid #cc5500 !important;
+    color: #6c4a00;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+.staff-empty {
+    text-align: center;
+    color: #adb5bd;
+    font-size: 0.82em;
+    padding: 20px 8px;
+    font-style: italic;
+}
+
+/* Dark mode for staff view */
+[data-bs-theme="dark"] .staff-col,
+body.dark-mode .staff-col {
+    border-color: #3a3a4a;
+}
+[data-bs-theme="dark"] .staff-col-header,
+body.dark-mode .staff-col-header {
+    background: #1e1e2e;
+    color: #e0e0e0;
+}
+[data-bs-theme="dark"] .staff-day-group,
+body.dark-mode .staff-day-group {
+    background: rgba(255,255,255,0.03);
+}
+[data-bs-theme="dark"] .staff-day-group.today,
+body.dark-mode .staff-day-group.today {
+    background: rgba(0, 123, 255, 0.08);
+    border-color: rgba(0, 123, 255, 0.25);
+}
+[data-bs-theme="dark"] .staff-card,
+body.dark-mode .staff-card {
+    background: color-mix(in srgb, var(--user-color) 15%, #1a1d21);
+}
+[data-bs-theme="dark"] .staff-card:hover,
+body.dark-mode .staff-card:hover {
+    background: color-mix(in srgb, var(--user-color) 25%, #1a1d21);
+}
+[data-bs-theme="dark"] .staff-col-body,
+body.dark-mode .staff-col-body {
+    background: #252535;
 }
 .staff-avatar-sm {
     width: 26px;
