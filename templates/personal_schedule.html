@@ -135,37 +135,89 @@
                             {{ form.location_id(class="form-control") }}
                         </div>
                         <div class="mb-3">
+                            <label class="form-label fw-semibold">Scheduling Mode</label>
+                            <div class="btn-group w-100 sched-mode-tabs" role="group">
+                                <input type="radio" class="btn-check" name="sched_mode" id="mode_single" value="single" checked onchange="switchSchedMode('single')">
+                                <label class="btn btn-outline-primary btn-sm" for="mode_single">Single Day</label>
+                                <input type="radio" class="btn-check" name="sched_mode" id="mode_multi" value="multi" onchange="switchSchedMode('multi')">
+                                <label class="btn btn-outline-primary btn-sm" for="mode_multi">Multiple Days</label>
+                                <input type="radio" class="btn-check" name="sched_mode" id="mode_range" value="range" onchange="switchSchedMode('range')">
+                                <label class="btn btn-outline-primary btn-sm" for="mode_range">Date Range</label>
+                            </div>
+                        </div>
+
+                        <div id="single_date_section" class="mb-3">
                             <label class="form-label">Date</label>
                             <input type="date" id="schedule_date" class="form-control">
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Repeat Schedule</label>
-                            <div class="mt-2">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="repeat_days_toggle" onchange="toggleRepeatDaysSelection()">
-                                    <label class="form-check-label" for="repeat_days_toggle">Schedule for multiple days</label>
+
+                        <div id="multi_date_section" class="mb-3" style="display:none;">
+                            <div class="quick-select-bar mb-2">
+                                <label class="form-label d-block mb-1">Quick Select</label>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <button type="button" class="btn btn-outline-secondary btn-xs" onclick="quickSelect('thisWeek')">This Week</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-xs" onclick="quickSelect('nextWeek')">Next Week</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-xs" onclick="quickSelect('next2Weeks')">Next 2 Weeks</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-xs" onclick="quickSelect('thisMonth')">This Month</button>
                                 </div>
                             </div>
-                            <div id="repeat_days_container" class="mt-2" style="display: none;">
-                                <div class="alert alert-info mb-3">
-                                    <small>Select the days to create this schedule. The same time and details will be used for all selected days.</small>
+                            <div class="mini-calendar">
+                                <div class="month-navigator d-flex justify-content-between align-items-center mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="prev-month">
+                                        <i data-feather="chevron-left"></i>
+                                    </button>
+                                    <h6 class="m-0" id="calendar-month-year">April 2026</h6>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="next-month">
+                                        <i data-feather="chevron-right"></i>
+                                    </button>
                                 </div>
-                                <div id="miniCalendar" class="mini-calendar">
-                                    <!-- Calendar will be populated by JavaScript -->
-                                </div>
-                                
-                                <div class="selected-dates mt-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="m-0">Selected Dates</h6>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-selection">
-                                            Clear All
-                                        </button>
+                                <div class="calendar-days">
+                                    <div class="day-names">
+                                        <div>Sun</div>
+                                        <div>Mon</div>
+                                        <div>Tue</div>
+                                        <div>Wed</div>
+                                        <div>Thu</div>
+                                        <div>Fri</div>
+                                        <div>Sat</div>
                                     </div>
-                                    <div id="selected-dates-container">
-                                        <span class="text-muted" id="no-dates-selected">No additional dates selected</span>
+                                    <div class="day-grid" id="calendar-days">
                                     </div>
                                 </div>
                             </div>
+                            <div class="selected-dates mt-2">
+                                <div class="d-flex align-items-center mb-1">
+                                    <small class="fw-semibold"><span id="selected-count">0</span> days selected</small>
+                                    <button type="button" class="btn btn-sm btn-link ms-auto p-0" id="clear-selection">Clear All</button>
+                                </div>
+                                <div id="selected-dates-container" class="d-flex flex-wrap">
+                                    <span class="text-muted" id="no-dates-selected">Click dates on the calendar above</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="range_date_section" class="mb-3" style="display:none;">
+                            <div class="row mb-2">
+                                <div class="col-6">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" id="range_start" class="form-control" onchange="updateRangePreview()">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" id="range_end" class="form-control" onchange="updateRangePreview()">
+                                </div>
+                            </div>
+                            <label class="form-label mb-1">Repeat on these days</label>
+                            <div class="dow-picker d-flex gap-1 mb-2">
+                                <label class="dow-chip"><input type="checkbox" value="1" checked onchange="updateRangePreview()"><span>Mon</span></label>
+                                <label class="dow-chip"><input type="checkbox" value="2" checked onchange="updateRangePreview()"><span>Tue</span></label>
+                                <label class="dow-chip"><input type="checkbox" value="3" checked onchange="updateRangePreview()"><span>Wed</span></label>
+                                <label class="dow-chip"><input type="checkbox" value="4" checked onchange="updateRangePreview()"><span>Thu</span></label>
+                                <label class="dow-chip"><input type="checkbox" value="5" checked onchange="updateRangePreview()"><span>Fri</span></label>
+                                <label class="dow-chip"><input type="checkbox" value="6" onchange="updateRangePreview()"><span>Sat</span></label>
+                                <label class="dow-chip"><input type="checkbox" value="0" onchange="updateRangePreview()"><span>Sun</span></label>
+                            </div>
+                            <div id="range-preview" class="range-preview text-muted small"></div>
                         </div>
                         <div class="row mb-3">
                             <div class="col">
@@ -356,59 +408,93 @@
     height: 12px;
 }
 
+.sched-mode-tabs .btn { font-size: 0.8rem; padding: 0.35rem 0; }
+.btn-xs { font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 4px; }
+
+.dow-picker { flex-wrap: wrap; }
+.dow-chip { display: flex; cursor: pointer; margin: 0; }
+.dow-chip input { display: none; }
+.dow-chip span {
+    display: inline-block; padding: 0.25rem 0.55rem; border-radius: 6px;
+    font-size: 0.78rem; font-weight: 600; border: 1px solid #6c757d; color: #adb5bd;
+    transition: all 0.15s; user-select: none;
+}
+.dow-chip input:checked + span {
+    background: #4f46e5; border-color: #4f46e5; color: #fff;
+}
+
+.range-preview {
+    padding: 0.4rem 0.6rem; border-radius: 6px;
+    background: rgba(79,70,229,0.08); border: 1px dashed rgba(79,70,229,0.25);
+    min-height: 28px;
+}
+
 .mini-calendar {
-    border: 1px solid #dee2e6;
-    border-radius: 0.25rem;
-    padding: 1rem;
-    background-color: #f8f9fa;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: rgba(255,255,255,0.04);
 }
 
 .day-names {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
-    font-weight: 500;
-    font-size: 0.8rem;
+    font-weight: 600;
+    font-size: 0.72rem;
     color: #6c757d;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .day-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-gap: 3px;
+    grid-gap: 2px;
 }
 
 .day-item {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 36px;
-    border-radius: 0.25rem;
+    height: 32px;
+    border-radius: 6px;
     cursor: pointer;
     user-select: none;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
+    transition: background 0.1s;
+}
+
+.day-item:hover:not(.disabled) {
+    background: rgba(79,70,229,0.15);
+}
+
+.day-item.outside-month {
+    color: #555;
+    opacity: 0.5;
 }
 
 .day-item.today {
-    border: 1px solid #007bff;
+    border: 1.5px solid #4f46e5;
     font-weight: bold;
 }
 
 .day-item.selected {
-    background-color: #007bff;
+    background: #4f46e5;
     color: white;
+    font-weight: 600;
 }
 
 .day-item.primary-date {
-    background-color: #28a745;
+    background: #22c55e;
     color: white;
 }
 
 .day-item.disabled {
-    color: #adb5bd;
+    color: #555;
     cursor: not-allowed;
-    background-color: #e9ecef;
+    opacity: 0.3;
 }
 
 .day-item.has-schedule {
@@ -418,13 +504,40 @@
 .day-item.has-schedule:after {
     content: '';
     position: absolute;
-    bottom: 4px;
+    bottom: 3px;
     left: 50%;
     transform: translateX(-50%);
     width: 4px;
     height: 4px;
-    background-color: #dc3545;
     border-radius: 50%;
+    background: #f87171;
+}
+
+.date-tag {
+    background: rgba(79,70,229,0.15);
+    border: 1px solid rgba(79,70,229,0.25);
+    border-radius: 6px;
+    padding: 0.15rem 0.45rem;
+    margin: 0.15rem;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.date-tag .close {
+    margin-left: 0.4rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    opacity: 0.6;
+}
+.date-tag .close:hover { opacity: 1; }
+
+#selected-dates-container {
+    min-height: 28px;
+    max-height: 120px;
+    overflow-y: auto;
 }
 
 .selected-date-pill {
@@ -625,59 +738,63 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Handle form submission
     try {
         const scheduleForm = document.getElementById('schedule_form');
         if (scheduleForm) {
             scheduleForm.addEventListener('submit', function(event) {
                 try {
-                    // Get form values
-                    const dateInput = document.getElementById('schedule_date').value;
-                    const startHour = document.getElementById('start_hour').value;
-                    const endHour = document.getElementById('end_hour').value;
-                    
-                    // Log the form submission for debugging
-                    console.log("Form submission:", {
-                        date: dateInput,
-                        startHour: startHour,
-                        endHour: endHour,
-                        repeatEnabled: document.getElementById('repeat_days_toggle').checked,
-                        repeatDays: selectedDates.join(',')
-                    });
-                    
-                    if (dateInput && startHour && endHour) {
-                        // Create datetime strings in the format expected by the server
-                        let startDate = new Date(`${dateInput}T${startHour}:00`);
-                        let endDate = new Date(`${dateInput}T${endHour}:00`);
-                        
-                        // If end time is midnight (00:00), we need to add a day to the end date
-                        if (endHour === '00') {
-                            endDate.setDate(endDate.getDate() + 1);
+                    var schedModeEl = document.querySelector('input[name="sched_mode"]:checked');
+                    var schedMode = schedModeEl ? schedModeEl.value : 'single';
+                    var dateInput = document.getElementById('schedule_date').value;
+                    var startHour = document.getElementById('start_hour').value;
+                    var endHour = document.getElementById('end_hour').value;
+
+                    console.log("Form submission:", { mode: schedMode, date: dateInput, startHour: startHour, endHour: endHour });
+
+                    if (schedMode === 'single') {
+                        if (dateInput && startHour && endHour) {
+                            var startDate = new Date(dateInput + 'T' + startHour + ':00');
+                            var endDate = new Date(dateInput + 'T' + endHour + ':00');
+                            if (endHour === '00:00' || endHour === '00:30') { endDate.setDate(endDate.getDate() + 1); }
+                            document.getElementById('start_time_input').value = dateInput + ' ' + startHour + ':00';
+                            document.getElementById('end_time_input').value =
+                                endDate.getFullYear() + '-' + String(endDate.getMonth()+1).padStart(2,'0') + '-' + String(endDate.getDate()).padStart(2,'0') + ' ' + endHour + ':00';
                         }
-                        
-                        // Format for the backend (YYYY-MM-DD HH:MM)
-                        const startTimeFormatted = 
-                            `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')} ${startHour}:00`;
-                        const endTimeFormatted = 
-                            `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')} ${endHour}:00`;
-                        
-                        // Set the hidden input values
-                        document.getElementById('start_time_input').value = startTimeFormatted;
-                        document.getElementById('end_time_input').value = endTimeFormatted;
-                    }
-                    
-                    // Set repeat days if we have any selected and the toggle is checked
-                    if (document.getElementById('repeat_days_toggle').checked && selectedDates.length > 0) {
-                        document.getElementById('repeat_days_input').value = selectedDates.join(',');
-                    } else {
                         document.getElementById('repeat_days_input').value = '';
+                    } else if (schedMode === 'multi') {
+                        if (selectedDates.length === 0) {
+                            event.preventDefault();
+                            alert('Please select at least one date on the calendar.');
+                            return;
+                        }
+                        var sortedDates = selectedDates.slice().sort();
+                        if (!dateInput) { dateInput = sortedDates[0]; document.getElementById('schedule_date').value = dateInput; }
+                        document.getElementById('start_time_input').value = sortedDates[0] + ' ' + startHour + ':00';
+                        document.getElementById('end_time_input').value = sortedDates[0] + ' ' + endHour + ':00';
+                        var allDates = selectedDates.slice();
+                        if (allDates.indexOf(dateInput) === -1) allDates.push(dateInput);
+                        document.getElementById('repeat_days_input').value = allDates.sort().join(',');
+                    } else if (schedMode === 'range') {
+                        var rangeVal = document.getElementById('repeat_days_input').value;
+                        if (!rangeVal) {
+                            event.preventDefault();
+                            alert('Please select a valid date range with at least one weekday selected.');
+                            return;
+                        }
+                        var rangeDates = rangeVal.split(',').filter(function(d){ return d; });
+                        if (rangeDates.length === 0) {
+                            event.preventDefault();
+                            alert('No dates match the selected range and weekdays.');
+                            return;
+                        }
+                        document.getElementById('schedule_date').value = rangeDates[0];
+                        document.getElementById('start_time_input').value = rangeDates[0] + ' ' + startHour + ':00';
+                        document.getElementById('end_time_input').value = rangeDates[0] + ' ' + endHour + ':00';
                     }
                 } catch (error) {
                     console.error("Error in form submission handler:", error);
                 }
             });
-        } else {
-            console.error("Schedule form element not found");
         }
     } catch (error) {
         console.error("Error setting up form submission handler:", error);
@@ -945,26 +1062,90 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function toggleRepeatDaysSelection() {
-        const container = document.getElementById('repeat_days_container');
-        const isChecked = document.getElementById('repeat_days_toggle').checked;
-        
-        if (container) {
-            container.style.display = isChecked ? 'block' : 'none';
-            
-            // Clear selected dates if toggling off
-            if (!isChecked) {
-                clearDateSelection();
-            } else {
-                // Initialize and update mini calendar when showing
-                if (document.getElementById('miniCalendar')) {
-                    try {
-                        initMiniCalendar();
-                    } catch (e) {
-                        console.error("Error initializing mini calendar:", e);
-                    }
-                }
+        initMiniCalendar();
+    }
+
+    function switchSchedMode(mode) {
+        document.getElementById('single_date_section').style.display = mode === 'single' ? '' : 'none';
+        document.getElementById('multi_date_section').style.display  = mode === 'multi'  ? '' : 'none';
+        document.getElementById('range_date_section').style.display  = mode === 'range'  ? '' : 'none';
+        if (mode === 'multi') { initMiniCalendar(); }
+        if (mode === 'range') {
+            var today = new Date();
+            var rangeStart = document.getElementById('range_start');
+            var rangeEnd = document.getElementById('range_end');
+            if (!rangeStart.value) {
+                rangeStart.value = _fmtDate(today);
+                var end = new Date(today); end.setDate(end.getDate() + 6);
+                rangeEnd.value = _fmtDate(end);
+            }
+            updateRangePreview();
+        }
+        if (mode === 'single' || mode === 'range') {
+            document.getElementById('repeat_days_input').value = '';
+        }
+    }
+
+    function _fmtDate(d) {
+        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+
+    function quickSelect(preset) {
+        var today = new Date();
+        var dow = today.getDay();
+        var dates = [];
+        if (preset === 'thisWeek') {
+            var mon = new Date(today); mon.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+            for (var i = 0; i < 5; i++) { var d = new Date(mon); d.setDate(mon.getDate()+i); if (d >= today) dates.push(_fmtDate(d)); }
+        } else if (preset === 'nextWeek') {
+            var mon = new Date(today); mon.setDate(today.getDate() + (8 - (dow === 0 ? 7 : dow)));
+            for (var i = 0; i < 5; i++) { var d = new Date(mon); d.setDate(mon.getDate()+i); dates.push(_fmtDate(d)); }
+        } else if (preset === 'next2Weeks') {
+            var mon = new Date(today); mon.setDate(today.getDate() + (8 - (dow === 0 ? 7 : dow)));
+            for (var i = 0; i < 10; i++) { var d = new Date(mon); d.setDate(mon.getDate()+i); if (d.getDay() !== 0 && d.getDay() !== 6) dates.push(_fmtDate(d)); }
+        } else if (preset === 'thisMonth') {
+            var year = today.getFullYear(), month = today.getMonth();
+            var last = new Date(year, month + 1, 0).getDate();
+            for (var day = today.getDate(); day <= last; day++) {
+                var d = new Date(year, month, day);
+                if (d.getDay() !== 0 && d.getDay() !== 6) dates.push(_fmtDate(d));
             }
         }
+        dates.forEach(function(ds) { if (selectedDates.indexOf(ds) === -1) selectedDates.push(ds); });
+        updateSelectedDatesDisplay();
+        updateMiniCalendar();
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        var el = document.getElementById('selected-count');
+        if (el) el.textContent = selectedDates.length;
+    }
+
+    function updateRangePreview() {
+        var startVal = document.getElementById('range_start').value;
+        var endVal = document.getElementById('range_end').value;
+        var preview = document.getElementById('range-preview');
+        if (!startVal || !endVal) { preview.textContent = 'Select a start and end date'; return; }
+        var checkedDows = [];
+        var labels = [];
+        document.querySelectorAll('.dow-chip input:checked').forEach(function(cb) {
+            checkedDows.push(parseInt(cb.value));
+            labels.push(cb.parentElement.querySelector('span').textContent);
+        });
+        var start = new Date(startVal + 'T00:00:00');
+        var end = new Date(endVal + 'T00:00:00');
+        if (end < start) { preview.textContent = 'End date must be after start date'; return; }
+        var count = 0;
+        var dates = [];
+        var cur = new Date(start);
+        while (cur <= end) {
+            if (checkedDows.indexOf(cur.getDay()) !== -1) { count++; dates.push(_fmtDate(cur)); }
+            cur.setDate(cur.getDate() + 1);
+        }
+        preview.innerHTML = '<strong>' + count + ' schedules</strong> will be created (' + labels.join(', ') + ')';
+        document.getElementById('repeat_days_input').value = dates.join(',');
+        document.getElementById('schedule_date').value = dates[0] || startVal;
     }
     
     // Force consistent grid line colors - fix 23:00 line issue
