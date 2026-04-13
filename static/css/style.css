@@ -327,14 +327,16 @@ div[style*="gradient"] {
 /* ── Staff view (card-based) ── */
 .staff-view {
     display: flex;
-    gap: 12px;
+    gap: 14px;
     overflow-x: auto;
     padding-bottom: 8px;
+    align-items: flex-start;
 }
 .staff-col {
-    min-width: 200px;
+    min-width: 220px;
+    max-width: 320px;
     flex: 1;
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid #dee2e6;
     overflow: hidden;
     display: flex;
@@ -343,15 +345,12 @@ div[style*="gradient"] {
 .staff-col-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    background: #f8f9fa;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #f1f3f5;
     border-bottom: 3px solid var(--user-color);
-    font-weight: 600;
-    font-size: 0.9em;
-    position: sticky;
-    top: 0;
-    z-index: 2;
+    font-weight: 700;
+    font-size: 1em;
 }
 .staff-col-name {
     white-space: nowrap;
@@ -359,81 +358,96 @@ div[style*="gradient"] {
     text-overflow: ellipsis;
 }
 .staff-col-body {
-    padding: 8px;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
     flex: 1;
 }
-.staff-day-group {
-    border-radius: 6px;
-    padding: 6px;
-    background: rgba(0,0,0,0.02);
+.staff-day-row {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid #eee;
+    min-height: 42px;
 }
-.staff-day-group.today {
-    background: rgba(0, 123, 255, 0.06);
-    border: 1px solid rgba(0, 123, 255, 0.2);
+.staff-day-row:last-child {
+    border-bottom: none;
+}
+.staff-day-row.today {
+    background: rgba(0, 123, 255, 0.07);
 }
 .staff-day-label {
-    font-size: 0.72em;
+    width: 82px;
+    min-width: 82px;
+    padding: 8px 10px;
+    font-size: 0.82em;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     color: #6c757d;
-    margin-bottom: 4px;
-    padding: 0 2px;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #eee;
 }
-.staff-day-group.today .staff-day-label {
+.staff-day-row.today .staff-day-label {
     color: #007bff;
+    font-weight: 800;
+}
+.staff-day-content {
+    flex: 1;
+    padding: 4px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    justify-content: center;
+}
+.staff-day-off {
+    color: #adb5bd;
+    font-size: 0.85em;
+    padding: 0 4px;
 }
 .staff-card {
-    background: color-mix(in srgb, var(--user-color) 12%, white);
-    border-left: 3px solid var(--user-color);
-    border-radius: 4px;
-    padding: 6px 8px;
+    background: color-mix(in srgb, var(--user-color) 15%, white);
+    border-left: 4px solid var(--user-color);
+    border-radius: 5px;
+    padding: 6px 10px;
     cursor: pointer;
     transition: background 0.15s, box-shadow 0.15s;
-    margin-bottom: 4px;
-}
-.staff-card:last-child {
-    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 .staff-card:hover {
-    background: color-mix(in srgb, var(--user-color) 22%, white);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    background: color-mix(in srgb, var(--user-color) 28%, white);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 .staff-card-time {
-    font-weight: 600;
-    font-size: 0.85em;
+    font-weight: 700;
+    font-size: 0.9em;
+    white-space: nowrap;
 }
 .staff-card-hours {
-    font-size: 0.75em;
+    font-size: 0.8em;
     color: #6c757d;
+    white-space: nowrap;
 }
 .staff-card-loc {
-    font-size: 0.75em;
-    margin-top: 2px;
-}
-.staff-card-desc {
-    font-size: 0.72em;
-    color: #6c757d;
-    margin-top: 2px;
+    font-size: 0.8em;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 .staff-card-ooo {
     background: linear-gradient(135deg, #fff4e6 0%, #ffe8cc 100%) !important;
-    border-left: 3px solid #cc5500 !important;
+    border-left: 4px solid #cc5500 !important;
     color: #6c4a00;
-    font-size: 0.8em;
+    font-size: 0.88em;
     font-weight: bold;
+    padding: 6px 10px;
 }
 .staff-empty {
     text-align: center;
     color: #adb5bd;
-    font-size: 0.82em;
-    padding: 20px 8px;
+    font-size: 0.88em;
+    padding: 24px 10px;
     font-style: italic;
 }
 
@@ -447,26 +461,47 @@ body.dark-mode .staff-col-header {
     background: #1e1e2e;
     color: #e0e0e0;
 }
-[data-bs-theme="dark"] .staff-day-group,
-body.dark-mode .staff-day-group {
-    background: rgba(255,255,255,0.03);
+[data-bs-theme="dark"] .staff-day-row,
+body.dark-mode .staff-day-row {
+    border-bottom-color: #333;
 }
-[data-bs-theme="dark"] .staff-day-group.today,
-body.dark-mode .staff-day-group.today {
-    background: rgba(0, 123, 255, 0.08);
-    border-color: rgba(0, 123, 255, 0.25);
+[data-bs-theme="dark"] .staff-day-label,
+body.dark-mode .staff-day-label {
+    border-right-color: #333;
+    color: #999;
+}
+[data-bs-theme="dark"] .staff-day-row.today,
+body.dark-mode .staff-day-row.today {
+    background: rgba(0, 123, 255, 0.1);
+}
+[data-bs-theme="dark"] .staff-day-row.today .staff-day-label,
+body.dark-mode .staff-day-row.today .staff-day-label {
+    color: #5fa8ff;
 }
 [data-bs-theme="dark"] .staff-card,
 body.dark-mode .staff-card {
-    background: color-mix(in srgb, var(--user-color) 15%, #1a1d21);
+    background: color-mix(in srgb, var(--user-color) 18%, #1a1d21);
+    color: #e0e0e0;
 }
 [data-bs-theme="dark"] .staff-card:hover,
 body.dark-mode .staff-card:hover {
-    background: color-mix(in srgb, var(--user-color) 25%, #1a1d21);
+    background: color-mix(in srgb, var(--user-color) 30%, #1a1d21);
+}
+[data-bs-theme="dark"] .staff-card-time,
+body.dark-mode .staff-card-time {
+    color: #fff;
+}
+[data-bs-theme="dark"] .staff-card-hours,
+body.dark-mode .staff-card-hours {
+    color: #aaa;
 }
 [data-bs-theme="dark"] .staff-col-body,
 body.dark-mode .staff-col-body {
-    background: #252535;
+    background: #1a1d25;
+}
+[data-bs-theme="dark"] .staff-day-off,
+body.dark-mode .staff-day-off {
+    color: #555;
 }
 .staff-avatar-sm {
     width: 26px;

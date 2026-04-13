@@ -207,49 +207,48 @@
                 {% for schedule in schedules if schedule.technician_id == tech.id and schedule.start_time.date() == current_date.date() %}
                     {% if day_scheds.append(schedule) %}{% endif %}
                 {% endfor %}
-                {% if day_scheds %}
-                <div class="staff-day-group {{ 'today' if is_today else '' }}">
+                <div class="staff-day-row {{ 'today' if is_today else '' }}">
                     <div class="staff-day-label">{{ current_date.strftime('%a %m/%d') }}</div>
-                    {% for schedule in day_scheds %}
-                    {% set disp = schedule_display.get(schedule.id, {}) %}
-                    {% set s_start = schedule.start_time.astimezone(current_user.get_timezone_obj()) %}
-                    {% set s_end = schedule.end_time.astimezone(current_user.get_timezone_obj()) %}
-                    {% if disp.get('is_ooo') %}
-                    <div class="staff-card staff-card-ooo schedule-event"
-                         data-schedule-id="{{ schedule.id }}"
-                         data-technician-id="{{ schedule.technician_id }}"
-                         data-start-time="{{ s_start.strftime('%Y-%m-%d %H:%M:%S') }}"
-                         data-end-time="{{ s_end.strftime('%Y-%m-%d %H:%M:%S') }}"
-                         data-time-off="true" data-all-day="true">
-                        🏖️ OOO All Day
-                        <span class="schedule-desc d-none"></span>
-                        <span class="schedule-location d-none"></span>
-                    </div>
+                    <div class="staff-day-content">
+                    {% if day_scheds %}
+                        {% for schedule in day_scheds %}
+                        {% set disp = schedule_display.get(schedule.id, {}) %}
+                        {% set s_start = schedule.start_time.astimezone(current_user.get_timezone_obj()) %}
+                        {% set s_end = schedule.end_time.astimezone(current_user.get_timezone_obj()) %}
+                        {% if disp.get('is_ooo') %}
+                        <div class="staff-card staff-card-ooo schedule-event"
+                             data-schedule-id="{{ schedule.id }}"
+                             data-technician-id="{{ schedule.technician_id }}"
+                             data-start-time="{{ s_start.strftime('%Y-%m-%d %H:%M:%S') }}"
+                             data-end-time="{{ s_end.strftime('%Y-%m-%d %H:%M:%S') }}"
+                             data-time-off="true" data-all-day="true">
+                            🏖️ OOO All Day
+                            <span class="schedule-desc d-none"></span>
+                            <span class="schedule-location d-none"></span>
+                        </div>
+                        {% else %}
+                        <div class="staff-card schedule-event"
+                             style="--user-color:{{ tech.color }};"
+                             data-schedule-id="{{ schedule.id }}"
+                             data-technician-id="{{ schedule.technician_id }}"
+                             data-start-time="{{ s_start.strftime('%Y-%m-%d %H:%M:%S') }}"
+                             data-end-time="{{ s_end.strftime('%Y-%m-%d %H:%M:%S') }}"
+                             data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
+                             data-all-day="false">
+                            <span class="staff-card-time">{{ s_start.strftime('%H:%M') }} – {{ s_end.strftime('%H:%M') }}</span>
+                            <span class="staff-card-hours">({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|round(1) }}h)</span>
+                            {% if schedule.location %}<span class="staff-card-loc">📍 {{ schedule.location.name }}</span>{% endif %}
+                            <span class="schedule-username d-none">{{ schedule.technician.username }}</span>
+                            <span class="schedule-location d-none">{{ schedule.location.name if schedule.location else '' }}</span>
+                            <span class="schedule-desc d-none">{{ schedule.description or '' }}</span>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
                     {% else %}
-                    <div class="staff-card schedule-event"
-                         style="--user-color:{{ tech.color }};"
-                         data-schedule-id="{{ schedule.id }}"
-                         data-technician-id="{{ schedule.technician_id }}"
-                         data-start-time="{{ s_start.strftime('%Y-%m-%d %H:%M:%S') }}"
-                         data-end-time="{{ s_end.strftime('%Y-%m-%d %H:%M:%S') }}"
-                         data-time-off="{{ 'true' if schedule.time_off else 'false' }}"
-                         data-all-day="false">
-                        <div class="staff-card-time">{{ s_start.strftime('%H:%M') }} – {{ s_end.strftime('%H:%M') }}</div>
-                        <div class="staff-card-hours">{{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|round(1) }}h</div>
-                        {% if schedule.location %}
-                        <div class="staff-card-loc">📍 {{ schedule.location.name }}</div>
-                        {% endif %}
-                        {% if schedule.description %}
-                        <div class="staff-card-desc">{{ schedule.description }}</div>
-                        {% endif %}
-                        <span class="schedule-username d-none">{{ schedule.technician.username }}</span>
-                        <span class="schedule-location d-none">{{ schedule.location.name if schedule.location else '' }}</span>
-                        <span class="schedule-desc d-none">{{ schedule.description or '' }}</span>
-                    </div>
+                        <span class="staff-day-off">&mdash;</span>
                     {% endif %}
-                    {% endfor %}
+                    </div>
                 </div>
-                {% endif %}
                 {% endfor %}
                 {% set has_any = [] %}
                 {% for schedule in schedules if schedule.technician_id == tech.id %}
