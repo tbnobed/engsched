@@ -2718,6 +2718,9 @@ def admin_delete_user(user_id):
         assigned_tickets = Ticket.query.filter_by(assigned_to=user_id).all()
         for ticket in assigned_tickets:
             ticket.assigned_to = None
+
+        # Delete ticket view records for this user
+        TicketView.query.filter_by(user_id=user_id).delete()
             
         # Delete associated schedules
         Schedule.query.filter_by(technician_id=user_id).delete()
