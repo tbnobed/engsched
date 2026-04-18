@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>Calendar B — Studio Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://unpkg.com/feather-icons"></script>
+<style>
+  :root {
+    --bg: #0f1520;
+    --panel: #18202d;
+    --panel-2: #1f2937;
+    --border: #2a3548;
+    --muted: #94a3b8;
+    --text: #f1f5f9;
+    --accent: #818cf8;
+    --good: #4ade80;
+    --warn: #fbbf24;
+    --bad:  #f87171;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family: 'Inter','Segoe UI',system-ui,sans-serif; height: 100%; margin: 0; }
+  .topbar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 14px 24px; background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { font-weight:700; display:flex; align-items:center; gap:10px; font-size:15px; }
+  .brand .dot { width:8px; height:8px; border-radius:50%; background: var(--good); box-shadow:0 0 10px var(--good); }
+
+  .toolbar {
+    display:flex; align-items:center; justify-content:space-between; gap: 16px;
+    padding: 18px 24px; background: var(--bg);
+  }
+  .nav-group { display:flex; align-items:center; gap: 10px; }
+  .icon-btn {
+    width:38px; height:38px; border-radius:10px; border:1px solid var(--border); background: var(--panel);
+    color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .icon-btn:hover { background: var(--panel-2); border-color: var(--accent); }
+  .week-label { font-size: 22px; font-weight: 700; padding: 0 14px; letter-spacing: -.3px; }
+  .week-sub { font-size: 12px; color: var(--muted); margin-left: 4px; font-weight:500; }
+  .pill-tabs { display:flex; background: var(--panel); border-radius: 12px; padding: 4px; gap: 2px; border:1px solid var(--border); }
+  .pill-tab { padding: 8px 18px; font-size: 13px; color: var(--muted); border-radius: 8px; cursor:pointer; font-weight:600; }
+  .pill-tab.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(129,140,248,.4); }
+  .filter-chip {
+    background: var(--panel); border:1px solid var(--border); color: var(--text);
+    border-radius: 10px; padding: 9px 14px; font-size: 13px; display:flex; align-items:center; gap: 8px;
+    cursor: pointer;
+  }
+  .filter-chip .label { color: var(--muted); font-size: 11px; }
+  .btn-new {
+    background: var(--accent); border:none; color:white;
+    padding: 10px 18px; border-radius: 10px; font-weight:600; font-size: 13px; display:flex; align-items:center; gap:6px;
+    box-shadow: 0 4px 14px rgba(129,140,248,.35);
+  }
+
+  .cal-shell {
+    display: grid; grid-template-columns: 70px repeat(7, 1fr);
+    background: var(--panel); border: 1px solid var(--border); margin: 0 24px 24px; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,.3);
+  }
+  .day-head {
+    padding: 14px 12px; border-bottom: 1px solid var(--border);
+    text-align: center; background: var(--panel);
+  }
+  .day-head + .day-head { border-left: 1px solid var(--border); }
+  .day-head.today { background: linear-gradient(180deg, rgba(129,140,248,.18), var(--panel)); }
+  .day-head .dow { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; }
+  .day-head .dnum {
+    font-size: 24px; font-weight: 800; margin-top: 4px; letter-spacing: -.5px;
+    display: inline-flex; align-items:center; justify-content:center;
+    width: 36px; height: 36px; border-radius: 50%;
+  }
+  .day-head .dnum.today-num { background: var(--accent); color: white; }
+  .corner { background: var(--panel); border-bottom: 1px solid var(--border); }
+
+  .hour-col { background: var(--panel); border-right: 1px solid var(--border); }
+  .hour-row { height: 64px; border-bottom: 1px solid rgba(255,255,255,.04); padding: 6px 8px; font-size: 11px; color: var(--muted); text-align: right; font-weight: 500; }
+  .day-col { position: relative; border-left: 1px solid var(--border); background: var(--panel); }
+  .day-col.today { background: linear-gradient(180deg, rgba(129,140,248,.05), var(--panel) 30%); }
+  .day-col .slot { height: 64px; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .day-col .slot.half { border-bottom: 1px dashed rgba(255,255,255,.03); height: 32px; }
+
+  .event {
+    position: absolute; left: 5px; right: 5px; border-radius: 10px;
+    padding: 8px 10px; color: white; font-size: 12px; font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,255,255,.12);
+    cursor: pointer; overflow: hidden; transition: transform .15s, box-shadow .15s;
+    backdrop-filter: blur(8px);
+  }
+  .event:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.2); z-index: 10; }
+  .event .e-time { font-size: 10px; opacity: .9; font-weight: 600; margin-bottom: 3px; letter-spacing: .3px; }
+  .event .e-name { font-size: 13px; font-weight: 700; }
+  .event .e-loc { font-size: 10px; opacity: .85; margin-top: 4px; display:flex; align-items:center; gap:4px; }
+  .event.ooo {
+    background: repeating-linear-gradient(45deg, rgba(148,163,184,.3), rgba(148,163,184,.3) 8px, rgba(100,116,139,.2) 8px, rgba(100,116,139,.2) 16px) !important;
+    border: 1px dashed rgba(148,163,184,.5);
+    color: #cbd5e1;
+  }
+  .now-line { position:absolute; left:0; right:0; height:2px; background: var(--bad); box-shadow:0 0 12px var(--bad); z-index: 8; }
+  .now-line::before { content:""; position:absolute; left:-6px; top:-5px; width:12px; height:12px; border-radius:50%; background: var(--bad); border: 2px solid var(--bg); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span> PLEX OPS · Calendar</div>
+  <div style="display:flex; gap:12px; align-items:center;">
+    <button class="icon-btn"><i data-feather="bell" style="width:15px;height:15px;"></i></button>
+    <div style="width:34px; height:34px; border-radius:50%; background: var(--accent); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px;">A</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="nav-group">
+    <button class="icon-btn"><i data-feather="chevron-left" style="width:18px;height:18px;"></i></button>
+    <button class="icon-btn" style="padding:0 18px; width:auto; font-size:13px; font-weight:600;">Today</button>
+    <button class="icon-btn"><i data-feather="chevron-right" style="width:18px;height:18px;"></i></button>
+    <div>
+      <span class="week-label">Apr 13 — 19</span>
+      <span class="week-sub">2026</span>
+    </div>
+  </div>
+  <div class="nav-group">
+    <div class="pill-tabs">
+      <div class="pill-tab">Day</div>
+      <div class="pill-tab active">Week</div>
+      <div class="pill-tab">Month</div>
+    </div>
+    <div class="filter-chip"><i data-feather="map-pin" style="width:14px;height:14px; color: var(--muted);"></i><span class="label">Location:</span> All</div>
+    <div class="filter-chip"><i data-feather="user" style="width:14px;height:14px; color: var(--muted);"></i><span class="label">Tech:</span> All</div>
+    <button class="btn-new"><i data-feather="plus" style="width:15px;height:15px;"></i> New Schedule</button>
+  </div>
+</div>
+
+<div class="cal-shell">
+  <div class="corner"></div>
+  <div class="day-head"><div class="dow">Mon</div><div class="dnum">13</div></div>
+  <div class="day-head"><div class="dow">Tue</div><div class="dnum">14</div></div>
+  <div class="day-head"><div class="dow">Wed</div><div class="dnum">15</div></div>
+  <div class="day-head"><div class="dow">Thu</div><div class="dnum">16</div></div>
+  <div class="day-head"><div class="dow">Fri</div><div class="dnum">17</div></div>
+  <div class="day-head today"><div class="dow">Sat</div><div class="dnum today-num">18</div></div>
+  <div class="day-head"><div class="dow">Sun</div><div class="dnum">19</div></div>
+
+  <div class="hour-col">
+    <div class="hour-row">06:00</div>
+    <div class="hour-row">07:00</div>
+    <div class="hour-row">08:00</div>
+    <div class="hour-row">09:00</div>
+    <div class="hour-row">10:00</div>
+    <div class="hour-row">11:00</div>
+    <div class="hour-row">12:00</div>
+    <div class="hour-row">13:00</div>
+    <div class="hour-row">14:00</div>
+    <div class="hour-row">15:00</div>
+    <div class="hour-row">16:00</div>
+    <div class="hour-row">17:00</div>
+    <div class="hour-row">18:00</div>
+    <div class="hour-row">19:00</div>
+  </div>
+
+  <!-- Mon -->
+  <div class="day-col">
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div>
+    <div class="event" style="top:128px; height:300px; background:linear-gradient(135deg,#6366f1,#4338ca);">
+      <div class="e-time">08:00 – 12:30</div>
+      <div class="e-name">Obed Smith</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Studio A</div>
+    </div>
+    <div class="event" style="top:480px; height:240px; background:linear-gradient(135deg,#10b981,#047857);">
+      <div class="e-time">13:30 – 17:00</div>
+      <div class="e-name">Priya Anand</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Edit Bay 2</div>
+    </div>
+  </div>
+
+  <!-- Tue -->
+  <div class="day-col">
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div>
+    <div class="event" style="top:64px; height:380px; background:linear-gradient(135deg,#f59e0b,#b45309);">
+      <div class="e-time">07:00 – 13:00</div>
+      <div class="e-name">Jamie Rivera</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Master Control</div>
+    </div>
+    <div class="event" style="top:480px; height:300px; background:linear-gradient(135deg,#a855f7,#7e22ce);">
+      <div class="e-time">13:30 – 18:30</div>
+      <div class="e-name">Dan Tran</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Remote OB</div>
+    </div>
+  </div>
+
+  <!-- Wed - PTO -->
+  <div class="day-col">
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div>
+    <div class="event ooo" style="top:0; height:880px; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+      <i data-feather="coffee" style="width:24px;height:24px; opacity:.6; margin-bottom:8px;"></i>
+      <div class="e-name">PTO</div>
+      <div class="e-loc">Marcus Kim · All Day</div>
+    </div>
+  </div>
+
+  <!-- Thu -->
+  <div class="day-col">
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div>
+    <div class="event" style="top:128px; height:240px; background:linear-gradient(135deg,#ec4899,#be185d);">
+      <div class="e-time">08:00 – 11:30</div>
+      <div class="e-name">Eli Lopez</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Studio B</div>
+    </div>
+    <div class="event" style="top:400px; height:200px; background:linear-gradient(135deg,#06b6d4,#0e7490);">
+      <div class="e-time">12:30 – 15:30</div>
+      <div class="e-name">Sara Gomez</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Edit Bay 1</div>
+    </div>
+  </div>
+
+  <!-- Fri -->
+  <div class="day-col">
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div>
+    <div class="event" style="top:128px; height:380px; background:linear-gradient(135deg,#6366f1,#4338ca);">
+      <div class="e-time">08:00 – 14:00</div>
+      <div class="e-name">Obed Smith</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Studio A · Live</div>
+    </div>
+    <div class="event" style="top:528px; height:260px; background:linear-gradient(135deg,#84cc16,#3f6212);">
+      <div class="e-time">14:30 – 18:30</div>
+      <div class="e-name">Naomi Brooks</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Podcast Booth</div>
+    </div>
+  </div>
+
+  <!-- Sat (today) -->
+  <div class="day-col today">
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div>
+    <div class="event" style="top:128px; height:300px; background:linear-gradient(135deg,#6366f1,#4338ca);">
+      <div class="e-time">08:00 – 12:30</div>
+      <div class="e-name">Obed Smith</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Studio A</div>
+    </div>
+    <div class="event" style="top:320px; height:240px; background:linear-gradient(135deg,#f59e0b,#b45309);">
+      <div class="e-time">10:30 – 14:00</div>
+      <div class="e-name">Jamie Rivera</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Master Ctrl</div>
+    </div>
+    <div class="event" style="top:496px; height:300px; background:linear-gradient(135deg,#ec4899,#be185d);">
+      <div class="e-time">13:30 – 18:00</div>
+      <div class="e-name">Eli Lopez</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Studio B · Live</div>
+    </div>
+    <div class="now-line" style="top:520px;"></div>
+  </div>
+
+  <!-- Sun -->
+  <div class="day-col">
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <div class="slot"></div><div class="slot"></div>
+    <div class="event" style="top:256px; height:300px; background:linear-gradient(135deg,#a855f7,#7e22ce);">
+      <div class="e-time">10:00 – 14:30</div>
+      <div class="e-name">Priya Anand</div>
+      <div class="e-loc"><i data-feather="map-pin" style="width:10px;height:10px;"></i> Edit Bay 2</div>
+    </div>
+  </div>
+</div>
+
+<script>feather.replace();</script>
+</body>
+</html>
