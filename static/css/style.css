@@ -741,3 +741,225 @@ div[style*="gradient"] {
         font-size: 0.8em;
     }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Calendar — Command Center re-skin (Variant A)
+   Scoped strictly to .calendar-container so other pages are unaffected.
+   ───────────────────────────────────────────────────────────────────────── */
+.calendar-container {
+    background: #0c1118 !important;
+    color: #e8edf5;
+    padding: 18px 20px 24px;
+    border-radius: 14px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+    border: 1px solid #232d3d;
+    font-family: 'Inter','Segoe UI',system-ui,sans-serif;
+}
+
+.calendar-container .calendar-header {
+    background: linear-gradient(90deg,#0e1622,#0c1118);
+    border: 1px solid #232d3d;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 16px !important;
+}
+
+.calendar-container .calendar-header h2 {
+    color: #e8edf5;
+    font-weight: 700;
+    letter-spacing: -.3px;
+    margin: 0;
+    font-size: 1.35rem;
+}
+
+.calendar-container .calendar-location-filter {
+    background: #18212f;
+    border: 1px solid #232d3d;
+    color: #e8edf5;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 13px;
+    min-width: 150px;
+}
+.calendar-container .calendar-location-filter:focus {
+    border-color: #6aa6ff;
+    box-shadow: 0 0 0 2px rgba(106,166,255,.18);
+}
+.calendar-container .calendar-location-filter option { background: #18212f; color: #e8edf5; }
+
+.calendar-container .calendar-controls .btn {
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 7px 12px;
+    border-color: #2a3548;
+}
+.calendar-container .calendar-controls .btn-outline-primary {
+    color: #cdd6e4;
+    background: #18212f;
+    border-color: #232d3d;
+}
+.calendar-container .calendar-controls .btn-outline-primary:hover {
+    background: #6aa6ff;
+    border-color: #6aa6ff;
+    color: #fff;
+}
+.calendar-container .calendar-controls .btn-outline-secondary {
+    color: #8a97ac;
+    background: #131a25;
+    border-color: #232d3d;
+}
+.calendar-container .calendar-controls .btn-outline-secondary:hover {
+    background: #232d3d;
+    color: #e8edf5;
+}
+.calendar-container .calendar-controls .btn-success {
+    background: linear-gradient(135deg,#10b981,#059669);
+    border: none;
+}
+.calendar-container .calendar-controls .btn-outline-warning,
+.calendar-container .btn-outline-warning#bulk-select-toggle {
+    background: #18212f;
+    border-color: #f59e0b;
+    color: #f59e0b;
+}
+.calendar-container .btn-outline-warning#bulk-select-toggle:hover {
+    background: #f59e0b;
+    color: #0c1118;
+}
+
+/* Grid */
+.calendar-container .calendar-grid {
+    background: #18212f !important;
+    border: 1px solid #232d3d;
+    border-radius: 12px;
+    overflow: hidden;
+    gap: 1px;
+}
+
+.calendar-container .time-column,
+.calendar-container .day-column {
+    background: #0f1622 !important;
+}
+
+.calendar-container .day-column.today {
+    background: linear-gradient(180deg, rgba(106,166,255,.06), #0f1622 30%) !important;
+}
+
+.calendar-container .day-header {
+    background: #131a25 !important;
+    border-bottom: 1px solid #232d3d !important;
+    color: #cdd6e4;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    font-size: 11px;
+}
+.calendar-container .day-header.today {
+    background: linear-gradient(180deg, rgba(106,166,255,.18), #131a25) !important;
+    color: #6aa6ff;
+    border-bottom: 2px solid #6aa6ff !important;
+}
+
+.calendar-container .time-column::before {
+    background: #131a25;
+    border-bottom: 1px solid #232d3d !important;
+}
+
+.calendar-container .hour-slot {
+    color: #8a97ac;
+    border-bottom: 1px dashed rgba(255,255,255,0.05) !important;
+    font-weight: 500;
+    text-align: right;
+    padding-right: 8px;
+}
+
+.calendar-container .time-slot {
+    border-bottom: 1px dashed rgba(255,255,255,0.04) !important;
+}
+.calendar-container .time-slot:hover {
+    background-color: rgba(106,166,255,0.08) !important;
+}
+
+/* Now-line accent */
+.calendar-container .current-time-line {
+    background: #f87171 !important;
+    box-shadow: 0 0 8px rgba(248,113,113,.7);
+    height: 2px !important;
+}
+.calendar-container .current-time-line::before {
+    background: #f87171 !important;
+}
+.calendar-container .current-time-line::after {
+    background: #f87171 !important;
+}
+
+/* Schedule bars — solid gradient pills with crisp typography */
+.calendar-container .schedule-event.sched-bar .sched-bar-fill {
+    inset: 1px;
+    background: linear-gradient(135deg,
+                  color-mix(in srgb, var(--user-color) 92%, #000),
+                  color-mix(in srgb, var(--user-color) 70%, #000)) !important;
+    border: none !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.15), 0 4px 14px rgba(0,0,0,.4);
+    border-radius: 8px;
+    transition: transform .15s, box-shadow .15s;
+}
+.calendar-container .schedule-event.sched-bar:hover .sched-bar-fill {
+    background: linear-gradient(135deg,
+                  color-mix(in srgb, var(--user-color) 100%, #000),
+                  color-mix(in srgb, var(--user-color) 80%, #000)) !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.25), 0 6px 18px rgba(0,0,0,.5);
+    transform: translateY(-1px);
+}
+.calendar-container .sched-bar-name {
+    color: #fff;
+    font-size: 11px;
+    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+.calendar-container .sched-bar-time {
+    color: rgba(255,255,255,.85);
+    font-size: 10px;
+    font-weight: 500;
+}
+.calendar-container .sched-avatar {
+    background: #131a25;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.4), 0 2px 8px rgba(0,0,0,.6);
+}
+
+/* OOO banner — match dark theme */
+.calendar-container .schedule-event.all-day-time-off {
+    background: repeating-linear-gradient(45deg,#374151,#374151 6px,#1f2937 6px,#1f2937 12px) !important;
+    border: 1px dashed rgba(148,163,184,.5) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,.4) !important;
+}
+.calendar-container .ooo-banner {
+    color: #cbd5e1;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    font-size: 0.78em;
+}
+
+/* Schedule modal — keep readable in dark mode */
+.calendar-container ~ .modal .modal-content,
+#scheduleModal .modal-content {
+    background: #131a25;
+    color: #e8edf5;
+    border: 1px solid #232d3d;
+}
+#scheduleModal .modal-header { border-bottom-color: #232d3d; }
+#scheduleModal .modal-footer { border-top-color: #232d3d; }
+#scheduleModal .form-control,
+#scheduleModal .form-select {
+    background: #18212f;
+    border-color: #232d3d;
+    color: #e8edf5;
+}
+#scheduleModal .form-control:focus,
+#scheduleModal .form-select:focus {
+    background: #18212f;
+    border-color: #6aa6ff;
+    box-shadow: 0 0 0 2px rgba(106,166,255,.18);
+    color: #e8edf5;
+}

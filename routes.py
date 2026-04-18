@@ -1685,24 +1685,93 @@ def calendar():
     force_mobile = request.args.get('mobile') == 'true'
 
     # ── Server-side column assignment ─────────────────────────────────────────
-    # Each technician gets an equal-width lane within the day column.
-    # Lanes use percentage-based widths so they scale with screen size.
-    _GAP_PX   = 2    # gap between lanes in pixels
-    _AV_HALF  = 16   # half of 32px avatar
+    # Sweep-line lane algorithm: only events whose TIME ranges overlap share
+    # columns within a day. Non-overlapping events use the full width even if
+    # other technicians are scheduled elsewhere that same day.
+    _AV_HALF = 16  # half of 32px avatar
 
     from collections import defaultdict
 
-    _day_techs = defaultdict(list)
+    # 1) Build per-day list of (start_min, end_min, schedule) for non-OOO events
+    _day_events = defaultdict(list)
     for _s in schedules:
-        if not (_s.time_off and _s.all_day):
-            _d = _s.start_time.date()
-            if _s.technician_id not in _day_techs[_d]:
-                _day_techs[_d].append(_s.technician_id)
-    for _d in _day_techs:
-        _day_techs[_d].sort()
+        if _s.time_off and _s.all_day:
+            continue
+        _ls = _s.start_time.astimezone(viewing_tz)
+        _le = _s.end_time.astimezone(viewing_tz)
+        _sh = _ls.hour + _ls.minute / 60
+        _eh = _le.hour + _le.minute / 60
+        if _eh == 0:
+            _eh = 24
+        _start_min = int(_sh * 60)
+        _end_min = max(_start_min + 30, int(_eh * 60))
+        _day_events[_s.start_time.date()].append((_start_min, _end_min, _s))
 
     _day_ooo = defaultdict(int)
     schedule_display = {}
+
+    # 2) For each day, group events into overlap clusters and assign lanes
+    for _d, _events in _day_events.items():
+        # Sort by start ascending, then end descending (longer events first on tie)
+        _events.sort(key=lambda x: (x[0], -x[1]))
+
+        # Greedy lane assignment: place each event in first lane whose last
+        # event has already ended. Track cluster boundaries (a cluster is a
+        # contiguous group of events whose union forms a single time range).
+        _lanes_end = []      # end time of the last event placed in each lane
+        _lane_for = {}       # schedule.id -> lane index
+        _cluster_id_for = {} # schedule.id -> cluster id
+        _cluster_max_end = {}  # cluster id -> rolling max end time
+        _cluster_size = defaultdict(int)  # cluster id -> max simultaneous lanes
+        _cluster_counter = [0]
+        _current_cluster = None
+
+        for _start, _end, _s in _events:
+            # New cluster starts when this event begins after current cluster's max end
+            if _current_cluster is None or _start >= _cluster_max_end.get(_current_cluster, -1):
+                _cluster_counter[0] += 1
+                _current_cluster = _cluster_counter[0]
+                _cluster_max_end[_current_cluster] = _end
+                _lanes_end = []  # reset lanes for new cluster
+            else:
+                _cluster_max_end[_current_cluster] = max(_cluster_max_end[_current_cluster], _end)
+
+            # Find first available lane (where previous event has ended)
+            _placed_lane = None
+            for _i, _le_end in enumerate(_lanes_end):
+                if _le_end <= _start:
+                    _lanes_end[_i] = _end
+                    _placed_lane = _i
+                    break
+            if _placed_lane is None:
+                _lanes_end.append(_end)
+                _placed_lane = len(_lanes_end) - 1
+
+            _lane_for[_s.id] = _placed_lane
+            _cluster_id_for[_s.id] = _current_cluster
+            _cluster_size[_current_cluster] = max(_cluster_size[_current_cluster], len(_lanes_end))
+
+        # 3) Emit display entries
+        for _start, _end, _s in _events:
+            _cid = _cluster_id_for[_s.id]
+            _total = _cluster_size[_cid]
+            _lane = _lane_for[_s.id]
+            _pct_w = round(100.0 / _total, 4) if _total else 100
+            _pct_l = round(_lane * _pct_w, 4)
+            _height = max(30, _end - _start)
+            _av_top = min(_height - _AV_HALF, max(_AV_HALF, _height // 3))
+            schedule_display[_s.id] = {
+                'is_ooo':     False,
+                'left_pct':   _pct_l,
+                'width_pct':  _pct_w,
+                'top':        _start,
+                'height':     _height,
+                'avatar_top': _av_top,
+                'total':      _total,
+                'col_idx':    _lane,
+            }
+
+    # OOO all-day banners
     for _s in schedules:
         if _s.time_off and _s.all_day:
             _d = _s.start_time.date()
@@ -1712,32 +1781,6 @@ def calendar():
                 'is_ooo': True,
                 'ooo_top': _ooo_idx * 58,
                 'username': _s.technician.username,
-            }
-        else:
-            _ls = _s.start_time.astimezone(viewing_tz)
-            _le = _s.end_time.astimezone(viewing_tz)
-            _sh = _ls.hour + _ls.minute / 60
-            _eh = _le.hour + _le.minute / 60
-            if _eh == 0:
-                _eh = 24
-            _top    = int(_sh * 60)
-            _height = max(30, int((_eh - _sh) * 60))
-            _d      = _s.start_time.date()
-            _tlist  = _day_techs[_d]
-            _cidx   = _tlist.index(_s.technician_id) if _s.technician_id in _tlist else 0
-            _total  = len(_tlist)
-            _pct_w  = round(100.0 / _total, 4) if _total else 100
-            _pct_l  = round(_cidx * _pct_w, 4)
-            _av_top = min(_height - _AV_HALF, max(_AV_HALF, _height // 3))
-            schedule_display[_s.id] = {
-                'is_ooo':     False,
-                'left_pct':   _pct_l,
-                'width_pct':  _pct_w,
-                'top':        _top,
-                'height':     _height,
-                'avatar_top': _av_top,
-                'total':      _total,
-                'col_idx':    _cidx,
             }
     # ─────────────────────────────────────────────────────────────────────────
 
