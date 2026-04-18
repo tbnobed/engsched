@@ -202,11 +202,81 @@ def dashboard():
             }
         schedules_by_tech[tech_name]['schedules'].append(schedule)
     
+    # Build people rail: every user with current on-shift / off / OOO status
+    now_utc = datetime.now(pytz.UTC)
+    all_users = User.query.order_by(User.username).all()
+    people_rail = []
+    for u in all_users:
+        status = 'off'
+        meta = 'Off shift'
+        current_sched = None
+        next_sched = None
+        ooo_sched = None
+        for sched in raw_schedules:
+            if sched.technician_id != u.id:
+                continue
+            s_utc = sched.start_time if sched.start_time.tzinfo else pytz.UTC.localize(sched.start_time)
+            e_utc = sched.end_time if sched.end_time.tzinfo else pytz.UTC.localize(sched.end_time)
+            if sched.time_off and s_utc <= now_utc <= e_utc:
+                ooo_sched = sched
+            elif s_utc <= now_utc <= e_utc and not sched.time_off:
+                current_sched = sched
+            elif s_utc > now_utc and not sched.time_off and (next_sched is None or s_utc < (next_sched.start_time if next_sched.start_time.tzinfo else pytz.UTC.localize(next_sched.start_time))):
+                next_sched = sched
+        if ooo_sched:
+            status = 'ooo'
+            meta = 'Time Off' + (f" · {ooo_sched.description}" if ooo_sched.description else '')
+        elif current_sched:
+            status = 'on'
+            end_local = (current_sched.end_time if current_sched.end_time.tzinfo else pytz.UTC.localize(current_sched.end_time)).astimezone(user_tz)
+            loc = current_sched.location.name if current_sched.location else 'Plex'
+            meta = f"{loc} · until {end_local.strftime('%-I:%M%p').lower()}"
+        elif next_sched:
+            start_local = (next_sched.start_time if next_sched.start_time.tzinfo else pytz.UTC.localize(next_sched.start_time)).astimezone(user_tz)
+            if start_local.date() == today:
+                meta = f"Starts {start_local.strftime('%-I:%M%p').lower()}"
+        people_rail.append({
+            'user': u,
+            'status': status,
+            'meta': meta,
+            'initials': ''.join([p[0].upper() for p in u.username.split()[:2]])[:2] or u.username[:2].upper(),
+        })
+    people_rail.sort(key=lambda p: (0 if p['status'] == 'on' else 1 if p['status'] == 'ooo' else 2, p['user'].username.lower()))
+
+    # KPI counts
+    active_tickets_all = Ticket.query.filter(Ticket.status.in_(['open', 'in_progress', 'pending']), Ticket.archived == False).all()
+    kpi_active = len(active_tickets_all)
+    kpi_high = len([t for t in active_tickets_all if t.priority >= 2])
+    kpi_on_shift = sum(1 for p in people_rail if p['status'] == 'on')
+    kpi_total_techs = len(all_users)
+    kpi_unassigned = len([t for t in active_tickets_all if not t.assigned_to])
+
+    # Timeline range — clamp 8-20 by default, expand to fit actual schedules
+    range_start_h, range_end_h = 8, 20
+    for sched in today_schedules:
+        if sched.time_off and sched.all_day:
+            continue
+        s_h = sched.start_time.astimezone(user_tz).hour
+        e_local = sched.end_time.astimezone(user_tz)
+        e_h = e_local.hour + (1 if e_local.minute > 0 else 0)
+        range_start_h = min(range_start_h, s_h)
+        range_end_h = max(range_end_h, e_h)
+    range_start_h = max(0, range_start_h)
+    range_end_h = min(24, max(range_end_h, range_start_h + 4))
+
     return render_template('dashboard.html', 
                          recent_tickets=recent_tickets,
                          schedules_by_tech=schedules_by_tech,
                          today=today,
-                         user_timezone=current_user.get_timezone())
+                         user_timezone=current_user.get_timezone(),
+                         people_rail=people_rail,
+                         kpi_active=kpi_active,
+                         kpi_high=kpi_high,
+                         kpi_on_shift=kpi_on_shift,
+                         kpi_total_techs=kpi_total_techs,
+                         kpi_unassigned=kpi_unassigned,
+                         range_start_h=range_start_h,
+                         range_end_h=range_end_h)
 
 @app.route('/api/team-stats')
 @login_required
