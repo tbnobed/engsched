@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>Variant A — Command Center</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://unpkg.com/feather-icons"></script>
+<style>
+  :root {
+    --bg: #0c1118;
+    --panel: #131a25;
+    --panel-2: #18212f;
+    --border: #232d3d;
+    --muted: #8a97ac;
+    --text: #e8edf5;
+    --accent: #6aa6ff;
+    --accent-2: #AFB3F7;
+    --good: #4ade80;
+    --warn: #facc15;
+    --bad:  #f87171;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family: 'Inter','Segoe UI',system-ui,sans-serif; }
+  .topbar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 14px 24px; background: linear-gradient(90deg,#0e1622,#0c1118);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { font-weight:700; letter-spacing:.4px; display:flex; align-items:center; gap:10px; }
+  .brand .dot { width:10px; height:10px; border-radius:50%; background: var(--good); box-shadow:0 0 12px var(--good); }
+  .clock { font-variant-numeric: tabular-nums; color: var(--text); }
+  .clock .big { font-size: 20px; font-weight:700; }
+  .clock .sub { color: var(--muted); font-size: 12px; }
+  .grid {
+    display:grid; gap: 18px; padding: 18px;
+    grid-template-columns: 280px 1fr 320px;
+    grid-template-rows: auto 1fr auto;
+    height: calc(100vh - 60px);
+  }
+  .panel {
+    background: var(--panel); border:1px solid var(--border);
+    border-radius: 14px; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .panel-h {
+    padding: 12px 16px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--border); font-weight:600; font-size:13px; letter-spacing:.5px; text-transform:uppercase; color:var(--muted);
+  }
+  .panel-h .count { background: var(--panel-2); color:var(--text); padding:2px 8px; border-radius:999px; font-size:11px; }
+  .pad { padding: 14px 16px; }
+
+  /* People rail */
+  .people { display:flex; flex-direction:column; gap:8px; padding:10px; }
+  .person { display:flex; align-items:center; gap:10px; padding:8px; border-radius:10px; cursor:pointer; transition: background .15s; }
+  .person:hover { background: var(--panel-2); }
+  .avatar {
+    width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    color:white; font-weight:700; font-size:13px; flex-shrink:0;
+  }
+  .person .info { flex:1; min-width:0; }
+  .person .name { font-weight:600; font-size:13px; }
+  .person .meta { font-size:11px; color: var(--muted); }
+  .pill { font-size:10px; padding:2px 7px; border-radius:999px; font-weight:600; }
+  .pill.on { background: rgba(74,222,128,.15); color: var(--good); }
+  .pill.off { background: rgba(138,151,172,.15); color: var(--muted); }
+  .pill.ooo { background: rgba(250,204,21,.15); color: var(--warn); }
+
+  /* Timeline */
+  .timeline-wrap { flex:1; display:flex; flex-direction:column; min-height:0; }
+  .timeline-head {
+    display:grid; grid-template-columns: 60px 1fr; padding: 8px 16px;
+    border-bottom:1px solid var(--border); color:var(--muted); font-size:11px;
+  }
+  .hours { display:grid; grid-template-columns: repeat(12, 1fr); }
+  .hours div { text-align:center; }
+  .lanes { flex:1; overflow:auto; padding: 10px 16px; position:relative; }
+  .lane {
+    display:grid; grid-template-columns: 60px 1fr; align-items:center;
+    padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,.04); position:relative; min-height: 56px;
+  }
+  .lane .lname { font-size:12px; color:var(--muted); }
+  .lane .track { position:relative; height:36px; background: linear-gradient(to right, transparent 0, transparent 100%); border-radius:8px; }
+  .lane .track::before {
+    content:""; position:absolute; inset:0;
+    background: repeating-linear-gradient(to right, rgba(255,255,255,.02) 0 1px, transparent 1px calc(100%/12));
+  }
+  .block {
+    position:absolute; top:4px; bottom:4px; border-radius:8px; padding: 4px 10px;
+    color:white; font-size:11px; font-weight:600; display:flex; align-items:center;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), 0 4px 12px rgba(0,0,0,.35);
+    cursor:pointer; transition: transform .15s;
+  }
+  .block:hover { transform: translateY(-1px); }
+  .now-line { position:absolute; top:0; bottom:0; width:2px; background: var(--bad); box-shadow:0 0 8px var(--bad); z-index:5; }
+  .now-line::after { content:""; position:absolute; top:-4px; left:-4px; width:10px; height:10px; border-radius:50%; background: var(--bad); }
+
+  /* Tickets */
+  .ticket-row {
+    display:grid; grid-template-columns: 40px 1fr auto; gap:10px;
+    padding: 10px 14px; border-bottom: 1px solid var(--border); cursor:pointer;
+    transition: background .15s;
+  }
+  .ticket-row:hover { background: var(--panel-2); }
+  .ticket-row .num { font-family: 'JetBrains Mono', monospace; color: var(--muted); font-size:12px; align-self:center; }
+  .ticket-row .title { font-size:13px; font-weight:500; }
+  .ticket-row .sub { font-size:11px; color: var(--muted); margin-top:2px; }
+  .badge-pri { font-size:10px; padding:3px 8px; border-radius:999px; font-weight:700; align-self:center; }
+  .pri-high { background:rgba(248,113,113,.15); color: var(--bad); }
+  .pri-med  { background:rgba(250,204,21,.15); color: var(--warn); }
+  .pri-low  { background:rgba(106,166,255,.15); color: var(--accent); }
+
+  /* KPI strip */
+  .kpis { display:grid; grid-template-columns: repeat(4,1fr); gap:14px; }
+  .kpi { background: var(--panel); border:1px solid var(--border); border-radius:14px; padding: 14px 16px; }
+  .kpi .lbl { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.6px; }
+  .kpi .val { font-size:26px; font-weight:700; margin-top:4px; }
+  .kpi .delta { font-size:11px; color: var(--good); margin-top:2px; }
+  .kpi .delta.neg { color: var(--bad); }
+  .kpi .spark { height: 28px; margin-top: 6px; }
+
+  /* Bookings */
+  .booking { padding: 10px 14px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:center; }
+  .booking .swatch { width:4px; align-self:stretch; border-radius:2px; }
+  .booking .t { font-size:12px; color: var(--muted); }
+  .booking .n { font-weight:600; font-size:13px; }
+
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb { background: #1f2937; border-radius:8px; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand"><span class="dot"></span> PLEX OPS · Command Center</div>
+  <div style="display:flex; gap:18px; align-items:center;">
+    <div class="clock">
+      <div class="big" id="clock">14:32:08</div>
+      <div class="sub">Monday · Apr 20 · CDT</div>
+    </div>
+    <button class="btn btn-sm btn-outline-light"><i data-feather="settings" style="width:14px;height:14px;"></i></button>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- Left: People rail -->
+  <div class="panel" style="grid-row: 1 / span 3;">
+    <div class="panel-h"><span>Technicians</span><span class="count">12 / 18</span></div>
+    <div class="people" style="overflow:auto;">
+      <div class="person">
+        <div class="avatar" style="background:#6aa6ff;">OS</div>
+        <div class="info"><div class="name">Obed Smith</div><div class="meta">Studio A · until 6:00pm</div></div>
+        <span class="pill on">On</span>
+      </div>
+      <div class="person">
+        <div class="avatar" style="background:#f59e0b;">JR</div>
+        <div class="info"><div class="name">Jamie Rivera</div><div class="meta">Master Control · 4h left</div></div>
+        <span class="pill on">On</span>
+      </div>
+      <div class="person">
+        <div class="avatar" style="background:#10b981;">PA</div>
+        <div class="info"><div class="name">Priya Anand</div><div class="meta">Edit Bay 2</div></div>
+        <span class="pill on">On</span>
+      </div>
+      <div class="person">
+        <div class="avatar" style="background:#ef4444;">MK</div>
+        <div class="info"><div class="name">Marcus Kim</div><div class="meta">PTO · back Wed</div></div>
+        <span class="pill ooo">OOO</span>
+      </div>
+      <div class="person">
+        <div class="avatar" style="background:#a78bfa;">SG</div>
+        <div class="info"><div class="name">Sara Gomez</div><div class="meta">Off shift</div></div>
+        <span class="pill off">Off</span>
+      </div>
+      <div class="person">
+        <div class="avatar" style="background:#22d3ee;">DT</div>
+        <div class="info"><div class="name">Dan Tran</div><div class="meta">Remote · 5pm-1am</div></div>
+        <span class="pill on">On</span>
+      </div>
+      <div class="person">
+        <div class="avatar" style="background:#fb7185;">EL</div>
+        <div class="info"><div class="name">Eli Lopez</div><div class="meta">Studio B</div></div>
+        <span class="pill on">On</span>
+      </div>
+      <div class="person">
+        <div class="avatar" style="background:#84cc16;">NB</div>
+        <div class="info"><div class="name">Naomi Brooks</div><div class="meta">Off shift</div></div>
+        <span class="pill off">Off</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center top: KPI strip -->
+  <div class="kpis" style="grid-column:2; grid-row:1;">
+    <div class="kpi"><div class="lbl">Active Tickets</div><div class="val">14</div><div class="delta">▲ 3 today</div></div>
+    <div class="kpi"><div class="lbl">High Priority</div><div class="val" style="color:var(--bad);">3</div><div class="delta neg">▲ 1</div></div>
+    <div class="kpi"><div class="lbl">On Shift</div><div class="val">12</div><div class="delta">5 in studios</div></div>
+    <div class="kpi"><div class="lbl">Bookings Today</div><div class="val">8</div><div class="delta">2 in progress</div></div>
+  </div>
+
+  <!-- Center middle: Live timeline -->
+  <div class="panel" style="grid-column:2; grid-row:2;">
+    <div class="panel-h"><span>Today's Live Timeline</span><span style="color:var(--muted); font-size:11px;">8:00 — 20:00</span></div>
+    <div class="timeline-wrap">
+      <div class="timeline-head">
+        <div></div>
+        <div class="hours">
+          <div>8</div><div>9</div><div>10</div><div>11</div><div>12</div><div>13</div>
+          <div>14</div><div>15</div><div>16</div><div>17</div><div>18</div><div>19</div>
+        </div>
+      </div>
+      <div class="lanes">
+        <div class="lane"><div class="lname">Obed S</div>
+          <div class="track">
+            <div class="block" style="left:0%; width:50%; background:linear-gradient(135deg,#6aa6ff,#4f46e5);">Studio A · Live</div>
+            <div class="block" style="left:54%; width:33%; background:linear-gradient(135deg,#10b981,#059669);">Edit · Promo Cut</div>
+          </div>
+        </div>
+        <div class="lane"><div class="lname">Jamie R</div>
+          <div class="track">
+            <div class="block" style="left:8%; width:42%; background:linear-gradient(135deg,#f59e0b,#d97706);">Master Control</div>
+            <div class="block" style="left:60%; width:25%; background:linear-gradient(135deg,#6aa6ff,#4f46e5);">Tech check</div>
+          </div>
+        </div>
+        <div class="lane"><div class="lname">Priya A</div>
+          <div class="track">
+            <div class="block" style="left:16%; width:58%; background:linear-gradient(135deg,#a78bfa,#7c3aed);">Edit Bay 2</div>
+          </div>
+        </div>
+        <div class="lane"><div class="lname">Marcus K</div>
+          <div class="track">
+            <div class="block" style="left:0%; width:100%; background:repeating-linear-gradient(45deg,#374151,#374151 8px,#1f2937 8px,#1f2937 16px); color:#cbd5e1;">PTO — All day</div>
+          </div>
+        </div>
+        <div class="lane"><div class="lname">Eli L</div>
+          <div class="track">
+            <div class="block" style="left:25%; width:25%; background:linear-gradient(135deg,#fb7185,#e11d48);">Studio B · Setup</div>
+            <div class="block" style="left:50%; width:42%; background:linear-gradient(135deg,#6aa6ff,#4f46e5);">Studio B · Live</div>
+          </div>
+        </div>
+        <div class="lane"><div class="lname">Dan T</div>
+          <div class="track">
+            <div class="block" style="left:75%; width:25%; background:linear-gradient(135deg,#22d3ee,#0891b2);">Remote OB</div>
+          </div>
+        </div>
+        <div class="now-line" style="left:calc(60px + (100% - 60px) * 0.55);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Center bottom: Tickets -->
+  <div class="panel" style="grid-column:2; grid-row:3; max-height: 240px;">
+    <div class="panel-h"><span>Active Tickets</span><span class="count">14</span></div>
+    <div style="overflow:auto;">
+      <div class="ticket-row">
+        <div class="num">#421</div>
+        <div><div class="title">Audio dropout in Studio A during 2pm rehearsal</div>
+          <div class="sub">Assigned to Obed S · Opened 12 min ago</div></div>
+        <span class="badge-pri pri-high">HIGH</span>
+      </div>
+      <div class="ticket-row">
+        <div class="num">#420</div>
+        <div><div class="title">Camera 3 IR cable replacement</div>
+          <div class="sub">Assigned to Jamie R · Opened 1h ago</div></div>
+        <span class="badge-pri pri-med">MED</span>
+      </div>
+      <div class="ticket-row">
+        <div class="num">#418</div>
+        <div><div class="title">Update lighting preset for Friday taping</div>
+          <div class="sub">Unassigned · Opened 3h ago</div></div>
+        <span class="badge-pri pri-low">LOW</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Bookings -->
+  <div class="panel" style="grid-row: 1 / span 3;">
+    <div class="panel-h"><span>Studio Bookings</span><span class="count">8 today</span></div>
+    <div style="overflow:auto;">
+      <div class="booking"><div class="swatch" style="background:#6aa6ff;"></div>
+        <div><div class="n">Praise Hour Live</div><div class="t">14:00 – 16:00 · Studio A</div></div>
+      </div>
+      <div class="booking"><div class="swatch" style="background:#f59e0b;"></div>
+        <div><div class="n">Promo Spot Recording</div><div class="t">15:30 – 16:30 · Edit Bay 2</div></div>
+      </div>
+      <div class="booking"><div class="swatch" style="background:#fb7185;"></div>
+        <div><div class="n">Pastor Interview</div><div class="t">16:00 – 17:00 · Studio B</div></div>
+      </div>
+      <div class="booking"><div class="swatch" style="background:#10b981;"></div>
+        <div><div class="n">Worship Rehearsal</div><div class="t">17:00 – 19:00 · Studio A</div></div>
+      </div>
+      <div class="booking"><div class="swatch" style="background:#a78bfa;"></div>
+        <div><div class="n">Podcast: Faith Forward</div><div class="t">18:00 – 19:30 · Podcast Booth</div></div>
+      </div>
+      <div class="booking"><div class="swatch" style="background:#22d3ee;"></div>
+        <div><div class="n">Remote OB — Stadium</div><div class="t">19:00 – 23:00 · Field</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  feather.replace();
+  function tick(){
+    const d = new Date();
+    const pad = (n)=>String(n).padStart(2,'0');
+    document.getElementById('clock').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+  setInterval(tick, 1000); tick();
+</script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Variant B — KPI Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/feather-icons"></script>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --border:#e6eaf2; --text:#1a2233; --muted:#6b7896;
+    --indigo:#5b6cff; --indigo-soft:#eef0ff;
+    --emerald:#10b981; --emerald-soft:#e6f9f1;
+    --amber:#f59e0b; --amber-soft:#fef3e0;
+    --rose:#ef4444; --rose-soft:#fde9e9;
+    --periwinkle:#AFB3F7; --air:#92BCEA; --steel:#7A93AC;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family:'Inter',system-ui,sans-serif; }
+  .topnav {
+    background: white; border-bottom:1px solid var(--border); padding:14px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .topnav .brand { font-weight:800; letter-spacing:-.2px; font-size:18px; }
+  .topnav .brand span { color: var(--indigo); }
+  .topnav .who { display:flex; align-items:center; gap:10px; }
+  .avatar-sm { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--indigo),#7c3aed); color:white; display:flex;align-items:center;justify-content:center; font-weight:700; font-size:13px; }
+
+  .wrap { padding: 28px; }
+  .hello { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 22px; }
+  .hello h1 { font-size: 26px; font-weight:800; margin:0; letter-spacing:-.4px; }
+  .hello .sub { color: var(--muted); margin-top:4px; }
+  .hello .actions .btn { border-radius: 10px; font-weight:600; }
+
+  .kpi-grid { display:grid; grid-template-columns: repeat(4,1fr); gap: 18px; margin-bottom: 22px; }
+  .kpi {
+    background: var(--card); border:1px solid var(--border); border-radius:16px; padding: 18px;
+    position:relative; overflow:hidden;
+  }
+  .kpi .ico {
+    width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    margin-bottom: 14px;
+  }
+  .kpi .lbl { font-size:12px; color: var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .kpi .val { font-size: 32px; font-weight:800; margin-top: 2px; letter-spacing:-.6px; }
+  .kpi .delta { font-size:12px; margin-top: 6px; font-weight:600; }
+  .kpi .delta.up { color: var(--emerald); } .kpi .delta.down { color: var(--rose); }
+  .kpi.indigo .ico { background: var(--indigo-soft); color: var(--indigo); }
+  .kpi.emerald .ico { background: var(--emerald-soft); color: var(--emerald); }
+  .kpi.amber .ico { background: var(--amber-soft); color: var(--amber); }
+  .kpi.rose .ico { background: var(--rose-soft); color: var(--rose); }
+  .kpi .spark { position:absolute; right:16px; bottom:14px; width:120px; height:42px; opacity:.55; }
+
+  .row2 { display:grid; grid-template-columns: 2fr 1.1fr; gap: 18px; }
+  .card2 { background: var(--card); border:1px solid var(--border); border-radius:16px; }
+  .card-h { padding: 18px 20px 12px; display:flex; align-items:center; justify-content:space-between; }
+  .card-h h3 { margin:0; font-size:16px; font-weight:700; letter-spacing:-.2px; }
+  .card-h .filters .btn { font-size:12px; padding: 4px 10px; border-radius: 8px; font-weight:600; }
+
+  /* Tickets table */
+  .ticket-list { padding: 0 8px 12px; }
+  .tk {
+    display:grid; grid-template-columns: 56px 1fr 110px 110px 90px;
+    align-items:center; gap:10px; padding: 12px 14px; border-radius:12px; cursor:pointer;
+    transition: background .15s;
+  }
+  .tk:hover { background: #f8f9fc; }
+  .tk .id { color:var(--muted); font-weight:600; font-size:12px; }
+  .tk .title { font-weight:600; font-size:14px; }
+  .tk .title .sub { color: var(--muted); font-weight:500; font-size:12px; margin-top:2px; }
+  .pri { font-size:11px; padding:4px 10px; border-radius:999px; font-weight:700; text-align:center; display:inline-block; }
+  .pri.high { background: var(--rose-soft); color: var(--rose); }
+  .pri.med  { background: var(--amber-soft); color: var(--amber); }
+  .pri.low  { background: var(--indigo-soft); color: var(--indigo); }
+  .status { font-size:11px; padding:4px 10px; border-radius:999px; font-weight:700; }
+  .status.open { background: #eef2ff; color:#4f46e5; }
+  .status.prog { background: #ecfeff; color:#0891b2; }
+  .status.pend { background: #fff7ed; color:#c2410c; }
+  .assignee { display:flex; align-items:center; gap:8px; font-size:12px; color: var(--muted); }
+  .av-xs { width:24px; height:24px; border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; }
+
+  /* Today schedule mini */
+  .sched-mini { padding: 10px 16px 18px; }
+  .sch {
+    display:flex; gap:12px; padding:12px; border-radius: 12px; margin-bottom:8px;
+    background: #fafbff; border: 1px solid #eef0f7;
+  }
+  .sch .when { width: 78px; flex-shrink:0; font-weight:700; color: var(--indigo); font-size:13px; font-variant-numeric: tabular-nums; }
+  .sch .who { font-weight:600; font-size:13px; }
+  .sch .where { color: var(--muted); font-size:12px; margin-top:2px; }
+
+  .row3 { display:grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+
+  /* Bookings list */
+  .bk { display:flex; align-items:center; gap:14px; padding:14px 16px; border-bottom:1px solid #f1f3f9; }
+  .bk:last-child { border-bottom:none; }
+  .bk .swatch { width:42px; height:42px; border-radius: 10px; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size: 12px; }
+  .bk .body { flex:1; }
+  .bk .name { font-weight:600; font-size:14px; }
+  .bk .meta { font-size:12px; color: var(--muted); margin-top:2px; }
+
+  /* Team availability */
+  .avail-grid { display:grid; grid-template-columns: repeat(3,1fr); gap:10px; padding: 12px 16px 18px; }
+  .av-card { padding:12px; border-radius:12px; background:#fafbff; border:1px solid #eef0f7; display:flex; align-items:center; gap:10px; }
+  .av-card .name { font-weight:600; font-size:13px; }
+  .av-card .stat { font-size:11px; color: var(--muted); }
+  .dot { width:8px; height:8px; border-radius:50%; }
+  .dot.on { background: var(--emerald); box-shadow:0 0 0 3px #d1fadf; }
+  .dot.ooo { background: var(--amber); box-shadow:0 0 0 3px #fef3c7; }
+  .dot.off { background: #cbd5e1; }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="brand">Plex<span>Engineering</span></div>
+  <div class="who">
+    <button class="btn btn-light btn-sm" style="border-radius:10px;"><i data-feather="bell" style="width:14px;height:14px;"></i></button>
+    <div class="avatar-sm">A</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hello">
+    <div>
+      <h1>Good afternoon, Admin 👋</h1>
+      <div class="sub">Here's what's happening across your team today, Monday April 20.</div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-outline-secondary me-2"><i data-feather="download" style="width:14px;height:14px;"></i> Export</button>
+      <button class="btn btn-primary" style="background:var(--indigo); border-color:var(--indigo);"><i data-feather="plus" style="width:14px;height:14px;"></i> New Ticket</button>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi indigo">
+      <div class="ico"><i data-feather="users"></i></div>
+      <div class="lbl">On Shift Now</div>
+      <div class="val">12<span style="font-size:14px;color:var(--muted);font-weight:600;"> / 18</span></div>
+      <div class="delta up">▲ 2 vs last hour</div>
+      <svg class="spark" viewBox="0 0 120 42"><polyline fill="none" stroke="#5b6cff" stroke-width="2" points="0,30 15,28 30,32 45,22 60,24 75,16 90,20 105,12 120,14"/></svg>
+    </div>
+    <div class="kpi emerald">
+      <div class="ico"><i data-feather="check-circle"></i></div>
+      <div class="lbl">Resolved Today</div>
+      <div class="val">9</div>
+      <div class="delta up">▲ 28% vs yesterday</div>
+      <svg class="spark" viewBox="0 0 120 42"><polyline fill="none" stroke="#10b981" stroke-width="2" points="0,32 15,30 30,26 45,22 60,18 75,16 90,12 105,10 120,8"/></svg>
+    </div>
+    <div class="kpi amber">
+      <div class="ico"><i data-feather="alert-triangle"></i></div>
+      <div class="lbl">Open Tickets</div>
+      <div class="val">14</div>
+      <div class="delta down">▲ 3 today</div>
+      <svg class="spark" viewBox="0 0 120 42"><polyline fill="none" stroke="#f59e0b" stroke-width="2" points="0,18 15,20 30,16 45,22 60,20 75,28 90,26 105,32 120,34"/></svg>
+    </div>
+    <div class="kpi rose">
+      <div class="ico"><i data-feather="zap"></i></div>
+      <div class="lbl">High Priority</div>
+      <div class="val">3</div>
+      <div class="delta down">▲ 1 unassigned</div>
+      <svg class="spark" viewBox="0 0 120 42"><polyline fill="none" stroke="#ef4444" stroke-width="2" points="0,28 15,26 30,24 45,18 60,22 75,20 90,14 105,16 120,10"/></svg>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="card2">
+      <div class="card-h">
+        <h3>Active Tickets</h3>
+        <div class="filters">
+          <button class="btn btn-light active">All</button>
+          <button class="btn btn-light">Mine</button>
+          <button class="btn btn-light">Unassigned</button>
+        </div>
+      </div>
+      <div class="ticket-list">
+        <div class="tk">
+          <div class="id">#421</div>
+          <div class="title">Audio dropout in Studio A during rehearsal<div class="sub">Reported by producer · 12 min ago</div></div>
+          <span class="pri high">HIGH</span>
+          <span class="status open">Open</span>
+          <div class="assignee"><div class="av-xs" style="background:#5b6cff;">OS</div> Obed</div>
+        </div>
+        <div class="tk">
+          <div class="id">#420</div>
+          <div class="title">Camera 3 IR cable replacement<div class="sub">Studio B · 1h ago</div></div>
+          <span class="pri med">MED</span>
+          <span class="status prog">In Progress</span>
+          <div class="assignee"><div class="av-xs" style="background:#f59e0b;">JR</div> Jamie</div>
+        </div>
+        <div class="tk">
+          <div class="id">#419</div>
+          <div class="title">Confidence monitor calibration<div class="sub">Master Control · 2h ago</div></div>
+          <span class="pri med">MED</span>
+          <span class="status pend">Pending</span>
+          <div class="assignee"><div class="av-xs" style="background:#10b981;">PA</div> Priya</div>
+        </div>
+        <div class="tk">
+          <div class="id">#418</div>
+          <div class="title">Update lighting preset for Friday taping<div class="sub">Unassigned · 3h ago</div></div>
+          <span class="pri low">LOW</span>
+          <span class="status open">Open</span>
+          <div class="assignee">—</div>
+        </div>
+        <div class="tk">
+          <div class="id">#417</div>
+          <div class="title">Replace HDMI fiber on Cam 5<div class="sub">Studio A · 4h ago</div></div>
+          <span class="pri low">LOW</span>
+          <span class="status prog">In Progress</span>
+          <div class="assignee"><div class="av-xs" style="background:#fb7185;">EL</div> Eli</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card2">
+      <div class="card-h"><h3>Today's Schedule</h3><a href="#" style="font-size:12px; color: var(--indigo); font-weight:600;">View calendar →</a></div>
+      <div class="sched-mini">
+        <div class="sch"><div class="when">8:00<br><span style="color:var(--muted); font-weight:500; font-size:11px;">– 16:00</span></div><div><div class="who">Obed Smith</div><div class="where">Studio A · Live broadcast</div></div></div>
+        <div class="sch"><div class="when">9:00<br><span style="color:var(--muted); font-weight:500; font-size:11px;">– 17:00</span></div><div><div class="who">Jamie Rivera</div><div class="where">Master Control</div></div></div>
+        <div class="sch"><div class="when">10:00<br><span style="color:var(--muted); font-weight:500; font-size:11px;">– 18:00</span></div><div><div class="who">Priya Anand</div><div class="where">Edit Bay 2</div></div></div>
+        <div class="sch" style="background:#fff7ed; border-color:#fed7aa;"><div class="when" style="color:#c2410c;">All Day</div><div><div class="who">Marcus Kim</div><div class="where">PTO — back Wed</div></div></div>
+        <div class="sch"><div class="when">14:00<br><span style="color:var(--muted); font-weight:500; font-size:11px;">– 22:00</span></div><div><div class="who">Eli Lopez</div><div class="where">Studio B</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row3">
+    <div class="card2">
+      <div class="card-h"><h3>Studio Bookings</h3><span style="font-size:12px; color:var(--muted);">8 today</span></div>
+      <div>
+        <div class="bk"><div class="swatch" style="background:#5b6cff;">14</div><div class="body"><div class="name">Praise Hour Live</div><div class="meta">14:00 – 16:00 · Studio A · Producer: D. Cole</div></div><span class="status prog">In Progress</span></div>
+        <div class="bk"><div class="swatch" style="background:#f59e0b;">15</div><div class="body"><div class="name">Promo Spot Recording</div><div class="meta">15:30 – 16:30 · Edit Bay 2</div></div><span class="status open">Booked</span></div>
+        <div class="bk"><div class="swatch" style="background:#fb7185;">16</div><div class="body"><div class="name">Pastor Interview</div><div class="meta">16:00 – 17:00 · Studio B</div></div><span class="status open">Booked</span></div>
+        <div class="bk"><div class="swatch" style="background:#10b981;">17</div><div class="body"><div class="name">Worship Rehearsal</div><div class="meta">17:00 – 19:00 · Studio A</div></div><span class="status open">Booked</span></div>
+      </div>
+    </div>
+
+    <div class="card2">
+      <div class="card-h"><h3>Team Availability</h3><span style="font-size:12px; color:var(--muted);">12 on / 5 off / 1 OOO</span></div>
+      <div class="avail-grid">
+        <div class="av-card"><span class="dot on"></span><div><div class="name">Obed S.</div><div class="stat">Studio A</div></div></div>
+        <div class="av-card"><span class="dot on"></span><div><div class="name">Jamie R.</div><div class="stat">Master Ctrl</div></div></div>
+        <div class="av-card"><span class="dot on"></span><div><div class="name">Priya A.</div><div class="stat">Edit Bay 2</div></div></div>
+        <div class="av-card"><span class="dot ooo"></span><div><div class="name">Marcus K.</div><div class="stat">PTO · Wed</div></div></div>
+        <div class="av-card"><span class="dot on"></span><div><div class="name">Eli L.</div><div class="stat">Studio B</div></div></div>
+        <div class="av-card"><span class="dot on"></span><div><div class="name">Dan T.</div><div class="stat">Remote</div></div></div>
+        <div class="av-card"><span class="dot off"></span><div><div class="name">Sara G.</div><div class="stat">Off shift</div></div></div>
+        <div class="av-card"><span class="dot off"></span><div><div class="name">Naomi B.</div><div class="stat">Off shift</div></div></div>
+        <div class="av-card"><span class="dot on"></span><div><div class="name">Riley H.</div><div class="stat">Edit Bay 1</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>feather.replace();</script>
+</body>
+</html>

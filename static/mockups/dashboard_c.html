@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>Variant C — Activity Feed</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/feather-icons"></script>
+<style>
+  :root {
+    --bg:#0f1115; --panel:#171a21; --panel-2:#1e2230;
+    --border:#262a36; --text:#e8eaf0; --muted:#8b91a4;
+    --indigo:#7b8cff; --teal:#14b8a6; --rose:#f472b6;
+    --green:#4ade80; --amber:#fbbf24; --red:#f87171;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family:'Inter',system-ui,sans-serif; }
+  .shell { display:grid; grid-template-columns: 240px 1fr 320px; height: 100vh; }
+
+  /* Left rail */
+  .rail { background:#11141b; border-right:1px solid var(--border); padding: 18px 12px; }
+  .brand { font-weight:800; font-size:16px; padding: 6px 10px 18px; letter-spacing:-.2px; }
+  .brand i { color: var(--indigo); }
+  .nav-item { display:flex; align-items:center; gap:10px; padding: 8px 10px; border-radius:8px; color: var(--muted); font-size:13px; font-weight:500; cursor:pointer; }
+  .nav-item:hover { background: var(--panel); color: var(--text); }
+  .nav-item.active { background: var(--panel-2); color: var(--text); }
+  .nav-item i { width:16px; height:16px; }
+  .nav-section { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color: var(--muted); padding: 18px 10px 6px; }
+
+  /* Center feed */
+  .feed { padding: 24px 32px; overflow:auto; }
+  .feed-h { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .feed-h h1 { font-size: 22px; font-weight:700; margin:0; letter-spacing:-.3px; }
+  .feed-h .sub { color: var(--muted); font-size:13px; margin-top:2px; }
+  .filter-tabs { display:flex; gap:6px; background:var(--panel); padding:4px; border-radius:10px; }
+  .filter-tabs .tab { padding: 6px 12px; font-size:12px; border-radius:8px; cursor:pointer; color:var(--muted); font-weight:600; }
+  .filter-tabs .tab.active { background: var(--panel-2); color: var(--text); }
+
+  .day-sep { display:flex; align-items:center; gap:12px; margin: 18px 0 10px; }
+  .day-sep .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.6px; color: var(--muted); font-weight:600; }
+  .day-sep .line { flex:1; height:1px; background: var(--border); }
+
+  .item {
+    display:grid; grid-template-columns: 36px 1fr; gap:12px;
+    padding: 12px; border-radius:12px;
+    transition: background .15s; cursor:pointer; border: 1px solid transparent;
+  }
+  .item:hover { background: var(--panel); border-color: var(--border); }
+  .item .ico {
+    width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:14px; flex-shrink:0;
+  }
+  .item .ico i { width:14px; height:14px; }
+  .item .body .top { display:flex; gap:8px; align-items:baseline; }
+  .item .body .who { font-weight:600; font-size:13px; }
+  .item .body .verb { color: var(--muted); font-size:13px; }
+  .item .body .when { color: var(--muted); font-size:11px; margin-left:auto; }
+  .item .body .meta { color: var(--muted); font-size:12px; margin-top:2px; }
+  .item .body .preview {
+    margin-top: 8px; padding: 10px 12px; background: var(--panel-2); border-radius: 8px;
+    border-left: 3px solid var(--indigo); font-size: 13px; color: var(--text);
+  }
+  .ico.ticket { background: rgba(123,140,255,.15); color: var(--indigo); }
+  .ico.resolved { background: rgba(74,222,128,.15); color: var(--green); }
+  .ico.comment { background: rgba(244,114,182,.15); color: var(--rose); }
+  .ico.schedule { background: rgba(20,184,166,.15); color: var(--teal); }
+  .ico.alert { background: rgba(248,113,113,.15); color: var(--red); }
+  .ico.booking { background: rgba(251,191,36,.15); color: var(--amber); }
+
+  .chip { font-size:10px; padding:2px 8px; border-radius:999px; font-weight:700; }
+  .chip.high { background: rgba(248,113,113,.18); color: var(--red); }
+  .chip.med { background: rgba(251,191,36,.18); color: var(--amber); }
+  .chip.low { background: rgba(123,140,255,.18); color: var(--indigo); }
+
+  /* Right rail */
+  .right { background:#11141b; border-left:1px solid var(--border); padding: 20px; overflow:auto; }
+  .stat-card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding: 14px; margin-bottom: 14px; }
+  .stat-card .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.6px; color: var(--muted); font-weight:600; }
+  .stat-card .val { font-size: 26px; font-weight:800; margin-top:4px; letter-spacing:-.4px; }
+  .stat-card .row { display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); font-size:12px; }
+  .stat-card .row .key { color: var(--muted); }
+
+  .next-up { padding-top:8px; }
+  .next-up .nu { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+  .next-up .nu:last-child { border-bottom:none; }
+  .nu .time { width:54px; font-weight:700; color: var(--indigo); font-size:13px; font-variant-numeric: tabular-nums; }
+  .nu .what { font-weight:600; font-size:13px; }
+  .nu .where { color: var(--muted); font-size:12px; margin-top:2px; }
+
+  .av-stack { display:flex; }
+  .av-stack .av { width:24px; height:24px; border-radius:50%; border:2px solid var(--panel); margin-left:-6px; color:white; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }
+  .av-stack .av:first-child { margin-left:0; }
+
+  .composer { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom: 18px; display:flex; gap:10px; align-items:center; }
+  .composer .av { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--indigo),#7c3aed); color:white; display:flex;align-items:center;justify-content:center; font-weight:700; font-size:13px; }
+  .composer input { flex:1; background:transparent; border:none; outline:none; color: var(--text); font-size:14px; }
+  .composer input::placeholder { color: var(--muted); }
+  .composer .btn { padding: 4px 10px; font-size:12px; }
+
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{background:#1f2937; border-radius:8px;}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- Left rail -->
+  <aside class="rail">
+    <div class="brand"><i data-feather="hexagon" style="vertical-align:-3px;"></i> Plex Eng</div>
+    <div class="nav-item active"><i data-feather="activity"></i> Activity</div>
+    <div class="nav-item"><i data-feather="calendar"></i> Calendar</div>
+    <div class="nav-item"><i data-feather="inbox"></i> Tickets <span style="margin-left:auto; font-size:11px; background:var(--panel-2); padding:1px 7px; border-radius:999px;">14</span></div>
+    <div class="nav-item"><i data-feather="users"></i> Team</div>
+    <div class="nav-item"><i data-feather="film"></i> Bookings</div>
+    <div class="nav-section">Quick Filters</div>
+    <div class="nav-item"><i data-feather="zap"></i> Assigned to me</div>
+    <div class="nav-item"><i data-feather="alert-circle"></i> High priority</div>
+    <div class="nav-item"><i data-feather="clock"></i> Awaiting reply</div>
+    <div class="nav-section">Channels</div>
+    <div class="nav-item"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);"></span> Studio A</div>
+    <div class="nav-item"><span style="width:8px;height:8px;border-radius:50%;background:var(--amber);"></span> Studio B</div>
+    <div class="nav-item"><span style="width:8px;height:8px;border-radius:50%;background:var(--rose);"></span> Master Ctrl</div>
+  </aside>
+
+  <!-- Center feed -->
+  <main class="feed">
+    <div class="feed-h">
+      <div>
+        <h1>What's happening</h1>
+        <div class="sub">Live activity across tickets, schedules and bookings</div>
+      </div>
+      <div class="filter-tabs">
+        <div class="tab active">All</div>
+        <div class="tab">Tickets</div>
+        <div class="tab">Schedule</div>
+        <div class="tab">Bookings</div>
+      </div>
+    </div>
+
+    <div class="composer">
+      <div class="av">A</div>
+      <input placeholder="Note something for the team or open a new ticket…">
+      <button class="btn btn-outline-light">Note</button>
+      <button class="btn btn-primary" style="background:var(--indigo); border-color:var(--indigo);">+ Ticket</button>
+    </div>
+
+    <div class="day-sep"><span class="lbl">Just now</span><span class="line"></span></div>
+
+    <div class="item">
+      <div class="ico alert"><i data-feather="alert-triangle"></i></div>
+      <div class="body">
+        <div class="top"><span class="who">Producer (D. Cole)</span><span class="verb">opened ticket</span><span class="chip high">HIGH</span><span class="when">2 min ago</span></div>
+        <div class="meta">#421 · Studio A · assigned to <b style="color:var(--text)">Obed S.</b></div>
+        <div class="preview">"Audio dropout intermittent on channel 3 during 2pm rehearsal. Happens roughly every 90 sec."</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="ico schedule"><i data-feather="user-check"></i></div>
+      <div class="body">
+        <div class="top"><span class="who">Eli L.</span><span class="verb">checked in for shift</span><span class="when">8 min ago</span></div>
+        <div class="meta">Studio B · 14:00 – 22:00</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="ico comment"><i data-feather="message-square"></i></div>
+      <div class="body">
+        <div class="top"><span class="who">Jamie R.</span><span class="verb">commented on</span><span class="who">#420</span><span class="when">14 min ago</span></div>
+        <div class="meta">Camera 3 IR cable replacement</div>
+        <div class="preview">"Got the new SDI cable from storage. Will swap during the next 15-min commercial break."</div>
+      </div>
+    </div>
+
+    <div class="day-sep"><span class="lbl">Earlier today</span><span class="line"></span></div>
+
+    <div class="item">
+      <div class="ico resolved"><i data-feather="check"></i></div>
+      <div class="body">
+        <div class="top"><span class="who">Priya A.</span><span class="verb">resolved</span><span class="who">#415</span><span class="when">1h 12m ago</span></div>
+        <div class="meta">Confidence monitor calibration · 38m to resolution</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="ico booking"><i data-feather="film"></i></div>
+      <div class="body">
+        <div class="top"><span class="who">Booking system</span><span class="verb">added</span><span class="when">2h ago</span></div>
+        <div class="meta">"Pastor Interview" · 16:00 – 17:00 · Studio B</div>
+        <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+          <span class="chip low">Booked</span>
+          <span style="font-size:12px; color: var(--muted);">crew needed: 2</span>
+          <div class="av-stack" style="margin-left:auto;">
+            <div class="av" style="background:#fb7185;">EL</div>
+            <div class="av" style="background:#f59e0b;">JR</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="ico schedule"><i data-feather="calendar"></i></div>
+      <div class="body">
+        <div class="top"><span class="who">Marcus K.</span><span class="verb">marked OOO</span><span class="when">3h ago</span></div>
+        <div class="meta">PTO · Apr 20 – Apr 22</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="ico ticket"><i data-feather="plus-circle"></i></div>
+      <div class="body">
+        <div class="top"><span class="who">System</span><span class="verb">opened ticket</span><span class="chip low">LOW</span><span class="when">3h ago</span></div>
+        <div class="meta">#418 · Update lighting preset for Friday taping · unassigned</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="ico resolved"><i data-feather="check"></i></div>
+      <div class="body">
+        <div class="top"><span class="who">Obed S.</span><span class="verb">resolved</span><span class="who">#412</span><span class="when">4h ago</span></div>
+        <div class="meta">Wireless mic battery doors replaced</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Right rail -->
+  <aside class="right">
+    <div class="stat-card">
+      <div class="lbl">Open Tickets</div>
+      <div class="val">14 <span style="font-size:12px; color:var(--red); font-weight:600;">▲ 3</span></div>
+      <div class="row"><span class="key">High priority</span><b>3</b></div>
+      <div class="row" style="border-top:none; padding-top:4px; margin-top:0;"><span class="key">Unassigned</span><b>2</b></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="lbl">Team Right Now</div>
+      <div class="val">12 <span style="font-size:12px; color:var(--muted); font-weight:600;">/ 18 on shift</span></div>
+      <div class="av-stack" style="margin-top: 10px;">
+        <div class="av" style="background:#7b8cff;">OS</div>
+        <div class="av" style="background:#f59e0b;">JR</div>
+        <div class="av" style="background:#10b981;">PA</div>
+        <div class="av" style="background:#fb7185;">EL</div>
+        <div class="av" style="background:#22d3ee;">DT</div>
+        <div class="av" style="background:#84cc16;">RH</div>
+        <div class="av" style="background:#a78bfa;">+6</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="lbl">Next Up</div>
+      <div class="next-up">
+        <div class="nu">
+          <div class="time">15:30</div>
+          <div><div class="what">Promo Spot Recording</div><div class="where">Edit Bay 2 · Priya A.</div></div>
+        </div>
+        <div class="nu">
+          <div class="time">16:00</div>
+          <div><div class="what">Pastor Interview</div><div class="where">Studio B · Eli L., Jamie R.</div></div>
+        </div>
+        <div class="nu">
+          <div class="time">17:00</div>
+          <div><div class="what">Worship Rehearsal</div><div class="where">Studio A · Obed S.</div></div>
+        </div>
+        <div class="nu">
+          <div class="time">19:00</div>
+          <div><div class="what">Remote OB · Stadium</div><div class="where">Field · Dan T.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="background:linear-gradient(135deg, rgba(123,140,255,.12), rgba(20,184,166,.08)); border-color: rgba(123,140,255,.3);">
+      <div class="lbl" style="color: var(--indigo);">AI Insight</div>
+      <div style="margin-top:8px; font-size:13px; line-height:1.5;">
+        Studio A audio issues have spiked 40% this week. Likely related to the new wireless mic batch — consider scheduling a full pre-show check.
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>feather.replace();</script>
+</body>
+</html>
