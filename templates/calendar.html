@@ -2,89 +2,74 @@
 
 {% block content %}
 <div class="calendar-container">
-    <div class="calendar-header d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center">
-            <h2>{{ week_start.strftime('%B %Y') }}</h2>
-            <div class="ms-4">
-                <select id="locationFilter" class="form-select calendar-location-filter" onchange="applyCalendarFilter()">
+    {% set _route = 'personal_schedule' if personal_view else 'calendar' %}
+    {% set _nav_args = {} if personal_view else {'location_id': selected_location, 'technician_id': selected_technician} %}
+    <div class="calendar-header cc-header">
+        <div class="cc-header-row">
+            <div class="cc-title-block">
+                <div class="cc-title">{{ week_start.strftime('%B %Y') }}</div>
+                <div class="cc-subtitle">Week of {{ week_start.strftime('%b %-d') }} – {{ (week_start + timedelta(days=6)).strftime('%b %-d') }}</div>
+            </div>
+            <div class="cc-nav">
+                <a class="cc-icon-btn" title="Previous Month"
+                   href="{{ url_for(_route, week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d'), **_nav_args) }}">
+                    <i data-feather="chevrons-left"></i>
+                </a>
+                <a class="cc-icon-btn" title="Previous Week"
+                   href="{{ url_for(_route, week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d'), **_nav_args) }}">
+                    <i data-feather="chevron-left"></i>
+                </a>
+                <a class="cc-today-btn"
+                   href="{{ url_for(_route, **_nav_args) }}">Today</a>
+                <a class="cc-icon-btn" title="Next Week"
+                   href="{{ url_for(_route, week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d'), **_nav_args) }}">
+                    <i data-feather="chevron-right"></i>
+                </a>
+                <a class="cc-icon-btn" title="Next Month"
+                   href="{{ url_for(_route, week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d'), **_nav_args) }}">
+                    <i data-feather="chevrons-right"></i>
+                </a>
+            </div>
+            <div class="cc-actions">
+                <button type="button" class="cc-btn cc-btn-ghost" id="bulk-select-toggle" title="Select multiple schedules">
+                    <i data-feather="check-square"></i> <span>Select</span>
+                </button>
+                {% if current_user.is_admin %}
+                <form method="POST" action="{{ url_for('copy_previous_week_schedules') }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="target_week_start" value="{{ week_start.strftime('%Y-%m-%d') }}">
+                    <button type="submit" class="cc-btn cc-btn-primary" title="Copy previous week's schedules">
+                        <i data-feather="copy"></i> <span>Copy Week</span>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        <div class="cc-filter-row">
+            <div class="cc-filter">
+                <i data-feather="map-pin" class="cc-filter-icon"></i>
+                <select id="locationFilter" class="cc-select" onchange="applyCalendarFilter()">
                     <option value="">All Locations</option>
                     {% for location in locations %}
-                    <option value="{{ location.id }}" {% if selected_location == location.id %}selected{% endif %}>
-                        {{ location.name }}
-                    </option>
+                    <option value="{{ location.id }}" {% if selected_location == location.id %}selected{% endif %}>{{ location.name }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="ms-2">
-                <select id="technicianFilter" class="form-select calendar-location-filter" onchange="applyCalendarFilter()">
+            <div class="cc-filter">
+                <i data-feather="user" class="cc-filter-icon"></i>
+                <select id="technicianFilter" class="cc-select" onchange="applyCalendarFilter()">
                     <option value="">All Technicians</option>
                     {% for tech in technicians %}
-                    <option value="{{ tech.id }}" {% if selected_technician == tech.id %}selected{% endif %}>
-                        {{ tech.username }}
-                    </option>
+                    <option value="{{ tech.id }}" {% if selected_technician == tech.id %}selected{% endif %}>{{ tech.username }}</option>
                     {% endfor %}
                 </select>
             </div>
-        </div>
-        <div class="calendar-controls">
-            {% if personal_view %}
-            <a href="{{ url_for('personal_schedule', week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d')) }}" 
-               class="btn btn-outline-secondary me-2">
-                <i data-feather="chevrons-left"></i> Previous Month
-            </a>
-            <a href="{{ url_for('personal_schedule', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d')) }}" 
-               class="btn btn-outline-primary me-2">
-                <i data-feather="chevron-left"></i> Previous Week
-            </a>
-            <a href="{{ url_for('personal_schedule') }}" 
-               class="btn btn-outline-primary me-2">
-                Current Week
-            </a>
-            <a href="{{ url_for('personal_schedule', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d')) }}"
-               class="btn btn-outline-primary me-2">
-                Next Week <i data-feather="chevron-right"></i>
-            </a>
-            <a href="{{ url_for('personal_schedule', week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d')) }}"
-               class="btn btn-outline-secondary me-2">
-                Next Month <i data-feather="chevrons-right"></i>
-            </a>
-            {% else %}
-            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location, technician_id=selected_technician) }}" 
-               class="btn btn-outline-secondary me-2">
-                <i data-feather="chevrons-left"></i> Previous Month
-            </a>
-            <a href="{{ url_for('calendar', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location, technician_id=selected_technician) }}" 
-               class="btn btn-outline-primary me-2">
-                <i data-feather="chevron-left"></i> Previous Week
-            </a>
-            <a href="{{ url_for('calendar', location_id=selected_location, technician_id=selected_technician) }}" 
-               class="btn btn-outline-primary me-2">
-                Current Week
-            </a>
-            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d'), location_id=selected_location, technician_id=selected_technician) }}"
-               class="btn btn-outline-primary me-2">
-                Next Week <i data-feather="chevron-right"></i>
-            </a>
-            <a href="{{ url_for('calendar', week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d'), location_id=selected_location, technician_id=selected_technician) }}"
-               class="btn btn-outline-secondary me-2">
-                Next Month <i data-feather="chevrons-right"></i>
+            {% if selected_location or selected_technician %}
+            <a class="cc-clear-filters" href="{{ url_for(_route, week_start=week_start.strftime('%Y-%m-%d')) }}">
+                <i data-feather="x"></i> Clear filters
             </a>
             {% endif %}
-            {% if current_user.is_admin %}
-            <form method="POST" action="{{ url_for('copy_previous_week_schedules') }}" class="d-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="target_week_start" value="{{ week_start.strftime('%Y-%m-%d') }}">
-                <button type="submit" class="btn btn-success">
-                    <i data-feather="copy"></i> Copy Previous Week
-                </button>
-            </form>
-            {% endif %}
         </div>
-    </div>
-    <div class="d-flex justify-content-end mb-2">
-        <button type="button" class="btn btn-outline-warning" id="bulk-select-toggle">
-            <i data-feather="check-square"></i> Select Multiple
-        </button>
     </div>
 
     <script>
