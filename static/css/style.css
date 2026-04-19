@@ -992,14 +992,21 @@ div[style*="gradient"] {
     box-shadow: inset 3px 0 0 #6aa6ff;
 }
 
-/* Day header — bigger, two-line, easier to scan */
+/* Day header — bigger, stacked layout, easier to scan */
 .calendar-container .day-header {
     background: #131a25 !important;
     border-bottom: 1px solid #232d3d !important;
     color: #cdd6e4;
-    padding: 10px 8px !important;
+    padding: 8px 6px !important;
     text-align: center;
     line-height: 1;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px;
+    height: auto !important;
+    min-height: 56px;
 }
 .calendar-container .day-header-name {
     font-size: 10px;
