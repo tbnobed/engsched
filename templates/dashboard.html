@@ -301,16 +301,6 @@
 
   function pad(n) { return String(n).padStart(2, '0'); }
 
-  function tickClock() {
-    const now = new Date();
-    const opts = { timeZone: userTz, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' };
-    const parts = new Intl.DateTimeFormat('en-US', opts).formatToParts(now);
-    const get = (t) => (parts.find(p => p.type === t) || {}).value || '00';
-    document.getElementById('ccClock').textContent = `${get('hour')}:${get('minute')}:${get('second')}`;
-  }
-  tickClock();
-  setInterval(tickClock, 1000);
-
   function updateNowLine() {
     const line = document.getElementById('ccNowLine');
     if (!line) return;
