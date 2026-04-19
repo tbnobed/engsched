@@ -274,6 +274,33 @@
             }
         }
 
+        .global-clock {
+            display: flex !important;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.05;
+            font-variant-numeric: tabular-nums;
+            padding: 4px 12px;
+            border-right: 1px solid rgba(255,255,255,.08);
+            margin-right: 12px !important;
+        }
+        .global-clock .gc-time {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: .5px;
+            color: #e8edf5;
+        }
+        .global-clock .gc-date {
+            font-size: 10.5px;
+            font-weight: 500;
+            color: #8a97ac;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-top: 2px;
+        }
+        .navbar-light .global-clock { border-right-color: rgba(0,0,0,.08); }
+        .navbar-light .global-clock .gc-time { color: #1a2233; }
+        .navbar-light .global-clock .gc-date { color: #5b6577; }
         /* Add CSS for theme toggle in the navbar */
         .theme-toggle-btn {
             display: flex;
@@ -437,6 +464,10 @@
             <div class="d-flex align-items-center" style="position: absolute; right: 15px; z-index: 1000;">
                 {% if current_user.is_authenticated %}
                 <ul class="navbar-nav d-flex flex-row align-items-center">
+                        <li class="nav-item me-3 d-none d-md-flex global-clock" id="globalClock" title="">
+                            <div class="gc-time" id="globalClockTime">--:--</div>
+                            <div class="gc-date" id="globalClockDate">—</div>
+                        </li>
                         {% if current_user.is_admin %}
                         <li class="nav-item dropdown me-3">
                             <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" style="font-weight: 500;">
@@ -1555,6 +1586,29 @@
     </script>
     
     <!-- Cache busting comment: sidebar removed 2025-07-16 -->
+
+    {% if current_user.is_authenticated %}
+    <script>
+    (function(){
+        var tz = {{ (current_user.timezone or 'America/Los_Angeles')|tojson }};
+        var t = document.getElementById('globalClockTime');
+        var d = document.getElementById('globalClockDate');
+        if (!t || !d) return;
+        function tick(){
+            var now = new Date();
+            try {
+                t.textContent = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(now);
+                d.textContent = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' }).format(now);
+            } catch(e) {
+                t.textContent = now.toLocaleTimeString();
+                d.textContent = now.toLocaleDateString();
+            }
+        }
+        tick();
+        setInterval(tick, 1000);
+    })();
+    </script>
+    {% endif %}
 
 </body>
 </html>
