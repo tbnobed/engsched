@@ -960,11 +960,11 @@ div[style*="gradient"] {
 
 /* Grid */
 .calendar-container .calendar-grid {
-    background: #18212f !important;
+    background: #2a3548 !important; /* shows through gaps to form column dividers */
     border: 1px solid #232d3d;
     border-radius: 12px;
     overflow: hidden;
-    gap: 1px;
+    gap: 2px; /* thicker dividers between days */
 }
 
 .calendar-container .time-column,
@@ -972,24 +972,74 @@ div[style*="gradient"] {
     background: #0f1622 !important;
 }
 
-.calendar-container .day-column.today {
-    background: linear-gradient(180deg, rgba(106,166,255,.06), #0f1622 30%) !important;
+/* Alternating tint so adjacent weekdays read distinctly */
+.calendar-container .day-column.day-1,
+.calendar-container .day-column.day-3 {
+    background: #111a28 !important;
 }
 
+/* Weekend columns get a subtle warm tint */
+.calendar-container .day-column.weekend {
+    background: #131523 !important;
+}
+.calendar-container .day-column.weekend .time-slot {
+    border-bottom-color: rgba(255,255,255,0.025) !important;
+}
+
+/* Today gets a strong blue wash + left accent stripe */
+.calendar-container .day-column.today {
+    background: linear-gradient(180deg, rgba(106,166,255,.10), rgba(106,166,255,.02) 40%, #0f1622 80%) !important;
+    box-shadow: inset 3px 0 0 #6aa6ff;
+}
+
+/* Day header — bigger, two-line, easier to scan */
 .calendar-container .day-header {
     background: #131a25 !important;
     border-bottom: 1px solid #232d3d !important;
     color: #cdd6e4;
+    padding: 10px 8px !important;
+    text-align: center;
+    line-height: 1;
+}
+.calendar-container .day-header-name {
+    font-size: 10px;
     font-weight: 700;
+    letter-spacing: 1.2px;
     text-transform: uppercase;
-    letter-spacing: .6px;
-    font-size: 11px;
+    color: #8a97ac;
+    margin-bottom: 4px;
+}
+.calendar-container .day-header-date {
+    font-size: 22px;
+    font-weight: 700;
+    color: #e8edf5;
+    letter-spacing: -.5px;
+    line-height: 1;
+}
+.calendar-container .day-header-month {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6e7a8e;
+    margin-top: 3px;
+}
+.calendar-container .day-header.weekend {
+    background: #181d2c !important;
+}
+.calendar-container .day-header.weekend .day-header-name {
+    color: #b58a5a;
 }
 .calendar-container .day-header.today {
-    background: linear-gradient(180deg, rgba(106,166,255,.18), #131a25) !important;
-    color: #6aa6ff;
+    background: linear-gradient(180deg, rgba(106,166,255,.22), rgba(106,166,255,.05)) !important;
     border-bottom: 2px solid #6aa6ff !important;
 }
+.calendar-container .day-header.today .day-header-name { color: #6aa6ff; }
+.calendar-container .day-header.today .day-header-date {
+    color: #fff;
+    text-shadow: 0 0 12px rgba(106,166,255,.35);
+}
+.calendar-container .day-header.today .day-header-month { color: #6aa6ff; }
 
 .calendar-container .time-column::before {
     background: #131a25;

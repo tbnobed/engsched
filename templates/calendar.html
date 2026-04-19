@@ -104,9 +104,13 @@
         {% for day in range(7) %}
         {% set current_date = week_start + timedelta(days=day) %}
         {% set is_today = current_date.date() == today.date() %}
-        <div class="day-column {{ 'today' if is_today else '' }}">
-            <div class="day-header {{ 'today' if is_today else '' }}">
-                {{ current_date.strftime('%a %m/%d') }}
+        {% set is_weekend = day >= 5 %}
+        {% set day_classes = ['day-column'] + (['today'] if is_today else []) + (['weekend'] if is_weekend else []) + (['day-' + day|string]) %}
+        <div class="{{ day_classes|join(' ') }}">
+            <div class="day-header {{ 'today' if is_today else '' }} {{ 'weekend' if is_weekend else '' }}">
+                <div class="day-header-name">{{ current_date.strftime('%a') }}</div>
+                <div class="day-header-date">{{ current_date.strftime('%-d') }}</div>
+                <div class="day-header-month">{{ current_date.strftime('%b') }}</div>
             </div>
             <div class="day-slots" data-date="{{ current_date.strftime('%Y-%m-%d') }}">
                 {% for hour in range(24) %}
