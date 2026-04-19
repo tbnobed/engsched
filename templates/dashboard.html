@@ -24,8 +24,8 @@
     font-family: 'Inter','Segoe UI',system-ui,sans-serif;
   }
   .cc-topbar {
-    display:flex; align-items:center; justify-content:space-between;
-    padding: 14px 24px; background: linear-gradient(90deg,#0e1622,#0c1118);
+    display:flex; align-items:center; justify-content:flex-end;
+    padding: 10px 20px; background: transparent;
     border-bottom: 1px solid var(--cc-border);
     border-radius: 14px 14px 0 0;
   }
@@ -139,19 +139,10 @@
 {% set ns = namespace(hour_cols=(range_end_h - range_start_h)) %}
 
 <div class="cc-shell">
-  <div class="cc-topbar">
-    <div class="cc-brand"><span class="dot"></span> PLEX OPS · Command Center</div>
-    <div style="display:flex; gap:18px; align-items:center;">
-      <div class="cc-clock">
-        <div class="big" id="ccClock">--:--:--</div>
-        <div class="sub" id="ccDate">{{ today.strftime('%A · %b %-d') }}</div>
-      </div>
-      <a href="{{ url_for('tickets.tickets_dashboard') }}" class="btn btn-sm btn-outline-light">
-        <i data-feather="list" style="width:14px;height:14px;"></i> Tickets
-      </a>
-      <a href="{{ url_for('calendar') }}" class="btn btn-sm btn-outline-light">
-        <i data-feather="calendar" style="width:14px;height:14px;"></i> Calendar
-      </a>
+  <div class="cc-topbar cc-topbar-slim">
+    <div class="cc-clock">
+      <span class="big" id="ccClock">--:--:--</span>
+      <span class="sub" id="ccDate">{{ today.strftime('%A, %b %-d') }}</span>
     </div>
   </div>
 
