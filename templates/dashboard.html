@@ -148,7 +148,7 @@
         {% for p in people_rail %}
         <a class="cc-person" href="{{ url_for('calendar', technician_id=p.user.id) }}" style="text-decoration:none;">
           <div class="cc-avatar"
-               style="{% if p.user.profile_picture %}background-image:url('{{ p.user.profile_picture }}');{% else %}background:{{ p.user.color or '#6aa6ff' }};{% endif %}">
+               style="{% if p.user.profile_picture %}background-image:url('{{ url_for('static', filename=p.user.profile_picture) }}');{% else %}background:{{ p.user.color or '#6aa6ff' }};{% endif %}">
             {% if not p.user.profile_picture %}{{ p.initials }}{% endif %}
           </div>
           <div class="info">
@@ -208,7 +208,7 @@
             {% for tech_name, tech_data in schedules_by_tech.items() %}
               <div class="cc-lane">
                 <div class="lname">
-                  <span class="cc-avatar" style="width:20px; height:20px; font-size:9px; {% if tech_data.user.profile_picture %}background-image:url('{{ tech_data.user.profile_picture }}');{% else %}background:{{ tech_data.user.color or '#6aa6ff' }};{% endif %}">
+                  <span class="cc-avatar" style="width:20px; height:20px; font-size:9px; {% if tech_data.user.profile_picture %}background-image:url('{{ url_for('static', filename=tech_data.user.profile_picture) }}');{% else %}background:{{ tech_data.user.color or '#6aa6ff' }};{% endif %}">
                     {% if not tech_data.user.profile_picture %}{{ (tech_data.user.username[:2])|upper }}{% endif %}
                   </span>
                   <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ tech_data.user.username.split()[0] }}</span>
