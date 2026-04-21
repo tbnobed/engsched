@@ -332,7 +332,7 @@
     line.style.left = (16 + trackOffset + pct * trackWidth) + 'px';
   }
   updateNowLine();
-  setInterval(updateNowLine, 30000);
+  setInterval(updateNowLine, 1000);
   window.addEventListener('resize', updateNowLine);
 
   function loadBookings() {
