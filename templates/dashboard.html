@@ -15,12 +15,18 @@
     --cc-warn: #facc15;
     --cc-bad:  #f87171;
   }
+  /* Vertically center the dashboard within the available viewport so equal space appears above and below the shell */
+  main.container-fluid:has(.cc-shell) {
+    min-height: calc(100vh - 90px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
   .cc-shell {
     background: var(--cc-bg);
     color: var(--cc-text);
     border-radius: 14px;
-    margin: 16px 0 0 0;
-    min-height: calc(100vh - 110px);
+    margin: 0;
     font-family: 'Inter','Segoe UI',system-ui,sans-serif;
   }
   .cc-topbar {
