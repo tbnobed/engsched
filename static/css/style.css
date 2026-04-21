@@ -231,18 +231,17 @@ div[style*="gradient"] {
 .sched-bar-fill {
     position: absolute;
     inset: 1px;
-    background: color-mix(in srgb, var(--user-color) 18%, transparent);
-    border: 1px solid color-mix(in srgb, var(--user-color) 35%, transparent);
-    border-left: 3px solid var(--user-color);
-    border-radius: 4px;
+    background: color-mix(in srgb, var(--user-color) 22%, transparent);
+    border: 1px solid color-mix(in srgb, var(--user-color) 55%, transparent);
+    border-radius: 6px;
     pointer-events: none;
     transition: background 0.15s, border-color 0.15s;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
 .calendar-container .schedule-event.sched-bar:hover .sched-bar-fill {
-    background: color-mix(in srgb, var(--user-color) 28%, transparent);
-    border-color: color-mix(in srgb, var(--user-color) 55%, transparent);
-    border-left-color: var(--user-color);
+    background: color-mix(in srgb, var(--user-color) 32%, transparent);
+    border-color: color-mix(in srgb, var(--user-color) 75%, transparent);
 }
 
 .bulk-select-mode .schedule-event {
@@ -313,34 +312,35 @@ div[style*="gradient"] {
 
 .sched-bar-label {
     position: absolute;
-    top: 4px;
+    top: 6px;
     left: 10px;
-    right: 4px;
+    right: 8px;
     z-index: 6;
     pointer-events: none;
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
     overflow: hidden;
 }
 
 .sched-bar-name {
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 700;
     color: #fff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-    line-height: 1.3;
+    line-height: 1.25;
 }
 
 .sched-bar-time {
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 400;
-    color: rgba(255,255,255,0.55);
+    color: rgba(255,255,255,0.7);
     white-space: nowrap;
     line-height: 1.2;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 /* Circular avatar inside bar */
