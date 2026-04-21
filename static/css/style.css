@@ -1108,30 +1108,29 @@ div[style*="gradient"] {
 /* Schedule bars — solid gradient pills with crisp typography */
 .calendar-container .schedule-event.sched-bar .sched-bar-fill {
     inset: 1px;
-    background: linear-gradient(135deg,
-                  color-mix(in srgb, var(--user-color) 92%, #000),
-                  color-mix(in srgb, var(--user-color) 70%, #000)) !important;
-    border: none !important;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.15), 0 4px 14px rgba(0,0,0,.4);
+    background: color-mix(in srgb, var(--user-color) 45%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--user-color) 70%, transparent) !important;
+    box-shadow: none;
     border-radius: 8px;
     transition: transform .15s, box-shadow .15s;
 }
 .calendar-container .schedule-event.sched-bar:hover .sched-bar-fill {
-    background: linear-gradient(135deg,
-                  color-mix(in srgb, var(--user-color) 100%, #000),
-                  color-mix(in srgb, var(--user-color) 80%, #000)) !important;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.25), 0 6px 18px rgba(0,0,0,.5);
-    transform: translateY(-1px);
+    background: color-mix(in srgb, var(--user-color) 55%, transparent) !important;
+    border-color: color-mix(in srgb, var(--user-color) 90%, transparent) !important;
+    box-shadow: none;
+    transform: none;
 }
 .calendar-container .sched-bar-name {
     color: #fff;
-    font-size: 11px;
-    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+    font-size: 15px;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0,0,0,.6);
 }
 .calendar-container .sched-bar-time {
     color: rgba(255,255,255,.85);
-    font-size: 10px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 400;
+    text-shadow: 0 1px 2px rgba(0,0,0,.5);
 }
 .calendar-container .sched-avatar {
     background: #131a25;
