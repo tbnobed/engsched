@@ -110,6 +110,15 @@
     background: var(--cc-panel-2); border:1px solid var(--cc-border); color: var(--cc-text);
     padding: 3px 8px; border-radius:6px; font-size:12px;
   }
+  .tk-sort { cursor:pointer; user-select:none; position:relative; }
+  .tk-sort:hover { color: var(--cc-text); }
+  .tk-sort::after {
+    content: ''; display:inline-block; width:0; height:0; margin-left:6px;
+    border-left:4px solid transparent; border-right:4px solid transparent;
+    border-bottom:4px solid var(--cc-border); vertical-align: middle; opacity:.6;
+  }
+  .tk-sort.sort-asc::after  { border-bottom-color: var(--cc-accent); border-top:0; opacity:1; }
+  .tk-sort.sort-desc::after { border-top:4px solid var(--cc-accent); border-bottom:0; opacity:1; }
   .tk-table { width:100%; border-collapse: collapse; font-size:13px; }
   .tk-table thead th {
     background: var(--cc-panel-2); color: var(--cc-muted);
@@ -257,8 +266,14 @@
         <table class="tk-table" id="tkTable">
           <thead>
             <tr>
-              <th>ID</th><th>Title</th><th>Category</th><th>Status</th>
-              <th>Priority</th><th>Assigned</th><th>Created</th><th></th>
+              <th class="tk-sort" data-sort="num"  data-col="0">ID</th>
+              <th class="tk-sort" data-sort="text" data-col="1">Title</th>
+              <th class="tk-sort" data-sort="text" data-col="2">Category</th>
+              <th class="tk-sort" data-sort="text" data-col="3">Status</th>
+              <th class="tk-sort" data-sort="pri"  data-col="4">Priority</th>
+              <th class="tk-sort" data-sort="text" data-col="5">Assigned</th>
+              <th class="tk-sort" data-sort="num"  data-col="6">Created</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -406,6 +421,75 @@ document.addEventListener('DOMContentLoaded', function() {
 
   pageSizeSel.addEventListener('change', () => { currentPage = 1; renderPager(); });
   renderPager();
+
+  // ----- Client-side sorting -----
+  let sortState = { col: null, dir: null, type: null };
+
+  function priorityRank(text) {
+    const t = (text || '').trim().toLowerCase();
+    return { 'low':0, 'med':1, 'medium':1, 'high':2, 'urgent':3 }[t] ?? -1;
+  }
+
+  function cellValue(tr, col, type) {
+    const td = tr.children[col];
+    if (!td) return '';
+    const raw = td.innerText.trim();
+    if (type === 'num') {
+      // Strip leading # for IDs; for dates parse mm/dd hh:mm into a sortable number
+      if (/^#?\d+$/.test(raw)) return parseInt(raw.replace('#',''), 10);
+      const m = raw.match(/^(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})$/);
+      if (m) {
+        const [_, mo, d, h, mi] = m;
+        // Use current year; older months in the future will sort before newer ones
+        const yr = new Date().getFullYear();
+        return new Date(yr, +mo - 1, +d, +h, +mi).getTime();
+      }
+      const n = parseFloat(raw);
+      return isNaN(n) ? 0 : n;
+    }
+    if (type === 'pri') return priorityRank(raw);
+    return raw.toLowerCase();
+  }
+
+  function applySort() {
+    if (sortState.col === null) return;
+    const tbody = document.querySelector('#tkTable tbody');
+    const rows = getRows();
+    rows.sort((a, b) => {
+      const va = cellValue(a, sortState.col, sortState.type);
+      const vb = cellValue(b, sortState.col, sortState.type);
+      let cmp;
+      if (typeof va === 'number' && typeof vb === 'number') cmp = va - vb;
+      else cmp = String(va).localeCompare(String(vb));
+      return sortState.dir === 'asc' ? cmp : -cmp;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+  }
+
+  function updateSortIndicators() {
+    document.querySelectorAll('#tkTable th.tk-sort').forEach(th => {
+      th.classList.remove('sort-asc', 'sort-desc');
+      if (parseInt(th.dataset.col, 10) === sortState.col) {
+        th.classList.add(sortState.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+      }
+    });
+  }
+
+  document.querySelectorAll('#tkTable th.tk-sort').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = parseInt(th.dataset.col, 10);
+      const type = th.dataset.sort;
+      if (sortState.col === col) {
+        sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortState = { col, type, dir: 'asc' };
+      }
+      updateSortIndicators();
+      applySort();
+      currentPage = 1;
+      renderPager();
+    });
+  });
 
   const applyBtn = document.getElementById('apply-filters-btn');
   const form = document.getElementById('filter-form');
