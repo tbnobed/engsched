@@ -505,6 +505,32 @@ def tickets_dashboard():
                              filter_assigned_to=assigned_to_int,
                              filter_created_by=created_by_int)
     else:
+        # Compute Command-Center metrics across ALL non-archived tickets (not the filtered subset)
+        from datetime import timedelta
+        metrics_base = Ticket.query.filter(Ticket.archived == False)
+        m_open = metrics_base.filter(Ticket.status == 'open').count()
+        m_in_progress = metrics_base.filter(Ticket.status == 'in_progress').count()
+        m_pending = metrics_base.filter(Ticket.status == 'pending').count()
+        m_active = m_open + m_in_progress + m_pending
+        m_high = metrics_base.filter(Ticket.status.in_(['open','in_progress','pending']),
+                                     Ticket.priority >= 2).count()
+        m_urgent = metrics_base.filter(Ticket.status.in_(['open','in_progress','pending']),
+                                       Ticket.priority == 3).count()
+        m_unassigned = metrics_base.filter(Ticket.status.in_(['open','in_progress','pending']),
+                                           Ticket.assigned_to.is_(None)).count()
+        m_mine = metrics_base.filter(Ticket.status.in_(['open','in_progress','pending']),
+                                     Ticket.assigned_to == current_user.id).count()
+        week_ago = datetime.now() - timedelta(days=7)
+        m_resolved_week = metrics_base.filter(Ticket.status.in_(['resolved','closed']),
+                                              Ticket.updated_at >= week_ago).count()
+        m_new_today = metrics_base.filter(Ticket.created_at >= datetime.now().replace(hour=0,minute=0,second=0,microsecond=0)).count()
+
+        ticket_metrics = {
+            'active': m_active, 'open': m_open, 'in_progress': m_in_progress,
+            'pending': m_pending, 'high': m_high, 'urgent': m_urgent,
+            'unassigned': m_unassigned, 'mine': m_mine,
+            'resolved_week': m_resolved_week, 'new_today': m_new_today,
+        }
         return render_template('tickets/dashboard.html', 
                              tickets=filtered_tickets,
                              categories=categories,
@@ -512,7 +538,8 @@ def tickets_dashboard():
                              technicians=technicians,
                              ticket_count=len(filtered_tickets),
                              filter_info=filter_info,
-                             timestamp=timestamp)
+                             timestamp=timestamp,
+                             ticket_metrics=ticket_metrics)
 
 @tickets.route('/tickets/create', methods=['GET', 'POST'])
 @login_required

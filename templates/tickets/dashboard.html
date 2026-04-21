@@ -2,482 +2,379 @@
 
 {% block extra_head %}
 <style>
-.unread-ticket {
-    border-left: 4px solid #dc3545 !important;
-    background-color: rgba(220, 53, 69, 0.1) !important;
-}
+  :root {
+    --cc-bg:     #0c1118;
+    --cc-panel:  #131a25;
+    --cc-panel-2:#1a2230;
+    --cc-border: #232d3d;
+    --cc-text:   #e8edf5;
+    --cc-muted:  #8a97ac;
+    --cc-accent: #6aa6ff;
+    --cc-good:   #4ade80;
+    --cc-warn:   #facc15;
+    --cc-bad:    #f87171;
+  }
+  main.container-fluid:has(.tk-shell) {
+    min-height: calc(100vh - 90px); display:flex; flex-direction:column;
+  }
+  .tk-shell {
+    background: var(--cc-bg); color: var(--cc-text);
+    border-radius: 14px; margin: 16px 0 0; padding: 16px;
+    font-family: 'Inter','Segoe UI',system-ui,sans-serif;
+  }
+  .tk-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 4px 4px 14px; gap: 12px; flex-wrap:wrap;
+  }
+  .tk-header h2 { color: var(--cc-text); font-size: 22px; font-weight:700; margin:0; letter-spacing:.3px; }
+  .tk-header .sub { color: var(--cc-muted); font-size: 12px; margin-top: 2px; }
+  .tk-actions { display:flex; gap:8px; align-items:center; }
+  .tk-btn {
+    display:inline-flex; align-items:center; gap:6px;
+    background: var(--cc-panel-2); border:1px solid var(--cc-border);
+    color: var(--cc-text); padding:8px 14px; border-radius:10px;
+    font-size:12px; font-weight:600; text-decoration:none; cursor:pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .tk-btn:hover { background: #233044; border-color:#2e3b51; color: var(--cc-text); }
+  .tk-btn.primary { background: linear-gradient(135deg,#4f46e5,#6aa6ff); border-color: transparent; color:#fff; }
+  .tk-btn.primary:hover { filter: brightness(1.1); color:#fff; }
+  .tk-btn i { width:14px; height:14px; }
 
-.table-warning {
-    background-color: rgba(255, 193, 7, 0.1) !important;
-}
+  /* KPI cards */
+  .tk-kpis { display:grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap:12px; margin-bottom: 16px; }
+  .tk-kpi {
+    background: var(--cc-panel); border:1px solid var(--cc-border);
+    border-radius:14px; padding: 12px 14px; display:flex; flex-direction:column;
+    transition: transform .15s, border-color .15s; cursor:pointer; text-decoration:none;
+  }
+  .tk-kpi:hover { transform: translateY(-2px); border-color: var(--cc-accent); }
+  .tk-kpi .lbl { color:var(--cc-muted); font-size:10px; text-transform:uppercase; letter-spacing:.6px; font-weight:600; }
+  .tk-kpi .val { font-size:26px; font-weight:700; margin-top:6px; line-height:1; color: var(--cc-text); }
+  .tk-kpi .sub { font-size:10px; color:var(--cc-muted); margin-top:6px; }
+  .tk-kpi.bad .val { color: var(--cc-bad); }
+  .tk-kpi.warn .val { color: var(--cc-warn); }
+  .tk-kpi.good .val { color: var(--cc-good); }
+  .tk-kpi.accent .val { color: var(--cc-accent); }
+  @media (max-width: 1400px) { .tk-kpis { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 700px)  { .tk-kpis { grid-template-columns: repeat(2, 1fr); } }
 
-.badge.bg-danger.rounded-pill {
-    animation: pulse 2s infinite;
-}
+  /* Body grid */
+  .tk-body { display:grid; grid-template-columns: 280px 1fr; gap: 16px; }
+  @media (max-width: 900px) { .tk-body { grid-template-columns: 1fr; } }
 
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
-}
+  .tk-panel {
+    background: var(--cc-panel); border:1px solid var(--cc-border);
+    border-radius:14px; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .tk-panel-h {
+    padding: 12px 16px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--cc-border); font-weight:600; font-size:12px;
+    letter-spacing:.6px; text-transform:uppercase; color:var(--cc-muted);
+  }
+  .tk-panel-h .count { background: var(--cc-panel-2); color:var(--cc-text); padding:2px 8px; border-radius:999px; font-size:11px; }
 
-.auto-refresh-indicator {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(0, 123, 255, 0.1);
-    border: 1px solid #007bff;
-    border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 0.8rem;
-    color: #007bff;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
+  /* Filters */
+  .tk-filters { padding: 14px; display:flex; flex-direction:column; gap:12px; }
+  .tk-filters label { color:var(--cc-muted); font-size:11px; text-transform:uppercase; letter-spacing:.6px; font-weight:600; margin-bottom:4px; display:block; }
+  .tk-input, .tk-select {
+    width:100%; background: var(--cc-panel-2); border:1px solid var(--cc-border);
+    color: var(--cc-text); padding:8px 10px; border-radius:8px; font-size:13px;
+    appearance:none;
+  }
+  .tk-input:focus, .tk-select:focus { outline:none; border-color: var(--cc-accent); }
+  .tk-select {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a97ac' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat:no-repeat; background-position: right 10px center; padding-right: 30px;
+  }
+  .tk-select option { background: var(--cc-panel-2); color: var(--cc-text); }
+  .tk-search-row { display:flex; gap:6px; }
+  .tk-search-row .tk-input { flex:1; }
 
-.auto-refresh-indicator.visible {
-    opacity: 1;
-}
+  /* Table */
+  .tk-table-wrap { overflow:auto; }
+  .tk-table { width:100%; border-collapse: collapse; font-size:13px; }
+  .tk-table thead th {
+    background: var(--cc-panel-2); color: var(--cc-muted);
+    font-size: 10.5px; text-transform:uppercase; letter-spacing:.6px; font-weight:600;
+    padding: 10px 14px; text-align:left; border-bottom: 1px solid var(--cc-border);
+    position:sticky; top:0; z-index:1;
+  }
+  .tk-table tbody tr { border-bottom:1px solid var(--cc-border); transition: background .12s; }
+  .tk-table tbody tr:hover { background: var(--cc-panel-2); }
+  .tk-table tbody tr.unread { background: rgba(248,113,113,.05); border-left: 3px solid var(--cc-bad); }
+  .tk-table td { padding: 10px 14px; color: var(--cc-text); vertical-align:middle; }
+  .tk-table td.num { font-family: 'JetBrains Mono', monospace; color: var(--cc-muted); font-size:12px; width:60px; }
+  .tk-table td.title a { color: var(--cc-text); text-decoration:none; font-weight:500; }
+  .tk-table td.title a:hover { color: var(--cc-accent); }
+  .tk-pill { display:inline-block; font-size:10px; font-weight:700; padding:3px 8px; border-radius:999px; text-transform:uppercase; letter-spacing:.4px; }
+  .tk-pill-cat { background: var(--cc-panel-2); color: var(--cc-muted); border:1px solid var(--cc-border); text-transform:none; font-weight:600; }
+  .tk-pill-st-open { background: rgba(106,166,255,.18); color: var(--cc-accent); }
+  .tk-pill-st-in_progress { background: rgba(74,222,128,.18); color: var(--cc-good); }
+  .tk-pill-st-pending { background: rgba(250,204,21,.18); color: var(--cc-warn); }
+  .tk-pill-st-resolved { background: rgba(74,222,128,.12); color: var(--cc-muted); }
+  .tk-pill-st-closed { background: rgba(138,151,172,.15); color: var(--cc-muted); }
+  .tk-pill-pri-0 { background: rgba(138,151,172,.18); color: var(--cc-muted); }
+  .tk-pill-pri-1 { background: rgba(106,166,255,.18); color: var(--cc-accent); }
+  .tk-pill-pri-2 { background: rgba(251,146,60,.2);   color: #fb923c; }
+  .tk-pill-pri-3 { background: rgba(248,113,113,.2);  color: var(--cc-bad); animation: tkPulse 2s infinite; }
+  @keyframes tkPulse { 0%,100% { opacity:1; } 50% { opacity:.65; } }
+  .tk-new { display:inline-block; width:7px; height:7px; border-radius:50%; background: var(--cc-bad); box-shadow:0 0 6px var(--cc-bad); margin-left:6px; vertical-align:middle; }
+  .tk-empty { padding: 60px 20px; text-align:center; color: var(--cc-muted); }
+  .tk-empty i { width:42px; height:42px; opacity:.5; margin-bottom:10px; }
 
-.refresh-icon {
-    animation: spin 1s linear infinite;
-}
+  .tk-shell ::-webkit-scrollbar { width:8px; height:8px; }
+  .tk-shell ::-webkit-scrollbar-thumb { background:#1f2937; border-radius:8px; }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+  .tk-refresh-ind {
+    position: fixed; top: 70px; right: 20px; background: var(--cc-panel);
+    border: 1px solid var(--cc-accent); border-radius: 8px; padding: 6px 10px;
+    font-size: 11px; color: var(--cc-accent); z-index:1000; opacity:0;
+    transition: opacity .3s; display:flex; align-items:center; gap:6px;
+  }
+  .tk-refresh-ind.visible { opacity:1; }
+  .tk-refresh-ind .spin { animation: tkSpin 1s linear infinite; width:12px; height:12px; }
+  @keyframes tkSpin { to { transform: rotate(360deg); } }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="tickets-dashboard">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="tk-shell">
+
+  <!-- Header -->
+  <div class="tk-header">
+    <div>
+      <h2>Tickets</h2>
+      <div class="sub">Showing {{ ticket_count }} ticket{% if ticket_count != 1 %}s{% endif %} · Auto-refreshes every 5s</div>
+    </div>
+    <div class="tk-actions">
+      <a href="{{ url_for('tickets.create_ticket') }}" class="tk-btn primary">
+        <i data-feather="plus"></i> New Ticket
+      </a>
+      {% if current_user.is_admin %}
+      <div class="dropdown">
+        <button class="tk-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i data-feather="settings"></i> Admin
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" style="background: var(--cc-panel); border:1px solid var(--cc-border);">
+          <li><a class="dropdown-item" style="color: var(--cc-text);" href="{{ url_for('tickets.manage_categories') }}"><i data-feather="tag" style="width:14px;height:14px;"></i> Manage Categories</a></li>
+          <li><a class="dropdown-item" style="color: var(--cc-text);" href="{{ url_for('tickets.archived_tickets') }}"><i data-feather="archive" style="width:14px;height:14px;"></i> View Archived</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" style="color: var(--cc-text);" href="#" data-bs-toggle="modal" data-bs-target="#batchArchiveModal"><i data-feather="package" style="width:14px;height:14px;"></i> Batch Archive</a></li>
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- KPI cards -->
+  {% if ticket_metrics %}
+  {% set m = ticket_metrics %}
+  <div class="tk-kpis">
+    <a class="tk-kpi accent" href="?status=open"><div class="lbl">Active</div><div class="val">{{ m.active }}</div><div class="sub">open + in&nbsp;progress + pending</div></a>
+    <a class="tk-kpi"        href="?status=open"><div class="lbl">Open</div><div class="val">{{ m.open }}</div><div class="sub">awaiting triage</div></a>
+    <a class="tk-kpi good"   href="?status=in_progress"><div class="lbl">In Progress</div><div class="val">{{ m.in_progress }}</div><div class="sub">being worked</div></a>
+    <a class="tk-kpi warn"   href="?status=pending"><div class="lbl">Pending</div><div class="val">{{ m.pending }}</div><div class="sub">awaiting reply</div></a>
+    <a class="tk-kpi bad"    href="?status=open&priority=3"><div class="lbl">Urgent</div><div class="val">{{ m.urgent }}</div><div class="sub">{{ m.high }} high+</div></a>
+    <a class="tk-kpi warn"   href="?status=open&technician=__unassigned__" onclick="event.preventDefault(); window.location='?status=open';"><div class="lbl">Unassigned</div><div class="val">{{ m.unassigned }}</div><div class="sub">need owner</div></a>
+    <a class="tk-kpi accent" href="?status=open&technician={{ current_user.id }}"><div class="lbl">My Open</div><div class="val">{{ m.mine }}</div><div class="sub">assigned to me</div></a>
+    <a class="tk-kpi good"   href="?status=resolved"><div class="lbl">Resolved 7d</div><div class="val">{{ m.resolved_week }}</div><div class="sub">{{ m.new_today }} new today</div></a>
+  </div>
+  {% endif %}
+
+  <!-- Body: filters + table -->
+  <div class="tk-body">
+
+    <!-- Filters panel -->
+    <div class="tk-panel">
+      <div class="tk-panel-h"><span>Filters</span></div>
+      <form id="filter-form" method="GET" autocomplete="off" class="tk-filters">
         <div>
-            <h2>Tickets</h2>
-            <p class="text-muted">Showing {{ ticket_count }} ticket{% if ticket_count != 1 %}s{% endif %}</p>
+          <label>Search</label>
+          <div class="tk-search-row">
+            <input type="text" name="search" class="tk-input" placeholder="Title or description" value="{{ filter_info.search }}">
+          </div>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('tickets.create_ticket') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #7A93AC 0%, #92BCEA 100%); border: none; color: white;">
-                <i data-feather="plus"></i> New Ticket
-            </a>
-            {% if current_user.is_admin %}
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="adminActionsDropdown" 
-                        data-bs-toggle="dropdown" aria-expanded="false" style="border-color: #617073; color: #617073;">
-                    <i data-feather="settings"></i> Admin Actions
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminActionsDropdown">
-                    <li>
-                        <a class="dropdown-item" href="{{ url_for('tickets.manage_categories') }}">
-                            <i data-feather="tag"></i> Manage Categories
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="{{ url_for('tickets.archived_tickets') }}">
-                            <i data-feather="archive"></i> View Archived Tickets
-                        </a>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#batchArchiveModal">
-                            <i data-feather="package"></i> Batch Archive Tickets
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            {% endif %}
+        <div>
+          <label>Status</label>
+          <select name="status" class="tk-select">
+            <option value="all" {% if filter_info.status == 'all' %}selected{% endif %}>All</option>
+            {% for status in ticket_statuses %}
+            <option value="{{ status }}" {% if filter_info.status == status %}selected{% endif %}>{{ status|replace('_',' ')|title }}</option>
+            {% endfor %}
+          </select>
         </div>
+        <div>
+          <label>Category</label>
+          <select name="category" class="tk-select">
+            <option value="all" {% if filter_info.category == 'all' %}selected{% endif %}>All</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}" {% if filter_info.category|string == category.id|string %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Priority</label>
+          <select name="priority" class="tk-select">
+            <option value="all" {% if filter_info.priority == 'all' %}selected{% endif %}>All</option>
+            <option value="0" {% if filter_info.priority in ('0',0) %}selected{% endif %}>Low</option>
+            <option value="1" {% if filter_info.priority in ('1',1) %}selected{% endif %}>Medium</option>
+            <option value="2" {% if filter_info.priority in ('2',2) %}selected{% endif %}>High</option>
+            <option value="3" {% if filter_info.priority in ('3',3) %}selected{% endif %}>Urgent</option>
+          </select>
+        </div>
+        <div>
+          <label>Technician</label>
+          <select name="technician" class="tk-select">
+            <option value="all" {% if filter_info.technician == 'all' %}selected{% endif %}>All</option>
+            {% for technician in technicians %}
+            <option value="{{ technician.id }}" {% if filter_info.technician|string == technician.id|string %}selected{% endif %}>{{ technician.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="button" id="apply-filters-btn" class="tk-btn primary" style="justify-content:center;">Apply Filters</button>
+        <a href="{{ url_for('tickets.tickets_dashboard') }}" class="tk-btn" style="justify-content:center;">Clear</a>
+      </form>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5>Filter Tickets</h5>
-                    <form id="filter-form" method="GET" autocomplete="off" novalidate>
-                        <div class="mb-3">
-                            <label class="form-label">Search</label>
-                            <div class="input-group">
-                                <input type="text" name="search" class="form-control" placeholder="Keywords in title/description" value="{{ filter_info.search }}">
-                                <button type="submit" class="btn btn-sm btn-secondary">
-                                    <i data-feather="search"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Status</label>
-                            <select name="status" id="status-filter" class="form-select">
-                                <option value="all" {% if filter_info and filter_info.status == 'all' %}selected{% endif %}>All</option>
-                                {% for status in ticket_statuses %}
-                                <option value="{{ status }}" {% if filter_info and filter_info.status == status %}selected{% endif %}>
-                                    {{ status|replace('_', ' ')|title }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Category</label>
-                            <select name="category" id="category-filter" class="form-select">
-                                <option value="all" {% if filter_info and filter_info.category == 'all' %}selected{% endif %}>All</option>
-                                {% for category in categories %}
-                                <option value="{{ category['id'] }}" {% if filter_info and filter_info.category|string == category['id']|string %}selected{% endif %}>
-                                    {{ category['name'] }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Priority</label>
-                            <select name="priority" id="priority-filter" class="form-select">
-                                <option value="all" {% if filter_info and filter_info.priority == 'all' %}selected{% endif %}>All</option>
-                                <option value="0" {% if filter_info and (filter_info.priority == '0' or filter_info.priority == 0) %}selected{% endif %}>Low</option>
-                                <option value="1" {% if filter_info and (filter_info.priority == '1' or filter_info.priority == 1) %}selected{% endif %}>Medium</option>
-                                <option value="2" {% if filter_info and (filter_info.priority == '2' or filter_info.priority == 2) %}selected{% endif %}>High</option>
-                                <option value="3" {% if filter_info and (filter_info.priority == '3' or filter_info.priority == 3) %}selected{% endif %}>Urgent</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Technician</label>
-                            <select name="technician" id="technician-filter" class="form-select">
-                                <option value="all" {% if filter_info and filter_info.technician == 'all' %}selected{% endif %}>All</option>
-                                {% for technician in technicians %}
-                                <option value="{{ technician.id }}" {% if filter_info and filter_info.technician|string == technician.id|string %}selected{% endif %}>
-                                    {{ technician.username }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <button type="button" id="apply-filters-btn" class="btn btn-primary w-100">Apply Filters</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-9">
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Title</th>
-                                    <th>Category</th>
-                                    <th>Status</th>
-                                    <th>Priority</th>
-                                    <th>Assigned To</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for ticket in tickets %}
-                                <tr class="{% if ticket.has_unread_activity %}table-warning{% endif %}">
-                                    <td>#{{ ticket['id'] }}</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket['id']) }}" class="text-decoration-none me-2">
-                                                {{ ticket['title'] }}
-                                            </a>
-                                            {% if ticket.has_unread_activity %}
-                                                <span class="badge bg-danger rounded-pill" style="font-size: 0.6rem; padding: 0.15rem 0.3rem;">NEW</span>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-secondary">
-                                            {{ ticket['category']['name'] }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {% set status_colors = {
-                                            'open': 'primary',
-                                            'in_progress': 'info',
-                                            'pending': 'warning',
-                                            'resolved': 'success',
-                                            'closed': 'secondary'
-                                        } %}
-                                        <span class="badge bg-{{ status_colors[ticket['status']] }}">
-                                            {{ ticket['status']|replace('_', ' ')|title }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {% set priority_colors = {
-                                            0: 'secondary',
-                                            1: 'info',
-                                            2: 'warning',
-                                            3: 'danger'
-                                        } %}
-                                        {% set priority_labels = {
-                                            0: 'Low',
-                                            1: 'Medium',
-                                            2: 'High',
-                                            3: 'Urgent'
-                                        } %}
-                                        <span class="badge bg-{{ priority_colors[ticket['priority']] }}">
-                                            {{ priority_labels[ticket['priority']] }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        {% if ticket['assigned_technician'] %}
-                                            {{ ticket['assigned_technician']['username'] }}
-                                        {% else %}
-                                            <span class="text-muted">Unassigned</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ ticket['created_at'].strftime('%Y-%m-%d %H:%M') }}</td>
-                                    <td>
-                                        <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket['id']) }}" class="btn btn-sm btn-primary">
-                                            View
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="8" class="text-center py-4">
-                                        <i data-feather="inbox" class="mb-2" style="width: 48px; height: 48px;"></i>
-                                        <p class="mb-0">No tickets found matching your criteria.</p>
-                                        {% if filter_info %}
-                                        <small class="d-block mt-2 text-muted">
-                                            Filters: Status={{ filter_info['status'] }}, Priority={{ filter_info['priority'] }}, Category={{ filter_info['category'] }}, Technician={{ filter_info['technician'] }}
-                                        </small>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Tickets table panel -->
+    <div class="tk-panel">
+      <div class="tk-panel-h"><span>Results</span><span class="count">{{ ticket_count }}</span></div>
+      <div class="tk-table-wrap">
+        <table class="tk-table">
+          <thead>
+            <tr>
+              <th>ID</th><th>Title</th><th>Category</th><th>Status</th>
+              <th>Priority</th><th>Assigned</th><th>Created</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ticket in tickets %}
+            <tr class="{% if ticket.has_unread_activity %}unread{% endif %}">
+              <td class="num">#{{ ticket.id }}</td>
+              <td class="title">
+                <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}">{{ ticket.title }}</a>
+                {% if ticket.has_unread_activity %}<span class="tk-new" title="New activity"></span>{% endif %}
+              </td>
+              <td><span class="tk-pill tk-pill-cat">{{ ticket.category.name }}</span></td>
+              <td><span class="tk-pill tk-pill-st-{{ ticket.status }}">{{ ticket.status|replace('_',' ')|title }}</span></td>
+              <td>
+                {% set pri_labels = {0:'Low',1:'Med',2:'High',3:'Urgent'} %}
+                <span class="tk-pill tk-pill-pri-{{ ticket.priority }}">{{ pri_labels[ticket.priority] }}</span>
+              </td>
+              <td>{% if ticket.assigned_technician %}{{ ticket.assigned_technician.username }}{% else %}<span style="color:var(--cc-muted);">—</span>{% endif %}</td>
+              <td style="color:var(--cc-muted); font-size:12px;">{{ ticket.created_at.strftime('%m/%d %H:%M') }}</td>
+              <td><a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" class="tk-btn" style="padding:4px 10px; font-size:11px;">View</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8"><div class="tk-empty"><i data-feather="inbox"></i><div>No tickets match your filters.</div></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
+
+  </div>
 </div>
-
-<script>
-    // Initialize Feather icons and handle custom filter submission
-    document.addEventListener('DOMContentLoaded', function() {
-        feather.replace({ 'class': 'feather-sm' });
-        
-        // Handle the apply filters button click
-        const applyFilterBtn = document.getElementById('apply-filters-btn');
-        if (applyFilterBtn) {
-            applyFilterBtn.addEventListener('click', function() {
-                // Use form data to collect all filter values consistently
-                const form = document.getElementById('filter-form');
-                const formData = new FormData(form);
-                
-                // Build query string
-                const params = new URLSearchParams();
-                
-                // Add all form values
-                for (const [key, value] of formData.entries()) {
-                    if (value) {
-                        params.append(key, value);
-                    }
-                }
-                
-                // Add cache-busting parameter
-                params.append('timestamp', Date.now());
-                params.append('rand', Math.random());
-                
-                // Keep the current path and just update query params
-                const currentPath = window.location.pathname;
-                const newUrl = `${currentPath}?${params.toString()}`;
-                
-                console.log('Navigating to URL:', newUrl);
-                
-                // Force reload the page with the new URL
-                window.location.href = newUrl;
-            });
-        }
-        
-        // For debugging - add info about current filters
-        console.log('Current filters:', {
-            status: '{{ filter_info.status }}',
-            category: '{{ filter_info.category }}',
-            priority: '{{ filter_info.priority }}',
-            technician: '{{ filter_info.technician }}',
-            search: '{{ filter_info.search }}',
-            timestamp: '{{ timestamp }}'
-        });
-    });
-</script>
 
 <!-- Batch Archive Modal -->
 {% if current_user.is_admin %}
-<div class="modal fade" id="batchArchiveModal" tabindex="-1" aria-labelledby="batchArchiveModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="batchArchiveModalLabel">Batch Archive Tickets</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ url_for('tickets.batch_archive_tickets') }}" method="post">
-                <div class="modal-body">
-                    <div class="alert alert-warning">
-                        <i data-feather="alert-triangle"></i>
-                        <strong>Warning:</strong> Archived tickets will be hidden from regular views.
-                        You can still view them in the Archive section, but they will not appear in regular searches or reports.
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Status</label>
-                        <select class="form-select" id="status" name="status">
-                            <option value="all">All Statuses</option>
-                            <option value="closed" selected>Closed Only</option>
-                            <option value="resolved">Resolved Only</option>
-                            <option value="pending">Pending Only</option>
-                            <option value="in_progress">In Progress Only</option>
-                            <option value="open">Open Only</option>
-                        </select>
-                        <div class="form-text">Select which ticket status to archive</div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="date_before" class="form-label">Last Updated Before</label>
-                        <input type="date" class="form-control" id="date_before" name="date_before">
-                        <div class="form-text">Archive tickets that were not updated since this date</div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning">
-                        <i data-feather="archive"></i> Archive Tickets
-                    </button>
-                </div>
-            </form>
+<div class="modal fade" id="batchArchiveModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background: var(--cc-panel); color: var(--cc-text); border:1px solid var(--cc-border);">
+      <div class="modal-header" style="border-bottom:1px solid var(--cc-border);">
+        <h5 class="modal-title">Batch Archive Tickets</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('tickets.batch_archive_tickets') }}" method="post">
+        <div class="modal-body">
+          <div class="alert" style="background: rgba(250,204,21,.1); border:1px solid rgba(250,204,21,.3); color: var(--cc-warn);">
+            <strong>Heads up:</strong> Archived tickets are hidden from regular views but remain accessible in the Archive section.
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select class="tk-select" name="status">
+              <option value="all">All Statuses</option>
+              <option value="closed" selected>Closed Only</option>
+              <option value="resolved">Resolved Only</option>
+              <option value="pending">Pending Only</option>
+              <option value="in_progress">In Progress Only</option>
+              <option value="open">Open Only</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Last Updated Before</label>
+            <input type="date" class="tk-input" name="date_before">
+          </div>
         </div>
+        <div class="modal-footer" style="border-top:1px solid var(--cc-border);">
+          <button type="button" class="tk-btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="tk-btn primary">Archive Tickets</button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 {% endif %}
 
 <!-- Auto-refresh indicator -->
-<div id="auto-refresh-indicator" class="auto-refresh-indicator">
-    <i data-feather="refresh-cw" class="refresh-icon" style="width: 14px; height: 14px;"></i>
-    <span>Refreshing tickets...</span>
+<div id="auto-refresh-indicator" class="tk-refresh-ind">
+  <i data-feather="refresh-cw" class="spin"></i><span>Refreshing…</span>
 </div>
 
-<!-- Auto-refresh JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const refreshInterval = 5000; // 5 seconds for responsive badge updates
-    const indicator = document.getElementById('auto-refresh-indicator');
-    let autoRefreshTimer;
-    
-    // Show refresh indicator
-    function showRefreshIndicator() {
-        indicator.classList.add('visible');
-        // Re-initialize feather icons for the refresh icon
-        if (window.feather) {
-            feather.replace();
-        }
-    }
-    
-    // Hide refresh indicator
-    function hideRefreshIndicator() {
-        indicator.classList.remove('visible');
-    }
-    
-    // Auto-refresh function
-    function autoRefreshTickets() {
-        console.log('Auto-refreshing tickets dashboard...');
-        showRefreshIndicator();
-        
-        // Get current filter parameters
-        const currentUrl = new URL(window.location.href);
-        const params = new URLSearchParams(currentUrl.search);
-        
-        // Add timestamp to prevent caching
-        params.set('timestamp', Date.now());
-        
-        // Build refresh URL with current filters
-        const refreshUrl = `${currentUrl.pathname}?${params.toString()}`;
-        
-        // Perform the refresh
-        fetch(refreshUrl, {
-            method: 'GET',
-            headers: {
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            // Parse the response and update the ticket table
-            const parser = new DOMParser();
-            const newDoc = parser.parseFromString(html, 'text/html');
-            const newTableBody = newDoc.querySelector('table tbody');
-            const currentTableBody = document.querySelector('table tbody');
-            
-            if (newTableBody && currentTableBody) {
-                // Update the table content
-                currentTableBody.innerHTML = newTableBody.innerHTML;
-                
-                // Update ticket count
-                const newTicketCount = newDoc.querySelector('.text-muted');
-                const currentTicketCount = document.querySelector('.text-muted');
-                if (newTicketCount && currentTicketCount) {
-                    currentTicketCount.textContent = newTicketCount.textContent;
-                }
-                
-                // Re-initialize feather icons
-                if (window.feather) {
-                    feather.replace();
-                }
-                
-                console.log('Tickets dashboard refreshed successfully');
-            }
-            
-            hideRefreshIndicator();
-        })
-        .catch(error => {
-            console.error('Error auto-refreshing tickets:', error);
-            hideRefreshIndicator();
-        });
-    }
-    
-    // Start auto-refresh timer
-    function startAutoRefresh() {
-        autoRefreshTimer = setInterval(autoRefreshTickets, refreshInterval);
-        console.log(`Auto-refresh started - updating every ${refreshInterval/1000} seconds`);
-    }
-    
-    // Stop auto-refresh timer
-    function stopAutoRefresh() {
-        if (autoRefreshTimer) {
-            clearInterval(autoRefreshTimer);
-            autoRefreshTimer = null;
-            console.log('Auto-refresh stopped');
-        }
-    }
-    
-    // Page visibility API to pause/resume auto-refresh when tab is not visible
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            stopAutoRefresh();
-        } else {
-            startAutoRefresh();
-        }
+  if (window.feather) feather.replace();
+
+  const applyBtn = document.getElementById('apply-filters-btn');
+  const form = document.getElementById('filter-form');
+  if (applyBtn && form) {
+    applyBtn.addEventListener('click', function() {
+      const fd = new FormData(form);
+      const params = new URLSearchParams();
+      for (const [k,v] of fd.entries()) { if (v) params.append(k,v); }
+      params.append('timestamp', Date.now());
+      window.location.href = window.location.pathname + '?' + params.toString();
     });
-    
-    // Start auto-refresh when page loads
-    startAutoRefresh();
-    
-    // Stop auto-refresh when user navigates away
-    window.addEventListener('beforeunload', stopAutoRefresh);
-    
-    // Manual refresh when user clicks apply filters (stop auto-refresh briefly)
-    const applyFiltersBtn = document.getElementById('apply-filters-btn');
-    if (applyFiltersBtn) {
-        applyFiltersBtn.addEventListener('click', function() {
-            stopAutoRefresh();
-            setTimeout(startAutoRefresh, 2000); // Resume after 2 seconds
-        });
-    }
+  }
+
+  // Submit on Enter in search box
+  const searchInput = form ? form.querySelector('input[name="search"]') : null;
+  if (searchInput) {
+    searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); applyBtn.click(); }});
+  }
+
+  // Auto-refresh table only (every 5s, paused when tab hidden)
+  const refreshInterval = 5000;
+  const indicator = document.getElementById('auto-refresh-indicator');
+  let timer = null;
+
+  function refresh() {
+    if (document.hidden) return;
+    indicator.classList.add('visible');
+    const url = window.location.pathname + window.location.search +
+                (window.location.search ? '&' : '?') + '_t=' + Date.now();
+    fetch(url, { headers: { 'Cache-Control':'no-cache' }})
+      .then(r => r.text())
+      .then(html => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const newBody = doc.querySelector('.tk-table tbody');
+        const curBody = document.querySelector('.tk-table tbody');
+        if (newBody && curBody) curBody.innerHTML = newBody.innerHTML;
+        const newKpis = doc.querySelector('.tk-kpis');
+        const curKpis = document.querySelector('.tk-kpis');
+        if (newKpis && curKpis) curKpis.innerHTML = newKpis.innerHTML;
+        if (window.feather) feather.replace();
+      })
+      .catch(()=>{})
+      .finally(()=> indicator.classList.remove('visible'));
+  }
+
+  function start() { if (!timer) timer = setInterval(refresh, refreshInterval); }
+  function stop()  { if (timer) { clearInterval(timer); timer = null; } }
+  document.addEventListener('visibilitychange', () => document.hidden ? stop() : start());
+  start();
+  window.addEventListener('beforeunload', stop);
 });
 </script>
-
 {% endblock %}
