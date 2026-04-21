@@ -412,22 +412,19 @@ def send_ticket_assigned_notification(
             
         logger.info(f"Found technician: {technician.username}, Email: {technician.email}")
         
-        settings = get_email_settings()
-        logger.info(f"Email settings: admin_email_group={settings.admin_email_group}")
-        
-        # Build recipient list - the assigned technician
+        # Build recipient list - ONLY the assigned technician.
+        # Previously this also CC'd the admin_email_group (a distribution list
+        # containing every technician), which caused everyone to receive the
+        # assignment email. That CC has been removed so only the assignee is
+        # notified.
         recipients = [technician.email]
         logger.info(f"Added technician email to recipients: {technician.email}")
-        
-        # Include external user if this is an external ticket
+
+        # Include the external reporter if the ticket originated from an email
+        # and they have notifications enabled (single person, not a DL).
         if ticket.is_external_user() and ticket.external_email and ticket.email_notifications:
             recipients.append(ticket.external_email)
             logger.info(f"Added external user email to recipients: {ticket.external_email}")
-        
-        # Add admin email for monitoring
-        if settings.admin_email_group not in recipients:
-            recipients.append(settings.admin_email_group)
-            logger.info(f"Added admin email to recipients: {settings.admin_email_group}")
             
         # Build ticket URL - manually constructing because SERVER_NAME causes issues
         domain = current_app.config.get('EMAIL_DOMAIN', 'localhost:5000')
