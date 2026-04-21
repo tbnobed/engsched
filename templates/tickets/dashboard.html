@@ -410,20 +410,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const applyBtn = document.getElementById('apply-filters-btn');
   const form = document.getElementById('filter-form');
-  if (applyBtn && form) {
-    applyBtn.addEventListener('click', function() {
-      const fd = new FormData(form);
-      const params = new URLSearchParams();
-      for (const [k,v] of fd.entries()) { if (v) params.append(k,v); }
-      params.append('timestamp', Date.now());
-      window.location.href = window.location.pathname + '?' + params.toString();
-    });
+
+  function submitFilters() {
+    const fd = new FormData(form);
+    const params = new URLSearchParams();
+    for (const [k,v] of fd.entries()) { if (v) params.append(k,v); }
+    params.append('timestamp', Date.now());
+    window.location.href = window.location.pathname + '?' + params.toString();
   }
 
-  // Submit on Enter in search box
-  const searchInput = form ? form.querySelector('input[name="search"]') : null;
-  if (searchInput) {
-    searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); applyBtn.click(); }});
+  if (applyBtn) applyBtn.addEventListener('click', submitFilters);
+
+  if (form) {
+    // Auto-apply on any select change
+    form.querySelectorAll('select').forEach(sel => sel.addEventListener('change', submitFilters));
+    // Auto-apply on search input (debounced) and on Enter
+    const searchInput = form.querySelector('input[name="search"]');
+    if (searchInput) {
+      let searchTimer;
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(submitFilters, 500);
+      });
+      searchInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); clearTimeout(searchTimer); submitFilters(); }
+      });
+    }
   }
 
   // Auto-refresh table only (every 5s, paused when tab hidden)
