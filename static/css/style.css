@@ -231,16 +231,18 @@ div[style*="gradient"] {
 .sched-bar-fill {
     position: absolute;
     inset: 1px;
-    background: color-mix(in srgb, var(--user-color) 45%, transparent);
-    border: 1px solid color-mix(in srgb, var(--user-color) 70%, transparent);
-    border-radius: 6px;
+    background: color-mix(in srgb, var(--user-color) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--user-color) 35%, transparent);
+    border-left: 3px solid var(--user-color);
+    border-radius: 4px;
     pointer-events: none;
     transition: background 0.15s, border-color 0.15s;
 }
 
 .calendar-container .schedule-event.sched-bar:hover .sched-bar-fill {
-    background: color-mix(in srgb, var(--user-color) 55%, transparent);
-    border-color: color-mix(in srgb, var(--user-color) 90%, transparent);
+    background: color-mix(in srgb, var(--user-color) 28%, transparent);
+    border-color: color-mix(in srgb, var(--user-color) 55%, transparent);
+    border-left-color: var(--user-color);
 }
 
 .bulk-select-mode .schedule-event {
@@ -311,35 +313,34 @@ div[style*="gradient"] {
 
 .sched-bar-label {
     position: absolute;
-    top: 6px;
+    top: 4px;
     left: 10px;
-    right: 8px;
+    right: 4px;
     z-index: 6;
     pointer-events: none;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
     overflow: hidden;
 }
 
 .sched-bar-name {
-    font-size: 15px;
+    font-size: 10px;
     font-weight: 700;
     color: #fff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-    line-height: 1.25;
+    line-height: 1.3;
 }
 
 .sched-bar-time {
-    font-size: 13px;
+    font-size: 9px;
     font-weight: 400;
-    color: rgba(255,255,255,0.85);
+    color: rgba(255,255,255,0.55);
     white-space: nowrap;
     line-height: 1.2;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 /* Circular avatar inside bar */
@@ -1103,38 +1104,6 @@ div[style*="gradient"] {
 }
 .calendar-container .current-time-line::after {
     background: #f87171 !important;
-}
-
-/* Schedule bars — solid gradient pills with crisp typography */
-.calendar-container .schedule-event.sched-bar .sched-bar-fill {
-    inset: 1px;
-    background: color-mix(in srgb, var(--user-color) 45%, transparent) !important;
-    border: 1px solid color-mix(in srgb, var(--user-color) 70%, transparent) !important;
-    box-shadow: none;
-    border-radius: 8px;
-    transition: transform .15s, box-shadow .15s;
-}
-.calendar-container .schedule-event.sched-bar:hover .sched-bar-fill {
-    background: color-mix(in srgb, var(--user-color) 55%, transparent) !important;
-    border-color: color-mix(in srgb, var(--user-color) 90%, transparent) !important;
-    box-shadow: none;
-    transform: none;
-}
-.calendar-container .sched-bar-name {
-    color: #fff;
-    font-size: 15px;
-    font-weight: 700;
-    text-shadow: 0 1px 3px rgba(0,0,0,.6);
-}
-.calendar-container .sched-bar-time {
-    color: rgba(255,255,255,.85);
-    font-size: 13px;
-    font-weight: 400;
-    text-shadow: 0 1px 2px rgba(0,0,0,.5);
-}
-.calendar-container .sched-avatar {
-    background: #131a25;
-    box-shadow: 0 0 0 1px rgba(0,0,0,.4), 0 2px 8px rgba(0,0,0,.6);
 }
 
 /* OOO banner — match dark theme */
