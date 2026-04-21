@@ -963,9 +963,26 @@ div[style*="gradient"] {
     background: #2a3548 !important; /* shows through gaps to form column dividers */
     border: 1px solid #232d3d;
     border-radius: 12px;
-    overflow: hidden;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    max-height: calc(100vh - 240px);
     gap: 2px; /* thicker dividers between days */
+    scrollbar-width: thin;
+    scrollbar-color: #2a3548 #0f1622;
 }
+.calendar-container .calendar-grid::-webkit-scrollbar { width: 10px; }
+.calendar-container .calendar-grid::-webkit-scrollbar-track { background: #0f1622; }
+.calendar-container .calendar-grid::-webkit-scrollbar-thumb { background: #2a3548; border-radius: 6px; }
+.calendar-container .calendar-grid::-webkit-scrollbar-thumb:hover { background: #3a475e; }
+
+/* Sticky day headers + time-column header so they remain visible while scrolling */
+.calendar-container .day-header,
+.calendar-container .time-column::before {
+    position: sticky !important;
+    top: 0;
+    z-index: 5;
+}
+.calendar-container .day-column { position: relative; }
 
 .calendar-container .time-column,
 .calendar-container .day-column {
