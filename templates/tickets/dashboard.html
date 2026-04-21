@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block extra_head %}
+{% block content %}
 <style>
   :root {
     --cc-bg:     #0c1118;
@@ -136,9 +136,6 @@
   .tk-refresh-ind .spin { animation: tkSpin 1s linear infinite; width:12px; height:12px; }
   @keyframes tkSpin { to { transform: rotate(360deg); } }
 </style>
-{% endblock %}
-
-{% block content %}
 <div class="tk-shell">
 
   <!-- Header -->
