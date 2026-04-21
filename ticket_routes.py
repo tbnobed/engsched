@@ -1137,8 +1137,12 @@ def update_status(ticket_id):
         # Create a fresh session for the email notification to avoid detached instance errors
         # Fresh session creation removed
         fresh_ticket = Ticket.query.get(ticket_id)
-        
-        if fresh_ticket and fresh_ticket.assigned_to and fresh_ticket.assigned_to != current_user.id:
+
+        # Call the notification unconditionally when the ticket exists; the
+        # email function now handles excluding the updater and includes the
+        # external reporter even when the ticket is unassigned or the assignee
+        # is the one making the change.
+        if fresh_ticket:
             app.logger.info(f"Sending status update notification for ticket #{fresh_ticket.id}")
             
             # The email function will create an app context if needed
@@ -1256,19 +1260,17 @@ def mobile_update_status(ticket_id):
     
     # Send notification email using the current ticket instance
     try:
-        if ticket.assigned_to and ticket.assigned_to != current_user.id:
-            app.logger.info(f"Sending status update notification for ticket #{ticket.id}")
-            
-            # Use the current ticket instance for email notification
-            result = send_ticket_status_notification(
-                ticket=ticket,
-                old_status=old_status,
-                new_status=new_status,
-                updated_by=current_user,
-                comment=comment if comment else None
-            )
-            
-            app.logger.info(f"Status notification result: {result}")
+        # Call unconditionally; the email function excludes the updater and
+        # still notifies the external reporter when present.
+        app.logger.info(f"Sending status update notification for ticket #{ticket.id}")
+        result = send_ticket_status_notification(
+            ticket=ticket,
+            old_status=old_status,
+            new_status=new_status,
+            updated_by=current_user,
+            comment=comment if comment else None
+        )
+        app.logger.info(f"Status notification result: {result}")
     except Exception as e:
         app.logger.error(f"Failed to send status update notification: {str(e)}")
         import traceback
@@ -1309,7 +1311,16 @@ def assign_ticket(ticket_id):
         # Assigning ticket to technician
         technician = User.query.get_or_404(technician_id)
         app.logger.info(f"Found technician: {technician.username} (ID: {technician.id}), email: {technician.email}")
-        
+
+        # No-op guard: if the ticket is already assigned to this technician,
+        # don't write a history row or send another "assigned to you" email.
+        if ticket.assigned_to == technician.id:
+            app.logger.info(
+                f"Ticket #{ticket.id} is already assigned to {technician.username}; skipping re-assignment."
+            )
+            flash('Ticket is already assigned to that technician', 'info')
+            return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
+
         # Update ticket
         ticket.assigned_to = technician.id
         details = f"Assigned to {technician.username}"

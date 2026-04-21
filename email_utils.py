@@ -224,12 +224,12 @@ def send_new_ticket_notification(ticket: Ticket, created_by: User) -> bool:
         scheme = current_app.config.get('PREFERRED_URL_SCHEME', 'http')
         ticket_url = f"{scheme}://{domain}/tickets/{ticket.id}"
         
-        # Priority labels
+        # Priority labels (DB stores 0-3, matching every other caller)
         priority_labels = {
-            1: 'Low',
-            2: 'Medium', 
-            3: 'High',
-            4: 'Urgent'
+            0: 'Low',
+            1: 'Medium',
+            2: 'High',
+            3: 'Urgent'
         }
         priority_str = priority_labels.get(ticket.priority, 'Unknown')
         
@@ -508,7 +508,8 @@ def send_ticket_assigned_notification(
 def send_ticket_comment_notification(
     ticket: Ticket,
     comment: TicketComment,
-    commented_by: User
+    commented_by: User,
+    display_name: Optional[str] = None
 ) -> bool:
     """
     Send a notification when a comment is added to a ticket
@@ -648,9 +649,10 @@ def send_ticket_comment_notification(
                 </div>
                 """
         
+        commenter_display = display_name or commented_by.username
         html_content = f"""
         <h3>New Comment on Ticket #{ticket.id}</h3>
-        <p><strong>{commented_by.username}</strong> added a comment to a ticket assigned to you:</p>
+        <p><strong>{commenter_display}</strong> added a comment to ticket #{ticket.id}:</p>
         <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;">
             {processed_comment_content}
         </div>
@@ -725,32 +727,43 @@ def send_ticket_status_notification(
     
     try:
         logger.debug(f"Starting status notification for ticket #{ticket.id}: {old_status} -> {new_status}")
-        
-        # Get the assigned technician (if any)
+
+        # Build recipient list. We always exclude the user who made the change
+        # so they don't get an email about their own action, but we still want
+        # to notify the external reporter (if any) even when the assignee is
+        # the one updating the status or the ticket is unassigned.
         recipients = []
+        updater_email = (updated_by.email or '').lower() if updated_by else ''
+
+        # Assigned technician (if any and not the updater)
         if ticket.assigned_to:
             technician = User.query.get(ticket.assigned_to)
             if technician and technician.email:
-                recipients.append(technician.email)
-                logger.debug(f"Added technician email to recipients: {technician.email}")
+                if technician.email.lower() != updater_email:
+                    recipients.append(technician.email)
+                    logger.debug(f"Added technician email to recipients: {technician.email}")
+                else:
+                    logger.debug("Skipping technician (is the updater)")
             else:
                 logger.warning(f"Could not find valid email for technician ID {ticket.assigned_to}")
-        
-        # Include external user if this is an external ticket
+
+        # External reporter (single person, independent of assignee)
         if ticket.is_external_user() and ticket.external_email and ticket.email_notifications:
-            recipients.append(ticket.external_email)
-            logger.debug(f"Added external user email to recipients: {ticket.external_email}")
-        
-        # Skip if no recipients
+            if ticket.external_email.lower() != updater_email and ticket.external_email not in recipients:
+                recipients.append(ticket.external_email)
+                logger.debug(f"Added external user email to recipients: {ticket.external_email}")
+
+        # Skip if no recipients (e.g. unassigned internal ticket updated by anyone)
         if not recipients:
-            logger.warning("No recipients for status notification, skipping")
+            logger.info("No recipients for status notification, skipping")
             return False
-            
+
         settings = get_email_settings()
         logger.debug(f"Email settings: admin_email_group={settings.admin_email_group}")
-            
-        # Add admin email for monitoring
-        if settings.admin_email_group not in recipients:
+
+        # Add admin email for monitoring (kept; it's a monitored shared mailbox,
+        # not a tech distribution list)
+        if settings.admin_email_group and settings.admin_email_group not in recipients:
             recipients.append(settings.admin_email_group)
             logger.debug(f"Added admin email to recipients: {settings.admin_email_group}")
         

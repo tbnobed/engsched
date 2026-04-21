@@ -760,6 +760,7 @@ def inbound_email_webhook():
                 # Add comment to existing ticket
                 comment_content = f"Email reply from: {sender_name} ({from_email})\n\n{description}"
                 
+                primary_admin = None
                 if sender_user:
                     # Internal user replying
                     new_comment = TicketComment(
@@ -769,14 +770,25 @@ def inbound_email_webhook():
                     )
                     commenter_name = sender_user.username
                 else:
-                    # External user replying - assign comment to admin but note the external sender
+                    # External user replying - store the comment under an admin
+                    # user (the comment table requires a valid user_id FK). We
+                    # must refuse to invent a user_id if no admin exists.
                     primary_admin = User.query.filter_by(email='admin@obedtv.com').first()
                     if not primary_admin:
                         primary_admin = User.query.filter_by(is_admin=True).first()
-                    
+
+                    if not primary_admin:
+                        app.logger.error(
+                            "External email reply received but no admin user exists to own the comment; skipping."
+                        )
+                        return jsonify({
+                            'success': False,
+                            'error': 'No admin user configured to own external comments'
+                        }), 500
+
                     new_comment = TicketComment(
                         ticket_id=existing_ticket.id,
-                        user_id=primary_admin.id if primary_admin else 1,
+                        user_id=primary_admin.id,
                         content=comment_content
                     )
                     commenter_name = f"{sender_name} (external)"
@@ -824,9 +836,14 @@ def inbound_email_webhook():
                     if sender_user:
                         send_ticket_comment_notification(existing_ticket, new_comment, sender_user)
                     else:
-                        # For external users, use admin as commenter for notification purposes
-                        admin_user = User.query.get(primary_admin.id if primary_admin else 1)
-                        send_ticket_comment_notification(existing_ticket, new_comment, admin_user)
+                        # External reply: the comment is stored under primary_admin
+                        # for the FK, but show the real sender in the notification.
+                        send_ticket_comment_notification(
+                            existing_ticket,
+                            new_comment,
+                            primary_admin,
+                            display_name=f"{sender_name} (external)"
+                        )
                     app.logger.info(f"Sent comment notification for ticket #{ticket_id}")
                 except Exception as e:
                     app.logger.error(f"Failed to send comment notification: {str(e)}")
