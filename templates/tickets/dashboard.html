@@ -537,12 +537,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const newBody = doc.querySelector('.tk-table tbody');
         const curBody = document.querySelector('.tk-table tbody');
-        if (newBody && curBody) curBody.innerHTML = newBody.innerHTML;
+        if (newBody && curBody) {
+          // Pre-sort the incoming rows in the detached document so the user
+          // never sees an unsorted flash before applySort kicks in.
+          if (sortState.col !== null) {
+            const incoming = Array.from(newBody.children).filter(tr => !tr.querySelector('.tk-empty'));
+            incoming.sort((a, b) => {
+              const va = cellValue(a, sortState.col, sortState.type);
+              const vb = cellValue(b, sortState.col, sortState.type);
+              let cmp;
+              if (typeof va === 'number' && typeof vb === 'number') cmp = va - vb;
+              else cmp = String(va).localeCompare(String(vb));
+              return sortState.dir === 'asc' ? cmp : -cmp;
+            });
+            newBody.innerHTML = '';
+            incoming.forEach(r => newBody.appendChild(r));
+          }
+          curBody.innerHTML = newBody.innerHTML;
+        }
         const newKpis = doc.querySelector('.tk-kpis');
         const curKpis = document.querySelector('.tk-kpis');
         if (newKpis && curKpis) curKpis.innerHTML = newKpis.innerHTML;
         if (window.feather) feather.replace();
-        applySort();
         updateSortIndicators();
         renderPager();
       })
