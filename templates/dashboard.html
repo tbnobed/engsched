@@ -83,8 +83,8 @@
     display:grid; grid-template-columns: 80px 1fr; padding: 8px 16px;
     border-bottom:1px solid var(--cc-border); color:var(--cc-muted); font-size:11px;
   }
-  .cc-hours { display:grid; }
-  .cc-hours div { text-align:center; }
+  .cc-hours { position:relative; height:14px; }
+  .cc-hours .htick { position:absolute; transform: translateX(-50%); white-space:nowrap; }
   .cc-lanes { flex:1; overflow:auto; padding: 6px 16px 14px; position:relative; }
   .cc-lane {
     display:grid; grid-template-columns: 80px 1fr; align-items:center;
@@ -203,8 +203,11 @@
       <div style="display:flex; flex-direction:column; flex:1; min-height:0;">
         <div class="cc-timeline-head">
           <div></div>
-          <div class="cc-hours" style="grid-template-columns: repeat({{ ns.hour_cols }}, 1fr);">
-            {% for h in range(range_start_h, range_end_h) %}<div>{{ h }}</div>{% endfor %}
+          <div class="cc-hours">
+            {% for h in range(range_start_h, range_end_h + 1) %}
+              {% set pct = ((h - range_start_h) / ns.hour_cols) * 100 %}
+              <div class="htick" style="left: {{ pct }}%;">{{ h }}</div>
+            {% endfor %}
           </div>
         </div>
         <div class="cc-lanes" id="ccLanes">
