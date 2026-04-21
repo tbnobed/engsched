@@ -150,8 +150,8 @@
       </a>
       {% if current_user.is_admin %}
       <div class="dropdown">
-        <button class="tk-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <i data-feather="settings"></i> Admin
+        <button class="tk-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Admin actions" style="padding:8px 10px;">
+          <i data-feather="settings"></i>
         </button>
         <ul class="dropdown-menu dropdown-menu-end" style="background: var(--cc-panel); border:1px solid var(--cc-border);">
           <li><a class="dropdown-item" style="color: var(--cc-text);" href="{{ url_for('tickets.manage_categories') }}"><i data-feather="tag" style="width:14px;height:14px;"></i> Manage Categories</a></li>
