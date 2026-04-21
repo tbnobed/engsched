@@ -161,6 +161,90 @@
   .tk-refresh-ind.visible { opacity:1; }
   .tk-refresh-ind .spin { animation: tkSpin 1s linear infinite; width:12px; height:12px; }
   @keyframes tkSpin { to { transform: rotate(360deg); } }
+
+  /* Saved view chips */
+  .tk-views { display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 14px; }
+  .tk-chip {
+    display:inline-flex; align-items:center; gap:6px;
+    background: var(--cc-panel); border:1px solid var(--cc-border);
+    color: var(--cc-text); padding:6px 12px; border-radius:999px;
+    font-size:12px; font-weight:600; text-decoration:none; cursor:pointer;
+    transition: all .15s;
+  }
+  .tk-chip:hover { background:#233044; border-color: var(--cc-accent); color: var(--cc-text); }
+  .tk-chip.active { background: var(--cc-accent); border-color: var(--cc-accent); color:#0c1118; }
+  .tk-chip i { width:12px; height:12px; }
+
+  /* Inline edit pills */
+  .tk-pill-edit { cursor:pointer; position:relative; transition: filter .15s; }
+  .tk-pill-edit:hover { filter: brightness(1.25); }
+  .tk-pill-edit::after {
+    content:'▾'; font-size:8px; margin-left:4px; opacity:.6; vertical-align: middle;
+  }
+  .tk-inline-popover {
+    position: absolute; z-index: 50; background: var(--cc-panel);
+    border:1px solid var(--cc-border); border-radius:8px; padding:4px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5); min-width: 140px;
+  }
+  .tk-inline-popover .opt {
+    display:block; padding:6px 10px; color: var(--cc-text); font-size:12px;
+    border-radius:6px; cursor:pointer; text-decoration:none;
+  }
+  .tk-inline-popover .opt:hover { background: var(--cc-panel-2); }
+  .tk-inline-popover .opt.current { background: rgba(106,166,255,.15); color: var(--cc-accent); }
+
+  /* Bulk action bar */
+  .tk-bulk-bar {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(120%);
+    background: var(--cc-panel); border:1px solid var(--cc-accent); border-radius:14px;
+    padding: 12px 16px; display:flex; align-items:center; gap:10px;
+    box-shadow: 0 12px 32px rgba(0,0,0,.6); z-index: 100;
+    transition: transform .25s ease;
+  }
+  .tk-bulk-bar.visible { transform: translateX(-50%) translateY(0); }
+  .tk-bulk-bar .count {
+    background: var(--cc-accent); color:#0c1118; padding:4px 10px;
+    border-radius:999px; font-weight:700; font-size:12px;
+  }
+  .tk-bulk-bar select {
+    background: var(--cc-panel-2); border:1px solid var(--cc-border);
+    color: var(--cc-text); padding:6px 10px; border-radius:8px; font-size:12px;
+  }
+
+  /* Checkbox column */
+  .tk-table .col-cb { width:36px; padding-left:14px; padding-right:0; }
+  .tk-table input[type="checkbox"].tk-cb {
+    width:16px; height:16px; cursor:pointer; accent-color: var(--cc-accent);
+  }
+
+  /* Per-row assign-me icon */
+  .tk-row-action {
+    background: transparent; border: 1px solid var(--cc-border); color: var(--cc-muted);
+    padding:3px 6px; border-radius:6px; cursor:pointer; transition: all .15s;
+    margin-right: 4px;
+  }
+  .tk-row-action:hover { background: var(--cc-accent); color:#0c1118; border-color: var(--cc-accent); }
+  .tk-row-action i { width:12px; height:12px; vertical-align: middle; }
+
+  /* Active row highlight (keyboard nav) */
+  .tk-table tbody tr.kbd-focus {
+    background: rgba(106,166,255,.08) !important;
+    box-shadow: inset 3px 0 0 var(--cc-accent);
+  }
+
+  /* Keyboard shortcut help */
+  .tk-kbd-help {
+    position: fixed; right: 20px; bottom: 20px; background: var(--cc-panel);
+    border:1px solid var(--cc-border); border-radius:10px; padding:10px 12px;
+    font-size:11px; color: var(--cc-muted); z-index: 90; max-width: 220px;
+    opacity:.7; transition: opacity .15s;
+  }
+  .tk-kbd-help:hover { opacity:1; }
+  .tk-kbd-help kbd {
+    background: var(--cc-panel-2); border:1px solid var(--cc-border);
+    border-radius:4px; padding: 1px 6px; color: var(--cc-text);
+    font-family: 'JetBrains Mono', monospace; font-size:10px; margin-right:4px;
+  }
 </style>
 <div class="tk-shell">
 
@@ -204,6 +288,27 @@
     <a class="tk-kpi good"   href="?status=resolved"><div class="lbl">Resolved 7d</div><div class="val">{{ m.resolved_week }}</div><div class="sub">{{ m.new_today }} new today</div></a>
   </div>
   {% endif %}
+
+  <!-- Saved view chips -->
+  {% set _f = filter_info %}
+  {% set _v_all       = (_f.status == 'all' and _f.priority == 'all' and _f.technician == 'all' and _f.category == 'all' and not _f.search) %}
+  {% set _v_my_open   = (_f.status == 'open' and _f.technician|string == current_user.id|string) %}
+  {% set _v_unassign  = (_f.status == 'open' and _f.technician == 'unassigned') %}
+  {% set _v_urgent    = (_f.status == 'open' and _f.priority|string == '3') %}
+  {% set _v_high      = (_f.status == 'open' and _f.priority|string == '2') %}
+  {% set _v_pending   = (_f.status == 'pending') %}
+  {% set _v_inprog    = (_f.status == 'in_progress') %}
+  {% set _v_active    = (_f.status == 'open' and _f.technician == 'all' and _f.priority == 'all') %}
+  <div class="tk-views">
+    <a class="tk-chip {% if _v_my_open %}active{% endif %}"  href="?status=open&technician=me"><i data-feather="user"></i> My Open</a>
+    <a class="tk-chip {% if _v_unassign %}active{% endif %}" href="?status=open&technician=unassigned"><i data-feather="alert-circle"></i> Unassigned</a>
+    <a class="tk-chip {% if _v_urgent %}active{% endif %}"   href="?status=open&priority=3"><i data-feather="zap"></i> Urgent Today</a>
+    <a class="tk-chip {% if _v_high %}active{% endif %}"     href="?status=open&priority=2"><i data-feather="trending-up"></i> High Priority</a>
+    <a class="tk-chip {% if _v_inprog %}active{% endif %}"   href="?status=in_progress"><i data-feather="play-circle"></i> In Progress</a>
+    <a class="tk-chip {% if _v_pending %}active{% endif %}"  href="?status=pending"><i data-feather="clock"></i> Pending Reply</a>
+    <a class="tk-chip {% if _v_active %}active{% endif %}"   href="?status=open"><i data-feather="inbox"></i> All Active</a>
+    <a class="tk-chip {% if _v_all %}active{% endif %}"      href="?status=all"><i data-feather="layers"></i> Everything</a>
+  </div>
 
   <!-- Body: filters + table -->
   <div class="tk-body">
@@ -266,36 +371,43 @@
         <table class="tk-table" id="tkTable">
           <thead>
             <tr>
-              <th class="tk-sort" data-sort="num"  data-col="0">ID</th>
-              <th class="tk-sort" data-sort="text" data-col="1">Title</th>
-              <th class="tk-sort" data-sort="text" data-col="2">Category</th>
-              <th class="tk-sort" data-sort="text" data-col="3">Status</th>
-              <th class="tk-sort" data-sort="pri"  data-col="4">Priority</th>
-              <th class="tk-sort" data-sort="text" data-col="5">Assigned</th>
-              <th class="tk-sort" data-sort="num"  data-col="6">Created</th>
+              <th class="col-cb"><input type="checkbox" class="tk-cb" id="tkSelectAll" title="Select all"></th>
+              <th class="tk-sort" data-sort="num"  data-col="1">ID</th>
+              <th class="tk-sort" data-sort="text" data-col="2">Title</th>
+              <th class="tk-sort" data-sort="text" data-col="3">Category</th>
+              <th class="tk-sort" data-sort="text" data-col="4">Status</th>
+              <th class="tk-sort" data-sort="pri"  data-col="5">Priority</th>
+              <th class="tk-sort" data-sort="text" data-col="6">Assigned</th>
+              <th class="tk-sort" data-sort="num"  data-col="7">Created</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {% for ticket in tickets %}
-            <tr class="{% if ticket.has_unread_activity %}unread{% endif %}">
+            <tr class="{% if ticket.has_unread_activity %}unread{% endif %}" data-ticket-id="{{ ticket.id }}" data-status="{{ ticket.status }}" data-priority="{{ ticket.priority }}" data-assigned="{{ ticket.assigned_to or '' }}">
+              <td class="col-cb"><input type="checkbox" class="tk-cb" value="{{ ticket.id }}"></td>
               <td class="num">#{{ ticket.id }}</td>
               <td class="title">
                 <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}">{{ ticket.title }}</a>
                 {% if ticket.has_unread_activity %}<span class="tk-new" title="New activity"></span>{% endif %}
               </td>
               <td><span class="tk-pill tk-pill-cat">{{ ticket.category.name }}</span></td>
-              <td><span class="tk-pill tk-pill-st-{{ ticket.status }}">{{ ticket.status|replace('_',' ')|title }}</span></td>
+              <td><span class="tk-pill tk-pill-st-{{ ticket.status }} tk-pill-edit" data-edit="status" data-value="{{ ticket.status }}" title="Click to change status">{{ ticket.status|replace('_',' ')|title }}</span></td>
               <td>
                 {% set pri_labels = {0:'Low',1:'Med',2:'High',3:'Urgent'} %}
-                <span class="tk-pill tk-pill-pri-{{ ticket.priority }}">{{ pri_labels[ticket.priority] }}</span>
+                <span class="tk-pill tk-pill-pri-{{ ticket.priority }} tk-pill-edit" data-edit="priority" data-value="{{ ticket.priority }}" title="Click to change priority">{{ pri_labels[ticket.priority] }}</span>
               </td>
               <td>{% if ticket.assigned_technician %}{{ ticket.assigned_technician.username }}{% else %}<span style="color:var(--cc-muted);">—</span>{% endif %}</td>
               <td style="color:var(--cc-muted); font-size:12px;">{{ ticket.created_at.strftime('%m/%d %H:%M') }}</td>
-              <td><a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" class="tk-btn" style="padding:4px 10px; font-size:11px;">View</a></td>
+              <td style="white-space:nowrap;">
+                {% if ticket.assigned_to != current_user.id %}
+                <button type="button" class="tk-row-action tk-assign-me" title="Assign to me (a)"><i data-feather="user-plus"></i></button>
+                {% endif %}
+                <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" class="tk-btn" style="padding:4px 10px; font-size:11px;">View</a>
+              </td>
             </tr>
             {% else %}
-            <tr><td colspan="8"><div class="tk-empty"><i data-feather="inbox"></i><div>No tickets match your filters.</div></div></td></tr>
+            <tr><td colspan="9"><div class="tk-empty"><i data-feather="inbox"></i><div>No tickets match your filters.</div></div></td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -357,6 +469,42 @@
   </div>
 </div>
 {% endif %}
+
+<!-- Bulk action bar -->
+<div class="tk-bulk-bar" id="tkBulkBar">
+  <span class="count" id="tkBulkCount">0</span>
+  <span style="color:var(--cc-muted); font-size:12px;">selected</span>
+  <select id="tkBulkAction">
+    <option value="">Choose action…</option>
+    <optgroup label="Set status">
+      <option value="status:open">Status → Open</option>
+      <option value="status:in_progress">Status → In Progress</option>
+      <option value="status:pending">Status → Pending</option>
+      <option value="status:resolved">Status → Resolved</option>
+      <option value="status:closed">Status → Closed</option>
+    </optgroup>
+    <optgroup label="Set priority">
+      <option value="priority:0">Priority → Low</option>
+      <option value="priority:1">Priority → Medium</option>
+      <option value="priority:2">Priority → High</option>
+      <option value="priority:3">Priority → Urgent</option>
+    </optgroup>
+    <optgroup label="Assign">
+      <option value="assigned_to:me">Assign to me</option>
+      <option value="assigned_to:none">Unassign</option>
+      {% for technician in technicians %}
+      <option value="assigned_to:{{ technician.id }}">Assign to {{ technician.username }}</option>
+      {% endfor %}
+    </optgroup>
+  </select>
+  <button class="tk-btn primary" id="tkBulkApply">Apply</button>
+  <button class="tk-btn" id="tkBulkClear" title="Clear selection"><i data-feather="x"></i></button>
+</div>
+
+<!-- Keyboard shortcut help -->
+<div class="tk-kbd-help" title="Keyboard shortcuts">
+  <kbd>j</kbd>/<kbd>k</kbd> nav · <kbd>↵</kbd> open · <kbd>x</kbd> select · <kbd>a</kbd> assign me · <kbd>s</kbd> status · <kbd>/</kbd> search
+</div>
 
 <!-- Auto-refresh indicator -->
 <div id="auto-refresh-indicator" class="tk-refresh-ind">
@@ -489,6 +637,261 @@ document.addEventListener('DOMContentLoaded', function() {
       currentPage = 1;
       renderPager();
     });
+  });
+
+  // ============================================================
+  // CSRF token helper (Flask-WTF)
+  // ============================================================
+  function getCsrfToken() {
+    const m = document.querySelector('meta[name="csrf-token"]');
+    return m ? m.getAttribute('content') : '';
+  }
+
+  function postJSON(url, body) {
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken(),
+      },
+      body: JSON.stringify(body),
+    }).then(r => r.json());
+  }
+
+  function showToast(msg, ok = true) {
+    let t = document.getElementById('tk-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'tk-toast';
+      t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--cc-panel);border:1px solid var(--cc-border);color:var(--cc-text);padding:10px 16px;border-radius:10px;font-size:13px;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.5);transition:opacity .2s;';
+      document.body.appendChild(t);
+    }
+    t.style.borderColor = ok ? 'var(--cc-good)' : 'var(--cc-bad)';
+    t.textContent = msg;
+    t.style.opacity = '1';
+    clearTimeout(t._h);
+    t._h = setTimeout(() => { t.style.opacity = '0'; }, 2000);
+  }
+
+  // ============================================================
+  // Inline edit pills (status / priority)
+  // ============================================================
+  const STATUS_OPTS = [
+    { v: 'open',        l: 'Open' },
+    { v: 'in_progress', l: 'In Progress' },
+    { v: 'pending',     l: 'Pending' },
+    { v: 'resolved',    l: 'Resolved' },
+    { v: 'closed',      l: 'Closed' },
+  ];
+  const PRIORITY_OPTS = [
+    { v: '0', l: 'Low' },
+    { v: '1', l: 'Medium' },
+    { v: '2', l: 'High' },
+    { v: '3', l: 'Urgent' },
+  ];
+
+  let openPopover = null;
+  function closePopover() { if (openPopover) { openPopover.remove(); openPopover = null; } }
+  document.addEventListener('click', e => {
+    if (openPopover && !openPopover.contains(e.target) && !e.target.classList.contains('tk-pill-edit')) {
+      closePopover();
+    }
+  });
+
+  document.addEventListener('click', e => {
+    const pill = e.target.closest('.tk-pill-edit');
+    if (!pill) return;
+    e.stopPropagation();
+    closePopover();
+    const tr = pill.closest('tr');
+    const ticketId = tr.dataset.ticketId;
+    const field = pill.dataset.edit;
+    const current = pill.dataset.value;
+    const opts = field === 'status' ? STATUS_OPTS : PRIORITY_OPTS;
+
+    const pop = document.createElement('div');
+    pop.className = 'tk-inline-popover';
+    opts.forEach(o => {
+      const a = document.createElement('a');
+      a.className = 'opt' + (String(o.v) === String(current) ? ' current' : '');
+      a.textContent = o.l;
+      a.addEventListener('click', ev => {
+        ev.preventDefault();
+        closePopover();
+        postJSON(`/tickets/api/${ticketId}/quick-update`, { field, value: field === 'priority' ? parseInt(o.v, 10) : o.v })
+          .then(res => {
+            if (!res.ok) { showToast(res.error || 'Update failed', false); return; }
+            // Update pill in-place
+            pill.dataset.value = o.v;
+            pill.textContent = o.l;
+            // Refresh class
+            if (field === 'status') {
+              pill.className = 'tk-pill tk-pill-st-' + o.v + ' tk-pill-edit';
+              tr.dataset.status = o.v;
+            } else {
+              pill.className = 'tk-pill tk-pill-pri-' + o.v + ' tk-pill-edit';
+              tr.dataset.priority = o.v;
+            }
+            pill.dataset.edit = field;
+            showToast('Updated #' + ticketId);
+          })
+          .catch(() => showToast('Network error', false));
+      });
+      pop.appendChild(a);
+    });
+    document.body.appendChild(pop);
+    const r = pill.getBoundingClientRect();
+    pop.style.left = (window.scrollX + r.left) + 'px';
+    pop.style.top = (window.scrollY + r.bottom + 4) + 'px';
+    openPopover = pop;
+  });
+
+  // ============================================================
+  // "Assign to me" per-row button
+  // ============================================================
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.tk-assign-me');
+    if (!btn) return;
+    e.stopPropagation();
+    const tr = btn.closest('tr');
+    const ticketId = tr.dataset.ticketId;
+    postJSON(`/tickets/api/${ticketId}/quick-update`, { field: 'assigned_to', value: 'me' })
+      .then(res => {
+        if (!res.ok) { showToast(res.error || 'Assign failed', false); return; }
+        // Update assigned cell (column index 6)
+        if (res.ticket && res.ticket.assigned_username) {
+          tr.children[6].textContent = res.ticket.assigned_username;
+          tr.dataset.assigned = res.ticket.assigned_to;
+        }
+        btn.remove();
+        showToast('Assigned #' + ticketId + ' to you');
+      })
+      .catch(() => showToast('Network error', false));
+  });
+
+  // ============================================================
+  // Bulk selection + bulk action bar
+  // ============================================================
+  const bulkBar = document.getElementById('tkBulkBar');
+  const bulkCount = document.getElementById('tkBulkCount');
+  const bulkActionSel = document.getElementById('tkBulkAction');
+  const bulkApplyBtn = document.getElementById('tkBulkApply');
+  const bulkClearBtn = document.getElementById('tkBulkClear');
+  const selectAllCb = document.getElementById('tkSelectAll');
+
+  function selectedIds() {
+    return Array.from(document.querySelectorAll('#tkTable tbody .tk-cb:checked')).map(cb => cb.value);
+  }
+  function refreshBulkBar() {
+    const ids = selectedIds();
+    bulkCount.textContent = ids.length;
+    bulkBar.classList.toggle('visible', ids.length > 0);
+  }
+
+  document.addEventListener('change', e => {
+    if (e.target.classList.contains('tk-cb') && e.target.id !== 'tkSelectAll') refreshBulkBar();
+  });
+  if (selectAllCb) {
+    selectAllCb.addEventListener('change', e => {
+      const visible = Array.from(document.querySelectorAll('#tkTable tbody tr')).filter(tr => tr.style.display !== 'none');
+      visible.forEach(tr => {
+        const cb = tr.querySelector('.tk-cb');
+        if (cb) cb.checked = e.target.checked;
+      });
+      refreshBulkBar();
+    });
+  }
+  if (bulkClearBtn) {
+    bulkClearBtn.addEventListener('click', () => {
+      document.querySelectorAll('#tkTable .tk-cb').forEach(cb => cb.checked = false);
+      refreshBulkBar();
+    });
+  }
+  if (bulkApplyBtn) {
+    bulkApplyBtn.addEventListener('click', () => {
+      const action = bulkActionSel.value;
+      if (!action) { showToast('Choose an action', false); return; }
+      const [field, valueStr] = action.split(':');
+      let value = valueStr;
+      if (field === 'priority') value = parseInt(valueStr, 10);
+      const ids = selectedIds();
+      if (!ids.length) { showToast('Nothing selected', false); return; }
+      if (!confirm(`Apply to ${ids.length} ticket${ids.length === 1 ? '' : 's'}?`)) return;
+      postJSON('/tickets/api/bulk-update', { ticket_ids: ids, field, value })
+        .then(res => {
+          if (!res.ok) { showToast(res.error || 'Bulk update failed', false); return; }
+          showToast(`Updated ${res.updated} ticket${res.updated === 1 ? '' : 's'}`);
+          // Reload to reflect server state cleanly
+          setTimeout(() => window.location.reload(), 600);
+        })
+        .catch(() => showToast('Network error', false));
+    });
+  }
+
+  // ============================================================
+  // Keyboard shortcuts
+  // ============================================================
+  let kbdIdx = -1;
+  function visibleRows() {
+    return Array.from(document.querySelectorAll('#tkTable tbody tr'))
+      .filter(tr => tr.style.display !== 'none' && !tr.querySelector('.tk-empty'));
+  }
+  function setKbdFocus(idx) {
+    document.querySelectorAll('#tkTable tbody tr.kbd-focus').forEach(r => r.classList.remove('kbd-focus'));
+    const rows = visibleRows();
+    if (!rows.length) { kbdIdx = -1; return; }
+    kbdIdx = Math.max(0, Math.min(idx, rows.length - 1));
+    const r = rows[kbdIdx];
+    r.classList.add('kbd-focus');
+    r.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  function focusedRow() {
+    return document.querySelector('#tkTable tbody tr.kbd-focus');
+  }
+
+  document.addEventListener('keydown', e => {
+    // Skip when typing in inputs
+    const tag = (e.target.tagName || '').toLowerCase();
+    const inField = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    // "/" — focus search even from inputs is OK only if not already in one
+    if (e.key === '/' && !inField) {
+      const search = document.querySelector('#filter-form input[name="search"]');
+      if (search) { e.preventDefault(); search.focus(); search.select(); }
+      return;
+    }
+    if (inField) {
+      if (e.key === 'Escape') e.target.blur();
+      return;
+    }
+
+    if (e.key === 'j') { e.preventDefault(); setKbdFocus(kbdIdx + 1); }
+    else if (e.key === 'k') { e.preventDefault(); setKbdFocus(kbdIdx - 1); }
+    else if (e.key === 'Enter') {
+      const r = focusedRow();
+      if (r) { const a = r.querySelector('.title a'); if (a) window.location.href = a.href; }
+    }
+    else if (e.key === 'x') {
+      const r = focusedRow();
+      if (r) { const cb = r.querySelector('.tk-cb'); if (cb) { cb.checked = !cb.checked; refreshBulkBar(); } }
+    }
+    else if (e.key === 'a') {
+      const r = focusedRow();
+      if (r) { const btn = r.querySelector('.tk-assign-me'); if (btn) btn.click(); else showToast('Already assigned to you', false); }
+    }
+    else if (e.key === 's') {
+      const r = focusedRow();
+      if (r) { const pill = r.querySelector('.tk-pill-edit[data-edit="status"]'); if (pill) pill.click(); }
+    }
+    else if (e.key === 'p') {
+      const r = focusedRow();
+      if (r) { const pill = r.querySelector('.tk-pill-edit[data-edit="priority"]'); if (pill) pill.click(); }
+    }
+    else if (e.key === '?') {
+      const help = document.querySelector('.tk-kbd-help');
+      if (help) help.style.opacity = help.style.opacity === '1' ? '' : '1';
+    }
   });
 
   const applyBtn = document.getElementById('apply-filters-btn');

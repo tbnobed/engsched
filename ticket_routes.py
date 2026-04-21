@@ -309,12 +309,19 @@ def tickets_dashboard():
             app.logger.error(f"Invalid priority filter value: {priority_filter}")
             
     if technician_filter != 'all':
-        try:
-            technician_id = int(technician_filter)
-            query = query.filter(Ticket.assigned_to == technician_id)
-            app.logger.debug(f"After technician filter ({technician_filter}): {str(query.statement.compile(compile_kwargs={'literal_binds': True}))}")
-        except (ValueError, TypeError):
-            app.logger.error(f"Invalid technician filter value: {technician_filter}")
+        if technician_filter == 'unassigned':
+            query = query.filter(Ticket.assigned_to.is_(None))
+            app.logger.debug("Filtered to unassigned tickets")
+        elif technician_filter == 'me':
+            query = query.filter(Ticket.assigned_to == current_user.id)
+            app.logger.debug(f"Filtered to current user ({current_user.id}) tickets")
+        else:
+            try:
+                technician_id = int(technician_filter)
+                query = query.filter(Ticket.assigned_to == technician_id)
+                app.logger.debug(f"After technician filter ({technician_filter}): {str(query.statement.compile(compile_kwargs={'literal_binds': True}))}")
+            except (ValueError, TypeError):
+                app.logger.error(f"Invalid technician filter value: {technician_filter}")
             
     # Handle assigned_to filter separately from technician_filter
     if assigned_to_filter != 'all':
@@ -1907,4 +1914,180 @@ def download_attachment(filename):
         conditional=True
     )
 
+
+
+
+# =====================================================================
+# JSON API endpoints for inline editing & bulk actions on the dashboard
+# =====================================================================
+
+@tickets.route("/tickets/api/<int:ticket_id>/quick-update", methods=["POST"])
+@login_required
+def api_quick_update(ticket_id):
+    """Inline edit a single ticket field (status / priority / assigned_to)."""
+    ticket = Ticket.query.get_or_404(ticket_id)
+    data = request.get_json(silent=True) or {}
+    field = (data.get("field") or "").strip()
+    value = data.get("value")
+
+    valid_statuses = ["open", "in_progress", "pending", "resolved", "closed"]
+    try:
+        if field == "status":
+            if value not in valid_statuses:
+                return jsonify({"ok": False, "error": "Invalid status"}), 400
+            old = ticket.status
+            ticket.status = value
+            db.session.add(TicketHistory(
+                ticket_id=ticket.id, user_id=current_user.id,
+                action="status_changed",
+                details=f"Status changed from {old} to {value}",
+                created_at=datetime.now(pytz.UTC),
+            ))
+        elif field == "priority":
+            try:
+                pv = int(value)
+            except (TypeError, ValueError):
+                return jsonify({"ok": False, "error": "Invalid priority"}), 400
+            if pv not in (0, 1, 2, 3):
+                return jsonify({"ok": False, "error": "Invalid priority"}), 400
+            old = ticket.priority
+            ticket.priority = pv
+            db.session.add(TicketHistory(
+                ticket_id=ticket.id, user_id=current_user.id,
+                action="priority_changed",
+                details=f"Priority changed from {old} to {pv}",
+                created_at=datetime.now(pytz.UTC),
+            ))
+        elif field == "assigned_to":
+            if value in (None, "", "none", "unassigned"):
+                ticket.assigned_to = None
+                details = "Ticket was unassigned"
+                action = "unassigned"
+            elif value == "me":
+                ticket.assigned_to = current_user.id
+                details = f"Assigned to {current_user.username}"
+                action = "assigned"
+            else:
+                try:
+                    uid = int(value)
+                except (TypeError, ValueError):
+                    return jsonify({"ok": False, "error": "Invalid user id"}), 400
+                user = User.query.get(uid)
+                if not user:
+                    return jsonify({"ok": False, "error": "User not found"}), 404
+                ticket.assigned_to = user.id
+                details = f"Assigned to {user.username}"
+                action = "assigned"
+            db.session.add(TicketHistory(
+                ticket_id=ticket.id, user_id=current_user.id,
+                action=action, details=details,
+                created_at=datetime.now(pytz.UTC),
+            ))
+        else:
+            return jsonify({"ok": False, "error": "Unknown field"}), 400
+
+        try:
+            ticket.mark_as_viewed(current_user.id)
+        except Exception:
+            pass
+        db.session.commit()
+        return jsonify({
+            "ok": True,
+            "ticket": {
+                "id": ticket.id,
+                "status": ticket.status,
+                "priority": ticket.priority,
+                "assigned_to": ticket.assigned_to,
+                "assigned_username": ticket.assigned_technician.username if ticket.assigned_technician else None,
+            },
+        })
+    except Exception as e:
+        db.session.rollback()
+        app.logger.exception("quick-update failed")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@tickets.route("/tickets/api/bulk-update", methods=["POST"])
+@login_required
+def api_bulk_update():
+    """Bulk update many tickets at once (status / priority / assigned_to)."""
+    data = request.get_json(silent=True) or {}
+    ids = data.get("ticket_ids") or []
+    field = (data.get("field") or "").strip()
+    value = data.get("value")
+
+    if not isinstance(ids, list) or not ids:
+        return jsonify({"ok": False, "error": "No ticket_ids provided"}), 400
+    try:
+        ids = [int(x) for x in ids]
+    except (TypeError, ValueError):
+        return jsonify({"ok": False, "error": "Invalid ticket id"}), 400
+
+    valid_statuses = ["open", "in_progress", "pending", "resolved", "closed"]
+    updated = 0
+    try:
+        target_user_id = None
+        if field == "assigned_to":
+            if value in (None, "", "none", "unassigned"):
+                target_user_id = None
+            elif value == "me":
+                target_user_id = current_user.id
+            else:
+                try:
+                    target_user_id = int(value)
+                except (TypeError, ValueError):
+                    return jsonify({"ok": False, "error": "Invalid user id"}), 400
+                if not User.query.get(target_user_id):
+                    return jsonify({"ok": False, "error": "User not found"}), 404
+        elif field == "status":
+            if value not in valid_statuses:
+                return jsonify({"ok": False, "error": "Invalid status"}), 400
+        elif field == "priority":
+            try:
+                value = int(value)
+            except (TypeError, ValueError):
+                return jsonify({"ok": False, "error": "Invalid priority"}), 400
+            if value not in (0, 1, 2, 3):
+                return jsonify({"ok": False, "error": "Invalid priority"}), 400
+        else:
+            return jsonify({"ok": False, "error": "Unknown field"}), 400
+
+        tickets_q = Ticket.query.filter(Ticket.id.in_(ids)).all()
+        for t in tickets_q:
+            if field == "status":
+                old = t.status
+                t.status = value
+                details = f"Status changed from {old} to {value} (bulk)"
+                action = "status_changed"
+            elif field == "priority":
+                old = t.priority
+                t.priority = value
+                details = f"Priority changed from {old} to {value} (bulk)"
+                action = "priority_changed"
+            else:  # assigned_to
+                t.assigned_to = target_user_id
+                if target_user_id is None:
+                    details = "Ticket was unassigned (bulk)"
+                    action = "unassigned"
+                else:
+                    u = User.query.get(target_user_id)
+                    details = f"Assigned to {u.username} (bulk)"
+                    action = "assigned"
+            db.session.add(TicketHistory(
+                ticket_id=t.id, user_id=current_user.id,
+                action=action, details=details,
+                created_at=datetime.now(pytz.UTC),
+            ))
+            try:
+                t.mark_as_viewed(current_user.id)
+            except Exception:
+                pass
+            updated += 1
+
+        db.session.commit()
+        return jsonify({"ok": True, "updated": updated})
+    except Exception as e:
+        db.session.rollback()
+        app.logger.exception("bulk-update failed")
+        return jsonify({"ok": False, "error": str(e)}), 500
 
