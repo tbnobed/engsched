@@ -204,6 +204,72 @@
   .tk-inline-popover .opt:hover { background: var(--cc-panel-2); }
   .tk-inline-popover .opt.current { background: rgba(106,166,255,.15); color: var(--cc-accent); }
 
+  /* Slide-over drawer */
+  .tk-drawer-backdrop {
+    position: fixed; inset: 0; background: rgba(6,10,18,.55);
+    backdrop-filter: blur(2px); opacity: 0; pointer-events: none;
+    transition: opacity .2s; z-index: 1040;
+  }
+  .tk-drawer-backdrop.visible { opacity: 1; pointer-events: auto; }
+  .tk-drawer {
+    position: fixed; top: 0; right: 0; height: 100vh;
+    width: min(520px, 100vw);
+    background: var(--cc-panel); border-left: 1px solid var(--cc-border);
+    transform: translateX(100%); transition: transform .25s ease;
+    z-index: 1050; display: flex; flex-direction: column;
+    box-shadow: -16px 0 40px rgba(0,0,0,.5);
+  }
+  .tk-drawer.visible { transform: translateX(0); }
+  .tk-drawer-head {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--cc-border);
+    flex-shrink: 0;
+  }
+  .tk-drawer-head h3 { margin:0; font-size:16px; font-weight:700; color: var(--cc-text); }
+  .tk-drawer-close {
+    background: transparent; border: none; color: var(--cc-muted);
+    cursor: pointer; padding: 4px; display:flex; align-items:center; justify-content:center;
+    border-radius: 6px;
+  }
+  .tk-drawer-close:hover { background: var(--cc-panel-2, #0f1622); color: var(--cc-text); }
+  .tk-drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+  .tk-drawer-body .field { margin-bottom: 16px; }
+  .tk-drawer-body label {
+    display:block; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--cc-muted); margin-bottom: 6px;
+  }
+  .tk-drawer-body input[type="text"],
+  .tk-drawer-body input[type="date"],
+  .tk-drawer-body select,
+  .tk-drawer-body textarea {
+    width: 100%; background: var(--cc-bg, #0c1118);
+    border: 1px solid var(--cc-border); color: var(--cc-text);
+    border-radius: 8px; padding: 9px 12px; font-size: 13px;
+    font-family: inherit;
+  }
+  .tk-drawer-body textarea { min-height: 140px; resize: vertical; }
+  .tk-drawer-body input[type="file"] {
+    width:100%; color: var(--cc-muted); font-size: 12px;
+  }
+  .tk-drawer-body input:focus,
+  .tk-drawer-body select:focus,
+  .tk-drawer-body textarea:focus {
+    outline: none; border-color: var(--cc-accent);
+    box-shadow: 0 0 0 3px rgba(106,166,255,.15);
+  }
+  .tk-drawer-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tk-drawer-foot {
+    padding: 14px 20px; border-top: 1px solid var(--cc-border);
+    display:flex; gap:10px; justify-content:flex-end; flex-shrink: 0;
+    background: var(--cc-panel);
+  }
+  .tk-drawer-error {
+    background: rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.3);
+    color: #fca5a5; padding: 10px 12px; border-radius: 8px;
+    font-size: 12px; margin-bottom: 14px; display:none;
+  }
+  .tk-drawer-error.visible { display:block; }
+
   /* Bulk action bar */
   .tk-bulk-bar {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(120%);
@@ -266,9 +332,9 @@
       <div class="sub">Showing {{ ticket_count }} ticket{% if ticket_count != 1 %}s{% endif %} · Auto-refreshes every 5s</div>
     </div>
     <div class="tk-actions">
-      <a href="{{ url_for('tickets.create_ticket') }}" class="tk-btn primary">
+      <button type="button" class="tk-btn primary" id="tkNewTicketBtn">
         <i data-feather="plus"></i> New Ticket
-      </a>
+      </button>
       {% if current_user.is_admin %}
       <div class="dropdown">
         <button class="tk-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Admin actions" style="padding:8px 10px;">
@@ -478,6 +544,78 @@
   </div>
 </div>
 {% endif %}
+
+<!-- New Ticket slide-over drawer -->
+<div class="tk-drawer-backdrop" id="tkDrawerBackdrop"></div>
+<aside class="tk-drawer" id="tkDrawer" role="dialog" aria-label="Create new ticket" aria-modal="true">
+  <div class="tk-drawer-head">
+    <h3><i data-feather="plus-circle" style="width:16px;height:16px;vertical-align:-2px;"></i> New Ticket</h3>
+    <button type="button" class="tk-drawer-close" id="tkDrawerClose" aria-label="Close">
+      <i data-feather="x" style="width:20px;height:20px;"></i>
+    </button>
+  </div>
+  <form id="tkDrawerForm" method="POST" action="{{ url_for('tickets.create_ticket') }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="tk-drawer-body">
+      <div class="tk-drawer-error" id="tkDrawerError"></div>
+
+      <div class="field">
+        <label for="tk_dr_title">Title *</label>
+        <input type="text" id="tk_dr_title" name="title" maxlength="200" required placeholder="Short, clear summary of the issue">
+      </div>
+
+      <div class="field">
+        <label for="tk_dr_desc">Description *</label>
+        <textarea id="tk_dr_desc" name="description" required placeholder="What happened? Steps to reproduce, which system/studio, any error messages…"></textarea>
+      </div>
+
+      <div class="tk-drawer-row">
+        <div class="field">
+          <label for="tk_dr_cat">Category *</label>
+          <select id="tk_dr_cat" name="category_id" required>
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="tk_dr_pri">Priority</label>
+          <select id="tk_dr_pri" name="priority">
+            <option value="0">Low</option>
+            <option value="1" selected>Medium</option>
+            <option value="2">High</option>
+            <option value="3">Urgent</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tk-drawer-row">
+        <div class="field">
+          <label for="tk_dr_asn">Assign To</label>
+          <select id="tk_dr_asn" name="assigned_to">
+            <option value="">— Unassigned —</option>
+            {% for technician in technicians %}
+            <option value="{{ technician.id }}">{{ technician.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="tk_dr_due">Due Date</label>
+          <input type="date" id="tk_dr_due" name="due_date">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="tk_dr_file">Attachment</label>
+        <input type="file" id="tk_dr_file" name="attachment">
+      </div>
+    </div>
+    <div class="tk-drawer-foot">
+      <button type="button" class="tk-btn" id="tkDrawerCancel">Cancel</button>
+      <button type="submit" class="tk-btn primary" id="tkDrawerSubmit">Create Ticket</button>
+    </div>
+  </form>
+</aside>
 
 <!-- Bulk action bar -->
 <div class="tk-bulk-bar" id="tkBulkBar">
@@ -984,5 +1122,95 @@ document.addEventListener('DOMContentLoaded', function() {
   start();
   window.addEventListener('beforeunload', stop);
 });
+
+// ============================================================
+// New Ticket slide-over drawer
+// ============================================================
+(function () {
+  const btn       = document.getElementById('tkNewTicketBtn');
+  const drawer    = document.getElementById('tkDrawer');
+  const backdrop  = document.getElementById('tkDrawerBackdrop');
+  const closeBtn  = document.getElementById('tkDrawerClose');
+  const cancelBtn = document.getElementById('tkDrawerCancel');
+  const form      = document.getElementById('tkDrawerForm');
+  const errBox    = document.getElementById('tkDrawerError');
+  const submitBtn = document.getElementById('tkDrawerSubmit');
+  if (!btn || !drawer) return;
+
+  function open() {
+    drawer.classList.add('visible');
+    backdrop.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => { const t = form.querySelector('[name="title"]'); if (t) t.focus(); }, 250);
+  }
+  function close() {
+    drawer.classList.remove('visible');
+    backdrop.classList.remove('visible');
+    document.body.style.overflow = '';
+    errBox.classList.remove('visible');
+    errBox.textContent = '';
+  }
+
+  btn.addEventListener('click', open);
+  closeBtn.addEventListener('click', close);
+  cancelBtn.addEventListener('click', close);
+  backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && drawer.classList.contains('visible')) close();
+    if (e.key === 'n' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+      if (!drawer.classList.contains('visible')) { e.preventDefault(); open(); }
+    }
+  });
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    errBox.classList.remove('visible');
+    submitBtn.disabled = true;
+    const originalLabel = submitBtn.textContent;
+    submitBtn.textContent = 'Creating…';
+    try {
+      const fd = new FormData(form);
+      const res = await fetch(form.action + '?ajax=1', {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+      });
+      const ct = res.headers.get('content-type') || '';
+      if (res.ok && ct.includes('application/json')) {
+        const data = await res.json();
+        if (data.ok) {
+          close();
+          // Refresh the dashboard so the new ticket appears
+          window.location.reload();
+          return;
+        }
+        errBox.textContent = data.error || 'Could not create ticket.';
+        errBox.classList.add('visible');
+      } else {
+        // Likely a validation error (HTML response) or 400 JSON
+        let msg = 'Please fill in required fields (Title, Description, Category).';
+        try {
+          const data = await res.json();
+          if (data && data.errors) {
+            msg = Object.entries(data.errors).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' · ');
+          } else if (data && data.error) {
+            msg = data.error;
+          }
+        } catch (_) {}
+        errBox.textContent = msg;
+        errBox.classList.add('visible');
+      }
+    } catch (err) {
+      errBox.textContent = 'Network error. Please try again.';
+      errBox.classList.add('visible');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalLabel;
+    }
+  });
+})();
 </script>
 {% endblock %}

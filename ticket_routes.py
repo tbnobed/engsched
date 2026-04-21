@@ -719,6 +719,13 @@ def create_ticket():
                     app.logger.error(f"Exception traceback: {traceback.format_exc()}")
             
             flash('Ticket created successfully', 'success')
+            _is_ajax = request.args.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            if _is_ajax:
+                return jsonify({
+                    'ok': True,
+                    'ticket_id': ticket.id,
+                    'redirect': url_for('tickets.view_ticket', ticket_id=ticket.id),
+                })
             return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket.id)
 
         except ValueError as ve:
