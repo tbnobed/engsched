@@ -92,7 +92,24 @@
   .tk-search-row .tk-input { flex:1; }
 
   /* Table */
-  .tk-table-wrap { overflow:auto; }
+  .tk-table-wrap { overflow:auto; max-height: calc(100vh - 360px); min-height: 300px; }
+  .tk-pager {
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding: 10px 16px; border-top:1px solid var(--cc-border); background: var(--cc-panel);
+    color: var(--cc-muted); font-size:12px; flex-wrap:wrap;
+  }
+  .tk-pager .pages { display:flex; gap:4px; align-items:center; }
+  .tk-pager button {
+    background: var(--cc-panel-2); border:1px solid var(--cc-border); color: var(--cc-text);
+    padding: 4px 10px; border-radius:6px; font-size:12px; cursor:pointer; min-width: 32px;
+  }
+  .tk-pager button:hover:not(:disabled) { background:#233044; border-color:#2e3b51; }
+  .tk-pager button:disabled { opacity:.4; cursor:not-allowed; }
+  .tk-pager button.active { background: var(--cc-accent); border-color: var(--cc-accent); color:#0c1118; font-weight:700; }
+  .tk-pager .size-sel {
+    background: var(--cc-panel-2); border:1px solid var(--cc-border); color: var(--cc-text);
+    padding: 3px 8px; border-radius:6px; font-size:12px;
+  }
   .tk-table { width:100%; border-collapse: collapse; font-size:13px; }
   .tk-table thead th {
     background: var(--cc-panel-2); color: var(--cc-muted);
@@ -235,10 +252,10 @@
     </div>
 
     <!-- Tickets table panel -->
-    <div class="tk-panel">
+    <div class="tk-panel" id="tkResultsPanel">
       <div class="tk-panel-h"><span>Results</span><span class="count">{{ ticket_count }}</span></div>
-      <div class="tk-table-wrap">
-        <table class="tk-table">
+      <div class="tk-table-wrap" id="tkTableWrap">
+        <table class="tk-table" id="tkTable">
           <thead>
             <tr>
               <th>ID</th><th>Title</th><th>Category</th><th>Status</th>
@@ -268,6 +285,19 @@
             {% endfor %}
           </tbody>
         </table>
+      </div>
+      <div class="tk-pager" id="tkPager">
+        <div class="info" id="tkPagerInfo">—</div>
+        <div class="pages" id="tkPagerPages"></div>
+        <div>
+          Per page:
+          <select class="size-sel" id="tkPageSize">
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="250">250</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -323,6 +353,61 @@
 document.addEventListener('DOMContentLoaded', function() {
   if (window.feather) feather.replace();
 
+  // ----- Client-side pagination -----
+  const pageSizeSel = document.getElementById('tkPageSize');
+  const pagerInfo = document.getElementById('tkPagerInfo');
+  const pagerPages = document.getElementById('tkPagerPages');
+  let currentPage = 1;
+
+  function getRows() {
+    return Array.from(document.querySelectorAll('#tkTable tbody tr'))
+      .filter(tr => !tr.querySelector('.tk-empty'));
+  }
+
+  function renderPager() {
+    const rows = getRows();
+    const total = rows.length;
+    const size = parseInt(pageSizeSel.value, 10);
+    const pages = Math.max(1, Math.ceil(total / size));
+    if (currentPage > pages) currentPage = pages;
+    if (currentPage < 1) currentPage = 1;
+
+    rows.forEach((tr, i) => {
+      const start = (currentPage - 1) * size;
+      tr.style.display = (i >= start && i < start + size) ? '' : 'none';
+    });
+
+    if (total === 0) {
+      pagerInfo.textContent = 'No results';
+    } else {
+      const from = (currentPage - 1) * size + 1;
+      const to = Math.min(currentPage * size, total);
+      pagerInfo.textContent = `Showing ${from}–${to} of ${total}`;
+    }
+
+    // Build pager buttons (windowed)
+    pagerPages.innerHTML = '';
+    function btn(label, page, opts = {}) {
+      const b = document.createElement('button');
+      b.textContent = label;
+      if (opts.active) b.classList.add('active');
+      if (opts.disabled) b.disabled = true;
+      b.addEventListener('click', () => { currentPage = page; renderPager(); document.getElementById('tkTableWrap').scrollTop = 0; });
+      pagerPages.appendChild(b);
+    }
+    btn('‹', currentPage - 1, { disabled: currentPage <= 1 });
+    const window_ = 2;
+    let from = Math.max(1, currentPage - window_);
+    let to = Math.min(pages, currentPage + window_);
+    if (from > 1) { btn('1', 1, { active: currentPage === 1 }); if (from > 2) { const e = document.createElement('span'); e.textContent='…'; e.style.padding='0 4px'; pagerPages.appendChild(e); } }
+    for (let p = from; p <= to; p++) btn(String(p), p, { active: p === currentPage });
+    if (to < pages) { if (to < pages - 1) { const e = document.createElement('span'); e.textContent='…'; e.style.padding='0 4px'; pagerPages.appendChild(e); } btn(String(pages), pages, { active: currentPage === pages }); }
+    btn('›', currentPage + 1, { disabled: currentPage >= pages });
+  }
+
+  pageSizeSel.addEventListener('change', () => { currentPage = 1; renderPager(); });
+  renderPager();
+
   const applyBtn = document.getElementById('apply-filters-btn');
   const form = document.getElementById('filter-form');
   if (applyBtn && form) {
@@ -362,6 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const curKpis = document.querySelector('.tk-kpis');
         if (newKpis && curKpis) curKpis.innerHTML = newKpis.innerHTML;
         if (window.feather) feather.replace();
+        renderPager();
       })
       .catch(()=>{})
       .finally(()=> indicator.classList.remove('visible'));
