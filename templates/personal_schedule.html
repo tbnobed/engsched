@@ -2,40 +2,40 @@
 
 {% block content %}
 <div class="calendar-container">
-    <div class="calendar-header d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center">
-            <h2>My Schedule - {{ week_start.strftime('%B %Y') }}</h2>
+    <div class="calendar-header cc-header">
+        <div class="cc-header-row">
+            <div class="cc-title-block">
+                <div class="cc-title">My Schedule — {{ week_start.strftime('%B %Y') }}</div>
+                <div class="cc-subtitle">Week of {{ week_start.strftime('%b %-d') }} – {{ (week_start + timedelta(days=6)).strftime('%b %-d') }}</div>
+            </div>
+            <div class="cc-nav">
+                <a class="cc-icon-btn" title="Previous Month"
+                   href="{{ url_for('personal_schedule', week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d')) }}">
+                    <i data-feather="chevrons-left"></i>
+                </a>
+                <a class="cc-icon-btn" title="Previous Week"
+                   href="{{ url_for('personal_schedule', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d')) }}">
+                    <i data-feather="chevron-left"></i>
+                </a>
+                <a class="cc-today-btn" href="{{ url_for('personal_schedule') }}">Today</a>
+                <a class="cc-icon-btn" title="Next Week"
+                   href="{{ url_for('personal_schedule', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d')) }}">
+                    <i data-feather="chevron-right"></i>
+                </a>
+                <a class="cc-icon-btn" title="Next Month"
+                   href="{{ url_for('personal_schedule', week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d')) }}">
+                    <i data-feather="chevrons-right"></i>
+                </a>
+            </div>
+            <div class="cc-actions">
+                <button type="button" class="cc-btn cc-btn-ghost" id="bulk-select-toggle" title="Select multiple schedules">
+                    <i data-feather="check-square"></i> <span>Select</span>
+                </button>
+                <button type="button" class="cc-btn cc-btn-primary" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+                    <i data-feather="plus"></i> <span>Add Schedule</span>
+                </button>
+            </div>
         </div>
-        <div class="calendar-controls">
-            <a href="{{ url_for('personal_schedule', week_start=(week_start - timedelta(days=28)).strftime('%Y-%m-%d')) }}" 
-               class="btn btn-outline-secondary me-2">
-                <i data-feather="chevrons-left"></i> Previous Month
-            </a>
-            <a href="{{ url_for('personal_schedule', week_start=(week_start - timedelta(days=7)).strftime('%Y-%m-%d')) }}" 
-               class="btn btn-outline-primary me-2">
-                <i data-feather="chevron-left"></i> Previous Week
-            </a>
-            <a href="{{ url_for('personal_schedule') }}" 
-               class="btn btn-outline-primary me-2">
-                Current Week
-            </a>
-            <a href="{{ url_for('personal_schedule', week_start=(week_start + timedelta(days=7)).strftime('%Y-%m-%d')) }}" 
-               class="btn btn-outline-primary me-2">
-                Next Week <i data-feather="chevron-right"></i>
-            </a>
-            <a href="{{ url_for('personal_schedule', week_start=(week_start + timedelta(days=28)).strftime('%Y-%m-%d')) }}" 
-               class="btn btn-outline-secondary me-2">
-                Next Month <i data-feather="chevrons-right"></i>
-            </a>
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#scheduleModal">
-                <i data-feather="plus"></i> Add Schedule
-            </button>
-        </div>
-    </div>
-    <div class="d-flex justify-content-end mb-2">
-        <button type="button" class="btn btn-outline-warning" id="bulk-select-toggle">
-            <i data-feather="check-square"></i> Select Multiple
-        </button>
     </div>
 
     <div class="calendar-grid calendar-container">
@@ -48,9 +48,13 @@
         {% for day in range(7) %}
         {% set current_date = week_start + timedelta(days=day) %}
         {% set is_today = current_date.date() == today.date() %}
-        <div class="day-column {{ 'today' if is_today else '' }}">
-            <div class="day-header {{ 'today' if is_today else '' }}" data-bs-toggle="modal" data-bs-target="#scheduleModal" data-date="{{ current_date.strftime('%Y-%m-%d') }}">
-                {{ current_date.strftime('%a %m/%d') }}
+        {% set is_weekend = day >= 5 %}
+        {% set day_classes = ['day-column'] + (['today'] if is_today else []) + (['weekend'] if is_weekend else []) + (['day-' + day|string]) %}
+        <div class="{{ day_classes|join(' ') }}">
+            <div class="day-header {{ 'today' if is_today else '' }} {{ 'weekend' if is_weekend else '' }}" data-bs-toggle="modal" data-bs-target="#scheduleModal" data-date="{{ current_date.strftime('%Y-%m-%d') }}">
+                <div class="day-header-name">{{ current_date.strftime('%a') }}</div>
+                <div class="day-header-date">{{ current_date.strftime('%-d') }}</div>
+                <div class="day-header-month">{{ current_date.strftime('%b') }}</div>
             </div>
             <div class="day-slots" data-date="{{ current_date.strftime('%Y-%m-%d') }}">
                 {% for hour in range(24) %}
