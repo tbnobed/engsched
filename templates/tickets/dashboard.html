@@ -162,17 +162,28 @@
   .tk-refresh-ind .spin { animation: tkSpin 1s linear infinite; width:12px; height:12px; }
   @keyframes tkSpin { to { transform: rotate(360deg); } }
 
-  /* Saved view chips */
-  .tk-views { display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 14px; }
+  /* Saved view chips (inside filters panel) */
+  .tk-views-group { grid-column: 1 / -1; margin: 0 0 4px; }
+  .tk-views-group > label {
+    display:block; font-size:10px; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; color: var(--cc-muted); margin-bottom:6px;
+  }
+  .tk-views { display:flex; flex-wrap:wrap; gap:6px; }
   .tk-chip {
     display:inline-flex; align-items:center; gap:6px;
-    background: var(--cc-panel); border:1px solid var(--cc-border);
-    color: var(--cc-text); padding:6px 12px; border-radius:999px;
-    font-size:12px; font-weight:600; text-decoration:none; cursor:pointer;
+    background: var(--cc-panel-2, #0f1622);
+    border:1px solid var(--cc-border);
+    color: var(--cc-text); padding:5px 10px; border-radius:999px;
+    font-size:11.5px; font-weight:600; text-decoration:none; cursor:pointer;
+    line-height:1; white-space:nowrap;
     transition: all .15s;
   }
-  .tk-chip:hover { background:#233044; border-color: var(--cc-accent); color: var(--cc-text); }
-  .tk-chip.active { background: var(--cc-accent); border-color: var(--cc-accent); color:#0c1118; }
+  .tk-chip:hover { background:#1b2436; border-color:#3a4864; color: var(--cc-text); }
+  .tk-chip.active {
+    background: rgba(106,166,255,.15);
+    border-color: var(--cc-accent);
+    color: var(--cc-accent);
+  }
   .tk-chip i { width:12px; height:12px; }
 
   /* Inline edit pills */
@@ -289,7 +300,6 @@
   </div>
   {% endif %}
 
-  <!-- Saved view chips -->
   {% set _f = filter_info %}
   {% set _v_all       = (_f.status == 'all' and _f.priority == 'all' and _f.technician == 'all' and _f.category == 'all' and not _f.search) %}
   {% set _v_my_open   = (_f.status == 'open' and _f.technician|string == current_user.id|string) %}
@@ -299,16 +309,6 @@
   {% set _v_pending   = (_f.status == 'pending') %}
   {% set _v_inprog    = (_f.status == 'in_progress') %}
   {% set _v_active    = (_f.status == 'open' and _f.technician == 'all' and _f.priority == 'all') %}
-  <div class="tk-views">
-    <a class="tk-chip {% if _v_my_open %}active{% endif %}"  href="?status=open&technician=me"><i data-feather="user"></i> My Open</a>
-    <a class="tk-chip {% if _v_unassign %}active{% endif %}" href="?status=open&technician=unassigned"><i data-feather="alert-circle"></i> Unassigned</a>
-    <a class="tk-chip {% if _v_urgent %}active{% endif %}"   href="?status=open&priority=3"><i data-feather="zap"></i> Urgent Today</a>
-    <a class="tk-chip {% if _v_high %}active{% endif %}"     href="?status=open&priority=2"><i data-feather="trending-up"></i> High Priority</a>
-    <a class="tk-chip {% if _v_inprog %}active{% endif %}"   href="?status=in_progress"><i data-feather="play-circle"></i> In Progress</a>
-    <a class="tk-chip {% if _v_pending %}active{% endif %}"  href="?status=pending"><i data-feather="clock"></i> Pending Reply</a>
-    <a class="tk-chip {% if _v_active %}active{% endif %}"   href="?status=open"><i data-feather="inbox"></i> All Active</a>
-    <a class="tk-chip {% if _v_all %}active{% endif %}"      href="?status=all"><i data-feather="layers"></i> Everything</a>
-  </div>
 
   <!-- Body: filters + table -->
   <div class="tk-body">
@@ -317,6 +317,19 @@
     <div class="tk-panel">
       <div class="tk-panel-h"><span>Filters</span></div>
       <form id="filter-form" method="GET" autocomplete="off" class="tk-filters">
+        <div class="tk-views-group">
+          <label>Quick Views</label>
+          <div class="tk-views">
+            <a class="tk-chip {% if _v_my_open %}active{% endif %}"  href="?status=open&technician=me"><i data-feather="user"></i> My Open</a>
+            <a class="tk-chip {% if _v_unassign %}active{% endif %}" href="?status=open&technician=unassigned"><i data-feather="alert-circle"></i> Unassigned</a>
+            <a class="tk-chip {% if _v_urgent %}active{% endif %}"   href="?status=open&priority=3"><i data-feather="zap"></i> Urgent</a>
+            <a class="tk-chip {% if _v_high %}active{% endif %}"     href="?status=open&priority=2"><i data-feather="trending-up"></i> High Priority</a>
+            <a class="tk-chip {% if _v_inprog %}active{% endif %}"   href="?status=in_progress"><i data-feather="play-circle"></i> In Progress</a>
+            <a class="tk-chip {% if _v_pending %}active{% endif %}"  href="?status=pending"><i data-feather="clock"></i> Pending Reply</a>
+            <a class="tk-chip {% if _v_active %}active{% endif %}"   href="?status=open"><i data-feather="inbox"></i> All Active</a>
+            <a class="tk-chip {% if _v_all %}active{% endif %}"      href="?status=all"><i data-feather="layers"></i> Everything</a>
+          </div>
+        </div>
         <div>
           <label>Search</label>
           <div class="tk-search-row">
