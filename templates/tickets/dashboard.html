@@ -542,6 +542,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const curKpis = document.querySelector('.tk-kpis');
         if (newKpis && curKpis) curKpis.innerHTML = newKpis.innerHTML;
         if (window.feather) feather.replace();
+        applySort();
+        updateSortIndicators();
         renderPager();
       })
       .catch(()=>{})
