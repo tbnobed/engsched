@@ -1014,7 +1014,7 @@ div[style*="gradient"] {
     background: #131a25 !important;
     border-bottom: 1px solid #232d3d !important;
     color: #cdd6e4;
-    padding: 8px 6px !important;
+    padding: 0 6px !important;
     text-align: center;
     line-height: 1;
     display: flex !important;
@@ -1022,8 +1022,11 @@ div[style*="gradient"] {
     align-items: center !important;
     justify-content: center !important;
     gap: 3px;
-    height: auto !important;
-    min-height: 56px;
+    height: 64px !important;
+    min-height: 64px !important;
+    max-height: 64px !important;
+    box-sizing: border-box !important;
+    overflow: hidden;
 }
 .calendar-container .day-header-name {
     font-size: 10px;
@@ -1068,6 +1071,11 @@ div[style*="gradient"] {
 .calendar-container .time-column::before {
     background: #131a25;
     border-bottom: 1px solid #232d3d !important;
+    height: 64px !important; /* must equal .day-header height for time labels to align with events */
+    min-height: 64px !important;
+    box-sizing: border-box !important;
+    display: block;
+    content: '';
 }
 
 .calendar-container .hour-slot {
