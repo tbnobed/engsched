@@ -1,282 +1,356 @@
 {% extends "base.html" %}
 
-{% block head_extra %}
-<style>
-/* Modal fixes for flickering issue */
-.no-animations {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-    -webkit-animation: none !important;
-    -moz-animation: none !important;
-    -o-animation: none !important;
-    -ms-animation: none !important;
-}
-
-.modal.fade.no-animations {
-    opacity: 1;
-}
-
-.modal-backdrop.fade.no-animations {
-    opacity: 0.5;
-}
-
-.modal.static {
-    animation: none !important;
-    transition: none !important;
-}
-
-.modal.static .modal-dialog {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-}
-
-.modal.static .modal-content {
-    animation: none !important;
-    transition: none !important;
-}
-
-.modal.static .modal-backdrop {
-    animation: none !important;
-    transition: none !important;
-}
-
-/* Make sure modals appear properly in dark mode */
-.modal-content {
-    background-color: #162439 !important;
-    border-color: #2c3e50 !important;
-}
-
-.modal-header {
-    background-color: #1a2942 !important;
-    border-color: #2c3e50 !important;
-}
-
-.modal-body {
-    background-color: #111f36 !important;
-}
-
-.modal-body input[type="text"],
-.modal-body input[type="email"],
-.modal-body input[type="password"] {
-    background-color: #162439 !important;
-    color: white !important;
-    border-color: #2c3e50 !important;
-}
-
-.modal-body label {
-    color: white !important;
-}
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="admin-dashboard">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Admin Dashboard</h2>
-        <div class="d-flex align-items-center gap-3">
-            <div class="d-flex gap-2">
+<style>
+  :root {
+    --ad-bg:      #0c1118;
+    --ad-panel:   #131a25;
+    --ad-panel2:  #18212f;
+    --ad-border:  #232d3d;
+    --ad-text:    #e8edf5;
+    --ad-muted:   #8a97ac;
+    --ad-accent:  #6aa6ff;
+    --ad-accent2: #4f8ce8;
+    --ad-good:    #22c55e;
+    --ad-warn:    #f59e0b;
+    --ad-bad:     #ef4444;
+  }
+  body.light-theme {
+    --ad-bg:      #f4f6fa;
+    --ad-panel:   #ffffff;
+    --ad-panel2:  #f8fafc;
+    --ad-border:  #d9dfe8;
+    --ad-text:    #1a2433;
+    --ad-muted:   #5b6878;
+    --ad-accent:  #2563eb;
+    --ad-accent2: #1d4ed8;
+  }
+
+  .admin-cc { color: var(--ad-text); padding: 12px 18px 28px; }
+
+  .ad-header {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; flex-wrap:wrap; margin-bottom:18px;
+  }
+  .ad-title { font-size:22px; font-weight:700; letter-spacing:.2px; margin:0; }
+  .ad-sub { font-size:12px; color:var(--ad-muted); margin-top:2px; }
+
+  .ad-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; }
+  .ad-date-group { display:flex; gap:6px; align-items:flex-end; padding:6px 10px;
+    background:var(--ad-panel); border:1px solid var(--ad-border); border-radius:10px; }
+  .ad-date-group label { font-size:10px; color:var(--ad-muted); text-transform:uppercase;
+    letter-spacing:.6px; margin:0 0 2px; display:block; }
+  .ad-date-group input[type=date] {
+    background:var(--ad-panel2); color:var(--ad-text);
+    border:1px solid var(--ad-border); border-radius:6px; padding:4px 8px; font-size:12px;
+  }
+  body.light-theme .ad-date-group input[type=date] { color-scheme: light; }
+
+  .ad-btn {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600;
+    border:1px solid var(--ad-border); background:var(--ad-panel); color:var(--ad-text);
+    text-decoration:none; cursor:pointer; transition:transform .08s ease, background .15s;
+  }
+  .ad-btn:hover { transform: translateY(-1px); color:var(--ad-text); }
+  .ad-btn svg { width:14px; height:14px; }
+  .ad-btn-primary { background:var(--ad-accent); border-color:var(--ad-accent); color:#fff; }
+  .ad-btn-primary:hover { background:var(--ad-accent2); border-color:var(--ad-accent2); color:#fff; }
+  .ad-btn-good { background:var(--ad-good); border-color:var(--ad-good); color:#fff; }
+  .ad-btn-good:hover { filter:brightness(.95); color:#fff; }
+  .ad-btn-warn { background:var(--ad-warn); border-color:var(--ad-warn); color:#1a1505; }
+  .ad-btn-warn:hover { filter:brightness(.95); color:#1a1505; }
+  .ad-btn-info { background:#2c4f86; border-color:#2c4f86; color:#fff; }
+  .ad-btn-info:hover { filter:brightness(1.08); color:#fff; }
+  .ad-btn-danger {
+    background:transparent; border:1px solid rgba(239,68,68,.4); color:var(--ad-bad);
+    padding:5px 10px; font-size:12px;
+  }
+  .ad-btn-danger:hover { background:rgba(239,68,68,.12); color:var(--ad-bad); }
+  .ad-btn-sm { padding:5px 10px; font-size:12px; }
+
+  .ad-kpis { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+  .ad-kpi {
+    background:var(--ad-panel); border:1px solid var(--ad-border);
+    border-radius:12px; padding:14px 16px;
+  }
+  .ad-kpi-label { font-size:11px; color:var(--ad-muted); text-transform:uppercase; letter-spacing:.7px; }
+  .ad-kpi-value { font-size:26px; font-weight:700; margin-top:4px; }
+  .ad-kpi .ic { float:right; opacity:.5; }
+  .ad-kpi .ic svg { width:20px; height:20px; }
+
+  .ad-grid { display:grid; grid-template-columns: 380px minmax(0,1fr); gap:16px; align-items:start; }
+  @media (max-width: 980px) { .ad-grid { grid-template-columns: 1fr; } .ad-kpis { grid-template-columns: repeat(2, 1fr); } }
+
+  .ad-panel {
+    background:var(--ad-panel); border:1px solid var(--ad-border);
+    border-radius:12px; overflow:hidden;
+  }
+  .ad-panel-head {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; border-bottom:1px solid var(--ad-border);
+  }
+  .ad-panel-title { font-size:13px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--ad-text); margin:0; }
+  .ad-panel-body { padding:16px; }
+
+  .ad-form .form-label { font-size:12px; color:var(--ad-muted); text-transform:uppercase;
+    letter-spacing:.5px; margin-bottom:4px; font-weight:600; }
+  .ad-form .form-control, .ad-form .form-select {
+    background:var(--ad-panel2) !important; color:var(--ad-text) !important;
+    border:1px solid var(--ad-border) !important; border-radius:8px;
+    font-size:13px; padding:8px 10px;
+  }
+  .ad-form .form-control:focus, .ad-form .form-select:focus {
+    border-color:var(--ad-accent) !important;
+    box-shadow:0 0 0 2px rgba(106,166,255,.18) !important;
+  }
+  .ad-form input[type=color].form-control { padding:2px; height:38px; cursor:pointer; }
+  .ad-form .form-text { color:var(--ad-muted); font-size:11px; }
+  .ad-form .form-check-input {
+    background-color:var(--ad-panel2); border-color:var(--ad-border);
+  }
+  .ad-form .form-check-input:checked {
+    background-color:var(--ad-accent); border-color:var(--ad-accent);
+  }
+  .ad-form .form-check-label { color:var(--ad-text); font-size:13px; }
+
+  .ad-table-wrap { overflow-x:auto; }
+  table.ad-table {
+    width:100%; border-collapse:separate; border-spacing:0; font-size:13px; color:var(--ad-text);
+  }
+  table.ad-table thead th {
+    text-align:left; font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.7px; color:var(--ad-muted);
+    padding:10px 12px; background:var(--ad-panel2);
+    border-bottom:1px solid var(--ad-border);
+    position:sticky; top:0;
+  }
+  table.ad-table tbody td {
+    padding:10px 12px; border-bottom:1px solid var(--ad-border); vertical-align:middle;
+  }
+  table.ad-table tbody tr:hover { background:rgba(106,166,255,.06); }
+  table.ad-table tbody tr:last-child td { border-bottom:none; }
+
+  .ad-avatar {
+    width:34px; height:34px; border-radius:50%; object-fit:cover;
+    border:2px solid var(--ad-border);
+  }
+  .ad-avatar-fallback {
+    width:34px; height:34px; border-radius:50%;
+    display:inline-flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; font-size:13px;
+    border:2px solid var(--ad-border);
+  }
+  .ad-swatch { display:inline-block; width:22px; height:22px; border-radius:6px; border:1px solid var(--ad-border); vertical-align:middle; }
+
+  .ad-pill {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 9px; border-radius:999px; font-size:11px; font-weight:600;
+  }
+  .ad-pill-admin { background:rgba(106,166,255,.15); color:var(--ad-accent); border:1px solid rgba(106,166,255,.3); }
+  .ad-pill-tech  { background:rgba(34,197,94,.12); color:var(--ad-good); border:1px solid rgba(34,197,94,.3); }
+  .ad-pill-hidden { background:rgba(138,151,172,.12); color:var(--ad-muted); border:1px solid var(--ad-border); }
+
+  .ad-username { font-weight:600; }
+  .ad-email { color:var(--ad-muted); }
+
+  .ad-row-actions { display:flex; gap:6px; justify-content:flex-end; }
+</style>
+
+<div class="admin-cc">
+    <div class="ad-header">
+        <div>
+            <h1 class="ad-title">Admin Dashboard</h1>
+            <div class="ad-sub">Manage users, schedules, and system settings</div>
+        </div>
+        <div class="ad-actions">
+            <div class="ad-date-group">
                 <div>
-                    <label class="form-label">Start Date</label>
-                    <input type="date" id="export_start_date" class="form-control form-control-sm">
+                    <label>Start</label>
+                    <input type="date" id="export_start_date">
                 </div>
                 <div>
-                    <label class="form-label">End Date</label>
-                    <input type="date" id="export_end_date" class="form-control form-control-sm">
+                    <label>End</label>
+                    <input type="date" id="export_end_date">
                 </div>
+                <button onclick="exportSchedules()" class="ad-btn ad-btn-good" title="Export schedules to CSV">
+                    <i data-feather="download"></i><span>Export</span>
+                </button>
             </div>
-            <button onclick="exportSchedules()" class="btn btn-success">
-                <i data-feather="download" class="me-1"></i> Export Schedules
-            </button>
-            <a href="{{ url_for('recurring_schedules') }}" class="btn btn-warning">
-                <i data-feather="repeat" class="me-1"></i> Recurring Schedules
+            <a href="{{ url_for('recurring_schedules') }}" class="ad-btn ad-btn-warn">
+                <i data-feather="repeat"></i><span>Recurring</span>
             </a>
-            <a href="{{ url_for('admin_email_settings') }}" class="btn btn-info">
-                <i data-feather="mail" class="me-1"></i> Email Settings
+            <a href="{{ url_for('admin_email_settings') }}" class="ad-btn ad-btn-info">
+                <i data-feather="mail"></i><span>Email Settings</span>
             </a>
         </div>
     </div>
 
-    <div class="row mt-4">
-        <!-- User Management Section -->
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Add New Technician</h3>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('admin_create_user') }}" enctype="multipart/form-data">
-                        {{ form.hidden_tag() }}
-                        <div class="mb-3">
-                            {{ form.username.label(class="form-label") }}
-                            {{ form.username(class="form-control") }}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.email.label(class="form-label") }}
-                            {{ form.email(class="form-control") }}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.password.label(class="form-label") }}
-                            {{ form.password(class="form-control") }}
-                        </div>
-                        <div class="mb-3">
+    {% set total_users = users|length %}
+    {% set admin_count = users|selectattr('is_admin')|list|length %}
+    {% set tech_count = total_users - admin_count %}
+    {% set on_dash_count = users|selectattr('show_on_dashboard')|list|length %}
+
+    <div class="ad-kpis">
+        <div class="ad-kpi">
+            <span class="ic"><i data-feather="users"></i></span>
+            <div class="ad-kpi-label">Total Users</div>
+            <div class="ad-kpi-value">{{ total_users }}</div>
+        </div>
+        <div class="ad-kpi">
+            <span class="ic"><i data-feather="shield"></i></span>
+            <div class="ad-kpi-label">Admins</div>
+            <div class="ad-kpi-value">{{ admin_count }}</div>
+        </div>
+        <div class="ad-kpi">
+            <span class="ic"><i data-feather="tool"></i></span>
+            <div class="ad-kpi-label">Technicians</div>
+            <div class="ad-kpi-value">{{ tech_count }}</div>
+        </div>
+        <div class="ad-kpi">
+            <span class="ic"><i data-feather="eye"></i></span>
+            <div class="ad-kpi-label">On Dashboard</div>
+            <div class="ad-kpi-value">{{ on_dash_count }}</div>
+        </div>
+    </div>
+
+    <div class="ad-grid">
+        <!-- Add User -->
+        <div class="ad-panel ad-form">
+            <div class="ad-panel-head">
+                <h2 class="ad-panel-title">Add New User</h2>
+                <i data-feather="user-plus" style="opacity:.5;"></i>
+            </div>
+            <div class="ad-panel-body">
+                <form method="POST" action="{{ url_for('admin_create_user') }}" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control") }}
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
                             {{ form.color.label(class="form-label") }}
                             {{ form.color(class="form-control") }}
                         </div>
-                        <div class="mb-3">
+                        <div class="col-6 mb-3">
                             {{ form.timezone.label(class="form-label") }}
                             {{ form.timezone(class="form-select") }}
                         </div>
-                        <div class="mb-3">
-                            {{ form.profile_picture.label(class="form-label") }}
-                            {{ form.profile_picture(class="form-control") }}
-                            <div class="form-text">Upload JPG, PNG, or WEBP image files only</div>
-                        </div>
-                        <div class="mb-3 form-check">
-                            {{ form.is_admin(class="form-check-input") }}
-                            {{ form.is_admin.label(class="form-check-label") }}
-                        </div>
-                        <button type="submit" class="btn btn-primary">Create User</button>
-                    </form>
-                </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.profile_picture.label(class="form-label") }}
+                        {{ form.profile_picture(class="form-control") }}
+                        <div class="form-text">JPG, PNG, or WEBP</div>
+                    </div>
+                    <div class="mb-2 form-check">
+                        {{ form.is_admin(class="form-check-input") }}
+                        {{ form.is_admin.label(class="form-check-label") }}
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.show_on_dashboard(class="form-check-input") }}
+                        {{ form.show_on_dashboard.label(class="form-check-label") }}
+                    </div>
+                    <button type="submit" class="ad-btn ad-btn-primary w-100" style="justify-content:center;">
+                        <i data-feather="plus"></i> Create User
+                    </button>
+                </form>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3>Technicians</h3>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped technicians-table">
-                        <thead>
-                            <tr>
-                                <th>Profile</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Color</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in users %}
-                            <tr>
-                                <td>
-                                    {% if user.profile_picture %}
-                                        <img src="{{ url_for('static', filename=user.profile_picture) }}" 
-                                             alt="{{ user.username }}" 
-                                             class="rounded-circle"
-                                             style="width: 40px; height: 40px; object-fit: cover;">
-                                    {% else %}
-                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                                             style="width: 40px; height: 40px; background-color: {{ user.color }}; font-size: 14px;">
-                                            {{ user.username[0].upper() }}
-                                        </div>
-                                    {% endif %}
-                                </td>
-                                <td>{{ user.username }}</td>
-                                <td>{{ user.email }}</td>
-                                <td>
-                                    <div class="color-box" style="background-color: {{ user.color }}; width: 24px; height: 24px; border: 1px solid #ddd; border-radius: 4px; display: inline-block;"></div>
-                                </td>
-                                <td>{{ "Admin" if user.is_admin else "Technician" }}</td>
-                                <td>
-                                    <a href="{{ url_for('admin_edit_user', user_id=user.id) }}" class="btn btn-sm btn-primary">
-                                        Edit
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteUser({{ user.id }})">
-                                        Delete
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <!-- Edit User Modal - Fixed for Dark Mode flickering issues -->
-                            <div class="modal fade no-animations" id="editUserModal{{ user.id }}" tabindex="-1" data-bs-backdrop="static">
-                                <div class="modal-dialog no-animations">
-                                    <div class="modal-content no-animations">
-                                        <div class="modal-header no-animations">
-                                            <h5 class="modal-title">Edit User: {{ user.username }}</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body no-animations">
-                                            <form method="POST" action="{{ url_for('admin_edit_user', user_id=user.id) }}">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Username</label>
-                                                    <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label">Email</label>
-                                                    <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label">Color</label>
-                                                    <input type="color" name="color" class="form-control form-control-color" value="{{ user.color }}" title="Choose your color">
-                                                    <div class="mt-2 color-preview" style="width: 100%; height: 24px; background-color: {{ user.color }}; border: 1px solid #ddd; border-radius: 4px;"></div>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label">New Password</label>
-                                                    <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current password">
-                                                </div>
-                                                <div class="mb-3 form-check">
-                                                    <input type="checkbox" name="is_admin" class="form-check-input" {% if user.is_admin %}checked{% endif %}>
-                                                    <label class="form-check-label">Is Admin</label>
-                                                </div>
-                                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                                            </form>
-                                        </div>
+        <!-- Users table -->
+        <div class="ad-panel">
+            <div class="ad-panel-head">
+                <h2 class="ad-panel-title">Users <span style="color:var(--ad-muted); font-weight:500; margin-left:6px;">{{ total_users }}</span></h2>
+                <i data-feather="users" style="opacity:.5;"></i>
+            </div>
+            <div class="ad-table-wrap">
+                <table class="ad-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;"></th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th style="width:60px;">Color</th>
+                            <th>Role</th>
+                            <th>Visibility</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                {% if user.profile_picture %}
+                                    <img src="{{ url_for('static', filename=user.profile_picture) }}"
+                                         alt="{{ user.username }}" class="ad-avatar">
+                                {% else %}
+                                    <div class="ad-avatar-fallback" style="background-color: {{ user.color }};">
+                                        {{ user.username[0].upper() }}
                                     </div>
+                                {% endif %}
+                            </td>
+                            <td><div class="ad-username">{{ user.username }}</div></td>
+                            <td><div class="ad-email">{{ user.email }}</div></td>
+                            <td><div class="ad-swatch" style="background-color: {{ user.color }};"></div></td>
+                            <td>
+                                {% if user.is_admin %}
+                                    <span class="ad-pill ad-pill-admin"><i data-feather="shield" style="width:10px; height:10px;"></i> Admin</span>
+                                {% else %}
+                                    <span class="ad-pill ad-pill-tech"><i data-feather="tool" style="width:10px; height:10px;"></i> Tech</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.show_on_dashboard %}
+                                    <span class="ad-pill ad-pill-tech"><i data-feather="eye" style="width:10px; height:10px;"></i> Visible</span>
+                                {% else %}
+                                    <span class="ad-pill ad-pill-hidden"><i data-feather="eye-off" style="width:10px; height:10px;"></i> Hidden</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="ad-row-actions">
+                                    <a href="{{ url_for('admin_edit_user', user_id=user.id) }}" class="ad-btn ad-btn-sm">
+                                        <i data-feather="edit-2"></i> Edit
+                                    </a>
+                                    <button type="button" class="ad-btn ad-btn-danger" onclick="deleteUser({{ user.id }}, '{{ user.username }}')">
+                                        <i data-feather="trash-2"></i>
+                                    </button>
                                 </div>
-                            </div>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function deleteUser(userId) {
-    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-        window.location.href = `/admin/delete_user/${userId}`;
+function deleteUser(userId, name) {
+    if (confirm('Delete user "' + name + '"? This cannot be undone.')) {
+        window.location.href = '/admin/delete_user/' + userId;
     }
 }
-
-// Modal initialization to prevent flickering
-document.addEventListener('DOMContentLoaded', function() {
-    // Add event listeners for color input changes 
-    document.querySelectorAll('input[type="color"]').forEach(input => {
-        input.addEventListener('input', function() {
-            // Update the preview div that follows this input
-            const colorPreview = this.parentNode.querySelector('.color-preview');
-            if (colorPreview) {
-                colorPreview.style.backgroundColor = this.value;
-            }
-        });
-    });
-    
-    // Remove animation classes from modal backdrops when they appear
-    document.body.addEventListener('shown.bs.modal', function() {
-        document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
-            backdrop.classList.add('no-animations');
-        });
-    });
-});
-
 function exportSchedules() {
     const startDate = document.getElementById('export_start_date').value;
     const endDate = document.getElementById('export_end_date').value;
-
     if (!startDate || !endDate) {
         alert('Please select both start and end dates');
         return;
     }
-
-    window.location.href = `/admin/export_schedules?start_date=${startDate}&end_date=${endDate}`;
+    window.location.href = '/admin/export_schedules?start_date=' + startDate + '&end_date=' + endDate;
 }
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof feather !== 'undefined') feather.replace();
+});
 </script>
 {% endblock %}
