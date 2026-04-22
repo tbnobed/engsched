@@ -1302,3 +1302,83 @@ body.light-theme .time-off-entry[class*="user-color-"] div {
 .light-theme .badge {
   color: white !important;
 }
+/* ─────────────────────────────────────────────────────────────────────────
+   Light-mode overrides for Command Center pages
+   (dashboard.html, tickets/dashboard.html, calendar.html)
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Override --cc-* CSS variables when light theme is active.
+   These cascade into dashboard.html and tickets/dashboard.html which
+   use them via :root. Defining them on body.light-theme overrides :root. */
+body.light-theme {
+  --cc-bg:      #f4f6fa !important;
+  --cc-panel:   #ffffff !important;
+  --cc-panel-2: #f0f3f8 !important;
+  --cc-border:  #d9dfe8 !important;
+  --cc-text:    #1a2433 !important;
+  --cc-muted:   #5b6878 !important;
+  --cc-accent:  #2563eb !important;
+  --cc-good:    #059669 !important;
+  --cc-warn:    #d97706 !important;
+  --cc-bad:     #dc2626 !important;
+}
+
+/* Some hardcoded helpers in those templates use literal colors —
+   override the most visible ones for light mode. */
+body.light-theme .tk-btn:hover { background: #e6ecf5 !important; border-color:#c7d0de !important; }
+body.light-theme .tk-pager button:hover:not(:disabled) { background:#e6ecf5 !important; border-color:#c7d0de !important; }
+body.light-theme .cc-shell, body.light-theme .tk-shell { color: #1a2433; }
+
+/* Calendar page (calendar.html) — .calendar-container is hardcoded dark
+   in style.css. Override to a clean light look in light mode. */
+body.light-theme .calendar-container {
+  background: #ffffff !important;
+  color: #1a2433 !important;
+  border-color: #d9dfe8 !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06) !important;
+}
+body.light-theme .calendar-container .cc-header {
+  background: linear-gradient(180deg, #f8fafc, #ffffff) !important;
+  border-color: #d9dfe8 !important;
+}
+body.light-theme .calendar-container .cc-title { color: #1a2433 !important; }
+body.light-theme .calendar-container .cc-subtitle { color: #5b6878 !important; }
+body.light-theme .calendar-container .cc-nav {
+  background: #f0f3f8 !important;
+  border-color: #d9dfe8 !important;
+}
+body.light-theme .calendar-container .cc-icon-btn,
+body.light-theme .calendar-container .cc-today-btn { color: #1a2433 !important; }
+body.light-theme .calendar-container .cc-icon-btn:hover,
+body.light-theme .calendar-container .cc-today-btn:hover {
+  background: #e6ecf5 !important;
+  color: #1a2433 !important;
+}
+body.light-theme .calendar-container .cc-today-btn {
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+body.light-theme .calendar-container .cc-today-btn:hover {
+  background: #1d4fd8 !important;
+  color: #ffffff !important;
+}
+body.light-theme .calendar-container .day-column,
+body.light-theme .calendar-container .time-column {
+  background: #ffffff !important;
+  border-color: #e3e8ef !important;
+}
+body.light-theme .calendar-container .day-header {
+  background: #f8fafc !important;
+  color: #1a2433 !important;
+  border-color: #d9dfe8 !important;
+}
+body.light-theme .calendar-container .hour-slot {
+  border-color: #eef1f6 !important;
+}
+body.light-theme .calendar-container .time-slot { color: #5b6878 !important; }
+body.light-theme .calendar-container .day-column.today { background: #f3f7ff !important; }
+body.light-theme .calendar-container .day-header.today { background: #e0ecff !important; color: #1d4fd8 !important; }
+
+/* Schedule bar text — keep readable on light backgrounds */
+body.light-theme .calendar-container .sched-bar-name { text-shadow: none !important; color: #1a2433 !important; }
+body.light-theme .calendar-container .sched-bar-time { color: rgba(26,36,51,.65) !important; }
