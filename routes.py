@@ -204,7 +204,7 @@ def dashboard():
     
     # Build people rail: every user with current on-shift / off / OOO status
     now_utc = datetime.now(pytz.UTC)
-    all_users = User.query.order_by(User.username).all()
+    all_users = User.query.filter(User.show_on_dashboard.is_(True)).order_by(User.username).all()
     people_rail = []
     for u in all_users:
         status = 'off'
@@ -2584,6 +2584,7 @@ def admin_create_user():
                 email=email,  # Store email in lowercase
                 color=form.color.data or '#3498db',  # Default color if none provided
                 is_admin=form.is_admin.data,
+                show_on_dashboard=form.show_on_dashboard.data,
                 timezone=form.timezone.data or 'America/Los_Angeles'  # Default timezone
             )
             user.set_password(form.password.data)
@@ -2655,6 +2656,7 @@ def admin_edit_user(user_id):
         form.email.data = user.email
         form.color.data = user.color
         form.is_admin.data = user.is_admin
+        form.show_on_dashboard.data = user.show_on_dashboard
         form.timezone.data = user.timezone
         return render_template('admin/edit_user.html', 
                             user=user,
@@ -2673,6 +2675,7 @@ def admin_edit_user(user_id):
         password = request.form.get('password')
         timezone = request.form.get('timezone')
         is_admin = 'is_admin' in request.form
+        show_on_dashboard = 'show_on_dashboard' in request.form
 
         # Handle profile picture upload
         profile_picture_path = None
@@ -2750,6 +2753,7 @@ def admin_edit_user(user_id):
             user.email = email.lower() if email else ""
             user.color = color
             user.is_admin = is_admin
+            user.show_on_dashboard = show_on_dashboard
             user.timezone = timezone
 
             # Update profile picture if uploaded

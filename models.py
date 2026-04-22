@@ -68,6 +68,7 @@ class User(UserMixin, db.Model):
     timezone = db.Column(db.String(50), default='UTC')  # New timezone field
     theme_preference = db.Column(db.String(20), default='dark')  # Theme preference (dark/light)
     profile_picture = db.Column(db.String(255), nullable=True)  # Path to profile picture file
+    show_on_dashboard = db.Column(db.Boolean, default=True, nullable=False)  # Show in technicians rail on dashboard
     
     # Override email property to ensure lowercase
     @property

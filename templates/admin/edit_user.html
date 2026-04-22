@@ -64,6 +64,11 @@
                             {{ form.is_admin(class="form-check-input") }}
                             {{ form.is_admin.label(class="form-check-label") }}
                         </div>
+                        <div class="mb-3 form-check">
+                            {{ form.show_on_dashboard(class="form-check-input") }}
+                            {{ form.show_on_dashboard.label(class="form-check-label") }}
+                            <small class="form-text text-muted d-block">Uncheck for managers/sysadmins who shouldn't appear in the dashboard technicians rail.</small>
+                        </div>
                         <div class="d-flex justify-content-between">
                             <button type="submit" class="btn btn-primary">Update User</button>
                             <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>

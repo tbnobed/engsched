@@ -40,6 +40,7 @@ class AdminUserForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     color = ColorField('Color', default='#3498db')
     is_admin = BooleanField('Is Admin')
+    show_on_dashboard = BooleanField('Show on Dashboard Technicians Rail', default=True)
     timezone = SelectField('Timezone', 
                          choices=[(tz, tz) for tz in pytz.common_timezones],
                          default='America/Los_Angeles')
@@ -65,6 +66,7 @@ class EditUserForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     color = ColorField('Color')
     is_admin = BooleanField('Is Admin')
+    show_on_dashboard = BooleanField('Show on Dashboard Technicians Rail', default=True)
     timezone = SelectField('Timezone', 
                          choices=[(tz, tz) for tz in pytz.common_timezones],
                          default='America/Los_Angeles')

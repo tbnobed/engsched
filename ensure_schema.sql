@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS "user" (
     is_admin BOOLEAN DEFAULT FALSE,
     timezone VARCHAR(50) DEFAULT 'America/Los_Angeles',
     theme_preference VARCHAR(20) DEFAULT 'dark',
-    profile_picture VARCHAR(255)
+    profile_picture VARCHAR(255),
+    show_on_dashboard BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE IF NOT EXISTS location (
@@ -183,6 +184,11 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user' AND column_name='profile_picture') THEN
         ALTER TABLE "user" ADD COLUMN profile_picture VARCHAR(255);
         RAISE NOTICE 'Added user.profile_picture';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user' AND column_name='show_on_dashboard') THEN
+        ALTER TABLE "user" ADD COLUMN show_on_dashboard BOOLEAN NOT NULL DEFAULT TRUE;
+        RAISE NOTICE 'Added user.show_on_dashboard';
     END IF;
 
     -- --------------------------------------------------------
