@@ -1422,3 +1422,47 @@ body.light-theme .calendar-container .day-column.today { background: #f3f7ff !im
 /* Current time line — keep the red marker readable on white */
 body.light-theme .calendar-container .current-time-line { background: #ef4444 !important; }
 body.light-theme .calendar-container .current-time-line::after { background: #ef4444 !important; color: #fff !important; }
+
+/* Calendar header buttons + filter pills */
+body.light-theme .calendar-container .cc-btn {
+  background: #ffffff !important;
+  border: 1px solid #d9dfe8 !important;
+  color: #1a2433 !important;
+}
+body.light-theme .calendar-container .cc-btn-ghost:hover {
+  background: #fff7ed !important;
+  color: #b8702a !important;
+  border-color: #f59e0b !important;
+}
+body.light-theme .calendar-container .cc-btn-primary {
+  background: linear-gradient(135deg,#2563eb,#4f46e5) !important;
+  border: none !important;
+  color: #fff !important;
+}
+body.light-theme .calendar-container .cc-btn-primary:hover {
+  background: linear-gradient(135deg,#1d4fd8,#4338ca) !important;
+  color: #fff !important;
+}
+
+/* Location / Technician filter pills */
+body.light-theme .calendar-container .cc-filter {
+  background: #ffffff !important;
+  border: 1px solid #d9dfe8 !important;
+  color: #1a2433 !important;
+}
+body.light-theme .calendar-container .cc-filter:focus-within {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37,99,235,.18) !important;
+}
+body.light-theme .calendar-container .cc-filter-icon { color: #5b6878 !important; }
+body.light-theme .calendar-container .cc-filter select,
+body.light-theme .calendar-container .cc-filter input {
+  background: transparent !important;
+  color: #1a2433 !important;
+}
+
+/* Grid divider color (hardcoded #2a3548) and grid border */
+body.light-theme .calendar-container .calendar-grid {
+  background: #d9dfe8 !important;
+  border-color: #d9dfe8 !important;
+}
