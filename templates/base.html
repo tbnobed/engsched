@@ -312,26 +312,56 @@
             border-top: 1px solid #dee2e6 !important;
         }
         
-        /* Dark mode dropdown overrides */
+        /* Dark mode dropdown overrides — Command Center aesthetic */
         body:not(.light-theme) .dropdown-menu {
-            background-color: #111f36 !important;
+            background-color: #131a25 !important;
+            border: 1px solid #232d3d !important;
+            border-radius: 10px !important;
+            box-shadow: 0 12px 32px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.4) !important;
+            padding: 6px !important;
+            margin-top: 6px !important;
+            min-width: 200px !important;
         }
-        
+
         body:not(.light-theme) .dropdown-item {
-            color: white !important;
+            color: #e6ecf5 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            padding: 8px 12px !important;
+            border-radius: 6px !important;
+            transition: background-color .12s ease, color .12s ease, transform .12s ease !important;
         }
-        
+
+        body:not(.light-theme) .dropdown-item:hover,
+        body:not(.light-theme) .dropdown-item:focus {
+            background-color: rgba(106,166,255,.12) !important;
+            color: #ffffff !important;
+        }
+
+        body:not(.light-theme) .dropdown-item.active,
+        body:not(.light-theme) .dropdown-item:active {
+            background-color: #6aa6ff !important;
+            color: #0c1118 !important;
+        }
+
         body:not(.light-theme) .dropdown-menu .form-label {
-            color: white !important;
+            color: #8a97ac !important;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            font-size: 10px;
+            font-weight: 600;
         }
-        
+
         body:not(.light-theme) .dropdown-menu select.form-select {
-            color: white !important;
-            background-color: #162439 !important;
+            color: #e6ecf5 !important;
+            background-color: #0c1118 !important;
+            border: 1px solid #232d3d !important;
+            border-radius: 6px !important;
         }
-        
+
         body:not(.light-theme) .dropdown-divider {
-            border-top: 1px solid #2c3e50 !important;
+            border-top: 1px solid #232d3d !important;
+            margin: 6px 4px !important;
         }
     </style>
 </head>
