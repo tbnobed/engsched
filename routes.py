@@ -251,18 +251,8 @@ def dashboard():
     kpi_total_techs = len(all_users)
     kpi_unassigned = len([t for t in active_tickets_all if not t.assigned_to])
 
-    # Timeline range — clamp 8-20 by default, expand to fit actual schedules
-    range_start_h, range_end_h = 8, 20
-    for sched in today_schedules:
-        if sched.time_off and sched.all_day:
-            continue
-        s_h = sched.start_time.astimezone(user_tz).hour
-        e_local = sched.end_time.astimezone(user_tz)
-        e_h = e_local.hour + (1 if e_local.minute > 0 else 0)
-        range_start_h = min(range_start_h, s_h)
-        range_end_h = max(range_end_h, e_h)
-    range_start_h = max(0, range_start_h)
-    range_end_h = min(24, max(range_end_h, range_start_h + 4))
+    # Timeline range — always show full 24 hours
+    range_start_h, range_end_h = 0, 24
 
     return render_template('dashboard.html', 
                          recent_tickets=recent_tickets,
