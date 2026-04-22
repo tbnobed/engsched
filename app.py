@@ -413,6 +413,16 @@ def inject_now():
     from datetime import datetime
     return {'now': datetime.now()}
 
+@app.after_request
+def add_no_cache_headers(response):
+    """Prevent browsers from caching HTML pages so template updates are picked up immediately."""
+    ctype = response.headers.get('Content-Type', '')
+    if ctype.startswith('text/html'):
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    return response
+
 @app.context_processor
 def inject_mobile_detection():
     """Inject mobile device detection function into templates"""
