@@ -311,16 +311,23 @@
 
   /* Keyboard shortcut help */
   .tk-kbd-help {
-    position: fixed; right: 20px; bottom: 20px; background: var(--cc-panel);
-    border:1px solid var(--cc-border); border-radius:10px; padding:10px 12px;
-    font-size:11px; color: var(--cc-muted); z-index: 90; max-width: 220px;
-    opacity:.7; transition: opacity .15s;
+    margin-top: 12px; padding: 12px 14px;
+    border-top: 1px solid var(--cc-border);
+    font-size: 11px; color: var(--cc-muted);
   }
-  .tk-kbd-help:hover { opacity:1; }
+  .tk-kbd-title {
+    text-transform: uppercase; letter-spacing: .6px; font-weight: 600;
+    color: var(--cc-muted); font-size: 10px; margin-bottom: 8px;
+  }
+  .tk-kbd-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+  }
+  .tk-kbd-row span { color: var(--cc-text); opacity: .75; }
   .tk-kbd-help kbd {
     background: var(--cc-panel-2); border:1px solid var(--cc-border);
     border-radius:4px; padding: 1px 6px; color: var(--cc-text);
-    font-family: 'JetBrains Mono', monospace; font-size:10px; margin-right:4px;
+    font-family: 'JetBrains Mono', monospace; font-size:10px; min-width: 18px;
+    text-align: center; display: inline-block;
   }
 </style>
 <div class="tk-shell">
@@ -437,6 +444,15 @@
         </div>
         <a href="{{ url_for('tickets.tickets_dashboard') }}" class="tk-btn" style="justify-content:center;">Clear</a>
       </form>
+      <div class="tk-kbd-help" title="Keyboard shortcuts">
+        <div class="tk-kbd-title">Shortcuts</div>
+        <div class="tk-kbd-row"><kbd>j</kbd><kbd>k</kbd><span>navigate</span></div>
+        <div class="tk-kbd-row"><kbd>↵</kbd><span>open</span></div>
+        <div class="tk-kbd-row"><kbd>x</kbd><span>select</span></div>
+        <div class="tk-kbd-row"><kbd>a</kbd><span>assign me</span></div>
+        <div class="tk-kbd-row"><kbd>s</kbd><span>status</span></div>
+        <div class="tk-kbd-row"><kbd>/</kbd><span>search</span></div>
+      </div>
     </div>
 
     <!-- Tickets table panel -->
