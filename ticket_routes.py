@@ -195,7 +195,7 @@ def tickets_dashboard():
     
     # Get filters from request args with appropriate defaults
     # Check if no URL parameters or only cache-busting parameters
-    cache_params = ['timestamp', 'rand']
+    cache_params = ['timestamp', 'rand', '_t']
     has_only_cache_params = all(k in cache_params for k in request.args.keys()) if request.args else True
     
     # Extract raw filter values from the request (for debugging)
