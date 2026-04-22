@@ -1382,3 +1382,43 @@ body.light-theme .calendar-container .day-header.today { background: #e0ecff !im
 /* Schedule bar text — keep readable on light backgrounds */
 body.light-theme .calendar-container .sched-bar-name { text-shadow: none !important; color: #1a2433 !important; }
 body.light-theme .calendar-container .sched-bar-time { color: rgba(26,36,51,.65) !important; }
+
+/* Day header inner pieces */
+body.light-theme .calendar-container .day-header {
+  background: #f8fafc !important;
+  color: #1a2433 !important;
+  border-bottom: 1px solid #d9dfe8 !important;
+}
+body.light-theme .calendar-container .day-header-name { color: #5b6878 !important; }
+body.light-theme .calendar-container .day-header-date { color: #1a2433 !important; }
+body.light-theme .calendar-container .day-header-month { color: #5b6878 !important; }
+body.light-theme .calendar-container .day-header.weekend { background: #eef2f7 !important; }
+body.light-theme .calendar-container .day-header.weekend .day-header-name { color: #b8702a !important; }
+body.light-theme .calendar-container .day-header.today {
+  background: linear-gradient(180deg, rgba(37,99,235,.18), rgba(37,99,235,.04)) !important;
+  border-bottom: 2px solid #2563eb !important;
+}
+body.light-theme .calendar-container .day-header.today .day-header-name { color: #2563eb !important; }
+body.light-theme .calendar-container .day-header.today .day-header-date {
+  color: #1d4fd8 !important;
+  text-shadow: none !important;
+}
+body.light-theme .calendar-container .day-header.today .day-header-month { color: #2563eb !important; }
+
+/* Time column top spacer (the dark notch above 00:00) */
+body.light-theme .calendar-container .time-column::before {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #d9dfe8 !important;
+}
+body.light-theme .calendar-container .time-column { background: #ffffff !important; }
+body.light-theme .calendar-container .time-slot {
+  color: #5b6878 !important;
+  border-color: #eef1f6 !important;
+}
+
+/* Today column body tint */
+body.light-theme .calendar-container .day-column.today { background: #f3f7ff !important; }
+
+/* Current time line — keep the red marker readable on white */
+body.light-theme .calendar-container .current-time-line { background: #ef4444 !important; }
+body.light-theme .calendar-container .current-time-line::after { background: #ef4444 !important; color: #fff !important; }
