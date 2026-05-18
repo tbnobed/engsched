@@ -152,6 +152,15 @@ app.config['SESSION_COOKIE_PATH'] = '/'
 # Set default timezone
 app.config['TIMEZONE'] = pytz.timezone('UTC')
 
+# Inbound email webhooks (SendGrid Inbound Parse) post the entire raw MIME
+# message — including attachments — in a single form field named "email".
+# Werkzeug's defaults (~500KB per field, ~1MB total) reject those with HTTP 413
+# ("Request Entity Too Large"). Raise the caps so large emails with image
+# attachments come through.
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024          # 50 MB total request
+app.config['MAX_FORM_MEMORY_SIZE'] = 50 * 1024 * 1024         # 50 MB per form field
+app.config['MAX_FORM_PARTS'] = 2000
+
 # Initialize extensions
 db.init_app(app)
 login_manager.init_app(app)
