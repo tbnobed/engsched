@@ -277,13 +277,16 @@ def auto_generate_recurring_schedules_job():
                     should_generate = True
                     app.logger.info(f"Template '{template.template_name}' never generated, generating now")
                 else:
-                    # Calculate time since last generation
+                    # Run at most once per day per template. generate_schedules is
+                    # idempotent (exact-time match is skipped), so daily runs only
+                    # do real work when the rolling horizon advances or a template
+                    # was edited.
                     time_since_last = datetime.now(pytz.UTC) - template.last_generated
-                    if time_since_last.days >= 7:  # Generate weekly for automatic runs
+                    if time_since_last.total_seconds() >= 23 * 3600:
                         should_generate = True
-                        app.logger.info(f"Template '{template.template_name}' last generated {time_since_last.days} days ago, generating now")
+                        app.logger.info(f"Template '{template.template_name}' last generated {time_since_last} ago, generating now")
                     else:
-                        app.logger.info(f"Template '{template.template_name}' last generated {time_since_last.days} days ago, skipping (need 7+ days)")
+                        app.logger.info(f"Template '{template.template_name}' last generated {time_since_last} ago, skipping (need ~24h)")
                 
                 if should_generate:
                     try:
@@ -354,20 +357,32 @@ def start_scheduler_with_lock():
         # If we got here, we have the lock - start the scheduler
         scheduler = BackgroundScheduler()
         
-        # Schedule the auto-generation to run every Sunday at 2:00 AM
+        # Daily cron at 2:00 AM — gate inside the job decides which templates
+        # actually need work (never-generated OR >=7 days since last_generated).
         scheduler.add_job(
             func=auto_generate_recurring_schedules_job,
             trigger="cron",
-            day_of_week="sun",
             hour=2,
             minute=0,
             id='auto_generate_schedules',
             name='Auto-generate recurring schedules',
             replace_existing=True
         )
-        
+
+        # Also run once shortly after startup so brand-new templates don't have
+        # to wait until the next 2 AM cron tick to materialize.
+        from datetime import datetime as _dt, timedelta as _td
+        scheduler.add_job(
+            func=auto_generate_recurring_schedules_job,
+            trigger="date",
+            run_date=_dt.now() + _td(seconds=30),
+            id='auto_generate_schedules_startup',
+            name='Auto-generate recurring schedules (startup)',
+            replace_existing=True
+        )
+
         scheduler.start()
-        app.logger.info("✅ Automatic recurring schedule generator started - runs every Sunday at 2:00 AM (lock acquired)")
+        app.logger.info("✅ Automatic recurring schedule generator started - daily at 2:00 AM + 30s after boot (lock acquired)")
         
         # Shut down the scheduler when exiting the app
         def cleanup():

@@ -625,28 +625,43 @@ class RecurringScheduleTemplate(db.Model):
                     if ooo_conflict:
                         continue
                     
-                    existing_schedule = Schedule.query.filter(
+                    # Only skip when an existing schedule occupies the EXACT same
+                    # time slot as the template would create. This lets technicians
+                    # have multiple distinct shifts on the same day without the
+                    # generator overwriting one of them.
+                    existing_exact = Schedule.query.filter(
                         Schedule.technician_id == self.technician_id,
                         Schedule.time_off == False,
-                        Schedule.start_time >= date_start,
-                        Schedule.start_time <= date_end
+                        Schedule.start_time == start_datetime_utc,
+                        Schedule.end_time == end_datetime_utc
                     ).first()
-                    
-                    if existing_schedule:
-                        existing_schedule.start_time = start_datetime_utc
-                        existing_schedule.end_time = end_datetime_utc
-                        existing_schedule.location_id = self.location_id
-                        updated_count += 1
-                    else:
-                        schedule = Schedule(
-                            technician_id=self.technician_id,
-                            start_time=start_datetime_utc,
-                            end_time=end_datetime_utc,
-                            description="",
-                            location_id=self.location_id,
-                            time_off=False
-                        )
-                        generated_schedules.append(schedule)
+
+                    if existing_exact:
+                        # Keep the existing entry; just refresh the location in case it changed.
+                        if existing_exact.location_id != self.location_id:
+                            existing_exact.location_id = self.location_id
+                            updated_count += 1
+                        continue
+
+                    # Skip if any other schedule actually overlaps the template slot.
+                    overlap = Schedule.query.filter(
+                        Schedule.technician_id == self.technician_id,
+                        Schedule.start_time < end_datetime_utc,
+                        Schedule.end_time > start_datetime_utc
+                    ).first()
+
+                    if overlap:
+                        continue
+
+                    schedule = Schedule(
+                        technician_id=self.technician_id,
+                        start_time=start_datetime_utc,
+                        end_time=end_datetime_utc,
+                        description="",
+                        location_id=self.location_id,
+                        time_off=False
+                    )
+                    generated_schedules.append(schedule)
         
         return generated_schedules, updated_count
     
