@@ -1,0 +1,24 @@
+{# Renders a single ticket/comment attachment.
+   Images render inline as a thumbnail that opens full-size in a new tab.
+   Non-image files render as a download button. #}
+{% set _ext = filename.rsplit('.', 1)[-1]|lower if '.' in filename else '' %}
+{% set _is_image = _ext in ['png','jpg','jpeg','gif','webp','svg','bmp'] %}
+{% set _display_name = filename.split('_', 3)[-1] if filename.count('_') >= 3 else (filename.split('_', 2)[-1] if '_' in filename else filename) %}
+{% set _href = url_for('tickets.download_attachment', filename=filename) %}
+{% if _is_image %}
+<a href="{{ _href }}" target="_blank" rel="noopener"
+   class="ticket-inline-image d-inline-block me-2 mb-2"
+   title="{{ _display_name }}">
+    <img src="{{ _href }}" alt="{{ _display_name }}"
+         style="max-width: 320px; max-height: 240px; border-radius: 8px;
+                border: 1px solid rgba(255,255,255,0.08);
+                box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+                display: block; cursor: zoom-in; background:#0c1118;">
+</a>
+{% else %}
+<a href="{{ _href }}"
+   class="btn btn-sm btn-outline-primary me-2 mb-2"
+   target="_blank" rel="noopener" download>
+    <i data-feather="download"></i> {{ _display_name }}
+</a>
+{% endif %}

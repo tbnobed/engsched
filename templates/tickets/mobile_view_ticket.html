@@ -164,24 +164,16 @@
             {% if ticket.attachment %}
             <div class="ticket-attachment mt-3">
                 <h6><i data-feather="paperclip" class="feather-small"></i> Attached File{{ 's' if ticket.attachment.startswith('[') else '' }}:</h6>
+                <div class="d-flex flex-wrap align-items-start">
                 {% if ticket.attachment.startswith('[') %}
-                    {# Multiple attachments stored as JSON array #}
-                    {% set attachments = ticket.attachment|from_json %}
-                    {% for filename in attachments %}
-                    <a href="{{ url_for('tickets.download_attachment', filename=filename) }}" 
-                       class="btn btn-sm btn-outline-primary me-2 mb-2"
-                       target="_blank" rel="noopener" download>
-                        <i data-feather="download" class="feather-small"></i> {{ filename.split('_', 3)[-1] if filename.count('_') >= 3 else filename.split('_', 2)[-1] if '_' in filename else filename }}
-                    </a>
+                    {% for filename in ticket.attachment|from_json %}
+                        {% include 'tickets/_attachment_item.html' %}
                     {% endfor %}
                 {% else %}
-                    {# Single attachment (legacy format) #}
-                    <a href="{{ url_for('tickets.download_attachment', filename=ticket.attachment) }}" 
-                       class="btn btn-sm btn-outline-primary"
-                       target="_blank" rel="noopener" download>
-                        <i data-feather="download" class="feather-small"></i> {{ ticket.attachment.split('_', 2)[-1] if '_' in ticket.attachment else ticket.attachment }}
-                    </a>
+                    {% set filename = ticket.attachment %}
+                    {% include 'tickets/_attachment_item.html' %}
                 {% endif %}
+                </div>
             </div>
             {% endif %}
         </div>
@@ -257,24 +249,14 @@
                         {{ comment['content']|safe }}
                     </div>
                     {% if comment.attachment %}
-                    <div class="comment-attachment mt-2">
+                    <div class="comment-attachment mt-2 d-flex flex-wrap align-items-start">
                         {% if comment.attachment.startswith('[') %}
-                            {# Multiple attachments stored as JSON array #}
-                            {% set attachments = comment.attachment|from_json %}
-                            {% for filename in attachments %}
-                            <a href="{{ url_for('tickets.download_attachment', filename=filename) }}" 
-                               class="btn btn-sm btn-outline-primary me-2 mb-2"
-                               target="_blank" rel="noopener" download>
-                                <i data-feather="download" class="feather-small"></i> {{ filename.split('_', 3)[-1] if filename.count('_') >= 3 else filename.split('_', 2)[-1] if '_' in filename else filename }}
-                            </a>
+                            {% for filename in comment.attachment|from_json %}
+                                {% include 'tickets/_attachment_item.html' %}
                             {% endfor %}
                         {% else %}
-                            {# Single attachment (legacy format) #}
-                            <a href="{{ url_for('tickets.download_attachment', filename=comment.attachment) }}" 
-                               class="btn btn-sm btn-outline-primary"
-                               target="_blank" rel="noopener" download>
-                                <i data-feather="download" class="feather-small"></i> {{ comment.attachment.split('_', 2)[-1] if '_' in comment.attachment else comment.attachment }}
-                            </a>
+                            {% set filename = comment.attachment %}
+                            {% include 'tickets/_attachment_item.html' %}
                         {% endif %}
                     </div>
                     {% endif %}
