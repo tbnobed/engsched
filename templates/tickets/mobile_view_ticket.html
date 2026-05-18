@@ -11,6 +11,24 @@
 [data-bs-theme="dark"] .ticket-header-gradient {
     background: linear-gradient(to right, #1A2332, #273449) !important;
 }
+
+/* Constrain inline images inside ticket description and comments so emailed
+   screenshots/photos render at a sane size on small screens. */
+.ticket-description img,
+.comment .mb-0 img {
+    max-width: 100%;
+    height: auto;
+    max-height: 360px;
+    object-fit: contain;
+    border-radius: 6px;
+    display: inline-block;
+    margin: 4px 0;
+}
+.ticket-description,
+.comment .mb-0 {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
 </style>
 
 <div class="ticket-view">
