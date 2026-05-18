@@ -489,19 +489,39 @@ def inbound_email_webhook():
                 for part in msg.walk():
                     content_type = part.get_content_type()
                     content_disposition = str(part.get('Content-Disposition', ''))
-                    
-                    # Check if it's an attachment
-                    if 'attachment' in content_disposition or part.get_filename():
+                    raw_cid = part.get('Content-ID', '') or ''
+                    cid = raw_cid.strip().strip('<>').strip()
+                    is_inline_disposition = 'inline' in content_disposition.lower()
+                    is_image = content_type.startswith('image/')
+
+                    # Treat as attachment if explicitly attached, has a filename,
+                    # OR is an inline/embedded image referenced by Content-ID.
+                    has_filename = bool(part.get_filename())
+                    looks_like_attachment = (
+                        'attachment' in content_disposition.lower()
+                        or has_filename
+                        or (is_image and (cid or is_inline_disposition))
+                    )
+
+                    if looks_like_attachment:
                         filename = part.get_filename()
+                        if not filename and is_image:
+                            ext = content_type.split('/', 1)[-1].lower() or 'bin'
+                            filename = f"inline_{cid or len(attachments)}.{ext}"
                         if filename:
                             payload = part.get_payload(decode=True)
                             if payload:
                                 attachments.append({
                                     'filename': filename,
                                     'data': payload,
-                                    'content_type': content_type
+                                    'content_type': content_type,
+                                    'content_id': cid,
+                                    'is_inline': bool(cid) or (is_inline_disposition and is_image),
                                 })
-                                app.logger.info(f"Found attachment: {filename}")
+                                app.logger.info(
+                                    f"Found {'inline ' if cid or is_inline_disposition else ''}"
+                                    f"attachment: {filename} (cid={cid or 'none'})"
+                                )
                     elif content_type == 'text/plain':
                         text_content = part.get_payload(decode=True).decode('utf-8', errors='ignore')
                     elif content_type == 'text/html':
@@ -733,7 +753,16 @@ def inbound_email_webhook():
                         'a': ['href', 'title', 'target'],
                         'img': ['src', 'alt', 'title', 'width', 'height', 'style']
                     }
-                    description = bleach.clean(description, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+                    # Allow cid: URIs so inline-image references survive the
+                    # sanitizer and can be rewritten to real URLs after the
+                    # attachments are saved.
+                    description = bleach.clean(
+                        description,
+                        tags=allowed_tags,
+                        attributes=allowed_attrs,
+                        protocols=['http', 'https', 'mailto', 'cid'],
+                        strip=True,
+                    )
                 
                 if not description or description.isspace():
                     description = "<p>Reply received with no readable content</p>"
@@ -792,27 +821,47 @@ def inbound_email_webhook():
                         from werkzeug.utils import secure_filename
                         import os
                         import json
-                        
+                        import re as _re
+
                         saved_attachments = []
+                        cid_map = {}
                         upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
                         os.makedirs(upload_dir, exist_ok=True)
-                        
+
                         for idx, attachment_info in enumerate(attachments):
                             filename = secure_filename(attachment_info['filename'])
                             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                             stored_filename = f"{timestamp}_comment{new_comment.id}_{idx}_{filename}"
-                            
-                            # Save the file
+
                             file_path = os.path.join(upload_dir, stored_filename)
                             with open(file_path, 'wb') as f:
                                 f.write(attachment_info['data'])
-                            
-                            saved_attachments.append(stored_filename)
+
+                            if attachment_info.get('content_id'):
+                                cid_map[attachment_info['content_id']] = stored_filename
+
+                            # Inline images are rendered in the body itself, so
+                            # keep them out of the "Attached Files" list.
+                            if not attachment_info.get('is_inline'):
+                                saved_attachments.append(stored_filename)
                             app.logger.info(f"Saved email attachment {idx+1}/{len(attachments)}: {stored_filename}")
-                        
-                        # Store all attachments as JSON array
-                        new_comment.attachment = json.dumps(saved_attachments)
-                        app.logger.info(f"Saved {len(attachments)} attachments for comment")
+
+                        # Rewrite cid: references in the comment body to point at
+                        # the saved file URLs so the inline images actually render.
+                        if cid_map and new_comment.content:
+                            updated = new_comment.content
+                            for _cid, _fname in cid_map.items():
+                                _url = url_for('tickets.download_attachment', filename=_fname)
+                                updated = _re.sub(
+                                    r'(?i)cid:' + _re.escape(_cid),
+                                    _url,
+                                    updated,
+                                )
+                            new_comment.content = updated
+
+                        if saved_attachments:
+                            new_comment.attachment = json.dumps(saved_attachments)
+                        app.logger.info(f"Saved {len(attachments)} attachments for comment ({len(saved_attachments)} listed, {len(attachments) - len(saved_attachments)} inline)")
                     except Exception as attach_error:
                         app.logger.error(f"Failed to save comment attachments: {str(attach_error)}")
                 
@@ -903,7 +952,15 @@ def inbound_email_webhook():
                 'a': ['href', 'title', 'target'],
                 'img': ['src', 'alt', 'title', 'width', 'height', 'style']
             }
-            description = bleach.clean(description, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+            # Allow cid: URIs so inline-image references survive the sanitizer
+            # and can be rewritten to real URLs after the attachments are saved.
+            description = bleach.clean(
+                description,
+                tags=allowed_tags,
+                attributes=allowed_attrs,
+                protocols=['http', 'https', 'mailto', 'cid'],
+                strip=True,
+            )
         
         # For forwarded emails, look for original content patterns
         if description and ('forwarded' in description.lower() or 'fwd:' in subject.lower() or 'fw:' in subject.lower()):
@@ -1019,27 +1076,47 @@ def inbound_email_webhook():
                 from werkzeug.utils import secure_filename
                 import os
                 import json
-                
+                import re as _re
+
                 saved_attachments = []
+                cid_map = {}
                 upload_dir = os.path.join('static', 'uploads', 'ticket_attachments')
                 os.makedirs(upload_dir, exist_ok=True)
-                
+
                 for idx, attachment_info in enumerate(attachments):
                     filename = secure_filename(attachment_info['filename'])
                     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                     stored_filename = f"{timestamp}_ticket{new_ticket.id}_{idx}_{filename}"
-                    
-                    # Save the file
+
                     file_path = os.path.join(upload_dir, stored_filename)
                     with open(file_path, 'wb') as f:
                         f.write(attachment_info['data'])
-                    
-                    saved_attachments.append(stored_filename)
+
+                    if attachment_info.get('content_id'):
+                        cid_map[attachment_info['content_id']] = stored_filename
+
+                    # Inline images are rendered in the body itself, so keep
+                    # them out of the "Attached Files" list.
+                    if not attachment_info.get('is_inline'):
+                        saved_attachments.append(stored_filename)
                     app.logger.info(f"Saved email attachment {idx+1}/{len(attachments)}: {stored_filename}")
-                
-                # Store all attachments as JSON array
-                new_ticket.attachment = json.dumps(saved_attachments)
-                app.logger.info(f"Saved {len(attachments)} attachments for new ticket")
+
+                # Rewrite cid: references in the ticket description to point at
+                # the saved file URLs so the inline images actually render.
+                if cid_map and new_ticket.description:
+                    updated = new_ticket.description
+                    for _cid, _fname in cid_map.items():
+                        _url = url_for('tickets.download_attachment', filename=_fname)
+                        updated = _re.sub(
+                            r'(?i)cid:' + _re.escape(_cid),
+                            _url,
+                            updated,
+                        )
+                    new_ticket.description = updated
+
+                if saved_attachments:
+                    new_ticket.attachment = json.dumps(saved_attachments)
+                app.logger.info(f"Saved {len(attachments)} attachments for new ticket ({len(saved_attachments)} listed, {len(attachments) - len(saved_attachments)} inline)")
             except Exception as attach_error:
                 app.logger.error(f"Failed to save ticket attachments: {str(attach_error)}")
         
