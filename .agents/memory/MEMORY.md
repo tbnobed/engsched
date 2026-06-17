@@ -1,0 +1,1 @@
+- [Inbound email webhook](inbound-email-webhook.md) — SendGrid Inbound Parse: 413 on large emails (raise form limits) + duplicate tickets from retries (claim-first Message-ID idempotency via ProcessedEmail).

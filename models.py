@@ -415,6 +415,20 @@ class TicketView(db.Model):
     user = db.relationship('User', backref='ticket_views')
     ticket = db.relationship('Ticket', backref='ticket_views')
 
+class ProcessedEmail(db.Model):
+    """Idempotency record for inbound emails.
+
+    SendGrid Inbound Parse retries the webhook (with backoff) when it does not
+    receive a timely 2xx. Without a dedup key each retry created a duplicate
+    ticket/comment. We record the email Message-ID here once it has been handled
+    so subsequent retries are short-circuited.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.String(512), unique=True, nullable=False, index=True)
+    ticket_id = db.Column(db.Integer, nullable=True)
+    processed_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC))
+
+
 class EmailSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     admin_email_group = db.Column(db.String(120), nullable=False, default='alerts@obedtv.com')

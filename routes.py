@@ -580,6 +580,78 @@ def inbound_email_webhook():
             if key not in ['text', 'html', 'email']:  # Don't log large content fields
                 app.logger.debug(f"Email field '{key}': {str(value)[:200]}...")
         
+        # IDEMPOTENCY: SendGrid Inbound Parse retries the webhook (with backoff)
+        # when it does not get a timely 2xx. The synchronous n8n AI call + the
+        # notification emails can push the response past that timeout, so each
+        # retry was creating a duplicate ticket. Extract the email Message-ID and
+        # short-circuit any retry we have already processed.
+        import re as _re_mid
+        email_message_id = ''
+        try:
+            if raw_email and 'msg' in dir() and msg is not None:
+                email_message_id = (msg.get('Message-ID') or msg.get('Message-Id') or '').strip().strip('<>').strip()
+            if not email_message_id:
+                headers_blob = email_data.get('headers', '') or ''
+                m = _re_mid.search(r'^Message-ID:\s*<?([^>\r\n]+)>?', headers_blob, _re_mid.IGNORECASE | _re_mid.MULTILINE)
+                if m:
+                    email_message_id = m.group(1).strip()
+        except Exception as mid_err:
+            app.logger.warning(f"Could not extract Message-ID: {mid_err}")
+            email_message_id = ''
+
+        def _mark_email_processed(mid, ticket_id):
+            """Attach the created ticket id to the already-claimed dedup row."""
+            if not mid:
+                return
+            from models import ProcessedEmail
+            try:
+                claim = ProcessedEmail.query.filter_by(message_id=mid).first()
+                if claim and claim.ticket_id is None:
+                    claim.ticket_id = ticket_id
+                    db.session.commit()
+            except Exception as rec_err:
+                db.session.rollback()
+                app.logger.warning(f"Could not update processed email {mid}: {rec_err}")
+
+        def _release_email_claim(mid):
+            """Release a dedup claim so a later retry can reprocess after failure."""
+            if not mid:
+                return
+            from models import ProcessedEmail
+            try:
+                claim = ProcessedEmail.query.filter_by(message_id=mid).first()
+                if claim and claim.ticket_id is None:
+                    db.session.delete(claim)
+                    db.session.commit()
+            except Exception as rel_err:
+                db.session.rollback()
+                app.logger.warning(f"Could not release processed-email claim {mid}: {rel_err}")
+
+        # Atomically CLAIM this Message-ID before doing any work. The unique
+        # constraint makes the claim race-safe: if a concurrent SendGrid retry
+        # has already inserted the same id, our insert fails and we treat this
+        # request as a duplicate. The claim is released later if processing
+        # fails, so a genuine error can still be retried.
+        if email_message_id:
+            from models import ProcessedEmail
+            from sqlalchemy.exc import IntegrityError
+            try:
+                db.session.add(ProcessedEmail(message_id=email_message_id, ticket_id=None))
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                existing = ProcessedEmail.query.filter_by(message_id=email_message_id).first()
+                app.logger.info(
+                    f"Duplicate inbound email (Message-ID {email_message_id}) already "
+                    f"claimed/processed (ticket #{getattr(existing, 'ticket_id', None)}); "
+                    f"ignoring SendGrid retry"
+                )
+                return jsonify({
+                    'status': 'ignored',
+                    'reason': 'duplicate message-id',
+                    'ticket_id': getattr(existing, 'ticket_id', None)
+                }), 200
+
         # FILTER OUT AUTO-REPLIES
         def is_auto_reply(msg_obj, from_addr, subj):
             """
@@ -869,6 +941,10 @@ def inbound_email_webhook():
                 
                 app.logger.info(f"Added comment to ticket #{ticket_id} from {commenter_name}")
                 
+                # Mark this email handled before the slow notification step so a
+                # SendGrid retry cannot add the same reply twice.
+                _mark_email_processed(email_message_id, existing_ticket.id)
+                
                 # Send comment notification to all relevant parties
                 try:
                     from email_utils import send_ticket_comment_notification
@@ -1027,6 +1103,7 @@ def inbound_email_webhook():
         default_category = TicketCategory.query.first()
         if not default_category:
             app.logger.error("No ticket categories found - cannot create ticket from email")
+            _release_email_claim(email_message_id)
             return jsonify({'error': 'No ticket categories configured'}), 500
         
         # Generate unique email thread ID for reply tracking
@@ -1123,6 +1200,11 @@ def inbound_email_webhook():
         db.session.commit()
         
         app.logger.info(f"Created ticket #{new_ticket.id} from email: {subject}")
+        
+        # Mark this email handled before the slow n8n + notification steps so a
+        # SendGrid retry (which fires on webhook timeout) cannot create a
+        # duplicate ticket for the same message.
+        _mark_email_processed(email_message_id, new_ticket.id)
         
         # Send ticket to n8n webhook for AI analysis
         try:
@@ -1229,6 +1311,12 @@ def inbound_email_webhook():
         
     except Exception as e:
         app.logger.error(f"Error processing inbound email: {str(e)}")
+        # Release the dedup claim so SendGrid's retry can reprocess this email
+        # instead of being permanently swallowed as a "duplicate".
+        try:
+            _release_email_claim(email_message_id)
+        except Exception:
+            pass
         return jsonify({
             'success': False,
             'error': 'Failed to process email',
