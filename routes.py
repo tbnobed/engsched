@@ -627,6 +627,55 @@ def inbound_email_webhook():
                 db.session.rollback()
                 app.logger.warning(f"Could not release processed-email claim {mid}: {rel_err}")
 
+        def _normalize_subject(s):
+            """Strip [Ticket #N], Re:/Fwd:/Fw: prefixes and extra whitespace for matching."""
+            import re as _re_sub
+            s = s or ''
+            s = _re_sub.sub(r'\[Ticket #\d+\]', '', s, flags=_re_sub.IGNORECASE)
+            prev = None
+            while prev != s:
+                prev = s
+                s = _re_sub.sub(r'^\s*(re|fwd|fw)\s*:\s*', '', s, flags=_re_sub.IGNORECASE)
+            return ' '.join(s.split()).strip().lower()
+
+        def _find_duplicate_alert_ticket(subj, raw_from):
+            """Collapse repeated alert emails: find an active ticket with the same
+            normalized subject from the same sender so we append a comment instead
+            of creating a brand-new duplicate ticket each time."""
+            norm = _normalize_subject(subj)
+            if not norm:
+                return None
+            bare = raw_from or ''
+            if '<' in bare:
+                bare = bare.split('<')[1].strip('>')
+            bare = bare.strip()
+            if not bare:
+                return None
+            try:
+                import pytz as _pytz
+                from datetime import timedelta as _timedelta
+                # Only collapse into a ticket that has been active recently. This
+                # avoids merging a brand-new alert into a stale long-open ticket
+                # that happens to share a subject (a likely-separate incident).
+                window_start = datetime.now(_pytz.UTC) - _timedelta(days=14)
+                sender = User.query.filter(User.email.ilike(bare)).first()
+                q = Ticket.query.filter(
+                    Ticket.status.in_(['open', 'in_progress', 'pending']),
+                    Ticket.archived == False,
+                    Ticket.updated_at >= window_start,
+                )
+                if sender:
+                    q = q.filter(Ticket.created_by == sender.id)
+                else:
+                    q = q.filter(Ticket.external_email.ilike(bare))
+                candidates = q.order_by(Ticket.updated_at.desc()).limit(50).all()
+                for t in candidates:
+                    if _normalize_subject(t.title) == norm:
+                        return t
+            except Exception as dup_err:
+                app.logger.warning(f"Duplicate-alert lookup failed: {dup_err}")
+            return None
+
         # Atomically CLAIM this Message-ID before doing any work. The unique
         # constraint makes the claim race-safe: if a concurrent SendGrid retry
         # has already inserted the same id, our insert fails and we treat this
@@ -736,12 +785,24 @@ def inbound_email_webhook():
         # CHECK FOR REPLY TO EXISTING TICKET FIRST
         import re
         ticket_reply_match = re.search(r'\[Ticket #(\d+)\]', subject, re.IGNORECASE)
-        if ticket_reply_match:
-            ticket_id = int(ticket_reply_match.group(1))
-            app.logger.info(f"Detected reply to existing ticket #{ticket_id}")
-            
-            # Find the existing ticket
-            existing_ticket = Ticket.query.get(ticket_id)
+        _dup_ticket = None
+        if not ticket_reply_match:
+            # No explicit [Ticket #N] marker: collapse repeated alert emails
+            # (same subject from the same sender) into the existing active ticket
+            # instead of spawning a brand-new duplicate ticket each time.
+            _dup_ticket = _find_duplicate_alert_ticket(subject, from_email)
+        if ticket_reply_match or _dup_ticket is not None:
+            if ticket_reply_match:
+                ticket_id = int(ticket_reply_match.group(1))
+                app.logger.info(f"Detected reply to existing ticket #{ticket_id}")
+                existing_ticket = Ticket.query.get(ticket_id)
+            else:
+                existing_ticket = _dup_ticket
+                ticket_id = existing_ticket.id
+                app.logger.info(
+                    f"Collapsing duplicate email '{subject}' into active ticket "
+                    f"#{ticket_id} (same subject + sender)"
+                )
             if existing_ticket:
                 app.logger.info(f"Found existing ticket #{ticket_id}, adding comment instead of creating new ticket")
                 

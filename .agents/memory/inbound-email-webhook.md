@@ -32,9 +32,26 @@ the duplicates.
 still races — two concurrent retries both pass the lookup. The unique-constraint
 insert is the atomic guard.
 
+## 3. Duplicate tickets from repeated automated alerts (NOT retries)
+**Symptom:** many tickets with the *identical* subject (e.g. "File Catalyst Fails
+Again"), created hours apart, each a distinct email with its own Message-ID.
+**Cause:** a monitoring system re-sends the same alert as a brand-new email. The
+Message-ID idempotency (failure mode #2) can't catch these — they're genuinely
+different messages. Reply detection only keys off `[Ticket #N]`, which alerts lack.
+**Fix:** before creating a new ticket, `_find_duplicate_alert_ticket(subject, from_email)`
+looks for an ACTIVE (open/in_progress/pending, not archived) ticket with the same
+*normalized* subject from the same sender (created_by for known users, external_email
+for unknown) within a 14-day recency window (`updated_at`), and appends a comment
+instead. Subject normalization strips `[Ticket #N]` + leading Re:/Fwd:/Fw: + whitespace.
+**Why the recency window + sender match:** subject+sender alone can merge two separate
+incidents that share a subject; the 14-day `updated_at` window and sender filter keep
+false-positive merges down while still collapsing recurring alerts. Once a ticket is
+resolved/closed (or goes stale >14d), a new alert correctly opens a fresh ticket.
+
 ## Conventions
-- Reply→existing-ticket detection keys ONLY off `[Ticket #N]` in the subject. Plain
-  "Re: ..." without that tag creates a NEW ticket (known limitation).
+- Reply→existing-ticket detection keys off `[Ticket #N]` in the subject. Plain
+  "Re: ..." without that tag falls through to alert-collapse (#3); if no active
+  same-subject ticket matches, a NEW ticket is created.
 - AI analysis comments are posted as a system comment prefixed `🤖 AI Analysis` and
   deliberately skip email notification.
 - New tables added to models are auto-created on boot via `db.create_all()` in app.py
