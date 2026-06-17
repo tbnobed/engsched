@@ -1116,7 +1116,21 @@ document.addEventListener('DOMContentLoaded', function() {
             newBody.innerHTML = '';
             incoming.forEach(r => newBody.appendChild(r));
           }
+          // Preserve the user's in-progress bulk selection across the refresh.
+          // Replacing the tbody HTML destroys the checkbox elements (and their
+          // checked state), so capture the selected ticket ids first and
+          // re-apply them to the freshly rendered rows.
+          const selectedBefore = (typeof selectedIds === 'function') ? selectedIds() : [];
+          const selectAllBefore = selectAllCb ? selectAllCb.checked : false;
           curBody.innerHTML = newBody.innerHTML;
+          if (selectedBefore.length) {
+            const selSet = new Set(selectedBefore);
+            curBody.querySelectorAll('.tk-cb').forEach(cb => {
+              if (selSet.has(cb.value)) cb.checked = true;
+            });
+          }
+          if (selectAllCb) selectAllCb.checked = selectAllBefore;
+          if (typeof refreshBulkBar === 'function') refreshBulkBar();
         }
         const newKpis = doc.querySelector('.tk-kpis');
         const curKpis = document.querySelector('.tk-kpis');
