@@ -232,6 +232,7 @@ def send_new_ticket_notification(ticket: Ticket, created_by: User) -> bool:
         
         # Priority labels (DB stores 0-3, matching every other caller)
         priority_labels = {
+            -1: 'Awaiting triage',
             0: 'Low',
             1: 'Medium',
             2: 'High',
@@ -448,6 +449,7 @@ def send_ticket_assigned_notification(
         logger.info(f"Email subject: {subject}")
         
         priority_labels = {
+            -1: 'Awaiting triage',
             0: 'Low',
             1: 'Medium',
             2: 'High',
@@ -538,10 +540,19 @@ def send_ticket_comment_notification(
         app_context_created = True
         
     try:
+        from models import TicketCommentMetadata, TicketWorkspace, db
+        meta = db.session.get(TicketCommentMetadata, comment.id)
+        if meta and meta.visibility == 'internal':
+            logger.info("Internal note saved without outbound email")
+            return True
         logger.debug(f"Starting comment notification for ticket #{ticket.id}")
         
         # Get the ticket creator - they should always be notified of comments
         recipients = []
+        workspace_meta = db.session.get(TicketWorkspace, ticket.id)
+        requester_user = db.session.get(User, workspace_meta.requester_id) if workspace_meta and workspace_meta.requester_id else None
+        if requester_user and requester_user.email:
+            recipients.append(requester_user.email)
         creator = User.query.get(ticket.created_by)
         if creator and creator.email and creator.id != commented_by.id:
             recipients.append(creator.email)

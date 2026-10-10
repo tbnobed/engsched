@@ -5,8 +5,10 @@
 {% block page_class %}page-dashboard{% endblock %}
 
 {% block content %}
+<section class="card ux-attention mb-4" aria-labelledby="uxMobileAttention"><div class="card-body"><h2 class="h5" id="uxMobileAttention">Needs attention</h2><div id="ux-attention-items"><div class="ux-skeleton"></div><div class="ux-skeleton" style="width:65%"></div></div><p id="ux-summary-error" class="small text-muted" hidden role="status"></p></div></section>
+{% include '_ux_team_schedule.html' %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Dashboard</h1>
+    <h1 class="h3 mb-0">Overview</h1>
     <div class="text-muted">
         <script>document.write(new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));</script>
     </div>
@@ -146,6 +148,7 @@
 </div>
 
 <!-- Studio Bookings Section -->
+<span id="ccBookingsList"></span>
 {% if studio_bookings %}
 <div class="mobile-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -288,6 +291,7 @@ function loadActiveUsers() {
                         </div>
                         <div class="flex-grow-1" style="min-width: 0;">
                             <div class="fw-semibold" style="font-size: 0.9rem; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.username}</div>
+                            <a class="small" href="/tickets/dashboard?status=open&technician=${user.id}" data-tech-count="${user.id}">${window.PostUX?.summary?.technician_counts?.[user.id]??0} open tickets</a>
                             <small class="text-muted" style="font-size: 0.75rem; line-height: 1.2;">
                                 <div>${user.schedule.start_time} - ${user.schedule.end_time}</div>
                                 ${user.location ? `<div style="margin-top: 2px;">${user.location.name}</div>` : ''}

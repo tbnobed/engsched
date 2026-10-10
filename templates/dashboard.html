@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Overview{% endblock %}
 
 {% block content %}
 <style>
@@ -150,6 +150,8 @@
 {% set ns = namespace(hour_cols=(range_end_h - range_start_h)) %}
 
 <div class="cc-shell">
+  <header class="d-flex justify-content-between align-items-center mb-4"><div><h2 class="mb-1">Overview</h2><p class="text-muted mb-0">The work that needs you. The people on it.</p></div><a class="btn btn-primary" href="{{ url_for('tickets.tickets_dashboard') }}">Open queue</a></header>
+  <section class="card ux-attention" aria-labelledby="uxAttentionTitle"><div class="cc-panel-h"><h3 class="h6 mb-0" id="uxAttentionTitle">Needs attention</h3><a href="{{ url_for('tickets.tickets_dashboard',status='open',overdue=1) }}">Overdue tickets</a></div><div id="ux-attention-items"><div class="p-3"><div class="ux-skeleton"></div><div class="ux-skeleton" style="width:65%"></div></div></div><p id="ux-summary-error" class="small text-muted p-3" role="status" hidden></p></section>
   <div class="cc-grid">
 
     <!-- Left: People rail -->
@@ -157,7 +159,7 @@
       <div class="cc-panel-h"><span>Technicians</span><span class="count">{{ kpi_on_shift }} / {{ kpi_total_techs }}</span></div>
       <div class="cc-people">
         {% for p in people_rail %}
-        <a class="cc-person" href="{{ url_for('calendar', technician_id=p.user.id) }}" style="text-decoration:none;">
+        <a class="cc-person" href="{{ url_for('tickets.tickets_dashboard',status='open',technician=p.user.id) }}" style="text-decoration:none;">
           <div class="cc-avatar"
                style="{% if p.user.profile_picture %}background-image:url('{{ url_for('static', filename=p.user.profile_picture) }}');{% else %}background:{{ p.user.color or '#6aa6ff' }};{% endif %}">
             {% if not p.user.profile_picture %}{{ p.initials }}{% endif %}
@@ -165,6 +167,7 @@
           <div class="info">
             <div class="name">{{ p.user.username }}</div>
             <div class="meta">{{ p.meta }}</div>
+            <div class="meta" data-tech-count="{{ p.user.id }}">Loading open-ticket count…</div>
           </div>
           <span class="cc-pill {{ p.status }}">{{ p.status|upper if p.status == 'ooo' else p.status|capitalize }}</span>
         </a>
@@ -176,26 +179,26 @@
 
     <!-- Center top: KPI strip -->
     <div class="cc-kpis" style="grid-column:2; grid-row:1;">
-      <div class="cc-kpi">
+      <a href="{{ url_for('tickets.tickets_dashboard',status='open') }}" class="cc-kpi text-decoration-none">
         <div class="lbl">Active Tickets</div>
         <div class="val">{{ kpi_active }}</div>
         <div class="delta">{{ kpi_unassigned }} unassigned</div>
-      </div>
-      <div class="cc-kpi">
+      </a>
+      <a href="{{ url_for('tickets.tickets_dashboard',status='open',priority=2) }}" class="cc-kpi text-decoration-none">
         <div class="lbl">High Priority</div>
         <div class="val" style="color: var(--cc-bad);">{{ kpi_high }}</div>
-        <div class="delta">Needs attention</div>
-      </div>
-      <div class="cc-kpi">
+        <div class="delta">Major disruption</div>
+      </a>
+      <a href="{{ url_for('calendar') }}" class="cc-kpi text-decoration-none">
         <div class="lbl">On Shift</div>
         <div class="val">{{ kpi_on_shift }}</div>
         <div class="delta">of {{ kpi_total_techs }} techs</div>
-      </div>
-      <div class="cc-kpi">
+      </a>
+      <a href="#ccBookingsList" class="cc-kpi text-decoration-none">
         <div class="lbl">Bookings Today</div>
         <div class="val" id="ccBookingCount">—</div>
         <div class="delta" id="ccBookingDelta">Loading…</div>
-      </div>
+      </a>
     </div>
 
     <!-- Center middle: Live timeline -->
@@ -278,11 +281,11 @@
             <div class="sub">
               {% if ticket.assigned_to %}{{ ticket.assigned_technician.username }}{% else %}Unassigned{% endif %}
               · {{ ticket.status.replace('_', ' ').title() }}
-              · {{ ticket.created_at.astimezone(current_user.get_timezone_obj()).strftime('%m/%d %H:%M') }}
+              · <span data-ux-time="{{ ticket.updated_at.isoformat() }}">{{ ticket.updated_at.strftime('%m/%d %H:%M') }}</span>
             </div>
           </div>
           <span class="cc-badge-pri cc-pri-{{ ticket.priority }}">
-            {% if ticket.priority == 0 %}LOW{% elif ticket.priority == 1 %}MED{% elif ticket.priority == 2 %}HIGH{% else %}URGENT{% endif %}
+            {% if ticket.priority == -1 %}Untriaged{% elif ticket.priority == 0 %}Low{% elif ticket.priority == 1 %}Medium{% elif ticket.priority == 2 %}High{% else %}Urgent{% endif %}
           </span>
         </a>
         {% else %}
@@ -299,7 +302,7 @@
       <div class="cc-panel-h"><span>Studio Bookings</span><span class="count" id="ccBookingHeaderCount">—</span></div>
       <div style="overflow:auto; flex:1;" id="ccBookingsList">
         <div class="cc-empty">
-          <div class="spinner-border spinner-border-sm" role="status"></div>
+          <div class="ux-skeleton"></div><div class="ux-skeleton" style="width:65%"></div>
           <div style="margin-top:8px;">Loading bookings…</div>
         </div>
       </div>
@@ -342,7 +345,11 @@
   window.addEventListener('resize', updateNowLine);
 
   function loadBookings() {
-    fetch('/api/studio-bookings').then(r => r.json()).then(data => {
+    fetch('/api/studio-bookings', {signal: AbortSignal.timeout(12000)}).then(r => {
+      if(!r.ok)throw new Error('Bookings unavailable');
+      return r.json();
+    }).then(data => {
+      if(!data.success)throw new Error('Bookings unavailable');
       const list = document.getElementById('ccBookingsList');
       const headerCount = document.getElementById('ccBookingHeaderCount');
       const kpiCount = document.getElementById('ccBookingCount');
@@ -380,7 +387,7 @@
         kpiDelta.textContent = 'None scheduled';
       }
     }).catch(() => {
-      document.getElementById('ccBookingsList').innerHTML = '<div class="cc-empty" style="color: var(--cc-bad);">Unable to load bookings</div>';
+      const list=document.getElementById('ccBookingsList');list.innerHTML='<div class="cc-empty">Unable to load bookings. </div>';const retry=document.createElement('button');retry.className='btn btn-sm btn-outline-secondary';retry.textContent='Retry';retry.onclick=loadBookings;list.firstElementChild.append(retry);
       document.getElementById('ccBookingDelta').textContent = 'Connection error';
     });
   }
@@ -396,7 +403,7 @@
   let ticketRefreshInFlight = null;
   let ticketRefreshSeq = 0;
   function refreshTickets() {
-    if (document.hidden) return;
+    if (document.hidden || document.querySelector('#ccTicketsList:hover, #ccTicketsList:focus-within')) return;
     if (ticketRefreshInFlight) ticketRefreshInFlight.abort();
     const ctrl = new AbortController();
     ticketRefreshInFlight = ctrl;
@@ -409,6 +416,7 @@
         const fresh = doc.getElementById('ccTicketsList');
         const cur = document.getElementById('ccTicketsList');
         if (fresh && cur) cur.innerHTML = fresh.innerHTML;
+        if(window.PostUX)window.PostUX.dates();
         if (window.feather) feather.replace();
       })
       .catch(() => {})

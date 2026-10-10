@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+{% set editable = current_user.is_admin or current_user.id == ticket.assigned_to or current_user.id == ticket.created_by %}
+<div class="ticket-view" data-ticket-id="{{ ticket.id }}" data-can-edit="{{ 'true' if editable else 'false' }}">
+ <header class="ux-workspace-header">
+  <a href="{{ url_for('tickets.tickets_dashboard') }}" class="small text-decoration-none">Queue / #{{ ticket.id }}</a>
+  <div class="d-flex justify-content-between align-items-start gap-3 mt-3">
+   <h2 class="mb-0">{{ ticket.title }}</h2>
+   <div class="dropdown">
+    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">Actions</button>
+    <ul class="dropdown-menu dropdown-menu-end">
+     {% if editable %}<li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editTicketModal">Edit ticket</a></li>{% endif %}
+     <li><a class="dropdown-item" href="{{ url_for('tickets.archive_ticket',ticket_id=ticket.id) }}" onclick="return confirm('Archive this ticket? It will be hidden from regular views.');">Archive ticket</a></li>
+     {% if current_user.is_admin %}<li><form method="POST" action="{{ url_for('tickets.delete_ticket',ticket_id=ticket.id) }}" onsubmit="return confirm('Permanently delete this ticket? This cannot be undone.');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="dropdown-item text-danger">Delete ticket</button></form></li>{% endif %}
+    </ul>
+   </div>
+  </div>
+  <div class="ux-tools">
+   <label class="visually-hidden" for="ux-ticket-status">Status</label>
+   <select class="form-select ux-pill-select" id="ux-ticket-status" data-workspace-field="status" {% if not editable %}disabled{% endif %}>{% for value in ['open','in_progress','pending','resolved','closed'] %}<option value="{{ value }}" {% if ticket.status == value %}selected{% endif %}>{{ value|replace('_',' ')|title }}</option>{% endfor %}</select>
+   <label class="visually-hidden" for="ux-ticket-priority">Priority</label>
+   <select class="form-select ux-pill-select" id="ux-ticket-priority" data-workspace-field="priority" {% if not editable %}disabled{% endif %}>{% for value,label in [(-1,'Untriaged'),(0,'▼ Low'),(1,'— Medium'),(2,'▲ High'),(3,'▲▲ Urgent')] %}<option value="{{ value }}" {% if ticket.priority == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+   <label class="visually-hidden" for="ux-ticket-assignee">Assignee</label>
+   <select class="form-select ux-pill-select" id="ux-ticket-assignee" data-workspace-field="assigned_to" {% if not editable %}disabled{% endif %}><option value="none">Unassigned</option>{% for technician in technicians %}<option value="{{ technician.id }}" {% if ticket.assigned_to == technician.id %}selected{% endif %}>{{ technician.username }}</option>{% endfor %}</select>
+   <label class="visually-hidden" for="ux-ticket-category">Category</label>
+   <select class="form-select ux-pill-select" id="ux-ticket-category" data-workspace-field="category_id" {% if not editable %}disabled{% endif %}>{% for category in categories %}<option value="{{ category.id }}" {% if ticket.category_id == category.id or ticket.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>{% endfor %}</select>
+   <button type="button" class="btn btn-primary ms-auto" id="uxResolve" {% if not editable %}disabled{% endif %}>Resolve ticket</button>
+  </div>
+  {% if not editable %}<p class="form-text mt-2">Only an administrator, the creator or the assigned technician can change these fields.</p>{% else %}<details class="small text-muted mt-2"><summary style="cursor:pointer">Update with an accompanying note</summary><div class="ux-tools mt-2"><button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#assignTicketModal">Assign with note…</button><button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#updateStatusModal">Change status with note…</button></div></details>{% endif %}
+ </header>
+ <div class="ux-workspace-grid">
+  <section aria-label="Conversation">
+   <div id="uxPinnedSummary" class="ux-summary" hidden><div class="d-flex justify-content-between"><strong>AI summary · verify before acting</strong><button class="btn btn-sm" type="button" id="uxUnpin">Unpin</button></div><p class="mb-0 mt-2" data-pinned-content></p></div>
+   <section class="card ux-composer mb-4" aria-label="Reply composer">
+    <div class="card-body">
+     <div class="ux-tabs" role="tablist" aria-label="Message visibility">
+      <button type="button" role="tab" aria-selected="false" aria-controls="ux-composer-panel" id="uxPublicTab" data-visibility="public">Public reply</button>
+      <button type="button" role="tab" aria-selected="true" aria-controls="ux-composer-panel" id="uxInternalTab" data-visibility="internal">Internal note</button>
+     </div>
+     <div id="ux-composer-panel" role="tabpanel" aria-labelledby="uxInternalTab">
+      <p class="small text-muted" id="uxVisibilityNotice">Internal note. Visible to the support team; not emailed to the requester.</p>
+      <form method="POST" action="{{ url_for('tickets.add_comment',ticket_id=ticket.id) }}" enctype="multipart/form-data" id="comment-form">
+       {{ comment_form.hidden_tag() }}
+       <input type="hidden" name="visibility" id="uxVisibility" value="internal">
+       <div class="d-flex align-items-center gap-2 mb-3">
+        <label for="uxCanned" class="small text-muted">Canned replies</label>
+        <select id="uxCanned" class="form-select form-select-sm" style="max-width:260px"><option value="">Insert a reply…</option><option value="acknowledge">Acknowledge &amp; investigate</option><option value="information">Request more information</option><option value="resolved">Confirm resolution</option></select>
+       </div>
+       <label for="content" class="visually-hidden">Message</label>
+       {{ comment_form.content(class="form-control",rows="5",placeholder="Write a note for the support team…",id="content") }}
+       <div class="ux-dropzone" id="uxDropzone">
+        <label for="attachment" class="form-label">Drop an attachment here, or choose a file</label>
+        {{ comment_form.attachment(class="form-control form-control-sm",id="attachment") }}
+        <div class="form-text" id="uxAttachmentStatus" aria-live="polite">Images, PDFs and documents are welcome.</div>
+       </div>
+       <p role="alert" id="uxComposerError" class="text-danger small"></p>
+       <button type="submit" class="btn btn-primary" id="submit-comment-btn">Add internal note</button>
+      </form>
+     </div>
+    </div>
+   </section>
+   <div class="d-flex justify-content-between align-items-center mb-3"><h3 class="h6 mb-0">Activity</h3><label class="small text-muted"><input type="checkbox" id="uxShowViews"> Show view events</label></div>
+   <p id="uxWorkspaceError" role="alert" class="small" hidden></p>
+   <div class="card mb-4" id="uxTimeline" aria-label="Ticket activity, newest first">
+    {% for comment in ticket.comments|reverse %}
+    <article class="ux-activity" data-event-kind="comment" data-event-id="{{ comment.id }}" data-created="{{ comment.created_at.isoformat() }}">
+     <header><strong>{{ comment.user.username }}</strong><div class="ux-tools"><time data-ux-time="{{ comment.created_at.isoformat() }}">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</time>{% if current_user.is_admin or current_user.id == comment.user.id %}<button type="button" class="btn btn-sm text-danger" onclick="deleteComment({{ comment.id }})" aria-label="Delete comment by {{ comment.user.username }}">Delete</button>{% endif %}</div></header>
+     <div class="ux-message-body">{{ comment.content|clean_ai_analysis|safe }}</div>
+     {% if comment.attachment %}<div class="comment-attachment d-flex flex-wrap mt-3">{% if comment.attachment.startswith('[') %}{% for filename in comment.attachment|from_json %}{% include 'tickets/_attachment_item.html' %}{% endfor %}{% else %}{% set filename=comment.attachment %}{% include 'tickets/_attachment_item.html' %}{% endif %}</div>{% endif %}
+    </article>
+    {% endfor %}
+    {% for entry in ticket.history %}
+    <article class="ux-activity" data-event-kind="history" data-event-id="{{ entry.id }}" data-action="{{ entry.action }}" data-created="{{ entry.created_at.isoformat() }}" {% if 'view' in entry.action|lower %}hidden{% endif %}><header><strong>{{ entry.user.username }} · {{ entry.action|replace('_',' ') }}</strong><time data-ux-time="{{ entry.created_at.isoformat() }}">{{ entry.created_at.strftime('%Y-%m-%d %H:%M') }}</time></header><p class="text-muted small mb-0">{{ entry.details or '' }}</p></article>
+    {% endfor %}
+   </div>
+   <article class="card mb-4"><div class="card-body"><header class="d-flex justify-content-between gap-3 mb-3"><strong>Original request</strong><time class="small text-muted" data-ux-time="{{ ticket.created_at.isoformat() }}">{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</time></header><div class="ticket-description ux-activity p-0 border-0">{{ ticket.description|safe }}</div>{% if ticket.attachment %}<div class="ticket-attachment mt-3 d-flex flex-wrap">{% if ticket.attachment.startswith('[') %}{% for filename in ticket.attachment|from_json %}{% include 'tickets/_attachment_item.html' %}{% endfor %}{% else %}{% set filename=ticket.attachment %}{% include 'tickets/_attachment_item.html' %}{% endif %}</div>{% endif %}</div></article>
+  </section>
+  <aside class="ux-rail" aria-label="Ticket reference">
+   <section class="card mb-3"><div class="card-body"><h3 class="h6 mb-3">Requester</h3><strong id="uxRequesterName">{{ ticket.requester_name|default(ticket.creator.username,true) }}</strong><a class="ux-requester" id="uxRequesterEmail" href="mailto:{{ ticket.requester_email|default('',true) }}">{{ ticket.requester_email|default('',true) }}</a><hr><h4 class="small">Past tickets</h4><div id="uxPastTickets"><div class="ux-skeleton"></div><div class="ux-skeleton" style="width:70%"></div></div></div></section>
+   <section class="card mb-3"><div class="card-body"><h3 class="h6 mb-3">Details</h3><dl class="mb-0"><dt>Due date</dt><dd><label for="uxTicketDue" class="visually-hidden">Ticket due date</label><input class="form-control form-control-sm" type="date" id="uxTicketDue" data-workspace-field="due_date" value="{{ ticket.due_date.strftime('%Y-%m-%d') if ticket.due_date else '' }}" {% if not editable %}disabled{% endif %}><span id="uxDueBadge" class="ux-chip mt-2" hidden></span></dd><dt>Created</dt><dd data-workspace-time="created_at" data-ux-time="{{ ticket.created_at.isoformat() }}">{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</dd><dt>Last updated</dt><dd data-workspace-time="updated_at" data-ux-time="{{ ticket.updated_at.isoformat() }}">{{ ticket.updated_at.strftime('%Y-%m-%d %H:%M') }}</dd><dt>Timezone</dt><dd>{{ current_user.get_timezone() }}</dd></dl></div></section>
+   <details class="card mb-3" id="uxAI"><summary>AI assistant <span class="ux-requester">Shared analysis &amp; troubleshooting</span></summary><div class="px-3"><button type="button" class="btn btn-sm btn-outline-primary mb-3" id="uxPinAI">Pin latest analysis as summary</button></div>{% include 'tickets/_ai_assistant.html' %}</details>
+  </aside>
+ </div>
+</div>
+{% include 'tickets/modals/assign_ticket.html' %}
+{% include 'tickets/modals/update_status.html' %}
+{% include 'tickets/modals/edit_ticket.html' %}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+{% include 'tickets/_workspace_script.html' %}
+{% endblock %}

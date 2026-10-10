@@ -1,0 +1,88 @@
+<section id="uxTeamSchedule" aria-labelledby="uxTeamTitle" class="mb-4"
+ {% if week_start is defined %}data-week="{{ week_start.strftime('%Y-%m-%d') }}"{% endif %}>
+ <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+  <div><h2 class="h5 mb-1" id="uxTeamTitle">Team schedule</h2><p id="uxTeamRange" class="small text-muted mb-0">Loading this week…</p></div>
+  <div class="ux-tools">
+   <button type="button" class="btn btn-sm btn-outline-secondary" id="uxTeamPrev" aria-label="Previous week">←</button>
+   <button type="button" class="btn btn-sm btn-outline-secondary" id="uxTeamToday">Today</button>
+   <button type="button" class="btn btn-sm btn-outline-secondary" id="uxTeamNext" aria-label="Next week">→</button>
+   {% if week_start is defined %}<button type="button" class="btn btn-sm btn-outline-secondary" id="uxScheduleMode" aria-pressed="false">Hourly view &amp; editing</button>{% else %}<a class="btn btn-sm btn-outline-secondary" href="{{ url_for('personal_schedule') }}">Edit my schedule</a>{% endif %}
+  </div>
+ </div>
+ <p id="uxTeamHours" class="small text-muted"></p>
+ <div id="uxTeamContent" class="ux-team-wrap" aria-live="polite"><div class="p-3"><div class="ux-skeleton"></div><div class="ux-skeleton" style="width:70%"></div></div></div>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const ux=window.PostUX,root=document.getElementById('uxTeamSchedule');if(!ux||!root)return;
+ const $=s=>document.querySelector(s),content=$('#uxTeamContent');
+ const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:ux.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(x=>[x.type,x.value]));
+ const today=new Date(Date.UTC(+parts.year,+parts.month-1,+parts.day));
+ function monday(d){const n=new Date(d);n.setUTCDate(n.getUTCDate()-((n.getUTCDay()+6)%7));return n;}
+ let start=root.dataset.week?new Date(root.dataset.week+'T00:00:00Z'):monday(today),seq=0;
+ const dateKey=d=>d.toISOString().slice(0,10),add=(d,n)=>new Date(d.valueOf()+n*86400000);
+ const zonedKey=value=>{const p=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:ux.timezone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(value)).map(x=>[x.type,x.value]));return `${p.year}-${p.month}-${p.day}`;};
+ const time=value=>new Intl.DateTimeFormat(undefined,{timeZone:ux.timezone,hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(value));
+ let hourly=false,firstHour=7;
+ const grid=document.querySelector('.calendar-grid');
+ const mobileDaily=document.querySelector('.modern-mobile-calendar');
+ if(mobileDaily&&!grid){
+  mobileDaily.hidden=!new URLSearchParams(location.search).has('date');
+  const toggle=document.createElement('button');toggle.type='button';toggle.className='btn btn-sm btn-outline-secondary';toggle.textContent='Daily view & editing';toggle.setAttribute('aria-expanded',String(!mobileDaily.hidden));toggle.onclick=()=>{mobileDaily.hidden=!mobileDaily.hidden;toggle.setAttribute('aria-expanded',String(!mobileDaily.hidden));if(!mobileDaily.hidden){mobileDaily.scrollIntoView({block:'start'});window.dispatchEvent(new Event('resize'));}};root.querySelector('.ux-tools').append(toggle);
+ }
+ function setMode(value){hourly=value;if(grid){grid.hidden=!hourly;if(hourly)requestAnimationFrame(()=>{grid.scrollTop=firstHour*(grid.querySelector('.hour-slot')?.offsetHeight||60);});}content.hidden=hourly;$('#uxTeamHours').hidden=hourly;const b=$('#uxScheduleMode');if(b){b.textContent=hourly?'Team view':'Hourly view & editing';b.setAttribute('aria-pressed',String(hourly));}}
+ if(grid)setMode(new URLSearchParams(location.search).get('view')==='hours');
+ $('#uxScheduleMode')?.addEventListener('click',()=>setMode(!hourly));
+ document.getElementById('bulk-select-toggle')?.addEventListener('click',()=>setMode(true));
+ function fitHours(shifts){
+  if(!grid)return;
+  const slots=Array.from(grid.querySelectorAll('.time-column .hour-slot'));
+  // Existing editing grid retains its coordinate system; clip only its scroll window.
+  const ranges=shifts.filter(s=>!s.all_day).flatMap(s=>[Number(time(s.start).split(':')[0]),Number(time(s.end).split(':')[0])]).filter(Number.isFinite);
+  const min=ranges.length?Math.max(0,Math.min(...ranges)-1):7,max=ranges.length?Math.min(24,Math.max(...ranges)+2):19;
+  firstHour=min;
+  $('#uxTeamHours').textContent=`Shift hours: ${String(min).padStart(2,'0')}:00–${String(max).padStart(2,'0')}:00 · ${ux.timezone}`;
+  // Auto-scroll to the first occupied hour without changing drag/edit coordinates.
+  grid.style.maxHeight=Math.min(850,Math.max(420,(max-min)*60+80))+'px';grid.style.overflow='auto';
+  requestAnimationFrame(()=>{grid.scrollTop=min*(slots[0]?.offsetHeight||60);});
+ }
+ async function load(){
+  const n=++seq;content.setAttribute('aria-busy','true');
+  $('#uxTeamRange').textContent=new Intl.DateTimeFormat(undefined,{timeZone:'UTC',month:'short',day:'numeric'}).format(start)+' – '+new Intl.DateTimeFormat(undefined,{timeZone:'UTC',month:'short',day:'numeric',year:'numeric'}).format(add(start,6));
+  try{
+   const data=await ux.request(`/api/team-schedule?start=${dateKey(start)}&end=${dateKey(add(start,7))}`);if(n!==seq)return;
+   const selectedTech=$('#technicianFilter')?.value;
+   const selectedLocation=$('#locationFilter')?.selectedOptions[0]?.textContent;
+   const technicians=(data.technicians||[]).filter(t=>!selectedTech||String(t.id)===String(selectedTech));
+   const shifts=(data.shifts||[]).filter(s=>!$('#locationFilter')?.value||s.location===selectedLocation);
+   const table=document.createElement('table');table.className='ux-team-table';table.setAttribute('aria-label','Technicians by day');
+   const head=document.createElement('thead'),header=document.createElement('tr');const first=document.createElement('th');first.scope='col';first.textContent='Technician';header.append(first);
+   for(let i=0;i<7;i++){const th=document.createElement('th');th.scope='col';th.textContent=new Intl.DateTimeFormat(undefined,{timeZone:'UTC',weekday:'short',month:'short',day:'numeric'}).format(add(start,i));header.append(th);}head.append(header);table.append(head);
+   const body=document.createElement('tbody');
+   technicians.forEach(tech=>{
+    const tr=document.createElement('tr'),name=document.createElement('th');name.scope='row';name.textContent=tech.name;tr.append(name);
+    for(let i=0;i<7;i++){
+     const td=document.createElement('td'),key=dateKey(add(start,i));
+     td.dataset.day=new Intl.DateTimeFormat(undefined,{timeZone:'UTC',weekday:'short',month:'short',day:'numeric'}).format(add(start,i));
+     const entries=shifts.filter(s=>String(s.technician_id)===String(tech.id)&&zonedKey(s.start)<=key&&zonedKey(s.end)>=key&&!(zonedKey(s.end)===key&&time(s.end)==='00:00'&&zonedKey(s.start)!==key));
+     entries.forEach(shift=>{
+      const existing=document.querySelector(`.schedule-event[data-schedule-id="${Number(shift.id)}"]`);
+      const b=document.createElement(existing?'button':'a');if(existing)b.type='button';else b.href=grid?{{ url_for('calendar')|tojson }}+`?week_start=${dateKey(start)}&technician_id=${tech.id}&view=hours&schedule=${shift.id}`:{{ url_for('mobile_calendar')|tojson }}+`?date=${key}#schedule-${shift.id}`;
+      b.className='ux-team-shift';b.style.borderLeftColor=/^#[0-9a-f]{3,8}$/i.test(tech.color||'')?tech.color:'var(--ux-accent)';
+      const hours=document.createElement('strong');hours.textContent=shift.all_day?'All day':`${time(shift.start)}–${time(shift.end)}`;const desc=document.createElement('div');desc.textContent=[shift.location,shift.description].filter(Boolean).join(' · ')||'On shift';b.append(hours,desc);b.title=`${tech.name} · ${hours.textContent} · ${desc.textContent} · Open schedule`;
+      if(existing)b.onclick=()=>existing.click();td.append(b);
+     });
+     if(!entries.length){const empty=document.createElement('span');empty.textContent='—';empty.setAttribute('aria-label','No shift');empty.className='text-muted';td.append(empty);}tr.append(td);
+    }body.append(tr);
+   });
+   table.append(body);content.replaceChildren(table);
+   if(!technicians.length){const empty=document.createElement('p');empty.className='p-3 text-muted';empty.textContent='No technicians match these filters.';content.replaceChildren(empty);}
+   fitHours(shifts);
+   if(!grid){const nonAllDay=shifts.filter(s=>!s.all_day);$('#uxTeamHours').textContent=nonAllDay.length?'Times shown in '+ux.timezone:'No timed shifts this week · '+ux.timezone;}
+  }catch(err){if(n!==seq)return;content.replaceChildren();const p=document.createElement('p');p.className='p-3 mb-0';p.textContent='Team schedule unavailable. '+err.message+' ';const retry=document.createElement('button');retry.className='btn btn-sm btn-outline-secondary';retry.textContent='Retry';retry.onclick=load;p.append(retry);content.append(p);}finally{content.setAttribute('aria-busy','false');}
+ }
+ $('#uxTeamPrev').onclick=()=>{start=add(start,-7);load();};$('#uxTeamNext').onclick=()=>{start=add(start,7);load();};$('#uxTeamToday').onclick=()=>{start=monday(today);load();};
+ load();
+ const requestedShift=new URLSearchParams(location.search).get('schedule');if(requestedShift)setTimeout(()=>document.querySelector(`.schedule-event[data-schedule-id="${Number(requestedShift)}"]`)?.click(),200);
+});
+</script>

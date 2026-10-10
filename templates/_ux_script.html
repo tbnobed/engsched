@@ -1,0 +1,122 @@
+{% if current_user.is_authenticated %}
+<script>
+(() => {
+ 'use strict';
+ const authenticated = {{ current_user.is_authenticated|tojson }};
+ if (!authenticated) return;
+ const timezone = {{ current_user.get_timezone()|tojson }};
+ const isAdmin = {{ current_user.is_admin|tojson }};
+ const $ = (s, root=document) => root.querySelector(s);
+ const $$ = (s, root=document) => Array.from(root.querySelectorAll(s));
+ document.body.classList.add('ux-app');
+ const main=document.querySelector('main');if(main&&!main.id)main.id='ux-main';
+ if(innerWidth<768){const schedule=$('[data-ux-schedule-link]');if(schedule)schedule.href={{ url_for('mobile_calendar')|tojson }};}
+ try { document.body.classList.toggle('ux-collapsed',localStorage.getItem('ux-sidebar')==='collapsed' && innerWidth>=768); } catch (_) {}
+ function toast(text, error=false) {
+  let el=$('#ux-toast'); if(!el){el=document.createElement('div');el.id='ux-toast';el.className='ux-toast';el.setAttribute('role','status');el.setAttribute('aria-live','polite');document.body.append(el);}
+  el.textContent=text;el.hidden=false;el.style.borderColor=error?'var(--cc-bad)':'var(--ux-border)';clearTimeout(el.timer);el.timer=setTimeout(()=>el.hidden=true,5000);
+ }
+ async function request(url,options={}) {
+  const res=await fetch(url,{credentials:'include',cache:'no-store',...options,headers:{Accept:'application/json','X-CSRFToken':$('meta[name="csrf-token"]')?.content || $('input[name="csrf_token"]')?.value || '',...options.headers}});
+  let data;try{data=await res.json();}catch(_){throw new Error('The server returned an unexpected response. Please retry.');}
+  if(!res.ok || data.ok===false) throw new Error(data.error || data.message || 'The request failed. Please retry.');
+  return data;
+ }
+ const post=(url,data)=>request(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+ function date(value,options={}) {
+  if(!value)return 'Not set';
+  const raw=String(value).replace(' ','T');
+  const d=new Date(/[zZ]$|[+-]\d\d:\d\d$/.test(raw)?raw:raw+'Z');
+  if(Number.isNaN(d.valueOf()))return value;
+  return new Intl.DateTimeFormat(undefined,{timeZone:timezone,month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',...options}).format(d);
+ }
+ function dates(root=document){
+  $$('[data-ux-time]',root).forEach(el=>{el.textContent=date(el.dataset.uxTime);el.title=date(el.dataset.uxTime,{year:'numeric',timeZoneName:'short'});});
+  const p=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).map(v=>[v.type,v.value]));const today=`${p.year}-${p.month}-${p.day}`;
+  $$('[data-ux-due]',root).forEach(el=>{const due=el.dataset.uxDue.slice(0,10);el.textContent=due<today?'Overdue · '+due:due===today?'Due today':'Due '+due;if(due<today)el.style.color='var(--cc-bad)';});
+ }
+ window.PostUX={request,post,toast,date,dates,timezone};
+ dates();
+ $('.ux-collapse')?.addEventListener('click',e=>{
+  document.body.classList.toggle('ux-collapsed');const collapsed=document.body.classList.contains('ux-collapsed');
+  e.currentTarget.setAttribute('aria-expanded',String(!collapsed));e.currentTarget.setAttribute('aria-label',collapsed?'Expand sidebar':'Collapse sidebar');
+  try{localStorage.setItem('ux-sidebar',collapsed?'collapsed':'expanded');}catch(_){}
+ });
+ $('.ux-mobile-menu')?.addEventListener('click',e=>{const open=document.body.classList.toggle('ux-sidebar-open');e.currentTarget.setAttribute('aria-expanded',String(open));});
+ document.addEventListener('click',e=>{if(document.body.classList.contains('ux-sidebar-open')&&!e.target.closest('.ux-sidebar,.ux-mobile-menu')){document.body.classList.remove('ux-sidebar-open');$('.ux-mobile-menu')?.setAttribute('aria-expanded','false');}});
+ $$('[data-close-dialog]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
+ $$('dialog.ux-dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}}));
+ const palette=$('#ux-command'),search=$('#ux-command-input'),results=$('#ux-command-results');
+ function contextId(){return $('.ticket-view[data-ticket-id]')?.dataset.ticketId || $('#tkTable tr.kbd-focus')?.dataset.ticketId || $('#tkTable tbody .tk-cb:checked')?.value;}
+ function action(label,fn) { const b=document.createElement('button');b.type='button';b.className='ux-command';b.textContent=label;b.onclick=async()=>{try{await fn();palette.close();}catch(err){toast(err.message,true);}};results.append(b); }
+ async function update(id,field,value){await post(`/tickets/api/${id}/quick-update`,{field,value});toast(`Ticket #${id} updated`);document.dispatchEvent(new CustomEvent('ux-ticket-updated',{detail:{id,field,value}}));}
+ function commands() {
+  const q=search.value.trim().toLowerCase();results.replaceChildren();
+  const match=q.match(/#?(\d+)/);const id=match?match[1]:contextId();
+  const clean=q.replace(/#?\d+/g,'').trim();
+  if(match)action(`Open ticket #${id}`,()=>location.href=`/tickets/${id}`);
+  const nav=[['Queue',{{ url_for('tickets.tickets_dashboard')|tojson }}],['Overview',{{ url_for('dashboard')|tojson }}],['Schedule',{{ url_for('calendar')|tojson }}]];
+  nav.forEach(([name,url])=>{if(!q||name.toLowerCase().includes(q))action(`Go to ${name}`,()=>location.href=url);});
+  if(!q||/new|create/.test(q))action('Create a ticket',()=>{const btn=$('#tkNewTicketBtn');if(btn)btn.click();else location.href={{ url_for('tickets.tickets_dashboard')|tojson }}+'?new=1';});
+  if(id&&(!clean||/assign|owner/.test(clean))){
+   action(`Assign #${id} to me`,()=>update(id,'assigned_to','me'));action(`Unassign #${id}`,()=>update(id,'assigned_to','none'));
+   const seen=new Set();$$('#tk_dr_asn option, [data-workspace-field="assigned_to"] option').forEach(o=>{if(o.value&&o.value!=='none'&&!seen.has(o.value)){seen.add(o.value);action(`Assign #${id} to ${o.textContent}`,()=>update(id,'assigned_to',o.value));}});
+  }
+  if(id&&(!clean||/status|open|pending|resolve|close|progress/.test(clean)))['open','in_progress','pending','resolved','closed'].forEach(status=>action(`Set #${id} status → ${status.replace('_',' ')}`,()=>update(id,'status',status)));
+  if(!id&&/assign|status/.test(q)){const hint=document.createElement('p');hint.className='text-muted p-3';hint.textContent='Include a ticket number, or select a queue row first. Example: assign #734.';results.append(hint);}
+  if(!results.children.length){const hint=document.createElement('p');hint.className='text-muted p-3';hint.textContent='No matching commands. Enter a ticket number or try “create”.';results.append(hint);}
+ }
+ function openPalette(){commands();palette.showModal();search.focus();search.select();}
+ $$('[data-ux-command]').forEach(b=>b.addEventListener('click',openPalette));search?.addEventListener('input',commands);
+ palette?.addEventListener('keydown',e=>{const buttons=$$('.ux-command',palette);let i=buttons.indexOf(document.activeElement);if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();i=e.key==='ArrowDown'?(i+1)%buttons.length:(i-1+buttons.length)%buttons.length;buttons[i]?.focus();}if(e.key==='Enter'&&e.target===search){e.preventDefault();buttons[0]?.click();}});
+ document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();palette.open?palette.close():openPalette();}if(e.key==='?'&&!e.target.closest('input,textarea,select,[contenteditable=true]')&&!$('dialog[open]')){e.preventDefault();$('#ux-shortcuts').showModal();}});
+ const merge=$('#ux-merge');let mergeIds=[];
+ window.PostUX.merge=(ids)=>{
+  if(!isAdmin){toast('Only administrators can merge tickets.',true);return;}
+  mergeIds=[...new Set(ids.map(Number))].filter(Number.isFinite);if(mergeIds.length<2){toast('Select at least two tickets to merge.',true);return;}
+  $('#ux-merge-target').replaceChildren(...mergeIds.map(id=>new Option(`#${id}`,id)));
+  $('#ux-merge-form').reset();$('#ux-merge-error').textContent='';$('#ux-merge-sources').textContent='Tickets being reviewed: '+mergeIds.map(id=>'#'+id).join(', ');merge.showModal();
+ };
+ $('#ux-merge-form')?.addEventListener('submit',async e=>{e.preventDefault();const button=$('[type=submit]',e.target);button.disabled=true;const target=Number($('#ux-merge-target').value);try{await post('/tickets/api/merge',{target_id:target,source_ids:mergeIds.filter(id=>id!==target)});merge.close();toast('Tickets merged. Originals archived.');location.reload();}catch(err){$('#ux-merge-error').textContent=err.message;}finally{button.disabled=false;}});
+ // All custom dialogs and the drawer trap focus, support Escape, and restore focus.
+ const drawer=$('#tkDrawer');let drawerReturn;
+ if(drawer){
+  drawer.setAttribute('aria-hidden',String(!drawer.classList.contains('visible')));
+  new MutationObserver(()=>{const open=drawer.classList.contains('visible');drawer.setAttribute('aria-hidden',String(!open));if(open){drawerReturn=document.activeElement;}else if(drawerReturn){drawerReturn.focus();}}).observe(drawer,{attributes:true,attributeFilter:['class']});
+  drawer.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const els=$$('a[href],button,input,select,textarea,[tabindex="0"]',drawer).filter(el=>!el.disabled&&el.offsetParent);const first=els[0],last=els[els.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
+  if(new URLSearchParams(location.search).has('new'))$('#tkNewTicketBtn')?.click();
+ }
+ // Requester lookup is progressive: self remains valid if the directory is unavailable.
+ $$('[data-requester-search]').forEach(input=>{
+  const form=input.closest('form'),id=$('[name=requester_id]',form),list=document.getElementById(input.getAttribute('aria-controls'));let timer,seq=0;
+  input.addEventListener('input',()=>{id.value='0';clearTimeout(timer);const n=++seq,query=input.value.trim();if(query.length<2){list.replaceChildren();return;}timer=setTimeout(async()=>{try{const data=await request('/tickets/api/requesters?q='+encodeURIComponent(query));if(n!==seq)return;list.replaceChildren();(data.users||[]).forEach(user=>{const b=document.createElement('button');b.type='button';b.className='ux-command btn text-start w-100';b.textContent=`${user.username} · ${user.email||'No email'}`;b.onclick=()=>{id.value=user.id;input.value=`${user.username}${user.email?' · '+user.email:''}`;list.replaceChildren();input.setCustomValidity('');};list.append(b);});if(!data.users?.length)list.textContent='No matches. Clear the search to use yourself.';}catch(err){if(n===seq)list.textContent=err.message;}},250);});
+  input.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){e.preventDefault();$('button',list)?.focus();}if(e.key==='Escape')list.replaceChildren();});
+  form.addEventListener('submit',e=>{if(input.value.trim()&&id.value==='0'){e.preventDefault();input.setCustomValidity('Choose a directory result, or clear the requester search to use yourself.');input.reportValidity();}});
+  input.addEventListener('input',()=>input.setCustomValidity(''));
+ });
+ $$('[data-due-offset]').forEach(b=>b.addEventListener('click',()=>{const input=$('[name=due_date]',b.closest('form'));const parts=new Intl.DateTimeFormat('en-CA',{timeZone:timezone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const p=Object.fromEntries(parts.map(v=>[v.type,v.value]));const d=new Date(Date.UTC(+p.year,+p.month-1,+p.day+Number(b.dataset.dueOffset)));input.value=d.toISOString().slice(0,10);input.dispatchEvent(new Event('change',{bubbles:true}));}));
+ $$('[data-triage]').forEach(button=>button.addEventListener('click',async()=>{
+  const form=button.closest('form'),box=$('[data-triage-result]',form);button.disabled=true;box.hidden=false;box.textContent='Reviewing the title and description…';
+  try{const data=await post('/tickets/api/triage',{title:$('[name=title]',form).value,description:$('[name=description]',form).value});box.replaceChildren();const text=document.createElement('p');const cat=$('[name=category_id]',form);const label=Array.from(cat.options).find(o=>String(o.value)===String(data.category_id))?.textContent||'Unsorted';const pri={0:'Low',1:'Medium',2:'High',3:'Urgent'}[data.priority]||'Not specified';text.textContent=`Suggested: ${label} · ${pri}. ${data.reason||''}`;const apply=document.createElement('button');apply.type='button';apply.className='btn btn-sm btn-outline-primary';apply.textContent='Apply suggestions';apply.onclick=()=>{if(Array.from(cat.options).some(o=>String(o.value)===String(data.category_id)))cat.value=String(data.category_id);$('[name=priority]',form).value=String(data.priority);apply.disabled=true;apply.textContent='Suggestions applied — review before creating';};box.append(text,apply);}catch(err){box.textContent='AI triage unavailable: '+err.message;}finally{button.disabled=false;}
+ }));
+ // Shared summary drives queue, attention, duplicate review and workload counts.
+ async function summary(){
+  try{
+   const data=await request('/tickets/api/ux-summary');window.PostUX.summary=data;
+   $$('[data-kpi]').forEach(el=>el.textContent=data.kpis?.[el.dataset.kpi]??'—');
+   $$('[data-tech-count]').forEach(el=>el.textContent=`${data.technician_counts?.[el.dataset.techCount]??0} open tickets`);
+   const attention=$('#ux-attention-items');if(attention){attention.replaceChildren();if(!data.needs_attention?.length){const p=document.createElement('p');p.className='p-3 mb-0 text-muted';p.textContent='Nothing needs attention. The queue is up to date.';attention.append(p);}else data.needs_attention.forEach(t=>{const a=document.createElement('a');a.href=`/tickets/${t.id}`;a.className='d-flex justify-content-between gap-3 p-3 border-bottom text-decoration-none';const name=document.createElement('span');name.textContent=`#${t.id} · ${t.title}`;const reason=document.createElement('small');reason.className='text-muted';reason.textContent=t.reason;a.append(name,reason);attention.append(a);});}
+   $$('#tkTable tr[data-ticket-id]').forEach(row=>{const candidates=data.duplicates?.[row.dataset.ticketId]||[];let badge=$('.ux-duplicate',row);if(candidates.length&&!badge){badge=document.createElement('button');badge.type='button';badge.className='ux-duplicate ms-2';badge.textContent='Possible duplicate';badge.title='Review duplicate tickets before merging';badge.onclick=e=>{e.stopPropagation();if(isAdmin)window.PostUX.merge([row.dataset.ticketId,...candidates]);else location.href=`/tickets/${candidates[0]}`;};$('.title',row).append(badge);}if(!candidates.length)badge?.remove();});
+   $('#ux-summary-error')?.setAttribute('hidden','');
+  }catch(err){const error=$('#ux-summary-error');if(error){error.hidden=false;error.textContent='Live summary unavailable. ';const retry=document.createElement('button');retry.className='btn btn-sm btn-outline-secondary';retry.textContent='Retry';retry.onclick=summary;error.append(retry);}}
+ }
+ if($('#tkTable')||$('#ux-attention-items')){summary();setInterval(()=>{if(!document.hidden)summary();},30000);}
+ document.addEventListener('ux-queue-refreshed',()=>{dates();summary();});
+ const createForm=$('#uxCreateForm');
+ if(createForm){
+  ['category_id','priority'].forEach(name=>{const el=$(`[name="${name}"]`,createForm);if(!el)return;el.required=true;const blank=Array.from(el.options).find(o=>name==='category_id'?Number(o.value)===0:Number(o.value)===-1);if(blank){blank.value='';blank.disabled=true;}});
+ }
+ document.addEventListener('ux-ticket-updated',e=>{if($('#tkTable')){const row=$(`#tkTable tr[data-ticket-id="${e.detail.id}"]`);if(row){const field=e.detail.field,value=e.detail.value;if(field==='assigned_to'){const select=$('.ux-assignee',row),assigned=value==='me'?{{ current_user.id|tojson }}:value;row.dataset.assigned=assigned==='none'?'':String(assigned);if(select)select.value=String(assigned);}else{const pill=$(`[data-edit="${field}"]`,row);if(pill){pill.dataset.value=value;pill.textContent=String(value).replace('_',' ');if(field==='status'){row.dataset.status=value;pill.className='tk-pill tk-pill-st-'+value+(row.dataset.canEdit==='true'?' tk-pill-edit':'');}}}}summary();}});
+})();
+</script>
+{% endif %}

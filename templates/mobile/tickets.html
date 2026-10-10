@@ -5,6 +5,8 @@
 {% block page_class %}page-tickets{% endblock %}
 
 {% block content %}
+<script>window.location.replace({{ url_for('tickets.tickets_dashboard')|tojson }}+window.location.search);</script>
+<noscript><a href="{{ url_for('tickets.tickets_dashboard') }}" class="btn btn-primary mb-3">Open the redesigned queue</a></noscript>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Tickets</h1>
     <a href="{{ url_for('tickets.create_ticket', mobile=1) }}" class="btn btn-primary" style="background: linear-gradient(135deg, #7A93AC, #92BCEA); border: none;">
@@ -31,10 +33,11 @@
             <label class="form-label small">Priority</label>
             <select class="form-select form-select-sm" id="priorityFilter" onchange="updateFilters()">
                 <option value="all" {% if priority_filter == 'all' %}selected{% endif %}>All</option>
-                <option value="4" {% if priority_filter == '4' %}selected{% endif %}>Urgent</option>
-                <option value="3" {% if priority_filter == '3' %}selected{% endif %}>High</option>
-                <option value="2" {% if priority_filter == '2' %}selected{% endif %}>Medium</option>
-                <option value="1" {% if priority_filter == '1' %}selected{% endif %}>Low</option>
+                <option value="-1" {% if priority_filter == '-1' %}selected{% endif %}>Untriaged</option>
+                <option value="3" {% if priority_filter == '3' %}selected{% endif %}>Urgent</option>
+                <option value="2" {% if priority_filter == '2' %}selected{% endif %}>High</option>
+                <option value="1" {% if priority_filter == '1' %}selected{% endif %}>Medium</option>
+                <option value="0" {% if priority_filter == '0' %}selected{% endif %}>Low</option>
             </select>
         </div>
     </div>
@@ -60,8 +63,8 @@
                         <span class="badge {% if ticket.status == 'open' %}bg-primary{% elif ticket.status == 'in_progress' %}bg-warning{% elif ticket.status == 'pending' %}bg-info{% elif ticket.status == 'resolved' %}bg-success{% else %}bg-secondary{% endif %}">
                             {{ ticket.status.replace('_', ' ').title() }}
                         </span>
-                        <span class="badge {% if ticket.priority == 4 %}bg-danger{% elif ticket.priority == 3 %}bg-warning{% elif ticket.priority == 2 %}bg-info{% else %}bg-light text-dark{% endif %}">
-                            {% if ticket.priority == 4 %}Urgent{% elif ticket.priority == 3 %}High{% elif ticket.priority == 2 %}Medium{% else %}Low{% endif %}
+                        <span class="tk-pill tk-pill-pri-{{ ticket.priority }}">
+                            {{ {-1:'Untriaged',0:'Low',1:'Medium',2:'High',3:'Urgent'}.get(ticket.priority,'Untriaged') }}
                         </span>
                     </div>
                 </div>

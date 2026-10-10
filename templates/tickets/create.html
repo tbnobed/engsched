@@ -9,7 +9,7 @@
                     <h4 class="mb-0">Create New Ticket</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('tickets.create_ticket') }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ url_for('tickets.create_ticket') }}" enctype="multipart/form-data" id="uxCreateForm">
                         {{ form.hidden_tag() }}
                         <div class="mb-3">
                             <label for="title" class="form-label">Title</label>
@@ -68,9 +68,12 @@
                             <div class="form-text">Any file type supported (images, PDFs, documents, etc.)</div>
                         </div>
 
-                        <div class="d-flex justify-content-between">
+                        {% include 'tickets/_new_ticket_extras.html' %}
+                        <div class="p-3 border rounded mb-3 small"><strong>Choose the impact, not the order.</strong><br>Urgent — on-air or production down<br>High — major disruption, no workaround<br>Medium — work impacted, workaround exists<br>Low — routine request</div>
+                        <div class="d-flex justify-content-between gap-2 flex-wrap">
                             <a href="{{ url_for('tickets.tickets_dashboard') }}" class="btn btn-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Create Ticket</button>
+                            <button type="submit" name="submit_action" value="assign_me" class="btn btn-outline-primary">Create &amp; assign to me</button>
                         </div>
                     </form>
                 </div>
@@ -99,6 +102,8 @@
                 return;
             }
             
+            // Preserve content when server-side validation returns the form.
+            const initialDescription = textarea.value;
             // Hide the original textarea
             textarea.style.display = 'none';
             
@@ -129,6 +134,7 @@
                 }
             });
             
+            if(initialDescription)quill.clipboard.dangerouslyPasteHTML(initialDescription);
             // Handle image upload
             quill.getModule('toolbar').addHandler('image', function() {
                 const input = document.createElement('input');

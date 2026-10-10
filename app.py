@@ -452,6 +452,8 @@ from health import health_bp
 app.register_blueprint(tickets)
 from ticket_ai import ai
 app.register_blueprint(ai)
+from ticket_workspace import workspace
+app.register_blueprint(workspace)
 app.register_blueprint(auth)
 app.register_blueprint(health_bp)
 

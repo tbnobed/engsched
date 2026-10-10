@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, DateTimeField, DateField, TextAreaField, ColorField, SelectField, IntegerField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, URL, Optional
+from wtforms.validators import DataRequired, Email, EqualTo, Length, URL, Optional, NumberRange
 import pytz
 
 class LocationForm(FlaskForm):
@@ -93,11 +93,13 @@ class TicketForm(FlaskForm):
     description = TextAreaField('Description', validators=[DataRequired()])
     category_id = SelectField('Category', coerce=int, validators=[DataRequired()])
     priority = SelectField('Priority', choices=[
+        (-1, 'Select priority'),
         (0, 'Low'),
         (1, 'Medium'),
         (2, 'High'),
         (3, 'Urgent')
-    ], coerce=int)
+    ], coerce=int, validators=[NumberRange(min=0, max=3)])
+    requester_id = SelectField('Requester', coerce=int, validators=[Optional()], default=0)
     assigned_to = SelectField('Assign To', coerce=int, validators=[Optional()])
     due_date = DateField('Due Date', format='%Y-%m-%d', validators=[Optional()])
     attachment = FileField('Attach File')

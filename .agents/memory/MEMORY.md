@@ -1,3 +1,4 @@
 - [Inbound email webhook](inbound-email-webhook.md) — SendGrid Inbound Parse: 413 on large emails (raise form limits) + duplicate tickets from retries (claim-first Message-ID idempotency via ProcessedEmail).
 - [Direct ticket AI](ticket-ai-decisions.md) — OpenAI follow-ups replace n8n; keep AI outside inbound email requests and distinguish Replit from separately hosted production.
 - [PostgreSQL driver compatibility](postgres-driver.md) — Explicitly select the installed driver; a production build failed trying to load psycopg v3.
+- [Support workspace data boundaries](support-workspace-decisions.md) — Internal notes never email requesters; historical time repairs and ticket merges must preserve evidence.

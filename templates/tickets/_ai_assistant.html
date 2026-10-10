@@ -135,12 +135,14 @@
             label.textContent = message.role === 'user' ? 'Question' : 'AI Assistant';
             header.appendChild(label);
             if (message.created_at) {
-                const date = new Date(message.created_at);
+                const raw = String(message.created_at).replace(' ', 'T');
+                const date = new Date(/[zZ]$|[+-]\d\d:\d\d$/.test(raw) ? raw : raw+'Z');
                 if (!Number.isNaN(date.getTime())) {
                     const time = document.createElement('time');
                     time.className = 'text-muted';
                     time.dateTime = message.created_at;
-                    time.textContent = date.toLocaleString();
+                    time.textContent = new Intl.DateTimeFormat(undefined, {timeZone: {{ current_user.get_timezone()|tojson }},month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(date);
+                    time.title = new Intl.DateTimeFormat(undefined, {timeZone: {{ current_user.get_timezone()|tojson }},year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'}).format(date);
                     header.appendChild(time);
                 }
             }
