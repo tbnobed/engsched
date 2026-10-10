@@ -266,7 +266,7 @@
                         {% endif %}
                     </div>
                     <div class="mb-0 {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}text-dark{% else %}text-light{% endif %}">
-                        {{ comment['content']|safe }}
+                        {{ comment['content']|clean_ai_analysis|safe }}
                     </div>
                     {% if comment.attachment %}
                     <div class="comment-attachment mt-2 d-flex flex-wrap align-items-start">

@@ -10,6 +10,7 @@ from sqlalchemy import func
 
 from app import app, db
 from models import Ticket, TicketComment, TicketAIMessage
+from ai_text import without_emojis
 
 ai = Blueprint("ticket_ai", __name__)
 
@@ -25,7 +26,8 @@ For follow-ups respond directly, incorporate reported test results, and avoid
 repeating failed steps. Flag service interruptions, data loss, or live broadcast
 risk before suggesting changes; prefer reversible checks first. Never request
 passwords or secrets. You cannot inspect attachments or access equipment.
-Write readable plain text with short headings and numbered steps, no HTML."""
+Write professional plain text with short headings and numbered steps.
+Do not use emojis, decorative symbols, or HTML."""
 
 
 def enabled():
@@ -137,7 +139,7 @@ def ask_openai(messages):
             raise ValueError("OpenAI returned no answer. Please retry.")
         if choice.get("finish_reason") == "length":
             content += "\n\n[Response reached its length limit. Ask a follow-up to continue.]"
-        return content
+        return without_emojis(content)
     except (requests.RequestException, KeyError, TypeError, IndexError):
         raise ValueError("OpenAI could not be reached or returned an invalid response. Please retry.") from None
 
@@ -192,7 +194,8 @@ def conversation(ticket_id):
             enabled=enabled(),
             busy=any(r.status in ("pending", "running") for r in rows),
             messages=[{
-                "id": r.id, "role": r.role, "content": r.content,
+                "id": r.id, "role": r.role,
+                "content": without_emojis(r.content) if r.role == "assistant" else r.content,
                 "status": r.status, "error": r.error,
                 "created_at": r.created_at.isoformat() + "Z",
             } for r in rows],

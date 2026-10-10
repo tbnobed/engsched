@@ -5,6 +5,12 @@ description: Direct OpenAI replacement scope and operational boundaries
 
 Ticket AI should use direct OpenAI, not n8n, and support shared technician follow-up questions.
 
+AI output should not display emojis, including legacy analysis headings.
+
+**Why:** The user said these look unprofessional.
+
+**How to apply:** Use plain headings in AI output and preserve ordinary user-authored comments.
+
 **Why:** The user requested replacement of one-shot n8n analysis; n8n downtime previously delayed inbound email processing.
 
 **How to apply:** Keep model calls outside inbound email requests. Preserve existing email deduplication. Do not claim all webhook delays are eliminated while notification emails still run synchronously. The user's production installation is separately hosted, so Replit secrets do not configure that installation.

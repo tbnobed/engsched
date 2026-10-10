@@ -29,6 +29,8 @@ csrf = CSRFProtect()
 
 # Create the app
 app = Flask(__name__)
+from ai_text import clean_legacy_analysis
+app.jinja_env.filters["clean_ai_analysis"] = clean_legacy_analysis
 
 # Custom Jinja2 filters
 @app.template_filter('nl2br')

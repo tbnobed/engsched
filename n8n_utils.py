@@ -19,13 +19,13 @@ def format_ai_analysis(analysis_data: Dict[str, Any]) -> str:
     
     # Add summary if available
     if analysis_data.get('summary'):
-        html_parts.append(f"<p><strong>📋 Summary:</strong><br>{analysis_data['summary']}</p>")
+        html_parts.append(f"<p><strong>Summary:</strong><br>{analysis_data['summary']}</p>")
     
     # Add possible causes if available
     if analysis_data.get('possible_causes'):
         causes = analysis_data['possible_causes']
         if isinstance(causes, list):
-            html_parts.append("<p><strong>🔍 Possible Causes:</strong></p><ul>")
+            html_parts.append("<p><strong>Possible Causes:</strong></p><ul>")
             for cause in causes:
                 html_parts.append(f"<li>{cause}</li>")
             html_parts.append("</ul>")
@@ -34,7 +34,7 @@ def format_ai_analysis(analysis_data: Dict[str, Any]) -> str:
     if analysis_data.get('suggested_solutions'):
         solutions = analysis_data['suggested_solutions']
         if isinstance(solutions, list):
-            html_parts.append("<p><strong>💡 Suggested Solutions:</strong></p><ol>")
+            html_parts.append("<p><strong>Suggested Solutions:</strong></p><ol>")
             for solution in solutions:
                 html_parts.append(f"<li>{solution}</li>")
             html_parts.append("</ol>")
@@ -43,18 +43,18 @@ def format_ai_analysis(analysis_data: Dict[str, Any]) -> str:
     if analysis_data.get('references'):
         references = analysis_data['references']
         if isinstance(references, list) and references:
-            html_parts.append("<p><strong>📚 References:</strong></p><ul>")
+            html_parts.append("<p><strong>References:</strong></p><ul>")
             for ref in references:
                 html_parts.append(f"<li><a href='{ref}' target='_blank'>{ref}</a></li>")
             html_parts.append("</ul>")
     
     # Add confidence level if available
     if analysis_data.get('confidence'):
-        html_parts.append(f"<p><strong>📊 Confidence Level:</strong> {analysis_data['confidence']}</p>")
+        html_parts.append(f"<p><strong>Confidence Level:</strong> {analysis_data['confidence']}</p>")
     
     # Add response/main analysis if available
     if analysis_data.get('response'):
-        html_parts.append(f"<p><strong>💬 Analysis:</strong><br>{analysis_data['response']}</p>")
+        html_parts.append(f"<p><strong>Analysis:</strong><br>{analysis_data['response']}</p>")
     
     return ''.join(html_parts)
 
