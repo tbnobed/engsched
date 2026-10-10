@@ -1,0 +1,255 @@
+<style>
+.ticket-ai .ticket-ai-conversation { max-height: 36rem; overflow-y: auto; overflow-wrap: anywhere; }
+.ticket-ai .ticket-ai-message { padding: 1rem; border: 1px solid var(--bs-border-color, #dee2e6); border-radius: .5rem; margin-bottom: .75rem; }
+.ticket-ai .ticket-ai-message-user { background: rgba(52, 152, 219, .07); }
+.ticket-ai .ticket-ai-content { white-space: pre-wrap; overflow-wrap: anywhere; margin: .5rem 0 0; font: inherit; }
+.ticket-ai .ticket-ai-skeleton { height: .7rem; border-radius: .25rem; background: rgba(108, 117, 125, .18); margin: .65rem 0; }
+.ticket-ai .ticket-ai-skeleton:last-child { width: 64%; }
+.ticket-ai [hidden] { display: none !important; }
+.ticket-ai textarea { resize: vertical; min-height: 6rem; }
+@media (max-width: 767px) {
+    .ticket-ai .ticket-ai-message { padding: .75rem; }
+    .ticket-ai .ticket-ai-actions { flex-direction: column; align-items: stretch !important; }
+    .ticket-ai .ticket-ai-actions .btn { min-height: 44px; }
+}
+</style>
+<section class="card mb-4 ticket-ai" id="ticket-ai" aria-labelledby="ticket-ai-title"
+         data-endpoint="{{ request.script_root }}/tickets/{{ ticket['id'] }}/ai"
+         data-csrf="{{ csrf_token() }}">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+            <h4 class="card-title mb-0" id="ticket-ai-title">AI Assistant</h4>
+            <span class="badge bg-secondary" data-ai-badge>Loading</span>
+        </div>
+        <p class="text-muted small mb-2">A shared conversation for this ticket. Ask for troubleshooting steps or help understanding the issue.</p>
+        <p class="text-muted small mb-3" id="ticket-ai-notice">Ticket details, comments, and your questions are sent to OpenAI. This conversation is shared with people who can access this ticket; it is not emailed externally. Check AI suggestions before acting.</p>
+        <div data-ai-loading aria-label="Loading conversation">
+            <div class="ticket-ai-skeleton"></div>
+            <div class="ticket-ai-skeleton"></div>
+        </div>
+        <p class="alert alert-secondary small" data-ai-disabled hidden>AI assistance is disabled for this installation. An administrator must enable it before you can request an analysis or send questions.</p>
+        <div class="alert alert-danger small" data-ai-error role="alert" hidden>
+            <span data-ai-error-text></span>
+            <button class="btn btn-sm btn-outline-danger mt-2 d-block" type="button" data-ai-reload>Refresh conversation</button>
+        </div>
+        <div class="ticket-ai-conversation" data-ai-conversation role="region" aria-label="Shared AI conversation" tabindex="0"></div>
+        <div class="border rounded p-3 mb-3" data-ai-empty hidden>
+            <strong>Start with the ticket.</strong>
+            <p class="text-muted small mb-2">Get an initial analysis of the details and comments, or ask a specific question below.</p>
+            <button type="button" class="btn btn-outline-primary btn-sm" data-ai-analyze disabled>Analyze ticket</button>
+        </div>
+        <p class="text-muted small mb-2" data-ai-status role="status" aria-live="polite">Loading conversation…</p>
+        <form data-ai-form aria-describedby="ticket-ai-notice">
+            <label class="form-label" for="ticket-ai-question">Ask a follow-up</label>
+            <textarea class="form-control mb-2" id="ticket-ai-question" name="question" rows="3" placeholder="What should we check next?" disabled required></textarea>
+            <div class="d-flex justify-content-between align-items-center gap-2 ticket-ai-actions">
+                <span class="text-muted small">Questions and replies stay with this ticket.</span>
+                <button type="submit" class="btn btn-primary" data-ai-send disabled>Send question</button>
+            </div>
+        </form>
+        <noscript><p class="alert alert-secondary mt-3 mb-0">Enable JavaScript to use the ticket AI assistant.</p></noscript>
+    </div>
+</section>
+<script>
+(function () {
+    'use strict';
+    const root = document.getElementById('ticket-ai');
+    if (!root || root.dataset.initialized) return;
+    root.dataset.initialized = 'true';
+    const find = selector => root.querySelector(selector);
+    const endpoint = root.dataset.endpoint;
+    const conversation = find('[data-ai-conversation]');
+    const question = find('textarea');
+    const send = find('[data-ai-send]');
+    const analyze = find('[data-ai-analyze]');
+    const status = find('[data-ai-status]');
+    const badge = find('[data-ai-badge]');
+    const errorBox = find('[data-ai-error]');
+    let ready = false;
+    let enabled = false;
+    let busy = false;
+    let submitting = false;
+    let fetching = false;
+    let timer = null;
+    let lastMessages = '';
+    let reloadRequired = false;
+
+    function controls() {
+        const locked = !ready || !enabled || busy || submitting || fetching || reloadRequired;
+        question.disabled = !ready || !enabled;
+        send.disabled = locked || !question.value.trim();
+        analyze.disabled = locked;
+        conversation.querySelectorAll('[data-ai-retry]').forEach(button => { button.disabled = locked; });
+        send.textContent = submitting ? 'Sending…' : 'Send question';
+        find('[data-ai-reload]').disabled = fetching || submitting;
+        conversation.setAttribute('aria-busy', String(fetching || busy || submitting));
+        badge.textContent = !ready ? (fetching ? 'Loading' : 'Unavailable') : !enabled ? 'Disabled' : (busy || submitting) ? 'Working' : 'Ready';
+        status.textContent = !ready ? (fetching ? 'Loading conversation…' : 'Conversation unavailable. Refresh to try again.') :
+            !enabled ? 'AI assistance is currently unavailable.' :
+            reloadRequired ? 'Refresh the conversation before sending another request.' :
+            submitting ? 'Sending your request…' :
+            busy ? 'The assistant is working. This conversation updates automatically.' : 'Up to date. Replies are AI-generated.';
+    }
+
+    function showError(message) {
+        find('[data-ai-error-text]').textContent = message;
+        errorBox.hidden = false;
+    }
+
+    async function request(url, options) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 30000);
+        try {
+            const response = await fetch(url, {
+                credentials: 'same-origin', cache: 'no-store',
+                ...options, signal: controller.signal,
+                headers: { Accept: 'application/json', ...(options && options.headers) }
+            });
+            let data = null;
+            try { data = await response.json(); } catch (_) { /* Handled below. */ }
+            if (!response.ok) {
+                const failure = new Error(data && typeof data.error === 'string' ? data.error :
+                    response.status === 401 || response.status === 403 ? 'Your session may have expired or access was denied. Refresh the page and try again.' :
+                    'The AI request could not be completed. Please try again.');
+                failure.status = response.status;
+                throw failure;
+            }
+            return data;
+        } finally {
+            window.clearTimeout(timeout);
+        }
+    }
+
+    function render(messages) {
+        const signature = JSON.stringify(messages);
+        if (signature === lastMessages) return;
+        lastMessages = signature;
+        const nearBottom = conversation.scrollHeight - conversation.scrollTop - conversation.clientHeight < 80;
+        const fragment = document.createDocumentFragment();
+        messages.forEach(message => {
+            const article = document.createElement('article');
+            article.className = 'ticket-ai-message' + (message.role === 'user' ? ' ticket-ai-message-user' : '');
+            const header = document.createElement('div');
+            header.className = 'd-flex flex-wrap justify-content-between gap-2 small';
+            const label = document.createElement('strong');
+            label.textContent = message.role === 'user' ? 'Question' : 'AI Assistant';
+            header.appendChild(label);
+            if (message.created_at) {
+                const date = new Date(message.created_at);
+                if (!Number.isNaN(date.getTime())) {
+                    const time = document.createElement('time');
+                    time.className = 'text-muted';
+                    time.dateTime = message.created_at;
+                    time.textContent = date.toLocaleString();
+                    header.appendChild(time);
+                }
+            }
+            article.appendChild(header);
+            if (message.content) {
+                const content = document.createElement('div');
+                content.className = 'ticket-ai-content';
+                content.textContent = message.content;
+                article.appendChild(content);
+            }
+            if (message.status === 'pending' || message.status === 'running') {
+                const pending = document.createElement('p');
+                pending.className = 'text-muted small mt-2 mb-0';
+                pending.textContent = message.status === 'pending' ? 'Waiting for analysis…' : 'Preparing a response…';
+                article.appendChild(pending);
+            }
+            if (message.status === 'failed') {
+                const failure = document.createElement('p');
+                failure.className = 'text-danger small mt-2 mb-2';
+                failure.textContent = message.error || 'The assistant could not complete this response.';
+                article.appendChild(failure);
+                if (message.role === 'assistant') {
+                    const retry = document.createElement('button');
+                    retry.type = 'button';
+                    retry.className = 'btn btn-sm btn-outline-primary';
+                    retry.dataset.aiRetry = String(message.id);
+                    retry.textContent = 'Retry response';
+                    retry.addEventListener('click', () => submit('/' + encodeURIComponent(message.id) + '/retry'));
+                    article.appendChild(retry);
+                }
+            }
+            fragment.appendChild(article);
+        });
+        conversation.replaceChildren(fragment);
+        if (nearBottom) conversation.scrollTop = conversation.scrollHeight;
+    }
+
+    function schedule(delay) {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(load, delay);
+    }
+
+    async function load() {
+        if (fetching) return;
+        fetching = true;
+        window.clearTimeout(timer);
+        controls();
+        try {
+            const data = await request(endpoint);
+            if (!data || typeof data.enabled !== 'boolean' || !Array.isArray(data.messages) || typeof data.busy !== 'boolean') {
+                throw new Error('The conversation could not be loaded. Please refresh to try again.');
+            }
+            ready = true;
+            enabled = data.enabled;
+            busy = data.busy;
+            reloadRequired = false;
+            render(data.messages);
+            find('[data-ai-empty]').hidden = !enabled || data.messages.length > 0 || busy;
+            find('[data-ai-disabled]').hidden = enabled;
+            errorBox.hidden = true;
+            // A slow idle refresh keeps the shared thread current across users.
+            schedule(busy ? 2000 : 15000);
+        } catch (error) {
+            reloadRequired = true;
+            showError(error.name === 'AbortError' ? 'Loading timed out. Refresh the conversation to try again.' : error.message);
+            if (ready && busy) schedule(5000);
+        } finally {
+            fetching = false;
+            find('[data-ai-loading]').hidden = true;
+            controls();
+        }
+    }
+
+    async function submit(suffix, text) {
+        if (!ready || !enabled || busy || submitting || reloadRequired || fetching) return;
+        submitting = true;
+        window.clearTimeout(timer);
+        errorBox.hidden = true;
+        controls();
+        try {
+            await request(endpoint + suffix, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': root.dataset.csrf },
+                body: JSON.stringify(suffix ? {} : { question: text })
+            });
+            if (!suffix && question.value === text) question.value = '';
+            busy = true;
+            await load();
+        } catch (error) {
+            // A lost response may still have queued work. Reconcile before another POST.
+            reloadRequired = !error.status || error.status >= 500 || error.status === 409;
+            showError(error.name === 'AbortError' ?
+                'The request timed out and may still be processing. Your draft is kept; refresh the conversation before trying again.' :
+                error.message);
+            schedule(15000);
+        } finally {
+            submitting = false;
+            controls();
+        }
+    }
+
+    find('[data-ai-form]').addEventListener('submit', event => {
+        event.preventDefault();
+        if (question.value.trim()) submit('', question.value);
+    });
+    analyze.addEventListener('click', () => submit('', ''));
+    find('[data-ai-reload]').addEventListener('click', load);
+    question.addEventListener('input', controls);
+    window.addEventListener('pagehide', () => window.clearTimeout(timer));
+    load();
+})();
+</script>

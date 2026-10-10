@@ -1,1 +1,2 @@
 - [Inbound email webhook](inbound-email-webhook.md) — SendGrid Inbound Parse: 413 on large emails (raise form limits) + duplicate tickets from retries (claim-first Message-ID idempotency via ProcessedEmail).
+- [Direct ticket AI](ticket-ai-decisions.md) — OpenAI follow-ups replace n8n; keep AI outside inbound email requests and distinguish Replit from separately hosted production.

@@ -238,7 +238,14 @@ def attempt_db_connection_with_retry():
                 logger.info("Successfully connected to the database!")
                 
                 # Create tables
-                db.create_all()
+                # Multiple Gunicorn workers can reach first-boot DDL together.
+                # Serialize PostgreSQL table creation on the same connection.
+                with engine.begin() as schema_connection:
+                    if engine.dialect.name == "postgresql":
+                        schema_connection.execute(sqlalchemy.text(
+                            "SELECT pg_advisory_xact_lock(72419031)"
+                        ))
+                    db.metadata.create_all(bind=schema_connection)
                 logger.info("Database tables created successfully!")
                 return True
         except sqlalchemy.exc.OperationalError as e:
@@ -390,6 +397,11 @@ def start_scheduler_with_lock():
             replace_existing=True
         )
 
+        from ticket_ai import process_queue
+        scheduler.add_job(
+            process_queue, trigger="interval", seconds=3,
+            id="ticket_ai_queue", max_instances=1, coalesce=True,
+        )
         scheduler.start()
         app.logger.info("✅ Automatic recurring schedule generator started - daily at 2:00 AM + 30s after boot (lock acquired)")
         
@@ -427,6 +439,8 @@ from auth import auth
 # Register health check for container healthchecks
 from health import health_bp
 app.register_blueprint(tickets)
+from ticket_ai import ai
+app.register_blueprint(ai)
 app.register_blueprint(auth)
 app.register_blueprint(health_bp)
 

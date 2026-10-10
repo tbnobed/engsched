@@ -228,6 +228,8 @@
         </div>
     </div>
 
+    {% include 'tickets/_ai_assistant.html' %}
+
     <!-- Comments Section -->
     <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
         <div class="card-header" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #e9ecef, #f8f9fa);{% else %}background: linear-gradient(to right, #1A2332, #273449);{% endif %} border: none;">
