@@ -458,6 +458,12 @@ def inbound_email_webhook():
     SendGrid Inbound Parse webhook endpoint
     Receives emails sent to mail1.opscal.io and converts them to tickets
     """
+    incident_lock = None
+    thread_key = None
+    from email_threading import (
+        incident_key, acquire_incident_lock, release_incident_lock,
+        find_incident_ticket, record_delivery,
+    )
     try:
         app.logger.info("Received inbound email webhook from SendGrid")
         
@@ -676,6 +682,13 @@ def inbound_email_webhook():
                 app.logger.warning(f"Duplicate-alert lookup failed: {dup_err}")
             return None
 
+        thread_key = incident_key(subject, from_email)
+        if thread_key:
+            incident_lock = acquire_incident_lock(thread_key)
+            if incident_lock is None:
+                # Do not claim/acknowledge an email we haven't stored.
+                return jsonify(error="Incident is being updated; retry delivery"), 503, {"Retry-After": "5"}
+
         # Atomically CLAIM this Message-ID before doing any work. The unique
         # constraint makes the claim race-safe: if a concurrent SendGrid retry
         # has already inserted the same id, our insert fails and we treat this
@@ -785,8 +798,12 @@ def inbound_email_webhook():
         # CHECK FOR REPLY TO EXISTING TICKET FIRST
         import re
         ticket_reply_match = re.search(r'\[Ticket #(\d+)\]', subject, re.IGNORECASE)
-        _dup_ticket = None
-        if not ticket_reply_match:
+        _dup_ticket = find_incident_ticket(thread_key) if thread_key else None
+        if _dup_ticket is not None:
+            # The canonical incident mapping takes precedence over stale local
+            # ticket markers in notifications from previously duplicated tickets.
+            ticket_reply_match = None
+        if not ticket_reply_match and _dup_ticket is None and not thread_key:
             # No explicit [Ticket #N] marker: collapse repeated alert emails
             # (same subject from the same sender) into the existing active ticket
             # instead of spawning a brand-new duplicate ticket each time.
@@ -801,7 +818,7 @@ def inbound_email_webhook():
                 ticket_id = existing_ticket.id
                 app.logger.info(
                     f"Collapsing duplicate email '{subject}' into active ticket "
-                    f"#{ticket_id} (same subject + sender)"
+                    f"#{ticket_id} (matched incident or subject + sender)"
                 )
             if existing_ticket:
                 app.logger.info(f"Found existing ticket #{ticket_id}, adding comment instead of creating new ticket")
@@ -998,7 +1015,10 @@ def inbound_email_webhook():
                     except Exception as attach_error:
                         app.logger.error(f"Failed to save comment attachments: {str(attach_error)}")
                 
+                record_delivery(thread_key, email_message_id, existing_ticket.id)
                 db.session.commit()
+                release_incident_lock(incident_lock)
+                incident_lock = None
                 
                 app.logger.info(f"Added comment to ticket #{ticket_id} from {commenter_name}")
                 
@@ -1258,7 +1278,10 @@ def inbound_email_webhook():
             except Exception as attach_error:
                 app.logger.error(f"Failed to save ticket attachments: {str(attach_error)}")
         
+        record_delivery(thread_key, email_message_id, new_ticket.id)
         db.session.commit()
+        release_incident_lock(incident_lock)
+        incident_lock = None
         
         app.logger.info(f"Created ticket #{new_ticket.id} from email: {subject}")
         
@@ -1338,6 +1361,7 @@ def inbound_email_webhook():
         }), 200
         
     except Exception as e:
+        db.session.rollback()
         app.logger.error(f"Error processing inbound email: {str(e)}")
         # Release the dedup claim so SendGrid's retry can reprocess this email
         # instead of being permanently swallowed as a "duplicate".
@@ -1350,6 +1374,8 @@ def inbound_email_webhook():
             'error': 'Failed to process email',
             'message': str(e)
         }), 500
+    finally:
+        release_incident_lock(incident_lock)
 
 @app.route('/api/test-email-webhook', methods=['GET'])
 @login_required
