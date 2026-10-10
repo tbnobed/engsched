@@ -81,15 +81,30 @@
                 panel.hidden = !expanded;
             });
         });
-        sidebar.querySelectorAll('a[href]').forEach(function (link) {
-            const url = new URL(link.href, window.location.href);
-            if (url.origin === window.location.origin && url.pathname === window.location.pathname && !url.hash && link.getAttribute('href') !== '#') {
-                link.setAttribute('aria-current', 'page');
-                const panel = link.closest('.app-sidebar-sublist');
-                if (panel) {
-                    panel.hidden = false;
-                    sidebar.querySelector('[aria-controls="' + panel.id + '"]').setAttribute('aria-expanded', 'true');
-                }
+        const currentUrl = new URL(window.location.href);
+        const matchingLinks = Array.from(sidebar.querySelectorAll('a[href]')).map(function (link) {
+            const url = new URL(link.href, currentUrl);
+            let matches = link.getAttribute('href') !== '#' &&
+                url.origin === currentUrl.origin &&
+                url.pathname === currentUrl.pathname &&
+                !url.hash;
+            let specificity = 0;
+            url.searchParams.forEach(function (value, key) {
+                specificity++;
+                if (!currentUrl.searchParams.getAll(key).includes(value)) matches = false;
+            });
+            return {link: link, matches: matches, specificity: specificity};
+        }).filter(function (candidate) { return candidate.matches; });
+        const activeSpecificity = matchingLinks.reduce(function (max, candidate) {
+            return Math.max(max, candidate.specificity);
+        }, -1);
+        matchingLinks.forEach(function (candidate) {
+            if (candidate.specificity !== activeSpecificity) return;
+            candidate.link.setAttribute('aria-current', 'page');
+            const panel = candidate.link.closest('.app-sidebar-sublist');
+            if (panel) {
+                panel.hidden = false;
+                sidebar.querySelector('[aria-controls="' + panel.id + '"]').setAttribute('aria-expanded', 'true');
             }
         });
         const timezone = document.getElementById('sidebarTimezoneButton');
