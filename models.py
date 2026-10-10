@@ -428,14 +428,6 @@ class TicketView(db.Model):
     user = db.relationship('User', backref='ticket_views')
     ticket = db.relationship('Ticket', backref='ticket_views')
 
-class ExternalIncidentThread(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    source = db.Column(db.String(100), nullable=False)
-    incident_number = db.Column(db.String(100), nullable=False)
-    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='SET NULL'))
-    __table_args__ = (db.UniqueConstraint('source', 'incident_number'),)
-
-
 class ProcessedEmail(db.Model):
     """Idempotency record for inbound emails.
 
