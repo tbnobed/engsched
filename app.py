@@ -125,7 +125,16 @@ def is_mobile_device():
 
 # Configuration
 app.secret_key = os.environ.get("SESSION_SECRET") or "dev-secret-key-change-in-production"
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+from sqlalchemy.engine import make_url
+
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    database_url = make_url(database_url)
+    if database_url.drivername in ("postgres", "postgresql", "postgresql+psycopg"):
+        # Both deployment manifests install psycopg2-binary. Select that driver
+        # explicitly rather than relying on SQLAlchemy's version-dependent default.
+        database_url = database_url.set(drivername="postgresql+psycopg2")
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,

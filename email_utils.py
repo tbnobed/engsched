@@ -81,6 +81,12 @@ def send_email(
     attachments: List of dicts with keys: content (base64), filename, type, content_id (optional), disposition (optional)
     Returns True if successful, False otherwise
     """
+    from email_threading import outbound_recipients
+    recipients = outbound_recipients(to_emails)
+    if to_emails and not recipients:
+        current_app.logger.info("Outbound message suppressed for automated ticket sender (loop prevention)")
+        return True
+    to_emails = recipients
     current_app.logger.info("=== Starting email sending process ===")
     current_app.logger.info(f"Attempting to send email to {to_emails} with subject: {subject}")
     
