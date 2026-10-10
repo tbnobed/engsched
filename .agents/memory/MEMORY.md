@@ -2,3 +2,4 @@
 - [Direct ticket AI](ticket-ai-decisions.md) — OpenAI follow-ups replace n8n; keep AI outside inbound email requests and distinguish Replit from separately hosted production.
 - [PostgreSQL driver compatibility](postgres-driver.md) — Explicitly select the installed driver; a production build failed trying to load psycopg v3.
 - [Sidebar branding](sidebar-branding.md) — Separate the TBN logo above the application name, not beside it.
+- [Ticket layout sizing](ticket-layout-sizing.md) — Use available width, readable conversation text, and proportional right-hand cards; avoid capped, centered layouts.
