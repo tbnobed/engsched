@@ -79,8 +79,9 @@
 
     <div class="row g-4">
         <div class="col-lg-8">
+            <div class="card ticket-thread">
             <!-- Ticket Details -->
-            <div class="card mb-4 ticket-summary">
+            <section class="ticket-summary" aria-label="Ticket summary">
                 <div class="card-body">
                     <h3 class="card-title">{{ ticket['title'] }}</h3>
                     <div class="ticket-meta d-flex gap-3 mb-4">
@@ -132,39 +133,37 @@
                     </div>
                     {% endif %}
                 </div>
-            </div>
+            </section>
 
-            <section class="card mb-4 ticket-composer" aria-labelledby="reply-heading">
+            <section class="ticket-composer" aria-labelledby="reply-heading">
                 <div class="card-body">
                     <div class="ticket-composer-header">
-                        <div>
-                            <h4 class="mb-0" id="reply-heading">Write a reply</h4>
-                            <p class="text-muted">Keep the conversation moving. Add an update or ask a question.</p>
-                        </div>
+                        <h4 class="mb-0" id="reply-heading">Reply</h4>
                     </div>
                     <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data" id="comment-form" novalidate>
                         {{ comment_form.hidden_tag() }}
-                        <div class="mb-3">
-                            <label for="content" class="form-label">Your reply</label>
+                        <div class="ticket-reply-field">
+                            <label for="content" class="visually-hidden">Your reply</label>
                             {{ comment_form.content(class="form-control", rows="3", placeholder="Write your reply...", id="content") }}
                         </div>
-                        <div class="mb-3">
-                            <label for="attachment" class="form-label">Attach a file <span class="text-muted">(optional)</span></label>
-                            {{ comment_form.attachment(class="form-control") }}
-                            <div class="form-text">Images, PDFs, documents, or other supporting files.</div>
+                        <div class="ticket-reply-footer">
+                            <div class="ticket-reply-attachment">
+                                <label for="attachment" class="visually-hidden">Attach a file (optional)</label>
+                                {{ comment_form.attachment(class="form-control form-control-sm") }}
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="submit-comment-btn">
+                                <i data-feather="send"></i> Send reply
+                            </button>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="submit-comment-btn">
-                            <i data-feather="send"></i> Send reply
-                        </button>
                     </form>
                 </div>
             </section>
 
             <!-- Comments Section -->
-            <div class="card mb-4">
+            <section class="ticket-conversation" aria-labelledby="conversation-heading">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
-                        <h4 class="mb-0">Conversation</h4>
+                    <div class="d-flex justify-content-between align-items-center gap-2 ticket-conversation-heading">
+                        <h4 class="mb-0" id="conversation-heading">Conversation</h4>
                         <small class="text-muted">Newest first</small>
                     </div>
                     <div class="comments-list mb-4">
@@ -204,6 +203,7 @@
                         {% endfor %}
                     </div>
                 </div>
+            </section>
             </div>
         </div>
 
@@ -298,7 +298,6 @@
         // Create editor container
         const editorContainer = document.createElement('div');
         editorContainer.id = 'comment-editor-container';
-        editorContainer.style.height = '180px';
         textarea.parentNode.insertBefore(editorContainer, textarea);
         
         // Initialize Quill
