@@ -22,7 +22,7 @@
 }
 </style>
 <div class="ticket-view">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 ticket-heading">
         <div>
             <h2>Ticket #{{ ticket['id'] }}</h2>
             <p class="text-muted mb-0">
@@ -77,10 +77,10 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
+    <div class="row g-4">
+        <div class="col-lg-8">
             <!-- Ticket Details -->
-            <div class="card mb-4">
+            <div class="card mb-4 ticket-summary">
                 <div class="card-body">
                     <h3 class="card-title">{{ ticket['title'] }}</h3>
                     <div class="ticket-meta d-flex gap-3 mb-4">
@@ -134,14 +134,41 @@
                 </div>
             </div>
 
-            {% include 'tickets/_ai_assistant.html' %}
+            <section class="card mb-4 ticket-composer" aria-labelledby="reply-heading">
+                <div class="card-body">
+                    <div class="ticket-composer-header">
+                        <div>
+                            <h4 class="mb-0" id="reply-heading">Write a reply</h4>
+                            <p class="text-muted">Keep the conversation moving. Add an update or ask a question.</p>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data" id="comment-form" novalidate>
+                        {{ comment_form.hidden_tag() }}
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Your reply</label>
+                            {{ comment_form.content(class="form-control", rows="3", placeholder="Write your reply...", id="content") }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="attachment" class="form-label">Attach a file <span class="text-muted">(optional)</span></label>
+                            {{ comment_form.attachment(class="form-control") }}
+                            <div class="form-text">Images, PDFs, documents, or other supporting files.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="submit-comment-btn">
+                            <i data-feather="send"></i> Send reply
+                        </button>
+                    </form>
+                </div>
+            </section>
 
             <!-- Comments Section -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4>Comments</h4>
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                        <h4 class="mb-0">Conversation</h4>
+                        <small class="text-muted">Newest first</small>
+                    </div>
                     <div class="comments-list mb-4">
-                        {% for comment in ticket['comments'] %}
+                        {% for comment in ticket['comments']|sort(attribute='created_at', reverse=true) %}
                         <div class="comment mb-3">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
@@ -153,7 +180,7 @@
                                     <small class="text-muted">{{ comment['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
                                 </div>
                                 {% if current_user.is_admin or current_user.id == comment['user']['id'] %}
-                                <button class="btn btn-sm btn-link text-danger" onclick="deleteComment({{ comment['id'] }})">
+                                <button class="btn btn-sm btn-link text-danger" aria-label="Delete comment by {{ comment['user']['username'] }}" onclick="deleteComment({{ comment['id'] }})">
                                     <i data-feather="trash-2"></i>
                                 </button>
                                 {% endif %}
@@ -172,33 +199,24 @@
                             </div>
                             {% endif %}
                         </div>
+                        {% else %}
+                        <div class="ticket-empty"><strong>No replies yet</strong><p class="small mb-0 mt-1">Use the reply box above to start the conversation.</p></div>
                         {% endfor %}
                     </div>
-
-                    <!-- Add Comment Form -->
-                    <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data" id="comment-form" novalidate>
-                        {{ comment_form.hidden_tag() }}
-                        <div class="mb-3">
-                            {{ comment_form.content(class="form-control", rows="3", placeholder="Add a comment...", id="content") }}
-                        </div>
-                        <div class="mb-3">
-                            <label for="attachment" class="form-label">Attach File (optional)</label>
-                            {{ comment_form.attachment(class="form-control") }}
-                            <div class="form-text">Any file type supported (images, PDFs, documents, etc.)</div>
-                        </div>
-                        <button type="submit" class="btn btn-primary" id="submit-comment-btn">
-                            <i data-feather="message-square"></i> Add Comment
-                        </button>
-                    </form>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-lg-4">
+            {% include 'tickets/_ai_assistant.html' %}
             <!-- Ticket Info -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h4>Ticket Information</h4>
+            <section class="card mb-4 ticket-context" aria-label="Ticket details and activity">
+                <div class="nav ticket-tabs" role="tablist" aria-label="Ticket details">
+                    <button class="nav-link active" id="ticket-info-tab" data-bs-toggle="tab" data-bs-target="#ticket-info-panel" type="button" role="tab" aria-controls="ticket-info-panel" aria-selected="true">Information</button>
+                    <button class="nav-link" id="ticket-history-tab" data-bs-toggle="tab" data-bs-target="#ticket-history-panel" type="button" role="tab" aria-controls="ticket-history-panel" aria-selected="false">History</button>
+                </div>
+                <div class="tab-content">
+                <div class="card-body tab-pane show active" id="ticket-info-panel" role="tabpanel" aria-labelledby="ticket-info-tab" tabindex="0">
                     <dl class="row mb-0">
                         <dt class="col-sm-4">Assigned To</dt>
                         <dd class="col-sm-8">
@@ -225,14 +243,9 @@
                         <dd class="col-sm-8">{{ ticket['updated_at'].strftime('%Y-%m-%d %H:%M') }}</dd>
                     </dl>
                 </div>
-            </div>
-
-            <!-- Ticket History -->
-            <div class="card">
-                <div class="card-body">
-                    <h4>History</h4>
+                <div class="card-body tab-pane" id="ticket-history-panel" role="tabpanel" aria-labelledby="ticket-history-tab" tabindex="0">
                     <div class="ticket-history">
-                        {% for entry in ticket['history'] %}
+                        {% for entry in ticket['history']|sort(attribute='created_at', reverse=true) %}
                         <div class="history-entry">
                             <small class="text-muted">{{ entry['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
                             <p class="mb-1">
@@ -243,10 +256,13 @@
                             <p class="mb-0 text-muted">{{ entry['details'] }}</p>
                             {% endif %}
                         </div>
+                        {% else %}
+                        <p class="ticket-empty mb-0">No activity recorded yet.</p>
                         {% endfor %}
                     </div>
                 </div>
-            </div>
+                </div>
+            </section>
         </div>
     </div>
 </div>
@@ -282,12 +298,13 @@
         // Create editor container
         const editorContainer = document.createElement('div');
         editorContainer.id = 'comment-editor-container';
-        editorContainer.style.height = '250px';
+        editorContainer.style.height = '180px';
         textarea.parentNode.insertBefore(editorContainer, textarea);
         
         // Initialize Quill
         const quill = new Quill('#comment-editor-container', {
             theme: 'snow',
+            placeholder: 'Write your reply...',
             modules: {
                 toolbar: [
                     ['bold', 'italic', 'underline'],

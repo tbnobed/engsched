@@ -32,8 +32,8 @@
 </style>
 
 <div class="ticket-view">
-    <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        <div class="card-header d-flex justify-content-between align-items-center ticket-header-gradient" style="border: none;">
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">Ticket #{{ ticket['id'] }}</h5>
         </div>
     </div>
@@ -42,6 +42,7 @@
         <a href="{{ url_for('mobile_tickets') }}" class="btn btn-outline-primary btn-sm">
             <i data-feather="arrow-left" class="feather-small"></i> Back
         </a>
+        <a href="#ticket-ai" class="btn btn-outline-secondary btn-sm">AI assistant</a>
         
         <div class="dropdown">
             <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -84,10 +85,10 @@
     </div>
 
     <!-- Ticket Details -->
-    <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        <div class="card-body" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #ffffff, #f8f9fa);{% else %}background: linear-gradient(to right, #141B2D, #1A2332);{% endif %}">
+    <div class="card mb-3 ticket-summary">
+        <div class="card-body">
             <h5 class="card-title">{{ ticket['title'] }}</h5>
-            <div class="d-flex gap-2 mb-3">
+            <div class="d-flex gap-2 mb-3 ticket-meta">
                 <span class="badge bg-secondary">
                     {{ ticket['category']['name'] }}
                 </span>
@@ -197,57 +198,40 @@
         </div>
     </div>
 
-    <!-- Ticket Info -->
-    <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        <div class="card-header" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #e9ecef, #f8f9fa);{% else %}background: linear-gradient(to right, #1A2332, #273449);{% endif %} border: none;">
-            <h5 class="card-title mb-0">Ticket Information</h5>
+    <section class="card mb-3 ticket-composer" aria-labelledby="reply-heading">
+        <div class="card-body">
+            <div class="ticket-composer-header">
+                <h5 class="mb-0" id="reply-heading">Write a reply</h5>
+                <p class="text-muted">Add an update or ask a question.</p>
+            </div>
+            <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data">
+                {{ comment_form.hidden_tag() }}
+                <div class="mb-3">
+                    <label for="content" class="form-label">Your reply</label>
+                    {{ comment_form.content(class="form-control", rows="4", placeholder="Write your reply...") }}
+                </div>
+                <div class="mb-3">
+                    <label for="attachment" class="form-label"><i data-feather="paperclip" class="feather-small"></i> Attach a file (optional)</label>
+                    {{ comment_form.attachment(class="form-control form-control-sm") }}
+                    <div class="form-text small">Images, documents, or other supporting files.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i data-feather="send"></i> Send reply
+                </button>
+            </form>
         </div>
-        <div class="card-body" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #ffffff, #f8f9fa);{% else %}background: linear-gradient(to right, #141B2D, #1A2332);{% endif %}">
-            <dl class="row mb-0">
-                <dt class="col-5">Assigned To</dt>
-                <dd class="col-7">
-                    {% if ticket['assigned_technician'] %}
-                        {{ ticket['assigned_technician']['username'] }}
-                    {% else %}
-                        <span class="text-muted">Unassigned</span>
-                    {% endif %}
-                </dd>
-
-                <dt class="col-5">Due Date</dt>
-                <dd class="col-7">
-                    {% if ticket['due_date'] %}
-                        {{ ticket['due_date'].strftime('%Y-%m-%d') }}
-                    {% else %}
-                        <span class="text-muted">Not set</span>
-                    {% endif %}
-                </dd>
-
-                <dt class="col-5">Last Updated</dt>
-                <dd class="col-7">{{ ticket['updated_at'].strftime('%Y-%m-%d %H:%M') }}</dd>
-            </dl>
-        </div>
-    </div>
-
-    {% include 'tickets/_ai_assistant.html' %}
+    </section>
 
     <!-- Comments Section -->
-    <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        <div class="card-header" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #e9ecef, #f8f9fa);{% else %}background: linear-gradient(to right, #1A2332, #273449);{% endif %} border: none;">
-            <h5 class="card-title mb-0">Comments</h5>
-        </div>
-        <div class="card-body" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #ffffff, #f8f9fa);{% else %}background: linear-gradient(to right, #141B2D, #1A2332);{% endif %}">
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                <h5 class="mb-0">Conversation</h5>
+                <small class="text-muted">Newest first</small>
+            </div>
             <div class="comments-list mb-3">
-                {% for comment in ticket['comments'] %}
-                <div class="comment mb-3 p-3" 
-                     style="border-left: 4px solid #3498db; 
-                           border-radius: 8px;
-                           box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-                           transition: all 0.3s ease;
-                           {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
-                           background: linear-gradient(to right, #f8f9fa, #ffffff);
-                           {% else %}
-                           background: linear-gradient(to right, #1A2332, #213346);
-                           {% endif %}">
+                {% for comment in ticket['comments']|sort(attribute='created_at', reverse=true) %}
+                <div class="comment mb-3">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div>
                             <strong class="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}text-dark{% else %}text-white{% endif %}">
@@ -260,7 +244,7 @@
                             <small class="text-muted d-block">{{ comment['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
                         </div>
                         {% if current_user.is_admin or current_user.id == comment['user']['id'] %}
-                        <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteComment({{ comment['id'] }})">
+                        <button class="btn btn-sm btn-link text-danger p-0" aria-label="Delete comment by {{ comment['user']['username'] }}" onclick="deleteComment({{ comment['id'] }})">
                             <i data-feather="trash-2" style="width: 16px; height: 16px;"></i>
                         </button>
                         {% endif %}
@@ -282,45 +266,49 @@
                     {% endif %}
                 </div>
                 {% else %}
-                <p class="text-muted text-center">No comments yet</p>
+                <div class="ticket-empty"><strong>No replies yet</strong><p class="small mb-0 mt-1">Use the reply box above to start the conversation.</p></div>
                 {% endfor %}
             </div>
 
-            <!-- Add Comment Form -->
-            <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data">
-                {{ comment_form.hidden_tag() }}
-                <div class="mb-3">
-                    {{ comment_form.content(class="form-control", rows="3", placeholder="Add a comment...") }}
-                </div>
-                <div class="mb-3">
-                    <label for="attachment" class="form-label"><i data-feather="paperclip" class="feather-small"></i> Attach File (optional)</label>
-                    {{ comment_form.attachment(class="form-control form-control-sm") }}
-                    <div class="form-text small">Any file type supported</div>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <i data-feather="message-square"></i> Add Comment
-                </button>
-            </form>
         </div>
     </div>
 
-    <!-- Ticket History -->
-    <div class="card mb-3" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        <div class="card-header" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #e9ecef, #f8f9fa);{% else %}background: linear-gradient(to right, #1A2332, #273449);{% endif %} border: none;">
-            <h5 class="card-title mb-0">History</h5>
+    {% include 'tickets/_ai_assistant.html' %}
+
+    <section class="card mb-3 ticket-context" aria-label="Ticket details and activity">
+        <div class="nav ticket-tabs" role="tablist" aria-label="Ticket details">
+            <button class="nav-link active" id="ticket-info-tab" data-bs-toggle="tab" data-bs-target="#ticket-info-panel" type="button" role="tab" aria-controls="ticket-info-panel" aria-selected="true">Information</button>
+            <button class="nav-link" id="ticket-history-tab" data-bs-toggle="tab" data-bs-target="#ticket-history-panel" type="button" role="tab" aria-controls="ticket-history-panel" aria-selected="false">History</button>
         </div>
-        <div class="card-body" style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background: linear-gradient(to right, #ffffff, #f8f9fa);{% else %}background: linear-gradient(to right, #141B2D, #1A2332);{% endif %}">
-            {% for entry in ticket['history'] %}
-            <div class="history-entry mb-3 p-2" 
-                 style="border-radius: 6px;
-                       border-left: 3px solid #6c757d;
-                       box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-                       transition: all 0.3s ease;
-                       {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}
-                       background: linear-gradient(to right, #f8f9fa, #ffffff);
-                       {% else %}
-                       background: linear-gradient(to right, #1A2332, #213346);
-                       {% endif %}">
+        <div class="tab-content">
+            <div class="card-body tab-pane show active" id="ticket-info-panel" role="tabpanel" aria-labelledby="ticket-info-tab" tabindex="0">
+                <dl class="row mb-0">
+                    <dt class="col-5">Assigned To</dt>
+                    <dd class="col-7">
+                        {% if ticket['assigned_technician'] %}
+                            {{ ticket['assigned_technician']['username'] }}
+                        {% else %}
+                            <span class="text-muted">Unassigned</span>
+                        {% endif %}
+                    </dd>
+                    <dt class="col-5">Due Date</dt>
+                    <dd class="col-7">
+                        {% if ticket['due_date'] %}
+                            {{ ticket['due_date'].strftime('%Y-%m-%d') }}
+                        {% else %}
+                            <span class="text-muted">Not set</span>
+                        {% endif %}
+                    </dd>
+                    <dt class="col-5">Created</dt>
+                    <dd class="col-7">{{ ticket['created_at'].strftime('%Y-%m-%d %H:%M') }}</dd>
+                    <dt class="col-5">Last Updated</dt>
+                    <dd class="col-7">{{ ticket['updated_at'].strftime('%Y-%m-%d %H:%M') }}</dd>
+                </dl>
+            </div>
+            <div class="card-body tab-pane" id="ticket-history-panel" role="tabpanel" aria-labelledby="ticket-history-tab" tabindex="0">
+            <div class="ticket-history">
+            {% for entry in ticket['history']|sort(attribute='created_at', reverse=true) %}
+            <div class="history-entry">
                 <small class="text-muted d-block mb-1">{{ entry['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
                 <p class="mb-1 {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}text-dark{% else %}text-white{% endif %}">
                     <strong>{{ entry['user']['username'] }}</strong>
@@ -333,8 +321,10 @@
             {% else %}
             <p class="text-muted text-center">No history available</p>
             {% endfor %}
+            </div>
+            </div>
         </div>
-    </div>
+    </section>
 </div>
 
 <!-- Include modals -->

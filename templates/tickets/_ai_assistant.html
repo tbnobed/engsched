@@ -1,4 +1,91 @@
 <style>
+.ticket-view {
+    --ticket-surface: #f8fafb;
+    --ticket-soft: #edf3f5;
+    --ticket-line: #d6e2e7;
+    --ticket-ink: #233d4b;
+    --ticket-muted: #5a7180;
+    --ticket-accent: #28758a;
+    color: var(--ticket-ink);
+}
+body:not(.light-theme) .ticket-view,
+[data-bs-theme="dark"] .ticket-view {
+    --ticket-surface: #192634;
+    --ticket-soft: #203242;
+    --ticket-line: #354b5c;
+    --ticket-ink: #e0ebf1;
+    --ticket-muted: #a6bac8;
+    --ticket-accent: #82c4d2;
+}
+body.light-theme .ticket-view {
+    --ticket-surface: #f8fafb;
+    --ticket-soft: #edf3f5;
+    --ticket-line: #d6e2e7;
+    --ticket-ink: #233d4b;
+    --ticket-muted: #5a7180;
+    --ticket-accent: #28758a;
+}
+.ticket-view .card { background: var(--ticket-surface); color: var(--ticket-ink); border: 1px solid var(--ticket-line); border-radius: 14px; box-shadow: none; }
+.ticket-view .card-body { padding: 1.35rem; }
+.ticket-view .card-title { color: var(--ticket-ink); letter-spacing: -.025em; line-height: 1.35; }
+.ticket-view h4, .ticket-view h5 { font-size: 1.08rem; font-weight: 650; }
+.ticket-view .text-muted, .ticket-view .form-text { color: var(--ticket-muted) !important; }
+.ticket-view .ticket-heading { gap: 1rem; flex-wrap: wrap; }
+.ticket-view .ticket-heading h2 { font-size: 1.35rem; font-weight: 650; margin-bottom: .35rem; }
+.ticket-view .ticket-heading p { font-size: .85rem; }
+.ticket-view .ticket-meta { flex-wrap: wrap; gap: .5rem !important; margin-bottom: 1.1rem !important; }
+.ticket-view .ticket-meta .badge { padding: .45rem .65rem; font-weight: 550; }
+.ticket-view .ticket-summary .card-title { font-size: 1.5rem; margin-bottom: 1rem; }
+.ticket-view .ticket-description { font-size: .95rem; line-height: 1.65; }
+.ticket-view .ticket-description > :last-child { margin-bottom: 0; }
+.ticket-view .ticket-composer { border-top: 3px solid var(--ticket-accent); }
+.ticket-view .ticket-composer-header { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.ticket-view .ticket-composer-header p { font-size: .82rem; margin: .3rem 0 0; }
+.ticket-view .form-control { background-color: var(--ticket-surface); border-color: var(--ticket-line); color: var(--ticket-ink); }
+.ticket-view .form-control::placeholder { color: var(--ticket-muted); opacity: 1; }
+.ticket-view .form-label { font-size: .85rem; font-weight: 600; }
+.ticket-view .ql-toolbar.ql-snow, .ticket-view .ql-container.ql-snow { border-color: var(--ticket-line); }
+.ticket-view .ql-toolbar.ql-snow { background: var(--ticket-soft); border-radius: 8px 8px 0 0; }
+.ticket-view .ql-container.ql-snow { border-radius: 0 0 8px 8px; color: var(--ticket-ink); font-family: inherit; font-size: .95rem; }
+.ticket-view .ql-snow .ql-stroke { stroke: var(--ticket-ink); }
+.ticket-view .ql-snow .ql-fill { fill: var(--ticket-ink); }
+.ticket-view .ql-snow .ql-picker { color: var(--ticket-ink); }
+.ticket-view .ql-editor.ql-blank::before { color: var(--ticket-muted); }
+.ticket-view .comments-list { margin-bottom: 0 !important; }
+.ticket-view .comment { position: relative; background: var(--ticket-soft); padding: 1rem 1.1rem; border: 1px solid var(--ticket-line); border-radius: 4px 12px 12px 12px; line-height: 1.6; }
+.ticket-view .comment small { display: block; font-size: .75rem; margin: .15rem 0 .65rem; }
+.ticket-view .comment .btn-link { min-width: 36px; min-height: 36px; }
+.ticket-view .comment .mb-0 > :last-child { margin-bottom: 0; }
+.ticket-view .ticket-tabs { display: flex; gap: 1rem; padding: 0 1.25rem; border-bottom: 1px solid var(--ticket-line); }
+.ticket-view .ticket-tabs .nav-link { color: var(--ticket-muted); background: transparent; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 1rem 0 .85rem; font-size: .9rem; font-weight: 600; }
+.ticket-view .ticket-tabs .nav-link.active { color: var(--ticket-accent); border-bottom-color: var(--ticket-accent); background: transparent; }
+.ticket-view .ticket-tabs .nav-link:focus-visible { outline: 2px solid var(--ticket-accent); outline-offset: 3px; }
+.ticket-view .ticket-context dl { font-size: .85rem; row-gap: .65rem; }
+.ticket-view .ticket-context dt { color: var(--ticket-muted); font-weight: 500; }
+.ticket-view .ticket-context dd { overflow-wrap: anywhere; margin-bottom: 0; }
+.ticket-view .ticket-history { max-height: 32rem; overflow-y: auto; }
+.ticket-view .history-entry { border-left: 2px solid var(--ticket-line); padding: 0 0 1.2rem 1rem; font-size: .85rem; }
+.ticket-view .history-entry:last-child { padding-bottom: 0; }
+.ticket-view .ticket-empty { padding: 1.25rem; background: var(--ticket-soft); border-radius: 10px; color: var(--ticket-muted); text-align: center; }
+.ticket-view .ticket-ai { border-top: 3px solid var(--ticket-accent); }
+.ticket-view #ticket-ai { scroll-margin-top: 5rem; }
+.ticket-view .ticket-ai .ticket-ai-conversation { max-height: 30rem; margin-bottom: 1rem; }
+.ticket-view .ticket-ai .ticket-ai-message { padding: .9rem; border-color: var(--ticket-line); background: var(--ticket-soft); font-size: .88rem; line-height: 1.6; }
+.ticket-view .ticket-ai .ticket-ai-message-user { background: transparent; }
+.ticket-view .ticket-ai .ticket-ai-message:first-child:not(.ticket-ai-message-user) { border-left: 3px solid var(--ticket-accent); }
+.ticket-view .ticket-ai [data-ai-form] { padding-top: 1rem; border-top: 1px solid var(--ticket-line); }
+.ticket-view .ticket-ai .ticket-ai-actions { flex-wrap: wrap; }
+.ticket-view .ticket-ai .ticket-ai-actions .btn { width: 100%; }
+.ticket-view .ticket-ai [data-ai-badge] { font-size: .65rem; letter-spacing: .04em; font-weight: 600; }
+.ticket-view .ticket-ai details { font-size: .78rem; color: var(--ticket-muted); margin-bottom: 1rem; }
+.ticket-view .ticket-ai summary { cursor: pointer; }
+.ticket-view .ticket-ai details p { margin: .6rem 0 0; }
+@media (max-width: 767px) {
+    .ticket-view .card-body { padding: 1rem; }
+    .ticket-view .ticket-summary .card-title { font-size: 1.25rem; }
+    .ticket-view .ticket-heading > .d-flex { flex-wrap: wrap; }
+    .ticket-view .ticket-composer-header { display: block; }
+}
 .ticket-ai .ticket-ai-conversation { max-height: 36rem; overflow-y: auto; overflow-wrap: anywhere; }
 .ticket-ai .ticket-ai-message { padding: 1rem; border: 1px solid var(--bs-border-color, #dee2e6); border-radius: .5rem; margin-bottom: .75rem; }
 .ticket-ai .ticket-ai-message-user { background: rgba(52, 152, 219, .07); }
@@ -21,8 +108,12 @@
             <h4 class="card-title mb-0" id="ticket-ai-title">AI Assistant</h4>
             <span class="badge bg-secondary" data-ai-badge>Loading</span>
         </div>
-        <p class="text-muted small mb-2">A shared conversation for this ticket. Ask for troubleshooting steps or help understanding the issue.</p>
-        <p class="text-muted small mb-3" id="ticket-ai-notice">Ticket details, comments, and your questions are sent to OpenAI. This conversation is shared with people who can access this ticket; it is not emailed externally. Check AI suggestions before acting.</p>
+        <p class="text-muted small mb-2">Troubleshoot the issue, then plan your next reply.</p>
+        <details>
+            <summary>Shared AI conversation · Privacy &amp; review</summary>
+            <p id="ticket-ai-notice">Ticket details, comments, and your questions are sent to OpenAI. This conversation is shared with people who can access this ticket; it is not emailed externally. Check AI suggestions before acting.</p>
+        </details>
+        <p class="text-muted small mb-2">Latest response first · Scroll for earlier questions and replies</p>
         <div data-ai-loading aria-label="Loading conversation">
             <div class="ticket-ai-skeleton"></div>
             <div class="ticket-ai-skeleton"></div>
@@ -124,9 +215,12 @@
         const signature = JSON.stringify(messages);
         if (signature === lastMessages) return;
         lastMessages = signature;
-        const nearBottom = conversation.scrollHeight - conversation.scrollTop - conversation.clientHeight < 80;
+        const nearTop = conversation.scrollTop < 80;
+        const previousScrollTop = conversation.scrollTop;
+        const previousScrollHeight = conversation.scrollHeight;
         const fragment = document.createDocumentFragment();
-        messages.forEach(message => {
+        // The API returns chronological history; render a copy newest-first.
+        [...messages].reverse().forEach(message => {
             const article = document.createElement('article');
             article.className = 'ticket-ai-message' + (message.role === 'user' ? ' ticket-ai-message-user' : '');
             const header = document.createElement('div');
@@ -175,7 +269,7 @@
             fragment.appendChild(article);
         });
         conversation.replaceChildren(fragment);
-        if (nearBottom) conversation.scrollTop = conversation.scrollHeight;
+        conversation.scrollTop = nearTop ? 0 : previousScrollTop + conversation.scrollHeight - previousScrollHeight;
     }
 
     function schedule(delay) {
