@@ -11,6 +11,7 @@
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon-120x120.png') }}" sizes="120x120">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <meta name="theme-color" content="#4A90B2">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.css" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
@@ -509,76 +510,11 @@
             {% endif %} 
         }
     </style>
+    {% include "_sidebar_styles.html" %}
 </head>
-<body class="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}light-theme {% endif %}{% block page_class %}{% endblock %}">
-    
-    <!-- Top Header -->
-    <header class="mobile-header">
-        <div class="logo">
-            <img src="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}{{ url_for('static', filename=site_logo) }}{% else %}{{ url_for('static', filename='tbn_logo_dark.png') }}{% endif %}?v=2" alt="{{ site_name }}">
-            <span>{{ site_name.upper() }}</span>
-        </div>
-        <div class="header-actions">
-            {% if current_user.is_authenticated %}
-            <div class="dropdown">
-                <button class="btn btn-link p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border: none; background: none; {% if current_user.theme_preference == 'light' %}color: #495057;{% else %}color: #ffffff;{% endif %}">
-                    {% if current_user.profile_picture %}
-                    <img src="{{ url_for('static', filename=current_user.profile_picture) }}" 
-                         alt="{{ current_user.username }}" 
-                         class="rounded-circle" 
-                         style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.3);">
-                    {% else %}
-                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-                         style="width: 32px; height: 32px; background-color: {{ current_user.color or '#7A93AC' }}; font-size: 14px; border: 2px solid rgba(255, 255, 255, 0.3);">
-                        {{ current_user.username[:2].upper() }}
-                    </div>
-                    {% endif %}
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end" style="{% if current_user.theme_preference != 'light' %}background: #2d2d2d; border: 1px solid #3a3a3a;{% endif %}">
-                    <li><h6 class="dropdown-header" style="{% if current_user.theme_preference != 'light' %}color: #ffffff;{% endif %}">{{ current_user.username }}</h6></li>
-                    <li><hr class="dropdown-divider" style="{% if current_user.theme_preference != 'light' %}border-color: #3a3a3a;{% endif %}"></li>
-                    
-                    <!-- Theme Toggle -->
-                    <li>
-                        <form method="POST" action="{{ url_for('toggle_theme') }}" style="margin: 0;">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="dropdown-item" style="{% if current_user.theme_preference != 'light' %}color: #ffffff; background: transparent;{% endif %}">
-                                <i data-feather="{% if current_user.theme_preference == 'light' %}moon{% else %}sun{% endif %}" style="width: 16px; height: 16px; margin-right: 8px;"></i>
-                                {% if current_user.theme_preference == 'light' %}Dark Mode{% else %}Light Mode{% endif %}
-                            </button>
-                        </form>
-                    </li>
-                    
-                    <!-- Timezone Settings -->
-                    <li>
-                        <a class="dropdown-item" href="#" onclick="showTimezoneModal()" style="{% if current_user.theme_preference != 'light' %}color: #ffffff; background: transparent;{% endif %}">
-                            <i data-feather="clock" style="width: 16px; height: 16px; margin-right: 8px;"></i>
-                            Timezone ({{ current_user.timezone }})
-                        </a>
-                    </li>
-                    
-                    <li><hr class="dropdown-divider" style="{% if current_user.theme_preference != 'light' %}border-color: #3a3a3a;{% endif %}"></li>
-                    
-                    <!-- Profile Settings -->
-                    <li>
-                        <a class="dropdown-item" href="{{ url_for('profile') }}" style="{% if current_user.theme_preference != 'light' %}color: #ffffff; background: transparent;{% endif %}">
-                            <i data-feather="settings" style="width: 16px; height: 16px; margin-right: 8px;"></i>
-                            Profile Settings
-                        </a>
-                    </li>
-                    
-                    <!-- Logout -->
-                    <li>
-                        <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}" style="{% if current_user.theme_preference != 'light' %}color: #ff6b6b;{% endif %}">
-                            <i data-feather="log-out" style="width: 16px; height: 16px; margin-right: 8px;"></i>
-                            Logout
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            {% endif %}
-        </div>
-    </header>
+<body class="{% if current_user.is_authenticated %}app-sidebar-layout {% if current_user.theme_preference == 'light' %}light-theme {% endif %}{% endif %}{% block page_class %}{% endblock %}">
+    {% set sidebar_mobile = true %}
+    {% include "_sidebar.html" %}
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages() %}
@@ -593,42 +529,6 @@
     <main class="mobile-content">
         {% block content %}{% endblock %}
     </main>
-
-    <!-- Bottom Navigation -->
-    {% if current_user.is_authenticated %}
-    <nav class="bottom-nav">
-        <a href="{{ url_for('mobile_dashboard') }}" class="nav-item">
-            <i data-feather="home" class="nav-icon"></i>
-            <span class="nav-label">Dashboard</span>
-        </a>
-        <a href="{{ url_for('mobile_personal_schedule') }}" class="nav-item" id="dynamic-nav-item">
-            <i data-feather="calendar" class="nav-icon" id="dynamic-nav-icon"></i>
-            <span class="nav-label" id="dynamic-nav-label">Schedule</span>
-        </a>
-        <a href="{{ url_for('mobile_tickets') }}" class="nav-item" style="position: relative;">
-            <i data-feather="life-buoy" class="nav-icon"></i>
-            <span class="nav-label">Tickets</span>
-            <span class="nav-badge" id="ticket-badge" style="
-                position: absolute; 
-                top: 8px; 
-                right: 20px; 
-                background: #dc3545; 
-                color: white; 
-                border-radius: 10px; 
-                padding: 2px 6px; 
-                font-size: 11px; 
-                font-weight: 600; 
-                min-width: 18px; 
-                text-align: center;
-                display: none;
-            ">0</span>
-        </a>
-        <a href="{{ url_for('mobile_quick_links') }}" class="nav-item">
-            <i data-feather="grid" class="nav-icon"></i>
-            <span class="nav-label">Quick Links</span>
-        </a>
-    </nav>
-    {% endif %}
 
     <!-- Quick Links Modal -->
     <div class="modal fade" id="quickLinksModal" tabindex="-1">
@@ -735,30 +635,12 @@
         
         // Update dynamic navigation based on current page
         function updateDynamicNavigation() {
-            const currentPath = window.location.pathname;
             const dynamicNavItem = document.getElementById('dynamic-nav-item');
             const dynamicNavLabel = document.getElementById('dynamic-nav-label');
-            const dynamicNavIcon = document.getElementById('dynamic-nav-icon');
-            
-            if (currentPath.includes('/mobile/personal_schedule')) {
-                // On Personal Schedule page - show "Timeline" to go back to calendar
-                dynamicNavLabel.textContent = 'Timeline';
-                dynamicNavItem.href = '{{ url_for("mobile_calendar") }}';
-                dynamicNavIcon.setAttribute('data-feather', 'clock');
-            } else if (currentPath.includes('/mobile/calendar')) {
-                // On Calendar page - show "Schedule" to go to personal schedule
-                dynamicNavLabel.textContent = 'Schedule';
-                dynamicNavItem.href = '{{ url_for("mobile_personal_schedule") }}';
-                dynamicNavIcon.setAttribute('data-feather', 'calendar');
-            } else {
-                // Default state - show "Schedule" for personal schedule
-                dynamicNavLabel.textContent = 'Schedule';
-                dynamicNavItem.href = '{{ url_for("mobile_personal_schedule") }}';
-                dynamicNavIcon.setAttribute('data-feather', 'calendar');
-            }
-            
-            // Re-initialize feather icons to apply icon changes
-            feather.replace();
+            if (!dynamicNavItem || !dynamicNavLabel) return;
+            // Both schedule destinations now have permanent, ordered sidebar links.
+            dynamicNavItem.href = '{{ url_for("mobile_personal_schedule") }}';
+            dynamicNavLabel.textContent = 'My Schedule';
         }
         
         // Load ticket count for badge
@@ -767,6 +649,7 @@
                 .then(response => response.json())
                 .then(data => {
                     const badge = document.getElementById('ticket-badge');
+                    if (!badge) return;
                     if (data.count > 0) {
                         badge.textContent = data.count > 99 ? '99+' : data.count;
                         badge.style.display = 'flex';
@@ -840,6 +723,7 @@
                 .then(response => response.json())
                 .then(data => {
                     const badge = document.getElementById('ticket-badge');
+                    if (!badge) return;
                     if (data.count && data.count > 0) {
                         badge.textContent = data.count;
                         badge.style.display = 'block';
@@ -872,17 +756,10 @@
             });
         });
         
-        // Chat integration
-        {% if CHAT_ENABLED %}
-        function openChatPopup() {
-            // Integrate with existing chat system
-            if (typeof window.openChatPopup === 'function') {
-                window.openChatPopup();
-            }
-        }
-        {% endif %}
+        // Team Chat uses the shared popup integration below.
     </script>
     
+    {% include "_sidebar_script.html" %}
     {% block scripts %}{% endblock %}
 </body>
 </html>

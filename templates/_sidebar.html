@@ -1,0 +1,109 @@
+{% if current_user.is_authenticated %}
+<div class="app-sidebar-mobilebar">
+    <button type="button" class="app-menu-button" id="appMenuButton" aria-label="Open navigation" aria-controls="appSidebar" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <span>{{ site_name }}</span>
+</div>
+<button type="button" class="app-sidebar-backdrop" id="appSidebarBackdrop" aria-label="Close navigation" tabindex="-1" hidden></button>
+<aside class="app-sidebar" id="appSidebar" aria-label="Application navigation">
+    <button type="button" class="app-sidebar-close" id="appSidebarClose" aria-label="Close navigation">&times;</button>
+    <a class="app-sidebar-brand" href="{{ url_for('mobile_dashboard' if sidebar_mobile|default(false) else 'dashboard') }}">
+        <img src="{{ url_for('static', filename=site_logo if current_user.theme_preference == 'light' else 'tbn_logo_dark.png') }}?v=2" alt="">
+        <span>{{ site_name.upper() }}</span>
+    </a>
+    <nav aria-label="Main navigation">
+        <ul class="app-sidebar-list" id="navbarNav">
+            <li><a class="app-sidebar-link" href="{{ url_for('mobile_dashboard' if sidebar_mobile|default(false) else 'dashboard') }}">Dashboard</a></li>
+            <li>
+                <button class="app-sidebar-toggle" id="calendarDropdown" type="button" aria-expanded="false" aria-controls="sidebarCalendar">Calendar</button>
+                <ul class="app-sidebar-sublist" id="sidebarCalendar" hidden>
+                    <li><a class="app-sidebar-link" href="{{ url_for('mobile_calendar' if sidebar_mobile|default(false) else 'calendar') }}">All Schedules</a></li>
+                    <li><a class="app-sidebar-link" href="{{ url_for('mobile_personal_schedule' if sidebar_mobile|default(false) else 'personal_schedule') }}" {% if sidebar_mobile|default(false) %}id="dynamic-nav-item"{% endif %}>
+                        {% if sidebar_mobile|default(false) %}<i data-feather="calendar" id="dynamic-nav-icon" style="width: 14px; height: 14px;" aria-hidden="true"></i><span id="dynamic-nav-label">My Schedule</span>{% else %}My Schedule{% endif %}
+                    </a></li>
+                </ul>
+            </li>
+            <li>
+                <button class="app-sidebar-toggle" id="ticketDropdown" type="button" aria-expanded="false" aria-controls="sidebarTickets">Tickets{% if sidebar_mobile|default(false) %}<span class="app-sidebar-badge" id="ticket-badge" style="display: none;" aria-live="polite" aria-label="Active tickets">0</span>{% endif %}</button>
+                <ul class="app-sidebar-sublist" id="sidebarTickets" hidden>
+                    <li><a class="app-sidebar-link" href="{{ url_for('mobile_tickets' if sidebar_mobile|default(false) else 'tickets.tickets_dashboard') }}">All Tickets</a></li>
+                    {% if current_user.is_admin %}
+                    <li class="app-sidebar-divider" role="separator"></li>
+                    <li><a class="app-sidebar-link" href="{{ url_for('tickets.manage_categories') }}">Manage Categories</a></li>
+                    {% endif %}
+                </ul>
+            </li>
+            <li>
+                <button class="app-sidebar-toggle" id="quickLinksDropdown" type="button" aria-expanded="false" aria-controls="sidebarQuickLinks">Quick Links</button>
+                <ul class="app-sidebar-sublist" id="sidebarQuickLinks" hidden>
+                    {% for link in get_quick_links() %}
+                    <li><a class="app-sidebar-link" href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.title }}</a></li>
+                    {% else %}
+                    <li class="app-sidebar-form"><small>No quick links available.</small></li>
+                    {% endfor %}
+                    {% if current_user.is_admin %}
+                    <li class="app-sidebar-divider" role="separator"></li>
+                    <li><a class="app-sidebar-link" href="{{ url_for('admin_quick_links') }}">Manage Quick Links</a></li>
+                    {% endif %}
+                </ul>
+            </li>
+            {% if CHAT_ENABLED %}
+            <li><a class="app-sidebar-link" href="#" id="sidebarTeamChat">Team Chat</a></li>
+            {% endif %}
+            <li class="global-clock" id="globalClock" title="{{ current_user.timezone or 'America/Los_Angeles' }}">
+                <div class="gc-time" id="globalClockTime">--:--</div>
+                <div class="gc-date" id="globalClockDate">—</div>
+                <div class="gc-zone">{{ current_user.timezone or 'America/Los_Angeles' }}</div>
+            </li>
+            {% if current_user.is_admin %}
+            <li>
+                <button class="app-sidebar-toggle" id="adminDropdown" type="button" aria-expanded="false" aria-controls="sidebarAdmin">Admin</button>
+                <ul class="app-sidebar-sublist" id="sidebarAdmin" hidden>
+                    <li><a class="app-sidebar-link" href="{{ url_for('admin_dashboard') }}">User Management</a></li>
+                    <li><a class="app-sidebar-link" href="{{ url_for('admin_locations') }}">Manage Locations</a></li>
+                    <li><a class="app-sidebar-link" href="{{ url_for('admin_quick_links') }}">Manage Quick Links</a></li>
+                    <li><a class="app-sidebar-link" href="{{ url_for('admin_backup') }}">Backup &amp; Restore</a></li>
+                </ul>
+            </li>
+            {% endif %}
+            <li>
+                <button class="app-sidebar-toggle" id="navbarDropdown" type="button" aria-expanded="false" aria-controls="sidebarProfile">
+                    {% if current_user.profile_picture %}
+                    <img class="app-sidebar-avatar" src="{{ url_for('static', filename=current_user.profile_picture) }}" alt="">
+                    {% else %}
+                    <span class="app-sidebar-avatar" style="background: {{ current_user.color or '#61788d' }};" aria-hidden="true">{{ current_user.username[0].upper() }}</span>
+                    {% endif %}
+                    <span class="app-sidebar-username">{{ current_user.username }}</span>
+                </button>
+                <ul class="app-sidebar-sublist" id="sidebarProfile" hidden>
+                    <li><a class="app-sidebar-link" href="{{ url_for('profile') }}">Profile Settings</a></li>
+                    <li>
+                        {% if sidebar_mobile|default(false) %}
+                        <button class="app-sidebar-link" type="button" id="sidebarTimezoneButton">Timezone ({{ current_user.timezone }})</button>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('update_timezone') }}" class="app-sidebar-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <label for="sidebarTimezone">Timezone</label>
+                            <select name="timezone" id="sidebarTimezone" onchange="this.form.submit()">
+                                <option value="America/Los_Angeles" {% if current_user.timezone == 'America/Los_Angeles' %}selected{% endif %}>PST</option>
+                                <option value="America/Chicago" {% if current_user.timezone == 'America/Chicago' %}selected{% endif %}>CST</option>
+                                <option value="America/New_York" {% if current_user.timezone == 'America/New_York' %}selected{% endif %}>EST</option>
+                            </select>
+                        </form>
+                        {% endif %}
+                    </li>
+                    <li>
+                        <form method="POST" action="{{ url_for('toggle_theme') }}" class="app-sidebar-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="app-sidebar-link">Switch to {% if current_user.theme_preference == 'light' %}Dark{% else %}Light{% endif %} Theme</button>
+                        </form>
+                    </li>
+                    <li class="app-sidebar-divider" role="separator"></li>
+                    <li><a class="app-sidebar-link" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</aside>
+{% endif %}

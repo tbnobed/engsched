@@ -1,0 +1,145 @@
+{% if current_user.is_authenticated %}
+<script>
+(function () {
+    'use strict';
+    function initSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        const menu = document.getElementById('appMenuButton');
+        const backdrop = document.getElementById('appSidebarBackdrop');
+        const close = document.getElementById('appSidebarClose');
+        if (!sidebar || !menu) return;
+        const mobile = window.matchMedia('(max-width: 991.98px)');
+        const main = document.querySelector('body > main');
+        // The mobile calendar's retained page script writes !important viewport
+        // widths on DOMContentLoaded. Translate only those legacy declarations
+        // to the space available beside the sidebar, without changing its grid.
+        function fitLegacyCalendar() {
+            if (!main || !main.querySelector('.modern-mobile-calendar')) return;
+            const containers = [main].concat(Array.from(main.querySelectorAll(
+                '.modern-mobile-calendar, .timeline-container, .timeline-wrapper, .timeline-scroll, .timeline-grid'
+            )));
+            containers.forEach(function (element) {
+                ['width', 'max-width'].forEach(function (property) {
+                    if (element.style.getPropertyValue(property) === '100vw') {
+                        element.style.setProperty(property, '100%', 'important');
+                    }
+                });
+            });
+        }
+        fitLegacyCalendar();
+        window.addEventListener('load', fitLegacyCalendar, {once: true});
+        let previousFocus = null;
+        function setOpen(open, restoreFocus) {
+            open = open && mobile.matches;
+            if (open) previousFocus = document.activeElement;
+            document.body.classList.toggle('app-sidebar-open', open);
+            menu.setAttribute('aria-expanded', String(open));
+            backdrop.hidden = !open;
+            sidebar.inert = mobile.matches && !open;
+            if (mobile.matches && !open) sidebar.setAttribute('aria-hidden', 'true');
+            else sidebar.removeAttribute('aria-hidden');
+            if (main) main.inert = open;
+            if (open) {
+                sidebar.setAttribute('role', 'dialog');
+                sidebar.setAttribute('aria-modal', 'true');
+                close.focus();
+            } else {
+                sidebar.removeAttribute('role');
+                sidebar.removeAttribute('aria-modal');
+                if (restoreFocus && previousFocus) previousFocus.focus();
+            }
+        }
+        menu.addEventListener('click', function () { setOpen(true); });
+        close.addEventListener('click', function () { setOpen(false, true); });
+        backdrop.addEventListener('click', function () { setOpen(false, true); });
+        document.addEventListener('keydown', function (event) {
+            if (!document.body.classList.contains('app-sidebar-open')) return;
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                setOpen(false, true);
+            } else if (event.key === 'Tab') {
+                const items = Array.from(sidebar.querySelectorAll('a[href], button, select, input:not([type="hidden"])'))
+                    .filter(function (item) { return !item.disabled && item.getClientRects().length; });
+                const first = items[0];
+                const last = items[items.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault(); last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault(); first.focus();
+                }
+            }
+        });
+        function resetDrawer() { setOpen(false, false); }
+        if (mobile.addEventListener) mobile.addEventListener('change', resetDrawer);
+        else mobile.addListener(resetDrawer);
+        resetDrawer();
+        sidebar.querySelectorAll('.app-sidebar-toggle').forEach(function (toggle) {
+            const panel = document.getElementById(toggle.getAttribute('aria-controls'));
+            toggle.addEventListener('click', function () {
+                const expanded = toggle.getAttribute('aria-expanded') !== 'true';
+                toggle.setAttribute('aria-expanded', String(expanded));
+                panel.hidden = !expanded;
+            });
+        });
+        sidebar.querySelectorAll('a[href]').forEach(function (link) {
+            const url = new URL(link.href, window.location.href);
+            if (url.origin === window.location.origin && url.pathname === window.location.pathname && !url.hash && link.getAttribute('href') !== '#') {
+                link.setAttribute('aria-current', 'page');
+                const panel = link.closest('.app-sidebar-sublist');
+                if (panel) {
+                    panel.hidden = false;
+                    sidebar.querySelector('[aria-controls="' + panel.id + '"]').setAttribute('aria-expanded', 'true');
+                }
+            }
+        });
+        const timezone = document.getElementById('sidebarTimezoneButton');
+        if (timezone) timezone.addEventListener('click', function () {
+            setOpen(false, false);
+            showTimezoneModal();
+        });
+        const chat = document.getElementById('sidebarTeamChat');
+        {% if sidebar_mobile|default(false) and CHAT_ENABLED %}
+        // The old mobile wrapper called itself recursively. Use the existing
+        // configured chat service and the same named popup as the desktop app.
+        if (typeof window.openChatPopup !== 'function') {
+            let chatWindow = null;
+            window.openChatPopup = function () {
+                if (chatWindow && !chatWindow.closed) {
+                    chatWindow.focus();
+                    return chatWindow;
+                }
+                chatWindow = window.open({{ CHAT_URL|tojson }}, 'TeamChat',
+                    'width=400,height=600,scrollbars=yes,resizable=yes,status=no,menubar=no,toolbar=no');
+                if (chatWindow) chatWindow.focus();
+                return chatWindow;
+            };
+        }
+        {% endif %}
+        if (chat) chat.addEventListener('click', function (event) {
+            event.preventDefault();
+            setOpen(false, false);
+            if (typeof window.openChatPopup === 'function') window.openChatPopup();
+        });
+        {% if sidebar_mobile|default(false) %}
+        const tz = {{ (current_user.timezone or 'America/Los_Angeles')|tojson }};
+        const clockTime = document.getElementById('globalClockTime');
+        const clockDate = document.getElementById('globalClockDate');
+        function tick() {
+            const now = new Date();
+            try {
+                clockTime.textContent = new Intl.DateTimeFormat('en-US', {timeZone: tz, hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'}).format(now);
+                clockDate.textContent = new Intl.DateTimeFormat('en-US', {timeZone: tz, weekday: 'short', month: 'short', day: 'numeric'}).format(now);
+            } catch (error) {
+                clockTime.textContent = now.toLocaleTimeString();
+                clockDate.textContent = now.toLocaleDateString();
+            }
+        }
+        tick();
+        window.setInterval(tick, 1000);
+        {% endif %}
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSidebar);
+    else initSidebar();
+})();
+</script>
+{% endif %}

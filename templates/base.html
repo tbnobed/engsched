@@ -364,195 +364,16 @@
             margin: 6px 4px !important;
         }
     </style>
+    {% include "_sidebar_styles.html" %}
 </head>
-<body {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}class="light-theme"{% endif %}{% if current_user.is_authenticated and current_user.theme_preference == 'dark' %} data-bs-theme="dark"{% endif %}>
-    <nav class="navbar navbar-expand-lg {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}navbar-light{% else %}navbar-dark{% endif %}" 
-         style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;{% else %}background-color: #0F1624; border-bottom: 1px solid #182234;{% endif %}">
-        <div class="container-fluid">
-            <!-- Logo and Brand - Far Left -->
-            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard') }}" style="position: absolute; left: 15px; z-index: 1000;">
-                <img src="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}{{ url_for('static', filename=site_logo) }}{% else %}{{ url_for('static', filename='tbn_logo_dark.png') }}{% endif %}?v=2" alt="{{ site_name }}" class="me-2" style="height: 36px; width: auto;">
-                <span style="font-weight: 700; letter-spacing: 0.5px; color: {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#002744{% else %}#ffffff{% endif %}; font-size: 1.1rem;">{{ site_name.upper() }}</span>
-            </a>
-            
-            <!-- Mobile toggle button -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="margin-left: auto;">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <!-- Navigation items - Centered -->
-            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
-                <ul class="navbar-nav">
-                    {% if current_user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dashboard') }}" style="font-weight: 500;">
-                                Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="calendarDropdown" role="button" data-bs-toggle="dropdown" style="font-weight: 500;">
-                                Calendar
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('calendar') }}">
-                                        All Schedules
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('personal_schedule') }}">
-                                        My Schedule
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="ticketDropdown" role="button" data-bs-toggle="dropdown" style="font-weight: 500;">
-                                Tickets
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('tickets.tickets_dashboard') }}">
-                                        All Tickets
-                                    </a>
-                                </li>
-                                {% if current_user.is_admin %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('tickets.manage_categories') }}">
-                                        Manage Categories
-                                    </a>
-                                </li>
-                                {% endif %}
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="quickLinksDropdown" role="button" data-bs-toggle="dropdown" style="font-weight: 500;">
-                                Quick Links
-                            </a>
-                            <ul class="dropdown-menu">
-                                {% for link in get_quick_links() %}
-                                <li>
-                                    <a class="dropdown-item" href="{{ link.url }}" target="_blank">
-                                        {{ link.title }}
-                                    </a>
-                                </li>
-                                {% endfor %}
-                                {% if current_user.is_admin %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('admin_quick_links') }}">
-                                        Manage Quick Links
-                                    </a>
-                                </li>
-                                {% endif %}
-                            </ul>
-                        </li>
-                        {% if CHAT_ENABLED %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="openChatPopup(); return false;" style="font-weight: 500;">
-                                Team Chat
-                            </a>
-                        </li>
-                        {% endif %}
-                    {% endif %}
-                </ul>
-            </div>
-            
-            <!-- Right side navigation - Fixed position -->
-            <div class="d-flex align-items-center" style="position: absolute; right: 15px; z-index: 1000;">
-                {% if current_user.is_authenticated %}
-                <ul class="navbar-nav d-flex flex-row align-items-center">
-                        <li class="nav-item me-3 d-none d-md-flex global-clock" id="globalClock" title="">
-                            <div class="gc-time" id="globalClockTime">--:--</div>
-                            <div class="gc-date" id="globalClockDate">—</div>
-                        </li>
-                        {% if current_user.is_admin %}
-                        <li class="nav-item dropdown me-3">
-                            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" style="font-weight: 500;">
-                                Admin
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('admin_dashboard') }}">
-                                        User Management
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('admin_locations') }}">
-                                        Manage Locations
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('admin_quick_links') }}">
-                                        Manage Quick Links
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('admin_backup') }}">
-                                        Backup & Restore
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        {% endif %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" style="font-weight: 500; padding: 4px 8px;">
-                                {% if current_user.profile_picture %}
-                                    <img src="{{ url_for('static', filename=current_user.profile_picture) }}" 
-                                         alt="{{ current_user.username }}" 
-                                         style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-right: 8px; border: 2px solid {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#e9ecef{% else %}#495057{% endif %};">
-                                {% else %}
-                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: {{ current_user.color or '#6c757d' }}; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; font-size: 14px; margin-right: 8px; border: 2px solid {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}#e9ecef{% else %}#495057{% endif %};">
-                                        {{ current_user.username[0].upper() }}
-                                    </div>
-                                {% endif %}
-                                {{ current_user.username }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
-                                        Profile Settings
-                                    </a>
-                                </li>
-                                <li>
-                                    <form method="POST" action="{{ url_for('update_timezone') }}" class="px-3 py-2">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <div class="mb-2">
-                                            <label class="form-label">Timezone</label>
-                                            <select name="timezone" class="form-select form-select-sm" onchange="this.form.submit()">
-                                                <option value="America/Los_Angeles" {% if current_user.timezone == 'America/Los_Angeles' %}selected{% endif %}>PST</option>
-                                                <option value="America/Chicago" {% if current_user.timezone == 'America/Chicago' %}selected{% endif %}>CST</option>
-                                                <option value="America/New_York" {% if current_user.timezone == 'America/New_York' %}selected{% endif %}>EST</option>
-                                            </select>
-                                        </div>
-                                    </form>
-                                </li>
-                                <li>
-                                    <form method="POST" action="{{ url_for('toggle_theme') }}" class="px-3 py-2">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <div class="d-grid">
-                                            <button type="submit" class="btn btn-sm {% if current_user.theme_preference == 'light' %}btn-dark{% else %}btn-light{% endif %}">
-                                                Switch to {% if current_user.theme_preference == 'light' %}Dark{% else %}Light{% endif %} Theme
-                                            </button>
-                                        </div>
-                                    </form>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
-                            </ul>
-                        </li>
-                </ul>
-                {% else %}
-                <ul class="navbar-nav d-flex flex-row">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-                    </li>
-                </ul>
-                {% endif %}
-            </div>
-        </div>
-    </nav>
+<body class="{% if current_user.is_authenticated %}app-sidebar-layout{% if current_user.theme_preference == 'light' %} light-theme{% endif %}{% endif %}"{% if current_user.is_authenticated and current_user.theme_preference == 'dark' %} data-bs-theme="dark"{% endif %}>
+    {% include "_sidebar.html" %}
+    {% if not current_user.is_authenticated %}
+    <header class="p-3 d-flex justify-content-between">
+        <a href="{{ url_for('dashboard') }}">{{ site_name }}</a>
+        <a href="{{ url_for('login') }}">Login</a>
+    </header>
+    {% endif %}
 
     {% if False %}
     <!-- Top Info Bar (removed - replaced by Command Center dashboard) -->
@@ -1531,7 +1352,7 @@
         });
     </script>
     
-    <!-- Cache busting comment: sidebar removed 2025-07-16 -->
+    {% include "_sidebar_script.html" %}
 
     {% if current_user.is_authenticated %}
     <script>
