@@ -1,10 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session, after_this_request
 from flask_login import login_required, current_user
 from forms import TicketForm, TicketCommentForm, TicketCategoryForm
-from models import db, Ticket, TicketCategory, TicketComment, TicketHistory, User, TicketStatus, TicketView
-from datetime import datetime
+from models import db, Ticket, TicketCategory, TicketComment, TicketHistory, User, TicketStatus, TicketView, ProcessedEmail
+from datetime import datetime, timedelta
 import pytz
-from sqlalchemy import text, or_
+from sqlalchemy import text, or_, func
 from app import app, is_mobile_device  # Import app for logging and mobile detection
 from email_utils import send_ticket_assigned_notification, send_ticket_comment_notification, send_ticket_status_notification, send_new_ticket_notification
 import bleach
@@ -342,6 +342,10 @@ def tickets_dashboard():
             app.logger.error(f"Invalid created_by filter value: {created_by_filter}")
             
     # Handle search query for keywords in title and description
+    requester_email = request.args.get('requester_email', '').strip()
+    if requester_email:
+        query = query.filter(func.lower(Ticket.external_email) == requester_email.lower())
+
     if search_query:
         app.logger.debug(f"Applying search query: {search_query}")
         search_term = f"%{search_query}%"
@@ -827,12 +831,14 @@ def view_ticket(ticket_id):
             'id': None,  # External users don't have internal IDs
             'username': ticket_obj.get_display_name(),
             'is_external': True,
+            'email': ticket_obj.external_email,
             'external_email': ticket_obj.external_email
         }
     else:
         ticket['creator'] = {
             'id': ticket_obj.creator.id,
             'username': ticket_obj.creator.username,
+            'email': ticket_obj.creator.email,
             'is_external': False
         }
     
@@ -859,32 +865,59 @@ def view_ticket(ticket_id):
         if current_user.is_admin or current_user.id == ticket_obj.created_by:
             form.assigned_to.choices = [(u.id, u.username) for u in technicians]
 
-    # Check if user is on a mobile device or mobile parameter is passed
-    from app import is_mobile_device
-    force_mobile = request.args.get('mobile') == '1'
-    if is_mobile_device() or force_mobile:
-        # Debug current user and ticket permissions
-        app.logger.debug(f"Rendering mobile ticket view for user: {current_user.id} (admin: {current_user.is_admin})")
-        app.logger.debug(f"Ticket assigned to: {ticket['assigned_to']}, created by: {ticket['created_by']}")
-        app.logger.debug(f"User can edit? {current_user.is_admin or current_user.id == ticket['assigned_to'] or current_user.id == ticket['created_by']}")
-        
-        return render_template('tickets/mobile_view_ticket.html', 
-                             ticket=ticket,
-                             comment_form=comment_form,
-                             form=form,
-                             categories=categories,
-                             technicians=technicians,
-                             
-                             TicketStatus=TicketStatus)
-    else:
-        return render_template('tickets/view.html', 
-                             ticket=ticket,
-                             comment_form=comment_form,
-                             form=form,
-                             categories=categories,
-                             technicians=technicians,
-                             
-                             TicketStatus=TicketStatus)
+    timezone = pytz.timezone(current_user.timezone or 'America/Los_Angeles')
+
+    def local_time(value):
+        if value.tzinfo is None:
+            value = pytz.UTC.localize(value)
+        return value.astimezone(timezone)
+
+    def display_time(value):
+        return local_time(value).strftime('%b %-d, %-I:%M %p')
+
+    initial_email = ProcessedEmail.query.filter(
+        ProcessedEmail.ticket_id == ticket_obj.id,
+        ProcessedEmail.processed_at <= local_time(ticket_obj.created_at) + timedelta(minutes=2)
+    ).first()
+    ticket['source'] = 'Email' if ticket_obj.is_external_user() or initial_email else 'Web'
+    activity = [
+        {'kind': 'comment', 'data': item, 'created_at': item['created_at']}
+        for item in ticket['comments']
+    ]
+    activity.extend(
+        {'kind': 'note' if item['action'] == 'internal_note' else 'history',
+         'data': item, 'created_at': item['created_at']}
+        for item in ticket['history'] if item['action'] not in ('created', 'commented')
+    )
+    activity.append({'kind': 'opening', 'data': ticket, 'created_at': ticket['created_at']})
+    activity.sort(key=lambda entry: local_time(entry['created_at']), reverse=True)
+    for entry in activity:
+        entry['display_time'] = display_time(entry['created_at'])
+    last_reply = max((local_time(item['created_at']) for item in ticket['comments']
+                      if item['user']['username'] != 'AI Assistant'), default=None)
+    display_last_reply = None
+    if last_reply:
+        seconds = max(0, (datetime.now(pytz.UTC) - last_reply).total_seconds())
+        for unit, duration in (('month', 2592000), ('day', 86400), ('hour', 3600), ('minute', 60)):
+            count = int(seconds // duration)
+            if count:
+                display_last_reply = f"{count} {unit}{'s' if count != 1 else ''} ago"
+                break
+        else:
+            display_last_reply = 'just now'
+    previous_ticket = Ticket.query.filter(Ticket.id < ticket_obj.id, Ticket.archived == False).order_by(Ticket.id.desc()).first()
+    next_ticket = Ticket.query.filter(Ticket.id > ticket_obj.id, Ticket.archived == False).order_by(Ticket.id).first()
+    return render_template(
+        'tickets/view.html', ticket=ticket, comment_form=comment_form, form=form,
+        categories=categories, technicians=technicians, TicketStatus=TicketStatus,
+        creator=ticket['creator'], activity=activity,
+        display_created=display_time(ticket['created_at']),
+        display_updated=display_time(ticket['updated_at']),
+        display_last_reply=display_last_reply,
+        display_timezone=f"All times {local_time(ticket['created_at']).tzname()} ({timezone.zone})",
+        previous_ticket_id=previous_ticket.id if previous_ticket else None,
+        next_ticket_id=next_ticket.id if next_ticket else None,
+        sidebar_mobile=is_mobile_device() or request.args.get('mobile') == '1')
 
 @tickets.route('/tickets/<int:ticket_id>/comment', methods=['POST'])
 @login_required
@@ -892,14 +925,39 @@ def add_comment(ticket_id):
     """Add a comment to a ticket"""
     ticket = Ticket.query.get_or_404(ticket_id)
     form = TicketCommentForm()
+    mode = request.form.get('mode', 'reply')
+    after_status = request.form.get('after_status', '')
+    if mode not in ('reply', 'internal_note') or after_status not in ('', 'open', 'in_progress', 'pending', 'resolved', 'closed'):
+        flash('Invalid reply settings. Nothing was saved.', 'error')
+        return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
     
     if form.validate_on_submit():
+        content = sanitize_html(form.content.data)
+        if not bleach.clean(content, tags=[], strip=True).strip() and '<img ' not in content:
+            flash('Enter a reply or note before sending.', 'error')
+            return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
+        if mode == 'internal_note':
+            if form.attachment.data and form.attachment.data.filename:
+                flash('Attachments are supported on replies, not internal notes.', 'error')
+                return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
+            try:
+                db.session.add(TicketHistory(ticket_id=ticket.id, user_id=current_user.id,
+                                             action='internal_note', details=content,
+                                             created_at=datetime.now(pytz.UTC)))
+                ticket.updated_at = datetime.now(pytz.UTC)
+                db.session.commit()
+                flash('Internal note saved. No email was sent.', 'success')
+            except Exception:
+                db.session.rollback()
+                app.logger.exception('Failed to save internal ticket note')
+                flash('Could not save the internal note.', 'error')
+            return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
         try:
             # Create a new comment directly with explicit autoincrement
             comment = TicketComment(
                 ticket_id=ticket.id,
                 user_id=current_user.id,
-                content=sanitize_html(form.content.data),
+                content=content,
                 created_at=datetime.now(pytz.UTC),
                 updated_at=datetime.now(pytz.UTC)
             )
@@ -927,6 +985,14 @@ def add_comment(ticket_id):
                     comment.attachment = unique_filename
                     app.logger.info(f"Saved comment attachment: {unique_filename}")
             
+            ticket.updated_at = datetime.now(pytz.UTC)
+            if after_status and after_status != ticket.status:
+                old_status = ticket.status
+                ticket.status = after_status
+                db.session.add(TicketHistory(
+                    ticket_id=ticket.id, user_id=current_user.id, action='status_changed',
+                    details=f'Status changed from {old_status} to {after_status}',
+                    created_at=datetime.now(pytz.UTC)))
             db.session.commit()
             app.logger.debug(f"Added comment to ticket #{ticket.id}")
             
@@ -980,15 +1046,26 @@ def add_comment(ticket_id):
                     app.logger.info("Comment sequence fixed successfully")
                     
                     # Retry the comment insertion
+                    saved_attachment = comment.attachment
                     comment = TicketComment(
                         ticket_id=ticket.id,
                         user_id=current_user.id,
-                        content=sanitize_html(form.content.data),
+                        content=content,
+                        attachment=saved_attachment,
                         created_at=datetime.now(pytz.UTC),
                         updated_at=datetime.now(pytz.UTC)
                     )
                     db.session.add(comment)
+                    ticket.updated_at = datetime.now(pytz.UTC)
+                    if after_status and after_status != ticket.status:
+                        old_status = ticket.status
+                        ticket.status = after_status
+                        db.session.add(TicketHistory(
+                            ticket_id=ticket.id, user_id=current_user.id, action='status_changed',
+                            details=f'Status changed from {old_status} to {after_status}',
+                            created_at=datetime.now(pytz.UTC)))
                     db.session.commit()
+                    send_ticket_comment_notification(ticket=ticket, comment=comment, commented_by=current_user)
                     app.logger.info(f"Comment successfully added after sequence fix for ticket #{ticket.id}")
                     flash('Comment added successfully', 'success')
                     return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
@@ -998,17 +1075,14 @@ def add_comment(ticket_id):
             
             flash('Error adding comment', 'error')
     
+    if form.errors:
+        flash('Your reply was not saved. Check the text and try again.', 'error')
     return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
 
 @tickets.route('/tickets/<int:ticket_id>/status', methods=['POST'])
 @login_required
 def update_status(ticket_id):
-    """Update ticket status (desktop version)"""
-    # Check for mobile-specific redirect
-    if is_mobile_device():
-        app.logger.debug("Mobile device detected, redirecting to mobile status update handler")
-        return redirect(url_for('tickets.mobile_update_status', ticket_id=ticket_id))
-        
+    """Update ticket status from the responsive detail page."""
     ticket = Ticket.query.get_or_404(ticket_id)
     new_status = request.form.get('status')
     comment = request.form.get('comment', '')

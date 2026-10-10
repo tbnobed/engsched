@@ -1,364 +1,390 @@
-{% extends "base.html" %}
+{% extends "mobile_base_enhanced.html" if sidebar_mobile else "base.html" %}
 
 {% block content %}
-<style>
-/* Constrain inline images inside ticket description and comments so emailed
-   screenshots/photos render at a sane size instead of overflowing the card. */
-.ticket-description img,
-.comment .mb-0 img {
-    max-width: 100%;
-    height: auto;
-    max-height: 480px;
-    object-fit: contain;
-    border-radius: 6px;
-    display: inline-block;
-    margin: 4px 0;
-    cursor: zoom-in;
-}
-.ticket-description,
-.comment .mb-0 {
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
-</style>
-<div class="ticket-view">
-    <div class="d-flex justify-content-between align-items-center mb-4 ticket-heading">
-        <div>
-            <h2>Ticket #{{ ticket['id'] }}</h2>
-            <p class="text-muted mb-0">
-                Created by {{ ticket['creator']['username'] }} on {{ ticket['created_at'].strftime('%Y-%m-%d %H:%M') }}
-            </p>
+{% include 'tickets/_view_styles.html' %}
+{% set ticket_creator = ticket['creator'] %}
+{% set requester = creator if creator is defined else ticket_creator %}
+{% set requester_name = requester.username|default(requester.name|default(requester.email|default('Requester'))) %}
+{% set status_labels = {'open': 'Open', 'in_progress': 'In progress', 'pending': 'Pending', 'resolved': 'Resolved', 'closed': 'Closed'} %}
+{% set priority_labels = {0: 'Low', 1: 'Medium', 2: 'High', 3: 'Urgent'} %}
+<main class="ticket-reference-page" data-ticket-id="{{ ticket['id'] }}">
+    <nav class="tr-topline" aria-label="Ticket navigation">
+        <div class="tr-crumbs">
+            <a href="{{ url_for('tickets.tickets_dashboard') }}">Queue</a>
+            <span>/</span>
+            <span class="tr-crumb-current">#{{ ticket['id'] }}</span>
         </div>
-        <div class="d-flex gap-2">
+        <div class="tr-nav-arrows">
+            {% if previous_ticket_id %}
+            <a class="tr-icon-button" href="{{ url_for('tickets.view_ticket', ticket_id=previous_ticket_id) }}" aria-label="Previous ticket" title="Previous ticket"><i data-feather="chevron-left"></i></a>
+            {% else %}
+            <span class="tr-icon-button disabled" aria-hidden="true"><i data-feather="chevron-left"></i></span>
+            {% endif %}
+            {% if next_ticket_id %}
+            <a class="tr-icon-button" href="{{ url_for('tickets.view_ticket', ticket_id=next_ticket_id) }}" aria-label="Next ticket" title="Next ticket"><i data-feather="chevron-right"></i></a>
+            {% else %}
+            <span class="tr-icon-button disabled" aria-hidden="true"><i data-feather="chevron-right"></i></span>
+            {% endif %}
+        </div>
+    </nav>
+
+    <header class="tr-header">
+        <div class="tr-heading">
+            <h1>{{ ticket['title'] }}</h1>
+            <div class="tr-subtitle">
+                Opened by {{ requester_name }}
+                via {{ ticket.source|default('Web', true) }} · {{ display_created|default(ticket['created_at'].strftime('%b %-d, %I:%M %p'), true) }}
+                · {% if display_last_reply %}last reply {{ display_last_reply }}{% else %}no replies yet{% endif %}
+            </div>
+        </div>
+        <div class="tr-actions">
+            <form method="POST" action="{{ url_for('tickets.assign_ticket', ticket_id=ticket['id']) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="technician_id" value="{{ current_user.id }}">
+                <button class="tr-btn" type="submit">Assign to me</button>
+            </form>
+            <form method="POST" action="{{ url_for('tickets.update_status', ticket_id=ticket['id']) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="status" value="resolved">
+                <button class="tr-btn tr-btn-primary" type="submit">Resolve</button>
+            </form>
             <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i data-feather="more-vertical"></i> Actions
-                </button>
-                <ul class="dropdown-menu">
-                    <li>
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#assignTicketModal">
-                            <i data-feather="user"></i> Assign Ticket
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
-                            <i data-feather="refresh-cw"></i> Update Status
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editTicketModal">
-                            <i data-feather="edit"></i> Edit Ticket
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="{{ url_for('tickets.archive_ticket', ticket_id=ticket['id']) }}" 
-                           onclick="return confirm('Are you sure you want to archive this ticket? It will be hidden from regular views.');">
-                            <i data-feather="archive"></i> Archive Ticket
-                        </a>
-                    </li>
+                <button class="tr-btn tr-more" type="button" data-bs-toggle="dropdown" aria-label="More ticket actions" aria-expanded="false"><i data-feather="more-horizontal"></i></button>
+                <ul class="dropdown-menu dropdown-menu-end tr-menu">
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#assignTicketModal"><i data-feather="user"></i> Assign ticket</a></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#updateStatusModal"><i data-feather="refresh-cw"></i> Update status</a></li>
+                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editTicketModal"><i data-feather="edit-2"></i> Edit ticket</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('tickets.archive_ticket', ticket_id=ticket['id']) }}" onclick="return confirm('Archive this ticket?');"><i data-feather="archive"></i> Archive ticket</a></li>
                     {% if current_user.is_admin %}
+                    <li><hr class="dropdown-divider"></li>
                     <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li>
-                        <form method="POST" action="{{ url_for('tickets.delete_ticket', ticket_id=ticket['id']) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this ticket? This action cannot be undone.');">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <button type="submit" class="dropdown-item text-danger" style="border: none; background: none; width: 100%; text-align: left;">
-                                <i data-feather="trash-2"></i> Delete Ticket
-                            </button>
+                        <form method="POST" action="{{ url_for('tickets.delete_ticket', ticket_id=ticket['id']) }}" onsubmit="return confirm('Delete this ticket? This cannot be undone.');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="dropdown-item text-danger" type="submit"><i data-feather="trash-2"></i> Delete ticket</button>
                         </form>
                     </li>
                     {% endif %}
                 </ul>
             </div>
-            <a href="{{ url_for('tickets.tickets_dashboard') }}" class="btn btn-outline-primary">
-                <i data-feather="arrow-left"></i> Back to List
-            </a>
         </div>
-    </div>
+    </header>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card ticket-thread">
-            <!-- Ticket Details -->
-            <section class="ticket-summary" aria-label="Ticket summary">
-                <div class="card-body">
-                    <h3 class="card-title">{{ ticket['title'] }}</h3>
-                    <div class="ticket-meta d-flex gap-3 mb-4">
-                        <span class="badge bg-secondary">
-                            {{ ticket['category']['name'] }}
-                        </span>
-                        {% set status_colors = {
-                            'open': 'primary',
-                            'in_progress': 'info',
-                            'pending': 'warning',
-                            'resolved': 'success',
-                            'closed': 'secondary'
-                        } %}
-                        <span class="badge bg-{{ status_colors[ticket['status']] }}">
-                            {{ ticket['status']|replace('_', ' ')|title }}
-                        </span>
-                        {% set priority_colors = {
-                            0: 'secondary',
-                            1: 'info',
-                            2: 'warning',
-                            3: 'danger'
-                        } %}
-                        {% set priority_labels = {
-                            0: 'Low',
-                            1: 'Medium',
-                            2: 'High',
-                            3: 'Urgent'
-                        } %}
-                        <span class="badge bg-{{ priority_colors[ticket['priority']] }}">
-                            Priority: {{ priority_labels[ticket['priority']] }}
-                        </span>
-                    </div>
-                    <div class="ticket-description mb-4">
-                        {{ ticket['description']|safe }}
-                    </div>
-                    {% if ticket.attachment %}
-                    <div class="ticket-attachment mt-3">
-                        <h5>Attached File{{ 's' if ticket.attachment.startswith('[') else '' }}:</h5>
-                        <div class="d-flex flex-wrap align-items-start">
-                        {% if ticket.attachment.startswith('[') %}
-                            {% for filename in ticket.attachment|from_json %}
-                                {% include 'tickets/_attachment_item.html' %}
-                            {% endfor %}
-                        {% else %}
-                            {% set filename = ticket.attachment %}
-                            {% include 'tickets/_attachment_item.html' %}
-                        {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </section>
-
-            <section class="ticket-composer" aria-labelledby="reply-heading">
-                <div class="card-body">
-                    <div class="ticket-composer-header">
-                        <h4 class="mb-0" id="reply-heading">Reply</h4>
-                    </div>
-                    <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data" id="comment-form" novalidate>
-                        {{ comment_form.hidden_tag() }}
-                        <div class="ticket-reply-field">
-                            <label for="content" class="visually-hidden">Your reply</label>
-                            {{ comment_form.content(class="form-control", rows="3", placeholder="Write your reply...", id="content") }}
-                        </div>
-                        <div class="ticket-reply-footer">
-                            <div class="ticket-reply-attachment">
-                                <label for="attachment" class="visually-hidden">Attach a file (optional)</label>
-                                {{ comment_form.attachment(class="form-control form-control-sm") }}
-                            </div>
-                            <button type="submit" class="btn btn-primary" id="submit-comment-btn">
-                                <i data-feather="send"></i> Send reply
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </section>
-
-            <!-- Comments Section -->
-            <section class="ticket-conversation" aria-labelledby="conversation-heading">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center gap-2 ticket-conversation-heading">
-                        <h4 class="mb-0" id="conversation-heading">Conversation</h4>
-                        <small class="text-muted">Newest first</small>
-                    </div>
-                    <div class="comments-list mb-4">
-                        {% for comment in ticket['comments']|sort(attribute='created_at', reverse=true) %}
-                        <div class="comment mb-3">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    {% if comment['content'].startswith('<p><strong>🤖 AI Analysis') %}
-                                    <strong>AI Assistant</strong>
-                                    {% else %}
-                                    <strong>{{ comment['user']['username'] }}</strong>
-                                    {% endif %}
-                                    <small class="text-muted">{{ comment['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
-                                </div>
-                                {% if current_user.is_admin or current_user.id == comment['user']['id'] %}
-                                <button class="btn btn-sm btn-link text-danger" aria-label="Delete comment by {{ comment['user']['username'] }}" onclick="deleteComment({{ comment['id'] }})">
-                                    <i data-feather="trash-2"></i>
-                                </button>
-                                {% endif %}
-                            </div>
-                            <div class="mb-0">{{ comment['content']|clean_ai_analysis|safe }}</div>
-                            {% if comment.attachment %}
-                            <div class="comment-attachment mt-2 d-flex flex-wrap align-items-start">
-                                {% if comment.attachment.startswith('[') %}
-                                    {% for filename in comment.attachment|from_json %}
-                                        {% include 'tickets/_attachment_item.html' %}
-                                    {% endfor %}
-                                {% else %}
-                                    {% set filename = comment.attachment %}
-                                    {% include 'tickets/_attachment_item.html' %}
-                                {% endif %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% else %}
-                        <div class="ticket-empty"><strong>No replies yet</strong><p class="small mb-0 mt-1">Use the reply box above to start the conversation.</p></div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </section>
+    <section class="tr-meta" aria-label="Ticket metadata">
+        <div class="tr-meta-cell">
+            <span class="tr-meta-label">Status</span>
+            <div class="tr-meta-value">
+                <span class="tr-status-dot {{ ticket['status'] }}"></span>
+                <button type="button" data-bs-toggle="modal" data-bs-target="#updateStatusModal">{{ status_labels.get(ticket['status'], ticket['status']|replace('_', ' ')|title) }}</button>
+                <i class="tr-caret" data-feather="chevron-down"></i>
             </div>
         </div>
-
-        <div class="col-lg-4">
-            {% include 'tickets/_ai_assistant.html' %}
-            <!-- Ticket Info -->
-            <section class="card mb-4 ticket-context" aria-label="Ticket details and activity">
-                <div class="nav ticket-tabs" role="tablist" aria-label="Ticket details">
-                    <button class="nav-link active" id="ticket-info-tab" data-bs-toggle="tab" data-bs-target="#ticket-info-panel" type="button" role="tab" aria-controls="ticket-info-panel" aria-selected="true">Information</button>
-                    <button class="nav-link" id="ticket-history-tab" data-bs-toggle="tab" data-bs-target="#ticket-history-panel" type="button" role="tab" aria-controls="ticket-history-panel" aria-selected="false">History</button>
-                </div>
-                <div class="tab-content">
-                <div class="card-body tab-pane show active" id="ticket-info-panel" role="tabpanel" aria-labelledby="ticket-info-tab" tabindex="0">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">Assigned To</dt>
-                        <dd class="col-sm-8">
-                            {% if ticket['assigned_technician'] %}
-                                {{ ticket['assigned_technician']['username'] }}
-                            {% else %}
-                                <span class="text-muted">Unassigned</span>
-                            {% endif %}
-                        </dd>
-
-                        <dt class="col-sm-4">Due Date</dt>
-                        <dd class="col-sm-8">
-                            {% if ticket['due_date'] %}
-                                {{ ticket['due_date'].strftime('%Y-%m-%d %H:%M') }}
-                            {% else %}
-                                <span class="text-muted">Not set</span>
-                            {% endif %}
-                        </dd>
-
-                        <dt class="col-sm-4">Created</dt>
-                        <dd class="col-sm-8">{{ ticket['created_at'].strftime('%Y-%m-%d %H:%M') }}</dd>
-
-                        <dt class="col-sm-4">Last Updated</dt>
-                        <dd class="col-sm-8">{{ ticket['updated_at'].strftime('%Y-%m-%d %H:%M') }}</dd>
-                    </dl>
-                </div>
-                <div class="card-body tab-pane" id="ticket-history-panel" role="tabpanel" aria-labelledby="ticket-history-tab" tabindex="0">
-                    <div class="ticket-history">
-                        {% for entry in ticket['history']|sort(attribute='created_at', reverse=true) %}
-                        <div class="history-entry">
-                            <small class="text-muted">{{ entry['created_at'].strftime('%Y-%m-%d %H:%M') }}</small>
-                            <p class="mb-1">
-                                <strong>{{ entry['user']['username'] }}</strong>
-                                {{ entry['action']|replace('_', ' ')|title }}
-                            </p>
-                            {% if entry['details'] %}
-                            <p class="mb-0 text-muted">{{ entry['details'] }}</p>
-                            {% endif %}
-                        </div>
-                        {% else %}
-                        <p class="ticket-empty mb-0">No activity recorded yet.</p>
-                        {% endfor %}
-                    </div>
-                </div>
-                </div>
-            </section>
+        <div class="tr-meta-cell">
+            <span class="tr-meta-label">Priority</span>
+            <div class="tr-meta-value"><button type="button" data-bs-toggle="modal" data-bs-target="#editTicketModal">{{ priority_labels.get(ticket['priority'], 'Medium') }}</button><i class="tr-caret" data-feather="chevron-down"></i></div>
         </div>
-    </div>
-</div>
+        <div class="tr-meta-cell">
+            <span class="tr-meta-label">Assignee</span>
+            <div class="tr-meta-value">
+                {% if ticket['assigned_technician'] %}
+                {% set assignee_name = ticket['assigned_technician']['username'] %}
+                <span class="tr-avatar">{{ assignee_name[:2]|upper }}</span><button type="button" data-bs-toggle="modal" data-bs-target="#assignTicketModal">{{ assignee_name }}</button>
+                {% else %}
+                <button type="button" data-bs-toggle="modal" data-bs-target="#assignTicketModal">Unassigned</button>
+                {% endif %}
+                <i class="tr-caret" data-feather="chevron-down"></i>
+            </div>
+        </div>
+        <div class="tr-meta-cell">
+            <span class="tr-meta-label">Category</span>
+            <div class="tr-meta-value"><button type="button" data-bs-toggle="modal" data-bs-target="#editTicketModal">{{ ticket['category']['name'] }}</button><i class="tr-caret" data-feather="chevron-down"></i></div>
+        </div>
+        <div class="tr-meta-cell">
+            <span class="tr-meta-label">Due</span>
+            <div class="tr-meta-value"><button type="button" class="tr-due-link" data-bs-toggle="modal" data-bs-target="#editTicketModal">{{ ticket['due_date'].strftime('%b %-d, %Y') if ticket['due_date'] else 'Set due date' }}</button></div>
+        </div>
+    </section>
 
-<!-- Include modals -->
-{% include 'tickets/modals/assign_ticket.html' %}
-{% include 'tickets/modals/update_status.html' %}
-{% include 'tickets/modals/edit_ticket.html' %}
+    <div class="tr-columns">
+        <section class="tr-main" aria-label="Ticket conversation">
+            <section class="tr-card tr-composer" aria-label="Reply">
+                <div class="tr-compose-tabs" role="tablist" aria-label="Reply type">
+                    <button type="button" class="tr-tab active" id="tr-reply-tab" aria-selected="true">Reply to {{ requester_name }}</button>
+                    <button type="button" class="tr-tab" id="tr-note-tab" aria-selected="false">Internal note</button>
+                </div>
+                <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket['id']) }}" enctype="multipart/form-data" id="comment-form" novalidate>
+                    {{ comment_form.hidden_tag() }}
+                    <input type="hidden" name="mode" id="tr-mode" value="reply">
+                    <div class="tr-compose-area">
+                        <label for="content" class="visually-hidden">Your reply</label>
+                        {{ comment_form.content(class="form-control", rows="3", placeholder="Write a reply...", id="content") }}
+                        <div class="tr-compose-placeholder" id="tr-placeholder">Write a reply. {{ requester_name }} gets this by email.</div>
+                    </div>
+                    <div class="tr-compose-footer">
+                        <label class="tr-file-label" for="attachment" title="Attach a file" aria-label="Attach a file"><i data-feather="paperclip"></i></label>
+                        {{ comment_form.attachment(id="attachment", class="tr-file-native") }}
+                        <span class="tr-file-name" id="tr-file-name" aria-live="polite"></span>
+                        <div class="tr-canned-wrap">
+                            <button type="button" class="tr-canned" id="tr-canned-toggle" aria-expanded="false">Canned reply</button>
+                            <div class="tr-canned-menu" id="tr-canned-menu" hidden>
+                                <button type="button" class="tr-canned-choice" data-reply="Thanks for reaching out. I’m reviewing this now and will follow up with what I find.">Investigating<small>Confirm receipt and set an expectation</small></button>
+                                <button type="button" class="tr-canned-choice" data-reply="Could you share the approximate time this occurred, the affected channel or output, and any error message you saw?">Request details<small>Ask for useful troubleshooting context</small></button>
+                                <button type="button" class="tr-canned-choice" data-reply="We’ve made the change and verified the signal is back. Please let us know if you still see an issue.">Resolved<small>Confirm fix and invite a check</small></button>
+                            </div>
+                        </div>
+                        <span class="tr-then">Then set</span>
+                        <select class="tr-after-status" name="after_status" aria-label="Status after sending">
+                            <option value="">No change</option>
+                            <option value="open">Open</option>
+                            <option value="in_progress">In progress</option>
+                            <option value="pending" selected>Pending</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                        <button class="tr-btn tr-btn-primary tr-send" type="submit" id="submit-comment-btn"><span id="tr-send-label">Send</span></button>
+                    </div>
+                </form>
+            </section>
+
+            <div class="tr-activity-head">
+                <h2>Activity</h2>
+                <label class="tr-views"><input type="checkbox" id="tr-show-views"> Show views</label>
+            </div>
+            <div class="tr-activity-list" id="tr-activity-list">
+                {% for entry in activity %}
+                    {% set item = entry.data %}
+                    {% if entry.kind == 'comment' %}
+                        {% set author = item.get('user', {}) %}
+                        {% set author_name = author.username|default(author.name|default(requester_name)) %}
+                        <article class="tr-activity-card" data-activity-kind="comment">
+                            <header class="tr-activity-top">
+                                <div class="tr-author"><span class="tr-avatar">{{ author_name[:2]|upper }}</span><span>{{ author_name }}</span><span class="tr-activity-label">{{ 'AI analysis' if author_name == 'AI Assistant' else 'replied' }}</span></div>
+                                <time class="tr-time" datetime="{{ entry.created_at.isoformat() if entry.created_at else '' }}">{{ entry.display_time }}</time>
+                            </header>
+                            <div class="tr-activity-content">{{ item.get('content', '')|clean_ai_analysis|safe }}</div>
+                            {% if item.get('attachment') %}
+                            <div class="tr-attachment-display">
+                                {% if item['attachment'].startswith('[') %}
+                                    {% for filename in item['attachment']|from_json %}{% include 'tickets/_attachment_item.html' %}{% endfor %}
+                                {% else %}{% set filename = item['attachment'] %}{% include 'tickets/_attachment_item.html' %}{% endif %}
+                            </div>
+                            {% endif %}
+                            {% if current_user.is_admin or current_user.id == author.get('id') %}
+                            <button class="tr-comment-delete" type="button" aria-label="Delete comment by {{ author_name }}" data-delete-comment="{{ item['id'] }}"><i data-feather="trash-2"></i></button>
+                            {% endif %}
+                        </article>
+                    {% elif entry.kind == 'opening' %}
+                        {% set opening_author = item.get('creator', ticket_creator) %}
+                        {% set opening_name = opening_author.username|default(opening_author.name|default(requester_name)) %}
+                        <article class="tr-activity-card tr-opening" data-activity-kind="opening">
+                            <header class="tr-activity-top">
+                                <div class="tr-author"><span class="tr-avatar">{{ opening_name[:2]|upper }}</span><span>{{ opening_name }}</span><span class="tr-activity-label">opened the ticket by {{ (ticket.source|default('Web', true))|lower }}</span></div>
+                                <time class="tr-time" datetime="{{ entry.created_at.isoformat() if entry.created_at else '' }}">{{ entry.display_time }}</time>
+                            </header>
+                            <div class="tr-activity-content">{{ item.get('description', '')|safe }}</div>
+                            {% if item.get('attachment') %}
+                            <div class="tr-attachment-display">
+                                {% if item['attachment'].startswith('[') %}
+                                    {% for filename in item['attachment']|from_json %}{% include 'tickets/_attachment_item.html' %}{% endfor %}
+                                {% else %}{% set filename = item['attachment'] %}{% include 'tickets/_attachment_item.html' %}{% endif %}
+                            </div>
+                            {% endif %}
+                        </article>
+                    {% elif entry.kind == 'note' %}
+                        {% set note_author = item.get('user', {}) %}
+                        {% set note_name = note_author.username|default(note_author.name|default('Technician')) %}
+                        <article class="tr-activity-card" data-activity-kind="note">
+                            <header class="tr-activity-top">
+                                <div class="tr-author"><span class="tr-avatar">{{ note_name[:2]|upper }}</span><span>{{ note_name }}</span><span class="tr-note-tag">Internal note</span></div>
+                                <time class="tr-time" datetime="{{ entry.created_at.isoformat() if entry.created_at else '' }}">{{ entry.display_time }}</time>
+                            </header>
+                            <div class="tr-activity-content">{{ item.get('details', item.get('content', ''))|safe }}</div>
+                        </article>
+                    {% elif entry.kind == 'history' %}
+                        {% set action = item.get('action', '') %}
+                        {% if action not in ['created', 'commented'] %}
+                        <div class="tr-history-row{% if action == 'viewed' %} tr-view-event{% endif %}" data-activity-kind="history" data-view-event="{{ 'true' if action == 'viewed' else 'false' }}">
+                            <span class="tr-history-bullet"></span>
+                            <span>{{ item.get('user', {}).get('username', 'System') }} {{ item['details'] if item.get('details') else action|replace('_', ' ') }}</span>
+                            <time class="tr-time" datetime="{{ entry.created_at.isoformat() if entry.created_at else '' }}">{{ entry.display_time }}</time>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    <div class="tr-card tr-empty">No activity has been recorded for this ticket.</div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <aside class="tr-side" aria-label="Requester and ticket details">
+            <section class="tr-side-card">
+                <h2 class="tr-side-title">Requester</h2>
+                {% set requester_email = requester.email|default(requester.external_email|default('')) %}
+                <div class="tr-requester">
+                    <span class="tr-avatar">{{ requester_name[:2]|upper }}</span>
+                    <div><span class="tr-requester-name">{{ requester_name }}</span><span class="tr-requester-email">{{ requester_email }}</span></div>
+                </div>
+                {% if requester.id|default(none) %}
+                <a class="tr-viewlink" href="{{ url_for('tickets.tickets_dashboard', created_by=requester.id) }}">View past tickets</a>
+                {% elif requester_email %}
+                <a class="tr-viewlink" href="{{ url_for('tickets.tickets_dashboard', requester_email=requester_email) }}">View past tickets</a>
+                {% endif %}
+            </section>
+
+            <section class="tr-side-card">
+                <h2 class="tr-side-title">Details</h2>
+                <dl class="tr-details-list">
+                    <div class="tr-detail-line"><dt>Created</dt><dd>{{ display_created|default(ticket['created_at'].strftime('%b %-d, %I:%M %p'), true) }}</dd></div>
+                    <div class="tr-detail-line"><dt>Last activity</dt><dd>{{ display_updated|default(ticket['updated_at'].strftime('%b %-d, %I:%M %p'), true) }}</dd></div>
+                    <div class="tr-detail-line"><dt>Source</dt><dd>{{ ticket.source|default('Web', true) }}</dd></div>
+                </dl>
+                <p class="tr-timezone">{{ display_timezone|default('', true) }}</p>
+            </section>
+            {% include 'tickets/_ai_assistant.html' %}
+        </aside>
+    </div>
+
+    {% include 'tickets/modals/assign_ticket.html' %}
+    {% include 'tickets/modals/update_status.html' %}
+    {% include 'tickets/modals/edit_ticket.html' %}
+</main>
 
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        feather.replace();
-        
-        // Get the comment form first
-        const form = document.getElementById('comment-form');
-        if (!form) {
-            console.error('Comment form not found');
-            return;
-        }
-        
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        
-        // Hide the original textarea
-        const textarea = document.getElementById('content');
-        if (!textarea) {
-            console.error('Content textarea not found');
-            return;
-        }
+(function () {
+    'use strict';
+    const root = document.querySelector('.ticket-reference-page');
+    if (!root) return;
+    root.querySelectorAll('.modal').forEach(modal => modal.classList.add('tr-ticket-modal'));
+    if (window.feather) window.feather.replace();
+    const form = root.querySelector('#comment-form');
+    const textarea = root.querySelector('#content');
+    const fileInput = root.querySelector('#attachment');
+    const fileLabel = root.querySelector('#tr-file-name');
+    const modeInput = root.querySelector('#tr-mode');
+    const tabs = [root.querySelector('#tr-reply-tab'), root.querySelector('#tr-note-tab')];
+    const placeholder = root.querySelector('#tr-placeholder');
+    const sendLabel = root.querySelector('#tr-send-label');
+    const fileControl = root.querySelector('.tr-file-label');
+    const afterStatus = root.querySelector('.tr-after-status');
+    const replyPlaceholder = {{ ('Write a reply. ' ~ requester_name ~ ' gets this by email.')|tojson }};
+    placeholder.hidden = true;
+    textarea.placeholder = replyPlaceholder;
+    let quill = null;
+
+    if (form && textarea && window.Quill) {
+        const editorHost = document.createElement('div');
+        editorHost.id = 'tr-quill-editor';
+        textarea.parentNode.insertBefore(editorHost, textarea);
         textarea.style.display = 'none';
-        
-        // Create editor container
-        const editorContainer = document.createElement('div');
-        editorContainer.id = 'comment-editor-container';
-        textarea.parentNode.insertBefore(editorContainer, textarea);
-        
-        // Initialize Quill
-        const quill = new Quill('#comment-editor-container', {
+        const csrf = form.querySelector('input[name="csrf_token"]')?.value || '';
+        quill = new Quill(editorHost, {
             theme: 'snow',
-            placeholder: 'Write your reply...',
-            modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link', 'image'],
-                    ['clean']
-                ]
-            }
+            placeholder: replyPlaceholder,
+            modules: { toolbar: [['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }], ['link', 'image'], ['clean']] }
         });
-        
-        // Handle image upload
-        quill.getModule('toolbar').addHandler('image', function() {
-            const input = document.createElement('input');
-            input.setAttribute('type', 'file');
-            input.setAttribute('accept', 'image/png, image/jpeg, image/jpg, image/gif, image/webp');
-            input.click();
-            
-            input.onchange = function() {
-                const file = input.files[0];
-                if (file) {
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    
-                    fetch('{{ url_for("editor_upload_image") }}', {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': csrfToken
-                        },
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        const range = quill.getSelection();
-                        quill.insertEmbed(range.index, 'image', result.location);
-                    })
-                    .catch(error => {
-                        console.error('Error uploading image:', error);
-                        alert('Failed to upload image');
+        quill.getModule('toolbar').addHandler('image', function () {
+            const upload = document.createElement('input');
+            upload.type = 'file';
+            upload.accept = 'image/png,image/jpeg,image/jpg,image/gif,image/webp';
+            upload.click();
+            upload.addEventListener('change', async function () {
+                if (!upload.files || !upload.files[0]) return;
+                try {
+                    const data = new FormData();
+                    data.append('file', upload.files[0]);
+                    const response = await fetch('{{ url_for("editor_upload_image") }}', {
+                        method: 'POST', headers: { 'X-CSRFToken': csrf }, body: data, credentials: 'same-origin'
                     });
+                    if (!response.ok) throw new Error('Upload failed');
+                    const result = await response.json();
+                    const range = quill.getSelection(true);
+                    if (result.location) quill.insertEmbed(range.index, 'image', result.location, 'user');
+                } catch (error) {
+                    window.alert('Image upload failed. Please try again.');
                 }
-            };
+            });
         });
-        
-        // Sync content to textarea on form submit
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function (event) {
+            if (quill.root.innerText.trim() === '' && !quill.root.querySelector('img')) {
+                event.preventDefault();
+                quill.focus();
+                return;
+            }
             textarea.value = quill.root.innerHTML;
         });
+    }
+
+    function setMode(mode) {
+        const internal = mode === 'internal_note';
+        modeInput.value = mode;
+        tabs.forEach((tab, index) => {
+            const active = index === (internal ? 1 : 0);
+            tab.classList.toggle('active', active);
+            tab.setAttribute('aria-selected', String(active));
+        });
+        placeholder.textContent = internal ? 'Add an internal note. Only your team can see this.' :
+            {{ ('Write a reply. ' ~ requester_name ~ ' gets this by email.')|tojson }};
+        if (quill) quill.root.dataset.placeholder = placeholder.textContent;
+        else textarea.placeholder = placeholder.textContent;
+        sendLabel.textContent = internal ? 'Add note' : 'Send';
+        fileControl.hidden = internal;
+        if (fileInput) {
+            fileInput.disabled = internal;
+            if (internal) fileInput.value = '';
+        }
+        afterStatus.disabled = internal;
+        if (fileLabel) fileLabel.textContent = '';
+    }
+    tabs[0]?.addEventListener('click', () => setMode('reply'));
+    tabs[1]?.addEventListener('click', () => setMode('internal_note'));
+
+    fileInput?.addEventListener('change', function () {
+        fileLabel.textContent = fileInput.files?.length ? fileInput.files[0].name : '';
+    });
+    root.querySelector('#tr-canned-toggle')?.addEventListener('click', function () {
+        const menu = root.querySelector('#tr-canned-menu');
+        menu.hidden = !menu.hidden;
+        this.setAttribute('aria-expanded', String(!menu.hidden));
+    });
+    root.querySelectorAll('.tr-canned-choice').forEach(button => button.addEventListener('click', function () {
+        if (quill) {
+            quill.setText(this.dataset.reply || '');
+            quill.setSelection(quill.getLength(), 0);
+            quill.focus();
+        } else if (textarea) textarea.value = this.dataset.reply || '';
+        root.querySelector('#tr-canned-menu').hidden = true;
+        root.querySelector('#tr-canned-toggle').setAttribute('aria-expanded', 'false');
+    }));
+    const showViews = root.querySelector('#tr-show-views');
+    if (showViews) showViews.checked = false;
+    root.querySelectorAll('[data-view-event="true"]').forEach(event => { event.hidden = true; });
+    showViews?.addEventListener('change', function () {
+        root.querySelectorAll('[data-view-event="true"]').forEach(event => { event.hidden = !this.checked; });
     });
 
+    root.querySelectorAll('.tr-activity-content blockquote').forEach((quote, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'tr-quote-collapsed';
+        quote.parentNode.insertBefore(wrapper, quote);
+        wrapper.appendChild(quote);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'tr-quote-toggle';
+        button.textContent = 'Show quoted text';
+        button.setAttribute('aria-expanded', 'false');
+        button.addEventListener('click', function () {
+            const open = wrapper.classList.toggle('open');
+            button.textContent = open ? 'Hide quoted text' : 'Show quoted text';
+            button.setAttribute('aria-expanded', String(open));
+        });
+        wrapper.parentNode.insertBefore(button, wrapper.nextSibling);
+    });
 
-
-    function deleteComment(commentId) {
-        if (confirm('Are you sure you want to delete this comment?')) {
-            window.location.href = "{{ url_for('tickets.delete_comment', comment_id=0) }}".replace('/0/delete', `/${commentId}/delete`);
-        }
-    }
+    root.querySelectorAll('[data-delete-comment]').forEach(button => button.addEventListener('click', function () {
+        if (!window.confirm('Are you sure you want to delete this comment?')) return;
+        window.location.href = "{{ url_for('tickets.delete_comment', comment_id=0) }}".replace('/0/delete', '/' + encodeURIComponent(this.dataset.deleteComment) + '/delete');
+    }));
+})();
 </script>
 {% endblock %}
