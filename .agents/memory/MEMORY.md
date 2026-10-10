@@ -3,3 +3,4 @@
 - [PostgreSQL driver compatibility](postgres-driver.md) — Explicitly select the installed driver; a production build failed trying to load psycopg v3.
 - [Sidebar branding](sidebar-branding.md) — Separate the TBN logo above the application name, not beside it.
 - [Ticket layout sizing](ticket-layout-sizing.md) — Use available width, readable conversation text, and proportional right-hand cards; avoid capped, centered layouts.
+- [Ticket reporting reliability](ticket-reporting-decisions.md) — Legacy AI and inbound-email proxy authors can mislead metrics; missing historical events must stay explicit.

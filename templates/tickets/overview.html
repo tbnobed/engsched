@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% macro workspace(page) %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ticket-insights.css') }}">
+<section class="ti" id="ticket-insights" data-page="{{ page }}" aria-label="Ticket insights">
+  <header class="ti-header">
+    <div><span class="ti-eyebrow">TBN Plex Engineering / Service operations</span><h1>{{ 'Ticket overview' if page == 'overview' else 'Ticket reports' }}</h1><p class="ti-muted">{{ 'Your queue, your team, and what needs attention.' if page == 'overview' else 'Trace every number back to the work behind it.' }}</p></div>
+    <div class="ti-actions">
+    {% if page == 'overview' %}
+      <button type="button" id="ti-add" class="ti-primary" disabled>+ Add widget</button>
+      <button type="button" id="ti-save" disabled>Save layout</button>
+    {% else %}
+      <a class="ti-button" id="ti-export" hidden>Export CSV</a>
+      <button type="button" id="ti-print" disabled>Print / Save PDF</button>
+    {% endif %}
+    </div>
+  </header>
+  <nav class="ti-tabs" aria-label="Ticket workspace">
+    <a href="/tickets/overview" data-page-link="overview" {% if page == 'overview' %}aria-current="page"{% endif %}>Overview</a>
+    <a href="/tickets/reports?report=volume" data-page-link="reports" {% if page == 'reports' %}aria-current="page"{% endif %}>Reports</a>
+  </nav>
+  <form id="ti-filters" class="ti-panel ti-filters">
+    <div class="ti-panel-head"><h2>Filter workspace</h2><span class="ti-refresh" id="ti-timezone">Loading your preferences…</span></div>
+    <div class="ti-filter-grid">
+      <label>From<input type="date" name="start" aria-label="Start date"></label>
+      <label>Through<input type="date" name="end" aria-label="End date"></label>
+      <label>Technician<select name="technician"><option value="all">All technicians</option><option value="me">Assigned to me</option><option value="unassigned">Unassigned</option></select></label>
+      <label>Category<select name="category"><option value="all">All categories</option></select></label>
+      <label>Priority<select name="priority"><option value="all">All priorities</option></select></label>
+      <label>Status<select name="status"><option value="all">All statuses</option></select></label>
+      <label>Source<select name="source"><option value="all">All sources</option></select></label>
+      <label>Stalled after<select name="stalled_days"><option value="3">3 days</option><option value="7" selected>7 days</option><option value="14">14 days</option><option value="30">30 days</option></select></label>
+    </div>
+    <div class="ti-filter-footer"><p>Dates are inclusive. Current backlog, workload, aging and stalled tickets ignore the date range.</p><div class="ti-actions"><button type="button" id="ti-clear">Clear</button><button type="submit" class="ti-primary" id="ti-apply" disabled>Apply filters</button></div></div>
+  </form>
+  <div id="ti-status" class="ti-status" role="status" aria-live="polite"></div>
+  {% if page == 'overview' %}
+  <div class="ti-toolbar">
+    <div><h2>Your workspace</h2><span id="ti-save-state" class="ti-save-state" role="status">Loading saved layout…</span></div>
+    <div class="ti-actions"><label>Start from a preset<select id="ti-preset" disabled><option value="">Choose preset…</option><option value="team">Team operations</option><option value="my">My daily work</option></select></label><button type="button" id="ti-reset" disabled>Reset layout</button></div>
+  </div>
+  <div id="ti-widgets" class="ti-grid" aria-live="polite"><div class="ti-skeleton"></div><div class="ti-skeleton"></div></div>
+  {% else %}
+  <nav id="ti-report-nav" class="ti-report-nav" aria-label="Choose report"></nav>
+  <div id="ti-report"><div class="ti-skeleton" aria-label="Loading report"></div></div>
+  {% endif %}
+  <p class="ti-refresh" id="ti-generated"></p>
+  <details class="ti-methodology" id="ti-methodology"><summary>Definitions &amp; data coverage</summary><div id="ti-methodology-content"></div></details>
+  <dialog id="ti-dialog" aria-labelledby="ti-dialog-title">
+    <div class="ti-dialog-head"><h2 id="ti-dialog-title"></h2><button type="button" id="ti-dialog-close" aria-label="Close dialog">Close</button></div>
+    <div id="ti-dialog-body" class="ti-dialog-body"></div>
+  </dialog>
+  <noscript><div class="ti-state ti-error">JavaScript is required to load reports and your saved widget layout. Enable JavaScript and reload this page.</div></noscript>
+</section>
+<script src="{{ url_for('static', filename='js/ticket-insights.js') }}" defer></script>
+{% endmacro %}
+{% block content %}{{ workspace('overview') }}{% endblock %}

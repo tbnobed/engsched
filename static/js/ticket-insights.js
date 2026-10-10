@@ -1,0 +1,708 @@
+/* Ticket insights is deliberately isolated from dashboard and ticket-detail code. */
+(() => {
+  'use strict';
+  const root = document.getElementById('ticket-insights');
+  if (!root) return;
+  const $ = id => document.getElementById(id);
+  const page = root.dataset.page;
+  const form = $('ti-filters');
+  const reportNames = {
+    volume: 'Ticket volume', aging: 'Backlog aging', first_response: 'First response',
+    resolution_time: 'Resolution time', workload: 'Technician workload',
+    categories: 'Categories', stalled: 'Stalled tickets'
+  };
+  const keys = ['start', 'end', 'technician', 'category', 'priority', 'status', 'source', 'stalled_days'];
+  let config, data, myData, savedLayout, layout, dirty = false, saving = false;
+  let query = new URLSearchParams(location.search);
+  let controller, generation = 0, dragId, dialogReturn;
+  let reportKey = Object.hasOwn(reportNames, query.get('report')) ? query.get('report') : 'volume';
+  let tableStates = [];
+
+  function el(tag, cls, text) {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined && text !== null) node.textContent = String(text);
+    return node;
+  }
+  function button(text, fn, cls = '') {
+    const node = el('button', cls, text);
+    node.type = 'button';
+    node.addEventListener('click', fn);
+    return node;
+  }
+  function copy(value) { return JSON.parse(JSON.stringify(value)); }
+  function number(value) { return new Intl.NumberFormat().format(value); }
+  function duration(value) {
+    if (value === null || value === undefined || !Number.isFinite(Number(value))) return 'Not tracked';
+    const hours = Number(value);
+    if (hours === 0) return '0 min';
+    if (hours < 1) return `${Math.max(1, Math.round(hours * 60))} min`;
+    if (hours < 24) return `${Number(hours.toFixed(1))} hr`;
+    return `${Number((hours / 24).toFixed(1))} days`;
+  }
+  function safeLink(url, text, cls = '') {
+    const node = el('a', cls, text);
+    try {
+      const target = new URL(url, location.origin);
+      if (!['http:', 'https:'].includes(target.protocol)) throw new Error('Invalid ticket link');
+      node.href = target.href;
+    } catch (_) { return el('span', cls, text); }
+    return node;
+  }
+  async function request(url, options = {}) {
+    const response = await fetch(url, { credentials: 'include', ...options });
+    let payload;
+    try { payload = await response.json(); } catch (_) { throw new Error('The server did not return a valid response. Please try again.'); }
+    if (!response.ok) {
+      const message = typeof payload.error === 'string' ? payload.error : typeof payload.message === 'string' ? payload.message : `Request failed (${response.status}).`;
+      throw new Error(message);
+    }
+    return payload;
+  }
+  function showError(message, retry) {
+    const box = el('div', 'ti-state ti-error');
+    box.append(el('h2', '', 'Unable to load ticket insights'), el('p', '', message));
+    if (retry) box.append(button('Try again', retry));
+    $('ti-status').replaceChildren(box);
+  }
+  function clearStatus() { $('ti-status').replaceChildren(); }
+  function syncLinks() {
+    root.querySelectorAll('[data-page-link]').forEach(link => {
+      const params = new URLSearchParams(query);
+      params.delete('report');
+      if (link.dataset.pageLink === 'reports') params.set('report', reportKey);
+      link.href = `/tickets/${link.dataset.pageLink}?${params}`;
+    });
+    if (page === 'reports') {
+      const nav = $('ti-report-nav');
+      nav.replaceChildren();
+      Object.entries(reportNames).forEach(([key, name]) => {
+        const params = new URLSearchParams(query);
+        params.set('report', key);
+        const link = safeLink(`/tickets/reports?${params}`, name);
+        if (key === reportKey) link.setAttribute('aria-current', 'page');
+        nav.append(link);
+      });
+    }
+  }
+  function reportURL(type, scope = 'team') {
+    const params = new URLSearchParams(query);
+    params.set('report', type);
+    if (scope === 'me') params.set('scope', 'me');
+    else params.delete('scope');
+    return `/tickets/reports?${params}`;
+  }
+  function fillFilters() {
+    const sources = { technician: 'technicians', category: 'categories', priority: 'priorities', status: 'statuses', source: 'sources' };
+    Object.entries(sources).forEach(([key, source]) => {
+      const select = form.elements.namedItem(key);
+      const existing = new Set(Array.from(select.options, option => option.value));
+      (config.options[source] || []).forEach(option => {
+        if (!existing.has(String(option.id))) {
+          const node = el('option', '', option.name);
+          node.value = String(option.id);
+          select.append(node);
+        }
+      });
+    });
+    if (page === 'reports' && !form.elements.namedItem('scope')) {
+      const label = el('label', '', 'Assignment scope');
+      const select = el('select');
+      select.name = 'scope';
+      [['team', 'Whole team'], ['me', 'Assigned to me only']].forEach(([value, name]) => {
+        const option = el('option', '', name); option.value = value; select.append(option);
+      });
+      label.append(select);
+      form.querySelector('.ti-filter-grid').append(label);
+    }
+    [...keys, 'scope'].forEach(key => {
+      const input = form.elements.namedItem(key);
+      if (!input) return;
+      if (query.has(key)) input.value = query.get(key);
+    });
+    $('ti-timezone').textContent = `Dates & activity in ${config.timezone}`;
+    $('ti-apply').disabled = false;
+    syncLinks();
+  }
+  function filterQuery() {
+    const params = new URLSearchParams();
+    [...keys, ...(page === 'reports' ? ['scope'] : [])].forEach(key => {
+      const value = form.elements.namedItem(key)?.value;
+      if (value) params.set(key, value);
+    });
+    if (page === 'reports') params.set('report', reportKey);
+    return params;
+  }
+  function validateDates() {
+    const start = form.elements.namedItem('start').value;
+    const end = form.elements.namedItem('end').value;
+    const endInput = form.elements.namedItem('end');
+    endInput.setCustomValidity('');
+    if (start && end) {
+      const days = (Date.parse(end) - Date.parse(start)) / 86400000;
+      if (days < 0) endInput.setCustomValidity('End date must be on or after the start date.');
+      else if (days > 365) endInput.setCustomValidity('Choose an inclusive range of no more than 366 days.');
+    }
+    return form.reportValidity();
+  }
+  function needsMine() { return page === 'overview' && layout.widgets.some(widget => widget.scope === 'me'); }
+  function skeleton() {
+    const container = page === 'overview' ? $('ti-widgets') : $('ti-report');
+    container.replaceChildren(el('div', 'ti-skeleton'), el('div', 'ti-skeleton'));
+    container.setAttribute('aria-busy', 'true');
+    if (page === 'reports') {
+      $('ti-export').hidden = true;
+      $('ti-print').disabled = true;
+    }
+  }
+  async function loadData() {
+    if (!config) return;
+    if (controller) controller.abort();
+    controller = new AbortController();
+    const current = ++generation;
+    const params = new URLSearchParams(query);
+    params.delete('report');
+    if (page === 'overview') params.delete('scope');
+    skeleton();
+    clearStatus();
+    $('ti-apply').disabled = true;
+    try {
+      const jobs = [request(`/api/ticket-insights/data?${params}`, { signal: controller.signal })];
+      if (needsMine()) {
+        const mine = new URLSearchParams(params); mine.set('scope', 'me');
+        jobs.push(request(`/api/ticket-insights/data?${mine}`, { signal: controller.signal }));
+      }
+      const result = await Promise.all(jobs);
+      if (current !== generation) return;
+      [data, myData] = result;
+      if (!data || !Array.isArray(data.tickets) || !data.reports || !data.charts) throw new Error('The ticket insights response is incomplete.');
+      ['start', 'end'].forEach(key => {
+        if (!query.has(key) && data[key]) {
+          form.elements.namedItem(key).value = data[key];
+          query.set(key, data[key]);
+        }
+      });
+      history.replaceState(null, '', `${location.pathname}?${query}`);
+      $('ti-generated').textContent = `Updated ${displayDate(data.generated_at)} · ${data.timezone} · Period: ${data.start} through ${data.end}`;
+      renderMethodology();
+      if (page === 'overview') renderWidgets();
+      else renderReport();
+      syncLinks();
+    } catch (error) {
+      if (error.name === 'AbortError' || current !== generation) return;
+      data = undefined; myData = undefined;
+      (page === 'overview' ? $('ti-widgets') : $('ti-report')).replaceChildren();
+      showError(error.message, loadData);
+    } finally {
+      if (current === generation) {
+        $('ti-apply').disabled = false;
+        (page === 'overview' ? $('ti-widgets') : $('ti-report')).removeAttribute('aria-busy');
+      }
+    }
+  }
+  function displayDate(value) {
+    if (!value) return 'Not tracked';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat(undefined, { timeZone: data?.timezone || config?.timezone || 'UTC', dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  }
+  function dayOf(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: data.timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
+    const part = key => parts.find(item => item.type === key)?.value;
+    return `${part('year')}-${part('month')}-${part('day')}`;
+  }
+  function renderMethodology() {
+    const container = $('ti-methodology-content');
+    const list = el('ul');
+    (data.methodology || []).forEach(text => list.append(el('li', '', text)));
+    list.append(el('li', '', 'Aging, workload, stalled tickets and open-queue metrics show the current state, not a historical snapshot. Dates do not restrict current backlog.'));
+    list.append(el('li', '', 'Categories compare tickets created during the selected period with the current backlog. These are different populations.'));
+    list.append(el('li', '', 'A missing duration means no qualifying tracked event. It is not zero. Widget assignment scope is independent of saved filters.'));
+    const coverage = data.coverage || {};
+    container.replaceChildren(list, el('p', '', `Resolution history missing: ${number(coverage.missing_resolution_history ?? 0)} tickets. AI comments excluded: ${number(coverage.excluded_ai_comments ?? 0)}.`));
+  }
+  function openDialog(title) {
+    const dialog = $('ti-dialog');
+    if (dialog.open) dialog.close();
+    dialogReturn = document.activeElement;
+    $('ti-dialog-title').textContent = title;
+    $('ti-dialog-body').replaceChildren();
+    dialog.showModal();
+    $('ti-dialog-close').focus();
+    return $('ti-dialog-body');
+  }
+  function openTickets(title, tickets) {
+    const body = openDialog(title);
+    body.append(el('p', 'ti-muted', `${number(tickets.length)} matching tickets · Current workspace filters applied`));
+    const columns = [
+      { key: 'id', label: 'Ticket' }, { key: 'title', label: 'Subject' }, { key: 'status', label: 'Status' },
+      { key: 'priority', label: 'Priority' }, { key: 'assignee', label: 'Technician' },
+      { key: 'category', label: 'Category' }, { key: 'age_days', label: 'Age (days)' }, { key: 'idle_days', label: 'Idle (days)' }
+    ];
+    body.append(createTable(columns, tickets, { tickets: true }));
+  }
+  function ticketCell(row, key, options) {
+    const value = row[key];
+    if (options.tickets && (key === 'id' || key === 'title')) return safeLink(row.url, key === 'id' ? `#${value}` : value);
+    if (row.ticket_url && ['ticket_id', 'ticket', 'title', 'subject'].includes(key)) return safeLink(row.ticket_url, value ?? `#${row.ticket_id}`);
+    if (value === null || value === undefined) return el('span', 'ti-muted', 'Not tracked');
+    if (/_hours$/.test(key) || ['first_response', 'resolution_time'].includes(key)) return el('span', '', duration(value));
+    if (/_at$/.test(key)) return el('span', '', displayDate(value));
+    if (typeof value === 'boolean') return el('span', '', value ? 'Yes' : 'No');
+    if (Array.isArray(value)) return el('span', '', value.join(', '));
+    if (typeof value === 'object') return el('span', '', JSON.stringify(value));
+    if (!options.plain && options.report && typeof value === 'number' &&
+        ['created', 'resolved', 'completed', 'open', 'high_priority', 'overdue'].includes(key)) {
+      return button(number(value), () => openReportRow(row, options.report, key), 'ti-link-button');
+    }
+    return el('span', '', typeof value === 'number' ? number(value) : String(value));
+  }
+  function openReportRow(row, report, key) {
+    const matching = data.tickets.filter(ticket => {
+      if (report === 'volume') {
+        return key === 'created'
+          ? ticket.in_created_period && ticket.created_display.slice(0, 10) === row.date
+          : ticket.in_resolved_period && dayOf(ticket.completed_at) === row.date;
+      }
+      if (report === 'workload' && ticket.assignee !== row.technician) return false;
+      if (report === 'categories' && ticket.category !== row.category) return false;
+      if (key === 'created') return ticket.in_created_period;
+      if (key === 'completed' || key === 'resolved') return ticket.in_resolved_period;
+      if (key === 'high_priority') return ticket.is_open && ticket.priority >= 2;
+      if (key === 'overdue') return ticket.is_overdue;
+      return ticket.is_open;
+    });
+    openTickets(`${row.date || row.technician || row.category} / ${key.replaceAll('_', ' ')}`, matching);
+  }
+  function createTable(columns, rows, options = {}) {
+    const panel = el('div', 'ti-table-block');
+    const controls = el('div', 'ti-table-controls');
+    const searchLabel = el('label', '', 'Search these rows');
+    const search = el('input');
+    search.type = 'search'; search.placeholder = 'Ticket, technician, category…';
+    searchLabel.append(search);
+    const sizeLabel = el('label', '', 'Rows per page');
+    const size = el('select');
+    [25, 50, 100].forEach(value => { const option = el('option', '', value); option.value = value; size.append(option); });
+    sizeLabel.append(size); controls.append(searchLabel, sizeLabel);
+    const tableWrap = el('div', 'ti-table-wrap ti-screen-table');
+    const table = el('table');
+    const caption = el('caption', '', options.tickets ? 'Matching tickets' : 'Filtered report rows');
+    caption.style.captionSide = 'top'; caption.style.padding = '0 20px 10px'; caption.style.color = 'var(--ti-muted)';
+    const head = el('thead'), headRow = el('tr');
+    columns.forEach(column => { const th = el('th', '', column.label); th.scope = 'col'; headRow.append(th); });
+    head.append(headRow);
+    const tbody = el('tbody');
+    table.append(caption, head, tbody); tableWrap.append(table);
+    const footer = el('div', 'ti-pagination'), counter = el('span');
+    counter.setAttribute('aria-live', 'polite');
+    const actions = el('div', 'ti-actions');
+    let currentPage = 1;
+    const previous = button('Previous', () => { currentPage--; render(); });
+    const next = button('Next', () => { currentPage++; render(); });
+    actions.append(previous, next); footer.append(counter, actions);
+    panel.append(controls, tableWrap, footer);
+    const printable = el('div', 'ti-print-table');
+    if (options.print) panel.append(printable);
+    function makeRow(row, plain = false) {
+      const tr = el('tr');
+      columns.forEach(column => {
+        const td = el('td'); td.append(ticketCell(row, column.key, { ...options, plain: options.plain || plain })); tr.append(td);
+      });
+      return tr;
+    }
+    function render() {
+      const term = search.value.trim().toLocaleLowerCase();
+      const matching = rows.filter(row => columns.some(column => String(row[column.key] ?? '').toLocaleLowerCase().includes(term)));
+      const limit = Number(size.value);
+      const pages = Math.max(1, Math.ceil(matching.length / limit));
+      currentPage = Math.max(1, Math.min(currentPage, pages));
+      tbody.replaceChildren();
+      matching.slice((currentPage - 1) * limit, currentPage * limit).forEach(row => tbody.append(makeRow(row)));
+      if (!matching.length) {
+        const row = el('tr'), cell = el('td');
+        cell.colSpan = Math.max(1, columns.length);
+        const empty = el('div', 'ti-state');
+        empty.append(el('h3', '', term ? 'No rows match your search' : 'No qualifying rows'), el('p', '', term ? 'Try another ticket, name or category.' : 'Change the workspace filters or choose another report.'));
+        if (term) empty.append(button('Clear search', () => { search.value = ''; currentPage = 1; render(); }));
+        cell.append(empty); row.append(cell); tbody.append(row);
+      }
+      counter.textContent = matching.length ? `${number((currentPage - 1) * limit + 1)}–${number(Math.min(currentPage * limit, matching.length))} of ${number(matching.length)} rows${term ? ` (${number(rows.length)} before search)` : ''}` : `0 of ${number(rows.length)} rows`;
+      previous.disabled = currentPage <= 1; next.disabled = currentPage >= pages;
+      if (options.print) {
+        // Print and CSV retain every server-filtered row, independently of client search/pagination.
+        const printTable = el('table'), printBody = el('tbody');
+        printTable.append(head.cloneNode(true));
+        rows.forEach(row => printBody.append(makeRow(row, true)));
+        printTable.append(printBody);
+        printable.replaceChildren(printTable);
+      }
+    }
+    search.addEventListener('input', () => { currentPage = 1; render(); });
+    size.addEventListener('change', () => { currentPage = 1; render(); });
+    render();
+    if (options.print) tableStates = [render];
+    return panel;
+  }
+  function renderReport() {
+    const report = data.reports[reportKey];
+    if (!report || !Array.isArray(report.rows) || !Array.isArray(report.columns)) {
+      $('ti-report').replaceChildren();
+      showError('This report is not available in the server response.', loadData);
+      return;
+    }
+    const panel = el('section', 'ti-panel');
+    const header = el('div', 'ti-report-head');
+    const top = el('div', 'ti-panel-head');
+    top.append(el('h2', '', report.title || reportNames[reportKey]), button(`${number(report.rows.length)} report rows`, () => {
+      const body = openDialog(report.title || reportNames[reportKey]);
+      body.append(createTable(report.columns, report.rows, { plain: true }));
+    }, 'ti-link-button'));
+    header.append(top, el('p', '', report.description));
+    const snapshot = ['aging', 'workload', 'stalled'].includes(reportKey);
+    header.append(el('p', '', snapshot ? 'Current snapshot · Date range does not restrict these rows.' : reportKey === 'categories' ? 'Created in the selected period and current backlog are reported separately.' : `Period: ${data.start} through ${data.end}, inclusive · ${data.timezone}`));
+    header.append(el('p', '', 'Search and pagination affect the on-screen table only. CSV and Print / Save PDF include all rows from the applied workspace filters.'));
+    const applied = el('p', 'ti-print-filters', filterDescription());
+    header.append(applied);
+    if (['first_response', 'resolution_time'].includes(reportKey)) {
+      const summary = el('div', 'ti-report-summary');
+      summary.append(
+        el('strong', '', `Median: ${duration(report.median_hours)}`),
+        el('strong', '', `90th percentile: ${duration(report.p90_hours)}`),
+        el('span', 'ti-muted', `${number(report.measured || 0)} measured tickets${report.total !== undefined ? ` of ${number(report.total)} in the creation cohort` : ''}`)
+      );
+      header.append(summary);
+      if (report.missing_history) header.append(el('p', 'ti-muted', `${number(report.missing_history)} completed tickets in the filtered dataset have no recorded completion timestamp and cannot be assigned to a historical period.`));
+    }
+    panel.append(header, createTable(report.columns, report.rows, { report: reportKey, print: true }));
+    $('ti-report').replaceChildren(panel);
+    const params = new URLSearchParams(query); params.delete('report');
+    const exportLink = $('ti-export');
+    exportLink.href = `/api/ticket-insights/export/${reportKey}.csv?${params}`;
+    exportLink.hidden = false; exportLink.setAttribute('download', '');
+    $('ti-print').disabled = false;
+  }
+  function filterDescription() {
+    const labels = [];
+    [...keys, 'scope'].forEach(key => {
+      const field = form.elements.namedItem(key);
+      if (!field || ['start', 'end'].includes(key)) return;
+      const value = query.get(key) || (key === 'stalled_days' ? '7' : 'all');
+      if (value === 'all' || value === 'team') return;
+      const selected = Array.from(field.options || []).find(option => option.value === value);
+      labels.push(`${key.replaceAll('_', ' ')}: ${selected?.textContent || value}`);
+    });
+    return labels.length ? `Applied filters — ${labels.join(' · ')}` : 'Applied filters — All technicians, categories, priorities, statuses and sources.';
+  }
+  function ticketsFor(type, source) {
+    const tickets = source.tickets;
+    const mine = ticket => String(ticket.assignee_id) === String(config.user_id);
+    const threshold = Number(query.get('stalled_days') || 7);
+    switch (type) {
+      case 'my_open': case 'my_queue': return tickets.filter(ticket => ticket.is_open && mine(ticket));
+      case 'unassigned': return tickets.filter(ticket => ticket.is_open && !ticket.assignee_id);
+      case 'high_priority': return tickets.filter(ticket => ticket.is_open && Number(ticket.priority) >= 2);
+      case 'overdue': return tickets.filter(ticket => ticket.is_overdue);
+      case 'created': return tickets.filter(ticket => ticket.in_created_period);
+      case 'resolved': return tickets.filter(ticket => ticket.in_resolved_period);
+      case 'stalled': return tickets.filter(ticket => ticket.is_open && Number(ticket.idle_days) >= threshold);
+      default: return tickets;
+    }
+  }
+  function renderBars(container, groups, source, title, limit) {
+    const all = groups || [];
+    const shown = all.slice(0, limit);
+    const max = Math.max(1, ...all.map(item => Number(item.count) || 0));
+    const bars = el('div', 'ti-bars');
+    shown.forEach(group => {
+      const ids = new Set((group.ids || []).map(String));
+      const matching = source.tickets.filter(ticket => ids.has(String(ticket.id)));
+      const bar = button('', () => openTickets(`${title} / ${group.label}`, matching), 'ti-bar');
+      bar.setAttribute('aria-label', `${group.label}: ${group.count} tickets. Open matching tickets.`);
+      const track = el('span', 'ti-bar-track'), fill = el('span', 'ti-bar-fill');
+      fill.style.width = `${Math.max(0, Number(group.count) / max * 100)}%`;
+      track.append(fill); bar.append(el('span', '', group.label), track, el('strong', '', number(group.count)));
+      bars.append(bar);
+    });
+    if (!shown.length) bars.append(el('p', 'ti-muted', 'No qualifying tickets for this breakdown.'));
+    container.append(bars);
+    if (all.length > shown.length) {
+      container.append(button(`View all ${number(all.length)} groups`, () => {
+        const body = openDialog(title);
+        renderBars(body, all, source, title, all.length);
+      }, 'ti-link-button'));
+    }
+  }
+  function renderVolume(container, source) {
+    const days = source.charts.volume || [];
+    if (!days.length) { container.append(el('p', 'ti-muted', 'No activity in the selected period.')); return; }
+    const maximum = Math.max(1, ...days.flatMap(day => [Number(day.created) || 0, Number(day.resolved) || 0]));
+    const legend = el('div', 'ti-legend');
+    [['', 'Created'], ['resolved', 'Resolved']].forEach(([cls, name]) => { const span = el('span', cls); span.append(el('i'), document.createTextNode(name)); legend.append(span); });
+    const scroll = el('div', 'ti-chart-scroll'); scroll.tabIndex = 0; scroll.setAttribute('aria-label', 'Daily ticket volume. Scroll horizontally to view all dates.');
+    const chart = el('div', 'ti-volume');
+    days.forEach(day => {
+      const group = el('div', 'ti-day'), bars = el('div', 'ti-day-bars');
+      ['created', 'resolved'].forEach(type => {
+        const count = Number(day[type]) || 0;
+        const matching = () => source.tickets.filter(ticket => {
+          if (type === 'created') return ticket.in_created_period && (String(ticket.created_display || '').slice(0, 10) === day.label || dayOf(ticket.created_at) === day.label);
+          return ticket.in_resolved_period && dayOf(ticket.completed_at) === day.label;
+        });
+        const bar = button('', () => openTickets(`${day.label} / ${type}`, matching()), `ti-column ${type === 'resolved' ? 'resolved' : ''}`);
+        bar.style.height = `${count / maximum * 121}px`;
+        bar.setAttribute('aria-label', `${day.label}: ${number(count)} ${type} tickets`);
+        bar.title = `${day.label}: ${number(count)} ${type}`;
+        bar.append(el('span', '', number(count)));
+        bars.append(bar);
+      });
+      group.append(bars, el('small', '', day.label.slice(5))); chart.append(group);
+    });
+    scroll.append(chart); container.append(legend, scroll, el('p', 'ti-widget-caption', `${source.start}–${source.end} · Daily ticket counts · All ${days.length} days shown; scroll to explore.`));
+  }
+  function widgetConfig(widget) {
+    const box = el('div', 'ti-config');
+    const controls = [
+      ['size', 'Widget width', [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']]],
+      ['scope', 'Assignment scope', [['team', 'Team'], ['me', 'Assigned to me']]],
+      ['limit', 'List / group limit', [[5, '5 rows'], [10, '10 rows'], [20, '20 rows']]]
+    ];
+    controls.forEach(([key, title, options]) => {
+      const label = el('label', '', title), select = el('select');
+      options.forEach(([value, text]) => { const option = el('option', '', text); option.value = value; select.append(option); });
+      select.value = String(widget[key]);
+      select.addEventListener('change', () => {
+        widget[key] = key === 'limit' ? Number(select.value) : select.value;
+        markDirty();
+        if (key === 'scope' && widget.scope === 'me' && !myData) loadData();
+        else renderWidgets();
+      });
+      label.append(select); box.append(label);
+    });
+    return box;
+  }
+  function renderWidgets() {
+    if (!data) return;
+    const grid = $('ti-widgets');
+    grid.replaceChildren();
+    if (!layout.widgets.length) {
+      const empty = el('div', 'ti-state');
+      empty.append(el('h2', '', 'Make room for the work that matters'), el('p', '', 'Add a queue, a trend or a workload breakdown. Your empty layout is valid and can be saved.'), button('Add your first widget', openPicker, 'ti-primary'));
+      grid.append(empty); return;
+    }
+    layout.widgets.forEach((widget, index) => {
+      const definition = config.catalog.find(item => item.type === widget.type);
+      const title = definition?.title || widget.type.replaceAll('_', ' ');
+      const source = widget.scope === 'me' ? myData : data;
+      const card = el('article', 'ti-panel ti-widget');
+      card.dataset.size = widget.size;
+      card.dataset.widgetId = widget.id;
+      const header = el('div', 'ti-widget-heading');
+      const heading = el('div');
+      heading.append(el('h3', '', title), el('div', 'ti-widget-caption', `${widget.scope === 'me' ? 'Assigned to me' : 'Team'} · ${['created', 'resolved', 'volume', 'first_response', 'resolution_time'].includes(widget.type) ? 'Selected period' : widget.type === 'categories' ? 'Period & current backlog' : 'Current snapshot'}`));
+      const configure = button('Configure', () => { settings.hidden = !settings.hidden; configure.setAttribute('aria-expanded', String(!settings.hidden)); });
+      configure.setAttribute('aria-label', `Configure ${title}`);
+      configure.setAttribute('aria-expanded', 'false');
+      header.append(heading, configure);
+      const settings = widgetConfig(widget); settings.hidden = true;
+      card.append(header, settings);
+      if (!source) {
+        card.append(el('p', 'ti-muted', 'Assignment data is not loaded.'), button('Load assignment data', loadData));
+      } else if (['aging', 'workload', 'categories', 'status'].includes(widget.type)) {
+        renderBars(card, source.charts[widget.type], source, title, widget.limit);
+        if (widget.type === 'categories') card.append(el('p', 'ti-widget-caption', 'Groups use the server-provided ticket membership. The Categories report separates period arrivals and current backlog.'), safeLink(reportURL('categories', widget.scope), 'Open category report'));
+      } else if (widget.type === 'volume') {
+        renderVolume(card, source);
+      } else if (['first_response', 'resolution_time'].includes(widget.type)) {
+        const value = source.metrics[widget.type];
+        card.append(safeLink(reportURL(widget.type, widget.scope), duration(value), 'ti-number'), el('p', 'ti-widget-caption', value == null ? 'No qualifying tracked event in this period.' : 'Tracked duration · Open report for exact qualifying rows and definitions.'));
+      } else {
+        const matching = ticketsFor(widget.type, source);
+        const metric = button(number(matching.length), () => openTickets(title, matching), 'ti-metric ti-number');
+        metric.setAttribute('aria-label', `${matching.length} matching tickets. Open ${title}.`);
+        card.append(metric);
+        if (widget.type === 'my_queue' || widget.type === 'stalled') {
+          const ordered = [...matching].sort((a, b) => widget.type === 'stalled' ? b.idle_days - a.idle_days : Number(b.is_overdue) - Number(a.is_overdue) || Number(b.priority) - Number(a.priority) || b.age_days - a.age_days);
+          const list = el('ul', 'ti-list');
+          ordered.slice(0, widget.limit).forEach(ticket => {
+            const li = el('li');
+            li.append(safeLink(ticket.url, `#${ticket.id}  ${ticket.title}`), el('small', '', `${ticket.assignee || 'Unassigned'} · ${ticket.status} · ${ticket.idle_days} days idle`));
+            list.append(li);
+          });
+          card.append(list, el('p', 'ti-widget-caption', `${Math.min(matching.length, widget.limit)} of ${matching.length} shown${widget.type === 'stalled' ? ` · At least ${query.get('stalled_days') || 7} days without human activity` : ' · Overdue first, then priority and age'}`));
+        } else card.append(el('p', 'ti-widget-caption', matching.length ? 'Open matching tickets →' : 'No qualifying tickets under the current filters.'));
+      }
+      const tools = el('div', 'ti-widget-tools');
+      const handle = el('span', 'ti-drag-handle', 'Drag to reorder');
+      handle.draggable = true;
+      handle.title = 'Drag this handle, or use Move up / Move down';
+      handle.addEventListener('dragstart', event => {
+        dragId = widget.id; event.dataTransfer.setData('text/plain', widget.id); event.dataTransfer.effectAllowed = 'move'; card.classList.add('dragging');
+      });
+      handle.addEventListener('dragend', () => { dragId = undefined; card.classList.remove('dragging'); });
+      card.addEventListener('dragover', event => { if (dragId && dragId !== widget.id) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } });
+      card.addEventListener('drop', event => {
+        event.preventDefault();
+        const from = layout.widgets.findIndex(item => item.id === dragId);
+        if (from < 0 || dragId === widget.id) return;
+        const [moving] = layout.widgets.splice(from, 1);
+        const to = layout.widgets.findIndex(item => item.id === widget.id);
+        layout.widgets.splice(to, 0, moving); markDirty(); renderWidgets(); dragId = undefined;
+      });
+      const up = button('Move up', () => moveWidget(index, -1));
+      up.dataset.move = 'up'; up.disabled = index === 0;
+      const down = button('Move down', () => moveWidget(index, 1)); down.disabled = index === layout.widgets.length - 1;
+      const remove = button('Remove', () => {
+        if (!window.confirm(`Remove “${title}” from your workspace?`)) return;
+        layout.widgets = layout.widgets.filter(item => item.id !== widget.id); markDirty(); renderWidgets();
+      });
+      tools.append(handle, up, down, remove); card.append(tools); grid.append(card);
+    });
+  }
+  function moveWidget(index, delta) {
+    const id = layout.widgets[index].id;
+    const [widget] = layout.widgets.splice(index, 1);
+    layout.widgets.splice(index + delta, 0, widget);
+    markDirty(); renderWidgets();
+    const card = Array.from($('ti-widgets').children).find(node => node.dataset.widgetId === id);
+    card?.querySelector('button')?.focus();
+  }
+  function markDirty() {
+    dirty = true;
+    $('ti-save-state').textContent = 'Unsaved layout changes · Save to keep them across sessions.';
+    $('ti-save').disabled = saving;
+    $('ti-add').disabled = layout.widgets.length >= 20;
+  }
+  function makeWidget(type, scope = 'team', size = 'small') {
+    return { id: window.crypto?.randomUUID ? window.crypto.randomUUID() : `widget-${Date.now()}-${Math.random().toString(36).slice(2)}`, type, size, scope, limit: 5 };
+  }
+  function openPicker() {
+    const body = openDialog('Add a widget');
+    const message = el('p', 'ti-muted', `Choose what belongs in your daily workspace. ${layout.widgets.length} of 20 slots used. You can add a widget more than once.`);
+    const searchLabel = el('label', '', 'Find a widget'), search = el('input');
+    search.type = 'search'; search.placeholder = 'Search queues, trends, reports…'; searchLabel.append(search);
+    const picker = el('div', 'ti-picker'); picker.style.marginTop = '18px';
+    body.append(message, searchLabel, picker);
+    function draw() {
+      picker.replaceChildren();
+      const matching = config.catalog.filter(item => `${item.title} ${item.description}`.toLowerCase().includes(search.value.toLowerCase()));
+      matching.forEach(item => {
+        const card = el('div', 'ti-picker-item'), text = el('div');
+        text.append(el('h3', '', item.title), el('p', '', item.description));
+        const add = button('Add', () => {
+          if (layout.widgets.length >= 20) return;
+          const size = ['volume', 'aging', 'workload', 'categories', 'status', 'my_queue', 'stalled'].includes(item.type) ? 'medium' : 'small';
+          const scope = ['my_open', 'my_queue'].includes(item.type) ? 'me' : 'team';
+          layout.widgets.push(makeWidget(item.type, scope, size));
+          markDirty();
+          $('ti-dialog').close();
+          if (needsMine() && !myData) loadData(); else renderWidgets();
+        }, 'ti-primary');
+        add.disabled = layout.widgets.length >= 20; add.setAttribute('aria-label', `Add ${item.title}`);
+        card.append(text, add); picker.append(card);
+      });
+      if (!matching.length) picker.append(el('p', 'ti-muted', 'No widgets match that search.'));
+    }
+    search.addEventListener('input', draw); draw();
+  }
+  async function saveLayout() {
+    if (saving || !dirty) return;
+    saving = true;
+    $('ti-save').disabled = true;
+    const outgoing = copy(layout);
+    $('ti-save-state').textContent = 'Saving your layout…';
+    try {
+      const result = await request('/api/ticket-insights/layout', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
+        body: JSON.stringify(outgoing)
+      });
+      if (!result.layout || !Array.isArray(result.layout.widgets)) throw new Error('The server did not confirm the saved layout.');
+      savedLayout = copy(result.layout);
+      dirty = JSON.stringify(layout) !== JSON.stringify(outgoing);
+      if (JSON.stringify(layout) === JSON.stringify(outgoing)) {
+        layout = copy(result.layout); dirty = false;
+        $('ti-save-state').textContent = 'Layout saved to your account.';
+      } else $('ti-save-state').textContent = 'Earlier changes saved. Newer layout changes still need saving.';
+      $('ti-status').replaceChildren();
+    } catch (error) {
+      const box = el('div', 'ti-state ti-error');
+      box.append(el('p', '', `Layout not saved. ${error.message}`), button('Retry save', saveLayout));
+      $('ti-status').replaceChildren(box);
+      $('ti-save-state').textContent = 'Save failed · Your changes remain on this page.';
+    } finally {
+      saving = false; $('ti-save').disabled = !dirty;
+    }
+  }
+  function applyPreset(preset) {
+    if (!preset) return;
+    if (!window.confirm('Replace the current workspace with this preset? It will not be saved until you choose Save layout.')) { $('ti-preset').value = ''; return; }
+    const types = preset === 'my' ? ['my_open', 'overdue', 'high_priority', 'my_queue', 'stalled'] : ['unassigned', 'high_priority', 'overdue', 'volume', 'workload', 'aging'];
+    const catalog = new Set(config.catalog.map(item => item.type));
+    layout = { version: 1, preset, widgets: types.filter(type => catalog.has(type)).map(type => makeWidget(type, preset === 'my' ? 'me' : 'team', ['volume', 'workload', 'aging', 'my_queue', 'stalled'].includes(type) ? 'medium' : 'small')) };
+    markDirty(); $('ti-preset').value = '';
+    if (needsMine() && !myData) loadData(); else renderWidgets();
+  }
+  async function init() {
+    clearStatus();
+    try {
+      config = await request('/api/ticket-insights/config');
+      if (!config.layout || !Array.isArray(config.catalog) || !config.options) throw new Error('Your insights configuration is incomplete.');
+      savedLayout = copy(config.layout); layout = copy(config.layout);
+      fillFilters();
+      if (page === 'overview') {
+        $('ti-add').disabled = layout.widgets.length >= 20;
+        $('ti-reset').disabled = false; $('ti-preset').disabled = false;
+        $('ti-save-state').textContent = 'Saved to your account · Drag handles or move buttons to reorder.';
+      }
+      await loadData();
+    } catch (error) {
+      (page === 'overview' ? $('ti-widgets') : $('ti-report')).replaceChildren();
+      showError(error.message, init);
+    }
+  }
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    if (!config || !validateDates()) return;
+    query = filterQuery();
+    history.replaceState(null, '', `${location.pathname}?${query}`);
+    syncLinks(); loadData();
+  });
+  form.elements.namedItem('start').addEventListener('change', () => form.elements.namedItem('end').setCustomValidity(''));
+  form.elements.namedItem('end').addEventListener('change', () => form.elements.namedItem('end').setCustomValidity(''));
+  $('ti-clear').addEventListener('click', () => {
+    form.reset(); form.elements.namedItem('end').setCustomValidity('');
+    query = new URLSearchParams();
+    if (page === 'reports') query.set('report', reportKey);
+    history.replaceState(null, '', `${location.pathname}?${query}`);
+    syncLinks(); loadData();
+  });
+  $('ti-dialog-close').addEventListener('click', () => $('ti-dialog').close());
+  $('ti-dialog').addEventListener('close', () => {
+    if (dialogReturn?.isConnected) dialogReturn.focus();
+    else $('ti-add')?.focus();
+  });
+  if (page === 'overview') {
+    $('ti-add').addEventListener('click', openPicker);
+    $('ti-save').addEventListener('click', saveLayout);
+    $('ti-preset').addEventListener('change', event => applyPreset(event.target.value));
+    $('ti-reset').addEventListener('click', () => {
+      if (!window.confirm('Discard unsaved changes and restore the last server-saved layout?')) return;
+      layout = copy(savedLayout); dirty = false;
+      $('ti-save').disabled = true; $('ti-add').disabled = layout.widgets.length >= 20;
+      $('ti-save-state').textContent = 'Restored the last server-saved layout.';
+      if (needsMine() && !myData) loadData(); else renderWidgets();
+    });
+    window.addEventListener('beforeunload', event => {
+      if (!dirty) return;
+      event.preventDefault(); event.returnValue = '';
+    });
+  } else {
+    $('ti-print').addEventListener('click', () => { tableStates.forEach(render => render()); window.print(); });
+  }
+  syncLinks();
+  init();
+})();

@@ -174,6 +174,13 @@ class TicketCategory(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
+class TicketDashboardLayout(db.Model):
+    """Each user's ticket widget layout; isolated from team-wide settings."""
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
+    layout = db.Column(db.JSON, nullable=False)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(pytz.UTC))
+
+
 class TicketAIMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='CASCADE'), nullable=False, index=True)
