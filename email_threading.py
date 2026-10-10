@@ -99,17 +99,6 @@ def find_incident_ticket(key):
     return (active or matching or [None])[0]
 
 
-def referenced_ticket(headers):
-    ids = re.findall(r"<([^<>]+)>", headers or "")
-    for message_id in reversed(ids):
-        delivery = ProcessedEmail.query.filter_by(message_id=message_id).first()
-        if delivery and delivery.ticket_id:
-            ticket = db.session.get(Ticket, delivery.ticket_id)
-            if ticket:
-                return ticket
-    return None
-
-
 def record_delivery(key, message_id, ticket_id):
     """Persist threading and retry dedup in the same transaction as the content."""
     if key:

@@ -265,21 +265,6 @@ class Ticket(db.Model):
     
     @property
     def has_unread_activity(self) -> bool:
-        from flask_login import current_user
-        if not current_user.is_authenticated:
-            return False
-        view = TicketView.query.filter_by(ticket_id=self.id, user_id=current_user.id).first()
-        if not view:
-            return self.status not in ('resolved', 'closed')
-        latest = self.comments.order_by(TicketComment.created_at.desc()).first()
-        if not latest:
-            return False
-        def aware(value):
-            return value.replace(tzinfo=pytz.UTC) if value.tzinfo is None else value
-        return aware(latest.created_at) > aware(view.last_viewed_at)
-
-    @property
-    def legacy_global_new_badge(self) -> bool:
         """Check if ticket has been viewed by ANY user (global NEW badge logic)"""
         from app import app
         
@@ -379,20 +364,6 @@ class Ticket(db.Model):
             'comments': [comment.to_dict() for comment in self.comments],
             'history': [history.to_dict() for history in self.history]
         }
-
-class TicketWorkspace(db.Model):
-    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='CASCADE'), primary_key=True)
-    requester_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'))
-    merged_into = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='SET NULL'))
-
-
-class TicketCommentMetadata(db.Model):
-    comment_id = db.Column(db.Integer, db.ForeignKey('ticket_comment.id', ondelete='CASCADE'), primary_key=True)
-    visibility = db.Column(db.String(20), nullable=False, default='internal')
-    sender_name = db.Column(db.String(255))
-    sender_email = db.Column(db.String(255))
-    quoted_content = db.Column(db.Text)
-
 
 class TicketComment(db.Model):
     # Use autoincrement to ensure unique IDs

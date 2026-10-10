@@ -90,7 +90,7 @@ def messages_for(ticket_id, response_id):
     ).limit(20).all()
     context = (
         f"Ticket #{ticket.id}: {plain(ticket.title)}\n"
-        f"Status: {ticket.status}; priority: {'Untriaged' if ticket.priority == -1 else ticket.priority}\n"
+        f"Status: {ticket.status}; priority: {ticket.priority}\n"
         f"Description:\n{plain(ticket.description)[:16000]}\n"
         "Recent comments (oldest to newest, may include legacy AI analysis):\n"
         + "\n".join(plain(c.content)[:2500] for c in reversed(comments))

@@ -509,10 +509,8 @@
             {% endif %} 
         }
     </style>
-    {% include '_ux_styles.html' %}
 </head>
 <body class="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}light-theme {% endif %}{% block page_class %}{% endblock %}">
-    {% include '_ux_navigation.html' %}
     
     <!-- Top Header -->
     <header class="mobile-header">
@@ -885,7 +883,6 @@
         {% endif %}
     </script>
     
-    {% include '_ux_script.html' %}
     {% block scripts %}{% endblock %}
 </body>
 </html>

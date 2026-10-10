@@ -30,7 +30,6 @@
                     <div class="mb-3">
                         <label class="form-label">Priority</label>
                         <select name="priority" class="form-select" required>
-                            {% if ticket['priority'] == -1 %}<option value="-1" selected disabled>Untriaged — choose priority</option>{% endif %}
                             <option value="0" {% if ticket['priority'] == 0 %}selected{% endif %}>Low</option>
                             <option value="1" {% if ticket['priority'] == 1 %}selected{% endif %}>Medium</option>
                             <option value="2" {% if ticket['priority'] == 2 %}selected{% endif %}>High</option>

@@ -95,10 +95,6 @@ def standalone_dashboard():
     if status_filter != 'all':
         query = query.filter(Ticket.status == status_filter)
     
-    if request.args.get('overdue') == '1':
-        today = datetime.now(current_user.get_timezone_obj()).date()
-        query = query.filter(Ticket.due_date < datetime.combine(today, datetime.min.time()).replace(tzinfo=pytz.UTC), db.func.lower(Ticket.status).in_(['open', 'in_progress', 'pending']))
-
     if priority_filter != 'all':
         try:
             priority_value = int(priority_filter)
@@ -290,11 +286,11 @@ def tickets_dashboard():
     if status_filter != 'all':
         if status_filter == 'open':
             # Include open, in_progress, and pending tickets for the "open" filter
-            query = query.filter(db.func.lower(Ticket.status).in_(['open', 'in_progress', 'pending']))
+            query = query.filter(Ticket.status.in_(['open', 'in_progress', 'pending']))
             app.logger.debug(f"After 'open' status filter (includes open/in_progress/pending): {str(query.statement.compile(compile_kwargs={'literal_binds': True}))}")
         else:
             # For other specific statuses, filter exactly
-            query = query.filter(db.func.lower(Ticket.status) == status_filter)
+            query = query.filter(Ticket.status == status_filter)
             app.logger.debug(f"After status filter ({status_filter}): {str(query.statement.compile(compile_kwargs={'literal_binds': True}))}")
     if category_filter != 'all':
         try:
@@ -345,10 +341,6 @@ def tickets_dashboard():
         except (ValueError, TypeError):
             app.logger.error(f"Invalid created_by filter value: {created_by_filter}")
             
-    if request.args.get('overdue') == '1':
-        today = datetime.now(current_user.get_timezone_obj()).date()
-        query = query.filter(Ticket.due_date < datetime.combine(today, datetime.min.time()).replace(tzinfo=pytz.UTC), db.func.lower(Ticket.status).in_(['open', 'in_progress', 'pending']))
-
     # Handle search query for keywords in title and description
     if search_query:
         app.logger.debug(f"Applying search query: {search_query}")
@@ -563,11 +555,10 @@ def create_ticket():
     form = TicketForm()
 
     # Populate category choices
-    form.category_id.choices = [(0, 'Select category')] + [(c.id, c.name) for c in TicketCategory.query.all() if c.name != 'Unsorted']
-    form.requester_id.choices = [(0, 'Me')] + [(u.id, u.username) for u in User.query.order_by(User.username).all()]
+    form.category_id.choices = [(c.id, c.name) for c in TicketCategory.query.all()]
 
     # Populate technician choices for all users
-    form.assigned_to.choices = [(0, 'Unassigned')] + [(u.id, u.username) for u in User.query.all()]
+    form.assigned_to.choices = [(u.id, u.username) for u in User.query.all()]
 
     if form.validate_on_submit():
         try:
@@ -595,7 +586,7 @@ def create_ticket():
                 category_id=form.category_id.data,
                 priority=form.priority.data,
                 created_by=current_user.id,
-                assigned_to=current_user.id if request.form.get('submit_action') == 'assign_me' else (form.assigned_to.data or None),
+                assigned_to=form.assigned_to.data,
                 due_date=due_date
             )
 
@@ -603,9 +594,6 @@ def create_ticket():
             db.session.add(ticket)
             db.session.flush()  # This assigns the ID but doesn't commit
             
-            from models import TicketWorkspace
-            db.session.add(TicketWorkspace(ticket_id=ticket.id, requester_id=form.requester_id.data or current_user.id))
-
             # Handle file upload if present
             if form.attachment.data:
                 file = form.attachment.data
@@ -742,11 +730,6 @@ def create_ticket():
 def view_ticket(ticket_id):
     """View a specific ticket"""
     ticket_obj = Ticket.query.get_or_404(ticket_id)
-    from models import TicketWorkspace
-    merged = db.session.get(TicketWorkspace, ticket_id)
-    if merged and merged.merged_into:
-        flash(f"Ticket #{ticket_id} was merged into #{merged.merged_into}", "info")
-        return redirect(url_for("tickets.view_ticket", ticket_id=merged.merged_into))
 
     # All users can view all tickets
 
@@ -909,9 +892,6 @@ def add_comment(ticket_id):
     """Add a comment to a ticket"""
     ticket = Ticket.query.get_or_404(ticket_id)
     form = TicketCommentForm()
-    visibility = request.form.get('visibility', 'internal')
-    if visibility not in ('public', 'internal'):
-        return jsonify(error="Invalid comment visibility"), 400
     
     if form.validate_on_submit():
         try:
@@ -925,9 +905,6 @@ def add_comment(ticket_id):
             )
             db.session.add(comment)
             db.session.flush()  # Get the comment ID
-            from models import TicketCommentMetadata
-            db.session.add(TicketCommentMetadata(comment_id=comment.id, visibility=visibility))
-            ticket.updated_at = datetime.now(pytz.UTC)
             
             # Handle file upload if present
             if form.attachment.data:
@@ -1011,9 +988,6 @@ def add_comment(ticket_id):
                         updated_at=datetime.now(pytz.UTC)
                     )
                     db.session.add(comment)
-                    db.session.flush()
-                    from models import TicketCommentMetadata
-                    db.session.add(TicketCommentMetadata(comment_id=comment.id, visibility=visibility))
                     db.session.commit()
                     app.logger.info(f"Comment successfully added after sequence fix for ticket #{ticket.id}")
                     flash('Comment added successfully', 'success')
@@ -1937,9 +1911,6 @@ def download_attachment(filename):
 def api_quick_update(ticket_id):
     """Inline edit a single ticket field (status / priority / assigned_to)."""
     ticket = Ticket.query.get_or_404(ticket_id)
-    from ticket_workspace import can_edit
-    if not can_edit(ticket):
-        return jsonify(error="You cannot edit this ticket"), 403
     data = request.get_json(silent=True) or {}
     field = (data.get("field") or "").strip()
     value = data.get("value")
@@ -1972,22 +1943,6 @@ def api_quick_update(ticket_id):
                 details=f"Priority changed from {old} to {pv}",
                 created_at=datetime.now(pytz.UTC),
             ))
-        elif field == "category_id":
-            try:
-                category_id = int(value)
-            except (ValueError, TypeError):
-                return jsonify(error="Choose a category"), 400
-            category = db.session.get(TicketCategory, category_id)
-            if not category or category.name == "Unsorted":
-                return jsonify(error="Choose a triage category"), 400
-            ticket.category_id = category_id
-            ticket.log_history(current_user, "category_changed", f"Category changed to {category.name}")
-        elif field == "due_date":
-            try:
-                ticket.due_date = datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=pytz.UTC) if value else None
-            except (ValueError, TypeError):
-                return jsonify(error="Invalid due date"), 400
-            ticket.log_history(current_user, "due_date_changed", f"Due date changed to {value or 'none'}")
         elif field == "assigned_to":
             if value in (None, "", "none", "unassigned"):
                 ticket.assigned_to = None
@@ -2083,9 +2038,6 @@ def api_bulk_update():
             return jsonify({"ok": False, "error": "Unknown field"}), 400
 
         tickets_q = Ticket.query.filter(Ticket.id.in_(ids)).all()
-        from ticket_workspace import can_edit
-        if any(not can_edit(t) for t in tickets_q):
-            return jsonify(error="You cannot edit one or more selected tickets"), 403
         for t in tickets_q:
             if field == "status":
                 old = t.status

@@ -335,12 +335,10 @@
   <!-- Header -->
   <div class="tk-header">
     <div>
-      <h2>Queue</h2>
-      <div class="sub">One problem. One conversation. {{ ticket_count }} ticket{% if ticket_count != 1 %}s{% endif %} in this view.</div>
+      <h2>Tickets</h2>
+      <div class="sub">Showing {{ ticket_count }} ticket{% if ticket_count != 1 %}s{% endif %} · Auto-refreshes every 5s</div>
     </div>
     <div class="tk-actions">
-      <button type="button" class="tk-btn" id="uxCompact" aria-pressed="false">Compact</button>
-      <button type="button" class="tk-btn" onclick="document.getElementById('ux-shortcuts').showModal()" aria-label="Keyboard shortcuts">?</button>
       <button type="button" class="tk-btn primary" id="tkNewTicketBtn">
         <i data-feather="plus"></i> New Ticket
       </button>
@@ -361,21 +359,19 @@
   </div>
 
   <!-- KPI cards -->
-  {% set m = ticket_metrics|default({}) %}
+  {% if ticket_metrics %}
+  {% set m = ticket_metrics %}
   <div class="tk-kpis">
-    <a class="tk-kpi" href="?status=open&technician=unassigned"><div class="lbl">Unassigned</div><div class="val" data-kpi="unassigned">{{ m.unassigned|default('—') }}</div><div class="sub">Waiting for an owner</div></a>
-    <a class="tk-kpi" href="?status=open&technician=me"><div class="lbl">My open</div><div class="val" data-kpi="my_open">{{ m.mine|default('—') }}</div><div class="sub">Your active work</div></a>
-    <a class="tk-kpi" href="?status=pending"><div class="lbl">Pending reply</div><div class="val" data-kpi="pending">{{ m.pending|default('—') }}</div><div class="sub">Waiting for a response</div></a>
-    <a class="tk-kpi" href="?status=open&overdue=1"><div class="lbl">Overdue</div><div class="val" data-kpi="overdue">—</div><div class="sub">Past the due date</div></a>
+    <a class="tk-kpi accent" href="?status=open"><div class="lbl">Active</div><div class="val">{{ m.active }}</div><div class="sub">open + in&nbsp;progress + pending</div></a>
+    <a class="tk-kpi"        href="?status=open"><div class="lbl">Open</div><div class="val">{{ m.open }}</div><div class="sub">awaiting triage</div></a>
+    <a class="tk-kpi good"   href="?status=in_progress"><div class="lbl">In Progress</div><div class="val">{{ m.in_progress }}</div><div class="sub">being worked</div></a>
+    <a class="tk-kpi warn"   href="?status=pending"><div class="lbl">Pending</div><div class="val">{{ m.pending }}</div><div class="sub">awaiting reply</div></a>
+    <a class="tk-kpi bad"    href="?status=open&priority=3"><div class="lbl">Urgent</div><div class="val">{{ m.urgent }}</div><div class="sub">{{ m.high }} high+</div></a>
+    <a class="tk-kpi warn"   href="?status=open&technician=__unassigned__" onclick="event.preventDefault(); window.location='?status=open';"><div class="lbl">Unassigned</div><div class="val">{{ m.unassigned }}</div><div class="sub">need owner</div></a>
+    <a class="tk-kpi accent" href="?status=open&technician={{ current_user.id }}"><div class="lbl">My Open</div><div class="val">{{ m.mine }}</div><div class="sub">assigned to me</div></a>
+    <a class="tk-kpi good"   href="?status=resolved"><div class="lbl">Resolved 7d</div><div class="val">{{ m.resolved_week }}</div><div class="sub">{{ m.new_today }} new today</div></a>
   </div>
-  <p id="ux-summary-error" class="small text-muted" role="status" hidden></p>
-  <nav class="ux-tabs" aria-label="Saved queue views">
-   {% for label,query in [('All open','status=open'),('Mine','status=open&technician=me'),('Unassigned','status=open&technician=unassigned'),('Pending','status=pending'),('Resolved','status=resolved')] %}
-   <a href="?{{ query }}" data-saved-view="{{ query }}">{{ label }}</a>
-   {% endfor %}
-   <a href="?status=all&created_by={{ current_user.id }}">Created by me</a>
-  </nav>
-  <div id="uxFilterChips" class="ux-tools mb-3" aria-label="Active filters"></div>
+  {% endif %}
 
   {% set _f = filter_info %}
   {% set _v_all       = (_f.status == 'all' and _f.priority == 'all' and _f.technician == 'all' and _f.category == 'all' and not _f.search) %}
@@ -404,9 +400,9 @@
           </div>
         </div>
         <div>
-          <label for="uxQueueSearch">Search</label>
+          <label>Search</label>
           <div class="tk-search-row">
-            <input type="text" id="uxQueueSearch" name="search" class="tk-input" placeholder="Search the queue…" value="{{ filter_info.search }}">
+            <input type="text" name="search" class="tk-input" placeholder="Title or description" value="{{ filter_info.search }}">
           </div>
         </div>
         <div>
@@ -431,7 +427,6 @@
           <label>Priority</label>
           <select name="priority" class="tk-select">
             <option value="all" {% if filter_info.priority == 'all' %}selected{% endif %}>All</option>
-            <option value="-1" {% if filter_info.priority in ('-1',-1) %}selected{% endif %}>Untriaged</option>
             <option value="0" {% if filter_info.priority in ('0',0) %}selected{% endif %}>Low</option>
             <option value="1" {% if filter_info.priority in ('1',1) %}selected{% endif %}>Medium</option>
             <option value="2" {% if filter_info.priority in ('2',2) %}selected{% endif %}>High</option>
@@ -442,16 +437,11 @@
           <label>Technician</label>
           <select name="technician" class="tk-select">
             <option value="all" {% if filter_info.technician == 'all' %}selected{% endif %}>All</option>
-            <option value="unassigned" {% if filter_info.technician == 'unassigned' %}selected{% endif %}>Unassigned</option>
-            <option value="me" {% if filter_info.technician == 'me' %}selected{% endif %}>Me</option>
             {% for technician in technicians %}
             <option value="{{ technician.id }}" {% if filter_info.technician|string == technician.id|string %}selected{% endif %}>{{ technician.username }}</option>
             {% endfor %}
           </select>
         </div>
-        {% if request.args.get('overdue') %}<input type="hidden" name="overdue" value="1">{% endif %}
-        {% if request.args.get('created_by') %}<input type="hidden" name="created_by" value="{{ request.args.get('created_by') }}">{% endif %}
-        {% if request.args.get('assigned_to') %}<input type="hidden" name="assigned_to" value="{{ request.args.get('assigned_to') }}">{% endif %}
         <a href="{{ url_for('tickets.tickets_dashboard') }}" class="tk-btn" style="justify-content:center;">Clear</a>
       </form>
       <div class="tk-kbd-help" title="Keyboard shortcuts">
@@ -467,7 +457,7 @@
 
     <!-- Tickets table panel -->
     <div class="tk-panel" id="tkResultsPanel">
-      <div class="tk-panel-h"><span>Tickets <span class="count">{{ ticket_count }}</span></span><div class="ux-tools"><span id="uxRefreshState" role="status">Live · pauses while interacting</span><button type="button" class="tk-btn" id="uxNewTickets" hidden>New tickets — show</button></div></div>
+      <div class="tk-panel-h"><span>Results</span><span class="count">{{ ticket_count }}</span></div>
       <div class="tk-table-wrap" id="tkTableWrap">
         <table class="tk-table" id="tkTable">
           <thead>
@@ -479,31 +469,29 @@
               <th class="tk-sort" data-sort="text" data-col="4">Status</th>
               <th class="tk-sort" data-sort="pri"  data-col="5">Priority</th>
               <th class="tk-sort" data-sort="text" data-col="6">Assigned</th>
-              <th class="tk-sort" data-sort="date" data-col="7">Last activity</th>
+              <th class="tk-sort" data-sort="num"  data-col="7">Created</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {% for ticket in tickets %}
-            {% set row_editable = current_user.is_admin or current_user.id == ticket.created_by or current_user.id == ticket.assigned_to %}
-            <tr class="{% if ticket.has_unread_activity %}unread{% endif %}" tabindex="0" aria-label="Open ticket {{ ticket.id }}: {{ ticket.title }}" data-ticket-id="{{ ticket.id }}" data-can-edit="{{ 'true' if row_editable else 'false' }}" data-status="{{ ticket.status }}" data-priority="{{ ticket.priority }}" data-assigned="{{ ticket.assigned_to or '' }}">
-              <td class="col-cb"><input type="checkbox" class="tk-cb" value="{{ ticket.id }}" aria-label="Select ticket {{ ticket.id }}" {% if not row_editable %}disabled title="Only an administrator, creator or assignee can update this ticket"{% endif %}></td>
+            <tr class="{% if ticket.has_unread_activity %}unread{% endif %}" data-ticket-id="{{ ticket.id }}" data-status="{{ ticket.status }}" data-priority="{{ ticket.priority }}" data-assigned="{{ ticket.assigned_to or '' }}">
+              <td class="col-cb"><input type="checkbox" class="tk-cb" value="{{ ticket.id }}"></td>
               <td class="num">#{{ ticket.id }}</td>
               <td class="title">
                 <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}">{{ ticket.title }}</a>
-                {% if ticket.has_unread_activity %}<span class="tk-new" title="Unread reply" aria-label="New reply"></span>{% endif %}
-                <span class="ux-requester">{{ ticket.requester_name|default(ticket.creator.username if ticket.creator else 'Requester not available', true) }}</span>
+                {% if ticket.has_unread_activity %}<span class="tk-new" title="New activity"></span>{% endif %}
               </td>
               <td><span class="tk-pill tk-pill-cat">{{ ticket.category.name }}</span></td>
-              <td><span class="tk-pill tk-pill-st-{{ ticket.status }} {% if row_editable %}tk-pill-edit{% endif %}" data-edit="status" data-value="{{ ticket.status }}" title="{{ 'Click to change status' if row_editable else 'Status — read only' }}">{{ ticket.status|replace('_',' ')|title }}</span></td>
+              <td><span class="tk-pill tk-pill-st-{{ ticket.status }} tk-pill-edit" data-edit="status" data-value="{{ ticket.status }}" title="Click to change status">{{ ticket.status|replace('_',' ')|title }}</span></td>
               <td>
-                {% set pri_labels = {-1:'Untriaged',0:'Low',1:'Medium',2:'High',3:'Urgent'} %}
-                <span class="tk-pill tk-pill-pri-{{ ticket.priority }} {% if row_editable %}tk-pill-edit{% endif %}" data-edit="priority" data-value="{{ ticket.priority }}" title="{{ 'Click to change priority' if row_editable else 'Priority — read only' }}">{{ pri_labels.get(ticket.priority,'Untriaged') }}</span>
+                {% set pri_labels = {0:'Low',1:'Med',2:'High',3:'Urgent'} %}
+                <span class="tk-pill tk-pill-pri-{{ ticket.priority }} tk-pill-edit" data-edit="priority" data-value="{{ ticket.priority }}" title="Click to change priority">{{ pri_labels[ticket.priority] }}</span>
               </td>
-              <td><select class="tk-select ux-pill-select ux-assignee" aria-label="Assignee for ticket {{ ticket.id }}" {% if not row_editable %}disabled{% endif %}><option value="none">Unassigned</option>{% for technician in technicians %}<option value="{{ technician.id }}" {% if ticket.assigned_to == technician.id %}selected{% endif %}>{{ technician.username }}</option>{% endfor %}</select></td>
-              <td style="color:var(--cc-muted); font-size:12px;" data-sort-date="{{ ticket.updated_at.isoformat() if ticket.updated_at else ticket.created_at.isoformat() }}"><span data-ux-time="{{ ticket.updated_at.isoformat() if ticket.updated_at else ticket.created_at.isoformat() }}">{{ ticket.updated_at.strftime('%m/%d %H:%M') if ticket.updated_at else ticket.created_at.strftime('%m/%d %H:%M') }}</span>{% if ticket.has_unread_activity %}<span class="ux-requester">Requester replied</span>{% endif %}{% if ticket.due_date and ticket.status not in ['resolved','closed'] %}<span class="ux-requester" data-ux-due="{{ ticket.due_date.isoformat() }}">Due {{ ticket.due_date.strftime('%b %d') }}</span>{% endif %}</td>
+              <td>{% if ticket.assigned_technician %}{{ ticket.assigned_technician.username }}{% else %}<span style="color:var(--cc-muted);">—</span>{% endif %}</td>
+              <td style="color:var(--cc-muted); font-size:12px;">{{ ticket.created_at.strftime('%m/%d %H:%M') }}</td>
               <td style="white-space:nowrap;">
-                {% if row_editable and ticket.assigned_to != current_user.id %}
+                {% if ticket.assigned_to != current_user.id %}
                 <button type="button" class="tk-row-action tk-assign-me" title="Assign to me (a)"><i data-feather="user-plus"></i></button>
                 {% endif %}
                 <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" class="tk-btn" style="padding:4px 10px; font-size:11px;">View</a>
@@ -601,20 +589,18 @@
         <div class="field">
           <label for="tk_dr_cat">Category *</label>
           <select id="tk_dr_cat" name="category_id" required>
-            <option value="" selected disabled>Choose a category</option>
-            {% for category in categories if category.name != 'Unsorted' %}
+            {% for category in categories %}
             <option value="{{ category.id }}">{{ category.name }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="field">
           <label for="tk_dr_pri">Priority</label>
-          <select id="tk_dr_pri" name="priority" required>
-            <option value="" selected disabled>Choose priority</option>
-            <option value="0">Low — routine request</option>
-            <option value="1">Medium — work impacted, workaround exists</option>
-            <option value="2">High — major disruption, no workaround</option>
-            <option value="3">Urgent — on-air or production down</option>
+          <select id="tk_dr_pri" name="priority">
+            <option value="0">Low</option>
+            <option value="1" selected>Medium</option>
+            <option value="2">High</option>
+            <option value="3">Urgent</option>
           </select>
         </div>
       </div>
@@ -635,7 +621,6 @@
         </div>
       </div>
 
-      {% include 'tickets/_new_ticket_extras.html' %}
       <div class="field">
         <label for="tk_dr_file">Attachment</label>
         <input type="file" id="tk_dr_file" name="attachment">
@@ -643,7 +628,6 @@
     </div>
     <div class="tk-drawer-foot">
       <button type="button" class="tk-btn" id="tkDrawerCancel">Cancel</button>
-      <button type="submit" name="submit_action" value="assign_me" class="tk-btn">Create &amp; assign to me</button>
       <button type="submit" class="tk-btn primary" id="tkDrawerSubmit">Create Ticket</button>
     </div>
   </form>
@@ -677,8 +661,6 @@
     </optgroup>
   </select>
   <button class="tk-btn primary" id="tkBulkApply">Apply</button>
-  {% if current_user.is_admin %}<button type="button" class="tk-btn" id="uxBulkMerge">Merge…</button>{% endif %}
-  <button type="button" class="tk-btn" id="uxBulkClose">Close selected</button>
   <button class="tk-btn" id="tkBulkClear" title="Clear selection"><i data-feather="x"></i></button>
 </div>
 
@@ -760,7 +742,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const td = tr.children[col];
     if (!td) return '';
     const raw = td.innerText.trim();
-    if(type === 'date') return Date.parse((td.dataset.sortDate || '').replace(/(?<!Z)$/,'Z')) || 0;
     if (type === 'num') {
       // Strip leading # for IDs; for dates parse mm/dd hh:mm into a sortable number
       if (/^#?\d+$/.test(raw)) return parseInt(raw.replace('#',''), 10);
@@ -834,7 +815,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'X-CSRFToken': getCsrfToken(),
       },
       body: JSON.stringify(body),
-    }).then(async r => {const data=await r.json();if(!r.ok)throw new Error(data.error||'Request failed');return data;});
+    }).then(r => r.json());
   }
 
   function showToast(msg, ok = true) {
@@ -891,8 +872,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const pop = document.createElement('div');
     pop.className = 'tk-inline-popover';
     opts.forEach(o => {
-      const a = document.createElement('button');
-      a.type='button';
+      const a = document.createElement('a');
       a.className = 'opt' + (String(o.v) === String(current) ? ' current' : '');
       a.textContent = o.l;
       a.addEventListener('click', ev => {
@@ -924,8 +904,6 @@ document.addEventListener('DOMContentLoaded', function() {
     pop.style.left = (window.scrollX + r.left) + 'px';
     pop.style.top = (window.scrollY + r.bottom + 4) + 'px';
     openPopover = pop;
-    pop.querySelector('.current,button')?.focus();
-    pop.addEventListener('keydown',ev=>{const options=Array.from(pop.querySelectorAll('button'));const i=options.indexOf(document.activeElement);if(ev.key==='Escape'){closePopover();pill.focus();}if(ev.key==='ArrowDown'||ev.key==='ArrowUp'){ev.preventDefault();options[(i+(ev.key==='ArrowDown'?1:options.length-1))%options.length]?.focus();}});
   });
 
   // ============================================================
@@ -942,7 +920,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!res.ok) { showToast(res.error || 'Assign failed', false); return; }
         // Update assigned cell (column index 6)
         if (res.ticket && res.ticket.assigned_username) {
-          const select=tr.querySelector('.ux-assignee');if(select)select.value=String(res.ticket.assigned_to);
+          tr.children[6].textContent = res.ticket.assigned_username;
           tr.dataset.assigned = res.ticket.assigned_to;
         }
         btn.remove();
@@ -978,7 +956,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const visible = Array.from(document.querySelectorAll('#tkTable tbody tr')).filter(tr => tr.style.display !== 'none');
       visible.forEach(tr => {
         const cb = tr.querySelector('.tk-cb');
-        if (cb && !cb.disabled) cb.checked = e.target.checked;
+        if (cb) cb.checked = e.target.checked;
       });
       refreshBulkBar();
     });
@@ -1035,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Skip when typing in inputs
     const tag = (e.target.tagName || '').toLowerCase();
     const inField = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
-    if (e.metaKey || e.ctrlKey || e.altKey || document.querySelector('dialog[open]') || document.querySelector('#tkDrawer.visible')) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
 
     // "/" — focus search even from inputs is OK only if not already in one
     if (e.key === '/' && !inField) {
@@ -1056,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     else if (e.key === 'x') {
       const r = focusedRow();
-      if (r) { const cb = r.querySelector('.tk-cb'); if (cb && !cb.disabled) { cb.checked = !cb.checked; refreshBulkBar(); } }
+      if (r) { const cb = r.querySelector('.tk-cb'); if (cb) { cb.checked = !cb.checked; refreshBulkBar(); } }
     }
     else if (e.key === 'a') {
       const r = focusedRow();
@@ -1071,7 +1049,8 @@ document.addEventListener('DOMContentLoaded', function() {
       if (r) { const pill = r.querySelector('.tk-pill-edit[data-edit="priority"]'); if (pill) pill.click(); }
     }
     else if (e.key === '?') {
-      // The shared accessible shortcut dialog handles this key.
+      const help = document.querySelector('.tk-kbd-help');
+      if (help) help.style.opacity = help.style.opacity === '1' ? '' : '1';
     }
   });
 
@@ -1109,25 +1088,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const refreshInterval = 5000;
   const indicator = document.getElementById('auto-refresh-indicator');
   let timer = null;
-  let pendingBody = null;
-  let refreshing = false;
-  const newPill=document.getElementById('uxNewTickets');
-  const refreshState=document.getElementById('uxRefreshState');
-  function interacting(){return document.querySelector('#tkTableWrap:hover, #tkTableWrap:focus-within, .tk-inline-popover, #tkDrawer.visible, .modal.show, dialog[open]') || selectedIds().length || document.querySelector('#filter-form:focus-within');}
-  function installBody(body){
-    document.querySelector('#tkTable tbody').innerHTML=body.innerHTML;
-    pendingBody=null;newPill.hidden=true;
-    applySort();renderPager();
-    document.dispatchEvent(new CustomEvent('ux-queue-refreshed'));
-    if(window.feather)feather.replace();
-  }
-  newPill.addEventListener('click',()=>{if(pendingBody)installBody(pendingBody);});
 
   function refresh() {
-    if (document.hidden || refreshing) return;
-    if(interacting()){refreshState.textContent='Updates paused while interacting';return;}
-    refreshState.textContent='Live · pauses while interacting';
-    refreshing=true;
+    if (document.hidden) return;
     indicator.classList.add('visible');
     const url = window.location.pathname + window.location.search +
                 (window.location.search ? '&' : '?') + '_t=' + Date.now();
@@ -1137,14 +1100,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const newBody = doc.querySelector('.tk-table tbody');
         const curBody = document.querySelector('.tk-table tbody');
-        if(interacting())return;
-        const oldIds=new Set(Array.from(curBody.querySelectorAll('[data-ticket-id]')).map(r=>r.dataset.ticketId));
-        const added=Array.from(newBody?.querySelectorAll('[data-ticket-id]')||[]).filter(r=>!oldIds.has(r.dataset.ticketId)).length;
-        if(added || pendingBody){
-          pendingBody=newBody;
-          newPill.textContent=added?`${added} new ticket${added===1?'':'s'} — show`:'Queue updated — show';
-          newPill.hidden=false;return;
-        }
         if (newBody && curBody) {
           // Pre-sort the incoming rows in the detached document so the user
           // never sees an unsorted flash before applySort kicks in.
@@ -1181,13 +1136,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const curKpis = document.querySelector('.tk-kpis');
         if (newKpis && curKpis) curKpis.innerHTML = newKpis.innerHTML;
         if (window.feather) feather.replace();
-        document.querySelectorAll('.tk-pill-edit').forEach(p=>{p.tabIndex=0;p.setAttribute('role','button');p.setAttribute('aria-label','Change '+p.dataset.edit);});
         updateSortIndicators();
         renderPager();
-        document.dispatchEvent(new CustomEvent('ux-queue-refreshed'));
       })
-      .catch(()=>{refreshState.textContent='Live updates unavailable — retrying';})
-      .finally(()=>{refreshing=false;indicator.classList.remove('visible');});
+      .catch(()=>{})
+      .finally(()=> indicator.classList.remove('visible'));
   }
 
   function start() { if (!timer) timer = setInterval(refresh, refreshInterval); }
@@ -1195,21 +1148,6 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('visibilitychange', () => document.hidden ? stop() : start());
   start();
   window.addEventListener('beforeunload', stop);
-  const compact=document.getElementById('uxCompact');
-  try{document.body.classList.toggle('ux-compact',localStorage.getItem('ux-compact')==='1');}catch(_){}
-  compact.setAttribute('aria-pressed',String(document.body.classList.contains('ux-compact')));
-  compact.onclick=()=>{const on=document.body.classList.toggle('ux-compact');compact.setAttribute('aria-pressed',String(on));try{localStorage.setItem('ux-compact',on?'1':'0');}catch(_){}};
-  document.querySelectorAll('#filter-form select').forEach((el,i)=>{if(!el.id)el.id='ux-filter-'+i;const label=el.parentElement.querySelector('label');if(label)label.htmlFor=el.id;});
-  document.getElementById('uxBulkMerge')?.addEventListener('click',()=>window.PostUX.merge(selectedIds()));
-  document.getElementById('uxBulkClose').onclick=()=>{bulkActionSel.value='status:closed';bulkApplyBtn.click();};
-  document.addEventListener('click',e=>{const row=e.target.closest('#tkTable tr[data-ticket-id]');if(!row||e.target.closest('a,button,select,input,.tk-pill-edit'))return;location.href=row.querySelector('.title a').href;});
-  document.addEventListener('keydown',e=>{const pill=e.target.closest('.tk-pill-edit');if(pill&&(e.key==='Enter'||e.key===' ')){e.preventDefault();pill.click();}const row=e.target.closest('#tkTable tr[data-ticket-id]');if(row&&e.target===row&&e.key==='Enter')location.href=row.querySelector('.title a').href;});
-  document.querySelectorAll('.tk-pill-edit').forEach(p=>{p.tabIndex=0;p.setAttribute('role','button');p.setAttribute('aria-label','Change '+p.dataset.edit);});
-  document.addEventListener('change',async e=>{if(!e.target.matches('.ux-assignee'))return;const el=e.target,row=el.closest('tr');el.disabled=true;try{await window.PostUX.post(`/tickets/api/${row.dataset.ticketId}/quick-update`,{field:'assigned_to',value:el.value});row.dataset.assigned=el.value;window.PostUX.toast('Assignee updated');}catch(err){el.value=row.dataset.assigned||'none';window.PostUX.toast(err.message,true);}finally{el.disabled=false;}});
-  const chips=document.getElementById('uxFilterChips');
-  const params=new URLSearchParams(location.search);
-  for(const [key,value] of params){if(['timestamp','_t','rand','new'].includes(key)||value==='all'||!value)continue;const a=document.createElement('a');a.className='ux-chip';const sel=document.querySelector(`#filter-form [name="${CSS.escape(key)}"]`);const label=sel?.tagName==='SELECT'?sel.selectedOptions[0]?.textContent:value;a.textContent=`${key.replace('_',' ')}: ${label} ×`;a.setAttribute('aria-label',`Remove ${key} filter`);const next=new URLSearchParams(params);next.delete(key);if(!next.has('status'))next.set('status','all');a.href='?'+next;chips.append(a);}
-  document.querySelectorAll('[data-saved-view]').forEach(a=>{const p=new URLSearchParams(a.dataset.savedView);const active=Array.from(p).every(([k,v])=>(params.get(k)||(k==='status'?'open':''))===v)&&(!params.get('technician')||p.has('technician'));a.classList.toggle('active',active);if(active)a.setAttribute('aria-current','page');});
 });
 
 // ============================================================
@@ -1255,15 +1193,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
-    const requester=form.querySelector('[data-requester-search]'),requesterId=form.querySelector('[name=requester_id]');
-    if(requester?.value.trim()&&requesterId?.value==='0'){requester.setCustomValidity('Choose a directory result, or clear the requester search to use yourself.');requester.reportValidity();return;}
     errBox.classList.remove('visible');
-    const submits=Array.from(form.querySelectorAll('[type=submit]'));submits.forEach(b=>b.disabled=true);
+    submitBtn.disabled = true;
     const originalLabel = submitBtn.textContent;
     submitBtn.textContent = 'Creating…';
     try {
       const fd = new FormData(form);
-      if(e.submitter?.value)fd.set('submit_action',e.submitter.value);
       const res = await fetch(form.action + '?ajax=1', {
         method: 'POST',
         body: fd,
@@ -1299,7 +1234,7 @@ document.addEventListener('DOMContentLoaded', function() {
       errBox.textContent = 'Network error. Please try again.';
       errBox.classList.add('visible');
     } finally {
-      submits.forEach(b=>b.disabled=false);
+      submitBtn.disabled = false;
       submitBtn.textContent = originalLabel;
     }
   });

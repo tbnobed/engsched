@@ -129,8 +129,8 @@
                                                         2: 'High',
                                                         3: 'Urgent'
                                                     } %}
-                                                    <span class="tk-pill tk-pill-pri-{{ ticket.priority }}">
-                                                        {{ priority_label.get(ticket.priority,'Untriaged') }}
+                                                    <span class="badge bg-{{ priority_class[ticket.priority] }}">
+                                                        {{ priority_label[ticket.priority] }}
                                                     </span>
                                                 </td>
                                                 <td>
@@ -140,7 +140,7 @@
                                                         <span class="text-muted">Unassigned</span>
                                                     {% endif %}
                                                 </td>
-                                                <td><span data-ux-time="{{ ticket.created_at.isoformat() }}">{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</span></td>
+                                                <td>{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                                 <td>
                                                     <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" class="btn btn-sm btn-primary">
                                                         View

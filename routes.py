@@ -799,15 +799,6 @@ def inbound_email_webhook():
         import re
         ticket_reply_match = re.search(r'\[Ticket #(\d+)\]', subject, re.IGNORECASE)
         _dup_ticket = find_incident_ticket(thread_key) if thread_key else None
-        if _dup_ticket is None and not ticket_reply_match:
-            from email_threading import referenced_ticket
-            if raw_email:
-                reference_headers = (msg.get('References', '') or '') + " " + (msg.get('In-Reply-To', '') or '')
-            else:
-                from email.parser import Parser
-                parsed_headers = Parser().parsestr(email_data.get('headers', '') or '')
-                reference_headers = (parsed_headers.get('References', '') or '') + " " + (parsed_headers.get('In-Reply-To', '') or '')
-            _dup_ticket = referenced_ticket(reference_headers)
         if _dup_ticket is not None:
             # The canonical incident mapping takes precedence over stale local
             # ticket markers in notifications from previously duplicated tickets.
@@ -830,11 +821,6 @@ def inbound_email_webhook():
                     f"#{ticket_id} (matched incident or subject + sender)"
                 )
             if existing_ticket:
-                from models import TicketWorkspace
-                merged = db.session.get(TicketWorkspace, existing_ticket.id)
-                if merged and merged.merged_into:
-                    existing_ticket = db.session.get(Ticket, merged.merged_into)
-                    ticket_id = existing_ticket.id
                 app.logger.info(f"Found existing ticket #{ticket_id}, adding comment instead of creating new ticket")
                 
                 # Clean up the description for the comment - extract only the new reply content
@@ -851,13 +837,6 @@ def inbound_email_webhook():
                     description = text_content.strip()
                     use_html = False
                 
-                # Retain a sanitized source copy before legacy quote/signature
-                # extraction; the workspace can collapse it without losing data.
-                original_reply_content = bleach.clean(
-                    description, tags=['p', 'br', 'div', 'span', 'strong', 'em', 'b', 'i',
-                                       'blockquote', 'ul', 'ol', 'li', 'a', 'pre', 'code'],
-                    attributes={'a': ['href', 'title']}, strip=True,
-                )
                 # Extract only the new reply content, not the quoted/forwarded text
                 if description:
                     # Common email reply patterns to split on
@@ -1036,18 +1015,6 @@ def inbound_email_webhook():
                     except Exception as attach_error:
                         app.logger.error(f"Failed to save comment attachments: {str(attach_error)}")
                 
-                from ticket_workspace import split_quoted
-                from models import TicketCommentMetadata
-                cleaned, quoted = split_quoted(new_comment.content)
-                if not quoted and original_reply_content.strip() != description.strip():
-                    quoted = original_reply_content
-                new_comment.content = cleaned
-                db.session.add(TicketCommentMetadata(
-                    comment_id=new_comment.id, visibility="public",
-                    sender_name=sender_name, sender_email=from_email,
-                    quoted_content=quoted,
-                ))
-                existing_ticket.updated_at = datetime.now(pytz.UTC)
                 record_delivery(thread_key, email_message_id, existing_ticket.id)
                 db.session.commit()
                 release_incident_lock(incident_lock)
@@ -1213,8 +1180,8 @@ def inbound_email_webhook():
         else:
             app.logger.info(f"No existing user found for email {from_email}")
         
-        from ticket_workspace import unsorted_category
-        default_category = unsorted_category()
+        # Determine category - default to first available category
+        default_category = TicketCategory.query.first()
         if not default_category:
             app.logger.error("No ticket categories found - cannot create ticket from email")
             _release_email_claim(email_message_id)
@@ -1248,10 +1215,10 @@ def inbound_email_webhook():
             title=subject,
             description=f"<p><strong>Email from:</strong> {sender_name} ({from_email})</p>{description}",
             category_id=default_category.id,
-            priority=-1,  # Untriaged until a technician chooses.
+            priority=1,  # Medium priority by default
             status='open',
             created_by=created_by_id,
-            created_at=datetime.now(pytz.UTC),
+            created_at=datetime.utcnow(),
             external_email=external_email,
             external_name=external_name,
             email_thread_id=email_thread_id,
@@ -1360,7 +1327,7 @@ def inbound_email_webhook():
                 <ul>
                     <li><strong>Ticket #:</strong> {new_ticket.id}</li>
                     <li><strong>Subject:</strong> {subject}</li>
-                    <li><strong>Priority:</strong> Awaiting triage</li>
+                    <li><strong>Priority:</strong> Medium</li>
                     <li><strong>Status:</strong> Open</li>
                 </ul>
                 <p>You will receive updates as your ticket is processed.</p>
@@ -1373,7 +1340,7 @@ def inbound_email_webhook():
                 <ul>
                     <li><strong>Ticket #:</strong> {new_ticket.id}</li>
                     <li><strong>Subject:</strong> {subject}</li>
-                    <li><strong>Priority:</strong> Awaiting triage</li>
+                    <li><strong>Priority:</strong> Medium</li>
                     <li><strong>Status:</strong> Open</li>
                     <li><strong>Thread ID:</strong> {email_thread_id}</li>
                 </ul>

@@ -94,7 +94,6 @@
         }
     </script>
 
-    {% include '_ux_team_schedule.html' %}
     <div class="calendar-grid">
         <div class="time-column">
             {% for hour in range(24) %}
@@ -132,7 +131,7 @@
                          data-end-time="{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%Y-%m-%d %H:%M:%S') }}"
                          data-time-off="true" data-all-day="true">
                         <div class="ooo-banner">
-                            <strong>{{ disp.username }}</strong>&nbsp;&mdash;&nbsp;Out of office · all day
+                            <span>🏖️</span><strong>{{ disp.username }}</strong>&nbsp;&mdash;&nbsp;OOO ALL DAY
                         </div>
                     </div>
                 {% else %}

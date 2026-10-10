@@ -364,10 +364,8 @@
             margin: 6px 4px !important;
         }
     </style>
-    {% include '_ux_styles.html' %}
 </head>
 <body {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}class="light-theme"{% endif %}{% if current_user.is_authenticated and current_user.theme_preference == 'dark' %} data-bs-theme="dark"{% endif %}>
-    {% include '_ux_navigation.html' %}
     <nav class="navbar navbar-expand-lg {% if current_user.is_authenticated and current_user.theme_preference == 'light' %}navbar-light{% else %}navbar-dark{% endif %}" 
          style="{% if current_user.is_authenticated and current_user.theme_preference == 'light' %}background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;{% else %}background-color: #0F1624; border-bottom: 1px solid #182234;{% endif %}">
         <div class="container-fluid">
@@ -643,7 +641,7 @@
     </div>
     {% endif %}
 
-    <main class="container-fluid" id="ux-main" tabindex="-1">
+    <main class="container-fluid">
         <div class="row">
             <!-- Full-width Main Content -->
             <div class="col-12">
@@ -1073,7 +1071,6 @@
             
             // Function to fetch and update active users
             function updateActiveUsers() {
-                if (!document.getElementById('active-users')) return;
                 fetch('/api/active_users')
                     .then(response => {
                         if (!response.ok) {
@@ -1559,6 +1556,5 @@
     </script>
     {% endif %}
 
-    {% include '_ux_script.html' %}
 </body>
 </html>
