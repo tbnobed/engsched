@@ -7,11 +7,13 @@
 </div>
 <button type="button" class="app-sidebar-backdrop" id="appSidebarBackdrop" aria-label="Close navigation" tabindex="-1" hidden></button>
 <aside class="app-sidebar" id="appSidebar" aria-label="Application navigation">
+    <div class="app-sidebar-header">
     <button type="button" class="app-sidebar-close" id="appSidebarClose" aria-label="Close navigation">&times;</button>
     <a class="app-sidebar-brand" href="{{ url_for('mobile_dashboard' if sidebar_mobile|default(false) else 'dashboard') }}">
         <img src="{{ url_for('static', filename=site_logo if current_user.theme_preference == 'light' else 'tbn_logo_dark.png') }}?v=2" alt="">
         <span>{{ site_name.upper() }}</span>
     </a>
+    </div>
     <nav aria-label="Main navigation">
         <ul class="app-sidebar-list" id="navbarNav">
             <li><a class="app-sidebar-link" href="{{ url_for('mobile_dashboard' if sidebar_mobile|default(false) else 'dashboard') }}">Dashboard</a></li>
