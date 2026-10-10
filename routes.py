@@ -5265,6 +5265,7 @@ def mobile_tickets():
     # Get filter parameters
     status_filter = request.args.get('status', 'open')
     priority_filter = request.args.get('priority', 'all')
+    technician_filter = request.args.get('technician', 'all')
     
     # Base query
     query = Ticket.query.filter(Ticket.archived == False)
@@ -5283,6 +5284,15 @@ def mobile_tickets():
             query = query.filter(Ticket.priority == priority_value)
         except (ValueError, TypeError):
             pass
+
+    # Match the desktop ticket view's assignment filter, including "me".
+    if technician_filter == 'me':
+        query = query.filter(Ticket.assigned_to == current_user.id)
+    elif technician_filter != 'all':
+        try:
+            query = query.filter(Ticket.assigned_to == int(technician_filter))
+        except (ValueError, TypeError):
+            pass
     
     # Get tickets ordered by priority and creation date
     tickets = query.order_by(Ticket.priority.desc(), Ticket.created_at.desc()).all()
@@ -5293,7 +5303,8 @@ def mobile_tickets():
     return render_template('mobile/tickets.html', 
                          tickets=tickets,
                          status_filter=status_filter,
-                         priority_filter=priority_filter)
+                         priority_filter=priority_filter,
+                         technician_filter=technician_filter)
 
 
 @app.route('/tickets/<int:ticket_id>/update_status', methods=['POST'])
