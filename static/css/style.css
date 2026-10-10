@@ -749,7 +749,8 @@ div[style*="gradient"] {
 .calendar-container {
     background: #0c1118 !important;
     color: #e8edf5;
-    padding: 30px 20px 24px;
+    margin-top: 16px;
+    padding: 18px 20px 24px;
     border-radius: 14px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.35);
     border: 1px solid #232d3d;
