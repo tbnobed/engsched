@@ -30,10 +30,6 @@
                 <button class="app-sidebar-toggle" id="ticketDropdown" type="button" aria-expanded="false" aria-controls="sidebarTickets">Tickets{% if sidebar_mobile|default(false) %}<span class="app-sidebar-badge" id="ticket-badge" style="display: none;" aria-live="polite" aria-label="Active tickets">0</span>{% endif %}</button>
                 <ul class="app-sidebar-sublist" id="sidebarTickets" hidden>
                     <li><a class="app-sidebar-link" href="{{ url_for('mobile_tickets' if sidebar_mobile|default(false) else 'tickets.tickets_dashboard') }}">All Tickets</a></li>
-                    {% if current_user.is_admin %}
-                    <li class="app-sidebar-divider" role="separator"></li>
-                    <li><a class="app-sidebar-link" href="{{ url_for('tickets.manage_categories') }}">Manage Categories</a></li>
-                    {% endif %}
                 </ul>
             </li>
             <li>
