@@ -571,6 +571,6 @@
   /* Dashboard-only separators; other pages retain the borderless theme. */
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .cc-shell :is(.cc-panel, .cc-kpi),
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body #ticket-insights[data-page="overview"] :is(.ti-widget, .ti-filters) {
-    border: 0.5px solid color-mix(in srgb, var(--flat-ink) 6%, transparent) !important;
+    border: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
   }
 }
