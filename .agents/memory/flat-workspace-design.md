@@ -18,3 +18,7 @@ For the main dashboard, each section needs a clearly distinct dark color family,
 **Why:** The user rejected near-identical section colors and unused page height, then clarified: “use all dark share of colors and do not move the tickets section just make it use the space available below the timeline.”
 
 **How to apply:** Check visible hue differences and viewport utilization, not merely different color codes. Preserve readable light-mode equivalents without reintroducing borders or shadows. The user rejected the medium-dark palette too: dashboard surfaces should be near-black with distinct hue tints, including alternate rows and hover backgrounds, not bright colored panels.
+
+Apply the same blended, borderless treatment to shared navigation: no sidebar outline, logo/clock separators, submenu rules, or outlined settings/mobile controls. Preserve menu order, branding, and keyboard focus indicators.
+
+**Why:** The user extended the direction to the sidebar: “I don't want to see borders anywhere.”

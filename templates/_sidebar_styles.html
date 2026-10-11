@@ -2,10 +2,9 @@
 /* Shared navigation: preserve the application's blue-gray visual language. */
 body.app-sidebar-layout {
     --sidebar-width: 244px;
-    --sidebar-bg: #0f1624;
+    --sidebar-bg: #0b0f15;
     --sidebar-text: #e6ecf5;
     --sidebar-muted: #9aa9bd;
-    --sidebar-border: #253246;
     --sidebar-accent: #92bcea;
     --sidebar-hover: #1b2b41;
     padding: 0 0 0 var(--sidebar-width) !important;
@@ -13,10 +12,9 @@ body.app-sidebar-layout {
     min-height: 100dvh;
 }
 body.app-sidebar-layout.light-theme {
-    --sidebar-bg: #f2f6f8;
+    --sidebar-bg: #e9eef2;
     --sidebar-text: #20394b;
     --sidebar-muted: #586f80;
-    --sidebar-border: #d5e0e7;
     --sidebar-accent: #235e86;
     --sidebar-hover: #dfeaf1;
 }
@@ -33,7 +31,8 @@ body.app-sidebar-layout.light-theme {
     overscroll-behavior: contain;
     background: var(--sidebar-bg);
     color: var(--sidebar-text);
-    border-right: 1px solid var(--sidebar-border);
+    border: 0;
+    box-shadow: none;
     padding: 0 12px max(20px, env(safe-area-inset-bottom));
     scrollbar-width: thin;
     scrollbar-color: var(--sidebar-muted) var(--sidebar-bg);
@@ -45,7 +44,7 @@ body.app-sidebar-layout.light-theme {
     flex-shrink: 0;
     margin: 0 -12px 16px;
     padding: 22px 20px;
-    border-bottom: 1px solid var(--sidebar-border);
+    border: 0;
     background: var(--sidebar-bg);
 }
 .app-sidebar-brand {
@@ -104,7 +103,7 @@ body.app-sidebar-layout.light-theme {
 .app-sidebar-toggle[aria-expanded="true"]::after { transform: rotate(225deg); }
 .app-sidebar-link:hover, .app-sidebar-toggle:hover, .app-sidebar-link[aria-current="page"] {
     color: var(--sidebar-accent);
-    background: var(--sidebar-hover);
+    background: linear-gradient(90deg, transparent, var(--sidebar-hover) 35%, var(--sidebar-hover) 65%, transparent);
 }
 .app-sidebar :focus-visible, .app-menu-button:focus-visible, .app-sidebar-backdrop:focus-visible {
     outline: 2px solid var(--sidebar-accent, #92bcea) !important;
@@ -113,21 +112,21 @@ body.app-sidebar-layout.light-theme {
 .app-sidebar-sublist {
     margin: 4px 0 10px 14px;
     padding-left: 8px;
-    border-left: 1px solid var(--sidebar-border);
+    border: 0;
 }
 .app-sidebar [hidden] { display: none !important; }
 .app-sidebar-sublist .app-sidebar-link { color: var(--sidebar-muted); font-size: 12px; }
 .app-sidebar-sublist .app-sidebar-link:hover,
 .app-sidebar-sublist .app-sidebar-link[aria-current="page"] { color: var(--sidebar-accent); }
-.app-sidebar-divider { border-top: 1px solid var(--sidebar-border); margin: 8px 4px; }
+.app-sidebar-divider { border: 0; height: 0; margin: 8px 4px; }
 .app-sidebar .global-clock {
     display: flex !important;
     flex-direction: column;
     align-items: center;
     text-align: center;
     border: 0;
-    border-top: 1px solid var(--sidebar-border);
-    border-bottom: 1px solid var(--sidebar-border);
+    background: transparent;
+    box-shadow: none;
     margin: auto 4px 12px !important;
     padding: 14px 8px;
     gap: 4px;
@@ -143,13 +142,14 @@ span.app-sidebar-avatar { display: grid; place-items: center; color: #f2f6f8; fo
 .app-sidebar-form select {
     width: 100%;
     min-height: 38px;
-    border: 1px solid var(--sidebar-border);
+    border: 0;
+    box-shadow: none;
     border-radius: 5px;
-    background: var(--sidebar-bg);
+    background: var(--sidebar-hover);
     color: var(--sidebar-text);
     padding: 5px;
 }
-.app-sidebar-form button { border: 1px solid var(--sidebar-border); justify-content: center; }
+.app-sidebar-form button { border: 0; box-shadow: none; justify-content: center; }
 .app-sidebar-badge {
     margin-left: auto;
     background: #b83148;
@@ -198,7 +198,8 @@ body.app-sidebar-layout .timeline-grid {
         padding: 0 16px;
         background: var(--sidebar-bg);
         color: var(--sidebar-text);
-        border-bottom: 1px solid var(--sidebar-border);
+        border: 0;
+        box-shadow: none;
         font-size: 13px;
         font-weight: 600;
     }
@@ -210,7 +211,8 @@ body.app-sidebar-layout .timeline-grid {
         height: 40px;
         flex-shrink: 0;
         background: transparent;
-        border: 1px solid var(--sidebar-border);
+        border: 0;
+        box-shadow: none;
         border-radius: 6px;
         color: var(--sidebar-text);
     }
