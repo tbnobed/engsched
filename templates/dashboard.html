@@ -3,14 +3,23 @@
 
 {% block content %}
 <style>
-  /* Main dashboard only: flat workspace, with tonal section separation.
+  /* Main dashboard only: flat workspace, with distinct section colors.
      Keep these tokens on the shell so reporting/calendar palettes stay intact. */
   .cc-shell {
-    --cc-bg: #18222e;
-    --cc-panel: #1e2b39;
-    --cc-panel-2: #2b3b4b;
-    --cc-rail: #22303e;
-    --cc-tickets: #24313d;
+    --cc-bg: #0b0f15;
+    --cc-panel: #0e1621;
+    --cc-panel-2: #182333;
+    --cc-rail: #0c1917;
+    --cc-tickets: #18111e;
+    --cc-bookings: #1b160f;
+    --cc-people-hover: #132520;
+    --cc-ticket-hover: #241a2c;
+    --cc-ticket-alternate: #1d1524;
+    --cc-booking-alternate: #211b12;
+    --cc-kpi-active: #151323;
+    --cc-kpi-priority: #211217;
+    --cc-kpi-shift: #101d14;
+    --cc-kpi-bookings: #201b10;
     --cc-muted: #acbbcb;
     --cc-text: #e5edf5;
     --cc-accent: #9bbde2;
@@ -18,20 +27,29 @@
     --cc-warn: #e0c18b;
     --cc-bad: #efa5a2;
     --cc-high: #e5b18c;
-    --cc-good-bg: #293f3b;
-    --cc-warn-bg: #3b362d;
-    --cc-bad-bg: #453239;
-    --cc-high-bg: #40362f;
-    --cc-accent-bg: #2b3c50;
+    --cc-good-bg: #14231c;
+    --cc-warn-bg: #252015;
+    --cc-bad-bg: #29171d;
+    --cc-high-bg: #271e15;
+    --cc-accent-bg: #142030;
     --cc-guide: rgba(172,187,203,.1);
     color-scheme: dark;
   }
   body.light-theme .cc-shell {
     --cc-bg: #e9eef2;
-    --cc-panel: #f4f6f8;
-    --cc-panel-2: #dfe7ee;
-    --cc-rail: #e3eaf0;
-    --cc-tickets: #edf1f4;
+    --cc-panel: #dfeaf5;
+    --cc-panel-2: #cedeed;
+    --cc-rail: #dceee8;
+    --cc-tickets: #eee0f0;
+    --cc-bookings: #f2e6d3;
+    --cc-people-hover: #c8e2d8;
+    --cc-ticket-hover: #dfcce5;
+    --cc-ticket-alternate: #e8d8ed;
+    --cc-booking-alternate: #eadcc4;
+    --cc-kpi-active: #e0e2f5;
+    --cc-kpi-priority: #f3dfe3;
+    --cc-kpi-shift: #dfeddb;
+    --cc-kpi-bookings: #f2e7cc;
     --cc-muted: #56677a;
     --cc-text: #253548;
     --cc-accent: #365f8a;
@@ -48,22 +66,41 @@
     color: var(--cc-text);
     color-scheme: light;
   }
-  /* Fill the available viewport, vertically centered around the shell */
+  /* The desktop sidebar takes no vertical space; the mobile bar takes 56px.
+     Propagate the actual remaining height through Bootstrap's row wrappers. */
+  body:has(.cc-shell) { background: #0b0f15; }
+  body.light-theme:has(.cc-shell) { background: #e9eef2; }
   main.container-fluid:has(.cc-shell) {
-    min-height: calc(100vh - 90px);
+    --cc-navigation-height: 0px;
+    height: calc(100dvh - var(--cc-navigation-height));
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding: 12px;
+  }
+  main.container-fluid:has(.cc-shell) > .row {
+    display: block;
+    height: 100%;
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+  }
+  main.container-fluid:has(.cc-shell) > .row > .col-12 {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
   }
   .cc-shell {
     background: var(--cc-bg);
+    height: 100%;
     color: var(--cc-text);
     border-radius: 0;
     margin: 0;
     font-family: 'Segoe UI',system-ui,sans-serif;
-    height: calc(100vh - 110px);
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
   }
@@ -79,28 +116,32 @@
   .cc-clock .big { font-size: 20px; font-weight:700; }
   .cc-clock .sub { color: var(--cc-muted); font-size: 12px; }
   .cc-grid {
-    display:grid; gap: 20px; padding: 16px;
-    grid-template-columns: 280px minmax(0, 1fr) 320px;
-    grid-template-rows: auto minmax(0, 1.4fr) minmax(0, 1fr);
+    display:grid; gap: 12px; padding: 0;
+    grid-template-columns: clamp(160px, 14vw, 240px) minmax(0, 1fr) clamp(180px, 17vw, 280px);
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "people metrics bookings" "people timeline bookings" "people tickets bookings";
     flex: 1; min-height: 0;
   }
   .cc-panel {
     background: var(--cc-panel); border:0;
     border-radius: 0; overflow:hidden; display:flex; flex-direction:column;
-    min-width:0;
+    min-width:0; min-height:0;
   }
-  .cc-people-panel, .cc-bookings-panel { background: var(--cc-rail); }
-  .cc-tickets-panel { background: var(--cc-tickets); }
+  .cc-people-panel { grid-area:people; background: var(--cc-rail); }
+  .cc-bookings-panel { grid-area:bookings; background: var(--cc-bookings); }
+  .cc-tickets-panel { grid-area:tickets; background: var(--cc-tickets); }
+  .cc-timeline-panel { grid-area:timeline; }
+  #ccTicketsList, #ccBookingsList { flex:1; min-height:0; overflow:auto; }
   .cc-panel-h {
     padding: 18px 16px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px;
-    border:0; font-weight:600; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:var(--cc-text);
+    border:0; font-weight:600; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:var(--cc-text); flex-shrink:0;
   }
   .cc-panel-h .count { background: transparent; color:var(--cc-muted); padding:2px 0; border-radius:0; font-size:11px; font-variant-numeric:tabular-nums; }
 
   /* People rail */
-  .cc-people { display:flex; flex-direction:column; gap:4px; padding:4px 8px 12px; overflow:auto; }
+  .cc-people { display:flex; flex-direction:column; gap:4px; padding:4px 8px 12px; overflow:auto; min-height:0; flex:1; }
   .cc-person { display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:0; cursor:pointer; transition:none; }
-  .cc-person:hover { background: var(--cc-panel-2); }
+  .cc-person:hover { background: var(--cc-people-hover); }
   /* Shared legacy CSS clears focus with !important; restore it locally.
      Inset outlines remain visible inside the scrolling, clipped panels. */
   .cc-shell :focus-visible {
@@ -120,8 +161,12 @@
   .cc-pill.ooo { background: var(--cc-warn-bg); color: var(--cc-warn); }
 
   /* KPI strip */
-  .cc-kpis { display:grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap:0; background:var(--cc-panel); }
+  .cc-kpis { grid-area:metrics; display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:8px; }
   .cc-kpi { background: transparent; border:0; border-radius:0; padding: 18px 16px; min-width:0; }
+  .cc-kpi:nth-child(1) { background:var(--cc-kpi-active); }
+  .cc-kpi:nth-child(2) { background:var(--cc-kpi-priority); }
+  .cc-kpi:nth-child(3) { background:var(--cc-kpi-shift); }
+  .cc-kpi:nth-child(4) { background:var(--cc-kpi-bookings); }
   .cc-kpi .lbl { color:var(--cc-muted); font-size:11px; text-transform:uppercase; letter-spacing:.6px; }
   .cc-kpi .val { font-size:30px; font-weight:600; letter-spacing:-.8px; font-variant-numeric:tabular-nums; margin-top:8px; line-height:1; color: var(--cc-text); }
   .cc-kpi .delta { font-size:11px; color: var(--cc-muted); margin-top:6px; }
@@ -138,7 +183,7 @@
     display:grid; grid-template-columns: 80px 1fr; align-items:center;
     padding: 6px 0; border:0; position:relative; min-height: 48px;
   }
-  .cc-lane:nth-child(even) { background:var(--cc-tickets); }
+  .cc-lane:nth-child(even) { background:rgba(128,160,194,.07); }
   .cc-lane .lname { font-size:12px; color:var(--cc-muted); display:flex; align-items:center; gap:6px; }
   .cc-lane .track { position:relative; height:32px; border-radius:0; }
   .cc-block {
@@ -155,12 +200,13 @@
 
   /* Tickets */
   .cc-ticket-row {
-    display:grid; grid-template-columns: 50px 1fr auto; gap:10px;
+    display:grid; grid-template-columns: 44px minmax(0,1fr) auto; gap:8px;
     padding: 12px 16px; border:0; cursor:pointer;
     transition:none; text-decoration:none;
   }
-  .cc-ticket-row:nth-child(even) { background:var(--cc-panel); }
-  .cc-ticket-row:hover { background: var(--cc-panel-2); }
+  .cc-ticket-row:nth-child(even) { background:var(--cc-ticket-alternate); }
+  .cc-ticket-row:hover { background: var(--cc-ticket-hover); }
+  .cc-ticket-row .title, .cc-ticket-row .sub, .cc-booking .n { overflow-wrap:anywhere; }
   .cc-ticket-row .num { font-family: 'JetBrains Mono', monospace; color: var(--cc-muted); font-size:12px; align-self:center; }
   .cc-ticket-row .title { font-size:13px; font-weight:500; color: var(--cc-text); }
   .cc-ticket-row .sub { font-size:11px; color: var(--cc-muted); margin-top:2px; }
@@ -173,7 +219,7 @@
 
   /* Bookings */
   .cc-booking { padding: 14px 16px; border:0; display:flex; gap:12px; align-items:flex-start; }
-  .cc-booking:nth-child(even) { background:var(--cc-tickets); }
+  .cc-booking:nth-child(even) { background:var(--cc-booking-alternate); }
   .cc-booking .swatch { width:4px; align-self:stretch; min-height:36px; border-radius:2px; }
   .cc-booking .t { font-size:11px; color: var(--cc-muted); margin-top:2px; }
   .cc-booking .n { font-weight:600; font-size:13px; color: var(--cc-text); }
@@ -183,18 +229,28 @@
   .cc-shell { scrollbar-color:var(--cc-muted) transparent; scrollbar-width:thin; }
   .cc-shell ::-webkit-scrollbar-thumb { background: var(--cc-muted); border-radius:2px; }
 
-  @media (max-width: 1200px) {
-    .cc-grid { grid-template-columns: 240px 1fr; }
-    .cc-bookings-panel { grid-column: 1 / span 2; grid-row: auto !important; max-height:260px; }
-    .cc-shell { height:auto; min-height:calc(100vh - 110px); }
-    .cc-grid { grid-template-rows:auto minmax(240px,1.4fr) minmax(180px,1fr); }
+  @media (min-width: 1200px) {
+    .cc-kpis { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  }
+  @media (max-width: 1249px) {
+    .cc-grid {
+      grid-template-columns:160px minmax(0,1fr) 180px;
+    }
+  }
+  @media (max-width: 991.98px) {
+    main.container-fluid:has(.cc-shell) { --cc-navigation-height:56px; }
   }
   @media (max-width: 768px) {
-    .cc-grid { grid-template-columns: minmax(0,1fr); grid-template-rows:auto; gap:16px; padding:12px; }
-    .cc-people-panel, .cc-kpis, .cc-tickets-panel, .cc-timeline-panel, .cc-bookings-panel { grid-column: 1 !important; grid-row: auto !important; }
+    main.container-fluid:has(.cc-shell) { height:auto; min-height:calc(100dvh - 56px); }
+    main.container-fluid:has(.cc-shell) > .row,
+    main.container-fluid:has(.cc-shell) > .row > .col-12,
+    .cc-shell { height:auto; }
+    .cc-grid { grid-template-columns: minmax(0,1fr); grid-template-rows:auto; grid-template-areas:"metrics" "people" "timeline" "tickets" "bookings"; gap:12px; }
     .cc-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
-    .cc-timeline-panel { min-height:260px; }
+    .cc-timeline-panel { height:320px; }
     .cc-people-panel { max-height:320px; }
+    .cc-tickets-panel { min-height:360px; max-height:70dvh; }
+    .cc-bookings-panel { min-height:180px; max-height:360px; }
   }
 </style>
 
@@ -204,7 +260,7 @@
   <div class="cc-grid">
 
     <!-- Left: People rail -->
-    <div class="cc-panel cc-people-panel" style="grid-row: 1 / span 3;">
+    <div class="cc-panel cc-people-panel">
       <div class="cc-panel-h"><span>Technicians</span><span class="count">{{ kpi_on_shift }} / {{ kpi_total_techs }}</span></div>
       <div class="cc-people">
         {% for p in people_rail %}
@@ -226,7 +282,7 @@
     </div>
 
     <!-- Center top: KPI strip -->
-    <div class="cc-kpis" style="grid-column:2; grid-row:1;">
+    <div class="cc-kpis">
       <div class="cc-kpi">
         <div class="lbl">Active Tickets</div>
         <div class="val">{{ kpi_active }}</div>
@@ -250,7 +306,7 @@
     </div>
 
     <!-- Center middle: Live timeline -->
-    <div class="cc-panel cc-timeline-panel" style="grid-column:2; grid-row:2;">
+    <div class="cc-panel cc-timeline-panel">
       <div class="cc-panel-h">
         <span>Today's Live Timeline</span>
         <span style="color:var(--cc-muted); font-size:11px; text-transform:none; letter-spacing:0;">
@@ -314,8 +370,8 @@
       </div>
     </div>
 
-    <!-- Center bottom: Tickets -->
-    <div class="cc-panel cc-tickets-panel" style="grid-column:2; grid-row:3; max-height: 280px;">
+    <!-- Full-height ticket column alongside the timeline -->
+    <div class="cc-panel cc-tickets-panel">
       <div class="cc-panel-h"><span>Active Tickets</span><span class="count">{{ kpi_active }}</span></div>
       <div style="overflow:auto;" id="ccTicketsList">
         {% for ticket in recent_tickets %}
@@ -346,7 +402,7 @@
     </div>
 
     <!-- Right: Bookings -->
-    <div class="cc-panel cc-bookings-panel" style="grid-row: 1 / span 3;">
+    <div class="cc-panel cc-bookings-panel">
       <div class="cc-panel-h"><span>Studio Bookings</span><span class="count" id="ccBookingHeaderCount">—</span></div>
       <div style="overflow:auto; flex:1;" id="ccBookingsList">
         <div class="cc-empty">
