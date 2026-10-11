@@ -258,11 +258,11 @@
     if (Number.isNaN(date.getTime())) return String(value);
     return new Intl.DateTimeFormat(undefined, { timeZone: data?.timezone || config?.timezone || 'UTC', dateStyle: 'medium', timeStyle: 'short' }).format(date);
   }
-  function dayOf(value) {
+  function dayOf(value, timezone = data.timezone) {
     if (!value) return '';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '';
-    const parts = new Intl.DateTimeFormat('en-US', { timeZone: data.timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date);
     const part = key => parts.find(item => item.type === key)?.value;
     return `${part('year')}-${part('month')}-${part('day')}`;
   }
@@ -576,8 +576,71 @@
       default: return tickets;
     }
   }
+  // Null/empty strings are unknown, not measured zero. Never invent history.
+  function chartValue(value) {
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+  }
+  function distribution(rows, key, thresholds, labels, idKey = 'id') {
+    const groups = labels.map(label => ({ label, count: 0, ids: [] }));
+    let missing = 0;
+    rows.forEach(row => {
+      const value = chartValue(row[key]);
+      if (value === null) { missing++; return; }
+      const group = groups[thresholds.filter(threshold => value >= threshold).length];
+      group.count++;
+      group.ids.push(row[idKey]);
+    });
+    return { groups, missing, measured: rows.length - missing };
+  }
+  function queueDistribution(type, matching) {
+    if (['my_queue', 'stalled'].includes(type)) {
+      return { title: type === 'stalled' ? 'Days without human activity' : 'Current ticket age',
+        ...distribution(matching, type === 'stalled' ? 'idle_days' : 'age_days',
+          [1, 3, 7, 14, 30], ['Under 1 day', '1–3 days', '3–7 days', '7–14 days', '14–30 days', '30+ days']) };
+    }
+    return { title: 'Current priority · Ticket counts',
+      ...distribution(matching, 'priority', [1, 2, 3], ['Low', 'Medium', 'High', 'Urgent']) };
+  }
+  const widgetChartSignatures = new Map();
+  const runningChartAnimations = new Set();
+  const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+  motionPreference.addEventListener?.('change', event => {
+    if (event.matches) runningChartAnimations.forEach(animation => animation.cancel());
+  });
+  function animateWidget(card, widget, source) {
+    // Reordering, saving and opening an actions menu must not replay charts.
+    const signature = JSON.stringify([widget.type, widget.scope, widget.limit, source]);
+    const previous = widgetChartSignatures.get(widget.id);
+    widgetChartSignatures.set(widget.id, signature);
+    if (previous === signature || motionPreference.matches || !card.animate) return;
+    function run(node, frames, options) {
+      const animation = node.animate(frames, options);
+      runningChartAnimations.add(animation);
+      const done = () => runningChartAnimations.delete(animation);
+      animation.addEventListener('finish', done, { once: true });
+      animation.addEventListener('cancel', done, { once: true });
+    }
+    // Opacity on the article avoids a transformed ancestor of the fixed menu.
+    run(card, [{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
+    card.querySelectorAll('.ti-bar-fill, .ti-column-ink').forEach((ink, index) => {
+      const axis = ink.classList.contains('ti-bar-fill') ? 'X' : 'Y';
+      run(ink, [{ transform: `scale${axis}(0)` }, { transform: `scale${axis}(1)` }],
+        { duration: 380, delay: Math.min(index * 12, 120), easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'backwards' });
+    });
+  }
+  function renderDistribution(container, result, source, title) {
+    container.append(el('p', 'ti-chart-heading', result.title || 'Tracked calendar hours · Ticket counts'));
+    if (!result.measured && result.missing) {
+      container.append(el('p', 'ti-widget-caption', 'Distribution unavailable: no qualifying measured values.'));
+    } else renderBars(container, result.groups, source, title, result.groups.length);
+    if (result.missing) container.append(el('p', 'ti-widget-caption', `${number(result.missing)} rows not tracked; excluded from the distribution (not zero).`));
+  }
   function renderBars(container, groups, source, title, limit) {
-    const all = groups || [];
+    if (!Array.isArray(groups)) {
+      container.append(el('p', 'ti-muted', 'This breakdown is unavailable: group data was not supplied.'));
+      return;
+    }
+    const all = groups;
     const shown = all.slice(0, limit);
     const max = Math.max(1, ...all.map(item => Number(item.count) || 0));
     const bars = el('div', 'ti-bars');
@@ -585,10 +648,13 @@
       const ids = new Set((group.ids || []).map(String));
       const matching = source.tickets.filter(ticket => ids.has(String(ticket.id)));
       const bar = button('', () => openTickets(`${title} / ${group.label}`, matching), 'ti-bar');
-      bar.setAttribute('aria-label', `${group.label}: ${group.count} tickets. Open matching tickets.`);
+      const count = chartValue(group.count);
+      bar.setAttribute('aria-label', `${group.label}: ${count === null ? 'Not tracked' : number(count)} tickets. Open matching tickets.`);
       const track = el('span', 'ti-bar-track'), fill = el('span', 'ti-bar-fill');
-      fill.style.width = `${Math.max(0, Number(group.count) / max * 100)}%`;
-      track.append(fill); bar.append(el('span', '', group.label), track, el('strong', '', number(group.count)));
+      fill.style.width = `${count === null ? 0 : count / max * 100}%`;
+      fill.hidden = count === null;
+      track.setAttribute('aria-hidden', 'true');
+      track.append(fill); bar.append(el('span', '', group.label), track, el('strong', '', count === null ? 'Not tracked' : number(count)));
       bars.append(bar);
     });
     if (!shown.length) bars.append(el('p', 'ti-muted', 'No qualifying tickets for this breakdown.'));
@@ -600,27 +666,37 @@
       }, 'ti-link-button'));
     }
   }
-  function renderVolume(container, source) {
+  function renderVolume(container, source, series = ['created', 'resolved'], overview = false) {
     const days = source.charts.volume || [];
-    if (!days.length) { container.append(el('p', 'ti-muted', 'No activity in the selected period.')); return; }
-    const maximum = Math.max(1, ...days.flatMap(day => [Number(day.created) || 0, Number(day.resolved) || 0]));
+    if (!days.length) { container.append(el('p', 'ti-muted', 'Daily activity data is unavailable for this period.')); return; }
+    const maximum = Math.max(1, ...days.flatMap(day => series.map(type => chartValue(day[type]) ?? 0)));
     const legend = el('div', 'ti-legend');
-    [['', 'Created'], ['resolved', 'Resolved']].forEach(([cls, name]) => { const span = el('span', cls); span.append(el('i'), document.createTextNode(name)); legend.append(span); });
+    series.forEach(type => { const span = el('span', type === 'resolved' ? 'resolved' : ''); span.append(el('i'), document.createTextNode(type === 'created' ? 'Created' : 'Completed')); legend.append(span); });
     const scroll = el('div', 'ti-chart-scroll'); scroll.tabIndex = 0; scroll.setAttribute('aria-label', 'Daily ticket volume. Scroll horizontally to view all dates.');
     const chart = el('div', 'ti-volume');
     days.forEach(day => {
       const group = el('div', 'ti-day'), bars = el('div', 'ti-day-bars');
-      ['created', 'resolved'].forEach(type => {
-        const count = Number(day[type]) || 0;
+      series.forEach(type => {
+        const count = chartValue(day[type]);
+        const label = count === null ? 'Not tracked' : number(count);
         const matching = () => source.tickets.filter(ticket => {
-          if (type === 'created') return ticket.in_created_period && (String(ticket.created_display || '').slice(0, 10) === day.label || dayOf(ticket.created_at) === day.label);
-          return ticket.in_resolved_period && dayOf(ticket.completed_at) === day.label;
+          if (type === 'created') return ticket.in_created_period && (String(ticket.created_display || '').slice(0, 10) === day.label || dayOf(ticket.created_at, source.timezone) === day.label);
+          return ticket.in_resolved_period && dayOf(ticket.completed_at, source.timezone) === day.label;
         });
         const bar = button('', () => openTickets(`${day.label} / ${type}`, matching()), `ti-column ${type === 'resolved' ? 'resolved' : ''}`);
-        bar.style.height = `${count / maximum * 121}px`;
-        bar.setAttribute('aria-label', `${day.label}: ${number(count)} ${type} tickets`);
-        bar.title = `${day.label}: ${number(count)} ${type}`;
-        bar.append(el('span', '', number(count)));
+        const height = (count ?? 0) / maximum * 121;
+        bar.style.height = `${height}px`;
+        if (overview) {
+          bar.classList.add('ti-chart-hit');
+          bar.style.setProperty('--ti-column-height', `${height}px`);
+          const ink = el('span', 'ti-column-ink');
+          ink.setAttribute('aria-hidden', 'true');
+          ink.hidden = count === null;
+          bar.append(ink);
+        }
+        bar.setAttribute('aria-label', `${day.label}: ${label} ${type} tickets. Open matching tickets.`);
+        bar.title = `${day.label}: ${label} ${type}`;
+        bar.append(el('span', '', count === null ? '—' : label));
         bars.append(bar);
       });
       group.append(bars, el('small', '', day.label.slice(5))); chart.append(group);
@@ -685,15 +761,25 @@
         renderBars(card, source.charts[widget.type], source, title, widget.limit);
         if (widget.type === 'categories') card.append(el('p', 'ti-widget-caption', 'Groups use the server-provided ticket membership. The Categories report separates period arrivals and current backlog.'), safeLink(reportURL('categories', widget.scope), 'Open category report'));
       } else if (widget.type === 'volume') {
-        renderVolume(card, source);
+        renderVolume(card, source, ['created', 'resolved'], true);
       } else if (['first_response', 'resolution_time'].includes(widget.type)) {
         const value = source.metrics[widget.type];
         card.append(safeLink(reportURL(widget.type, widget.scope), duration(value), 'ti-number'), el('p', 'ti-widget-caption', value == null ? 'No qualifying tracked event in this period.' : 'Tracked duration · Open report for exact qualifying rows and definitions.'));
+        const rows = source.reports?.[widget.type]?.rows;
+        if (!Array.isArray(rows)) card.append(el('p', 'ti-widget-caption', 'Duration distribution is unavailable: qualifying rows were not supplied.'));
+        else {
+          const result = distribution(rows, 'hours', [1, 4, 24, 72, 168],
+            ['Under 1 hr', '1–4 hr', '4–24 hr', '1–3 days', '3–7 days', '7+ days'], 'ticket_id');
+          if (!result.measured && !rows.length) card.append(el('p', 'ti-widget-caption', 'No qualifying duration rows in this period; distribution unavailable.'));
+          else renderDistribution(card, result, source, title);
+        }
       } else {
         const matching = ticketsFor(widget.type, source);
         const metric = button(number(matching.length), () => openTickets(title, matching), 'ti-metric ti-number');
         metric.setAttribute('aria-label', `${matching.length} matching tickets. Open ${title}.`);
         card.append(metric);
+        if (['created', 'resolved'].includes(widget.type)) renderVolume(card, source, [widget.type], true);
+        else renderDistribution(card, queueDistribution(widget.type, matching), source, title);
         if (widget.type === 'my_queue' || widget.type === 'stalled') {
           const ordered = [...matching].sort((a, b) => widget.type === 'stalled' ? b.idle_days - a.idle_days : Number(b.is_overdue) - Number(a.is_overdue) || Number(b.priority) - Number(a.priority) || b.age_days - a.age_days);
           const list = el('ul', 'ti-list');
@@ -753,7 +839,10 @@
       });
       panel.append(configure, handle, up, down, remove);
       tools.append(toggle, panel); card.append(tools); grid.append(card);
+      if (source) animateWidget(card, widget, source);
     });
+    const activeIds = new Set(layout.widgets.map(widget => widget.id));
+    widgetChartSignatures.forEach((_, id) => { if (!activeIds.has(id)) widgetChartSignatures.delete(id); });
   }
   function moveWidget(index, delta) {
     const id = layout.widgets[index].id;
