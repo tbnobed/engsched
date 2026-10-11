@@ -27,7 +27,9 @@ For the main dashboard, each section needs a clearly distinct dark color family,
 
 Apply the same blended, borderless treatment to shared navigation: no sidebar outline, logo/clock separators, submenu rules, or outlined settings/mobile controls. Preserve menu order, branding, and keyboard focus indicators.
 
-Current section styling: use the approved barely visible 0.5px, 3%-opacity borders across all pages, retaining blended surfaces and existing positions. Keep navigation and individual controls unchanged.
+Current section styling: retain thin borders but make their contrast apparent in daylight across all pages. Keep blended surfaces, existing positions, navigation and individual controls unchanged.
+
+**Why:** The user found the previously approved 3%-opacity lines hard to see during daylight and requested more apparent lines. This supersedes the barely visible contrast preference.
 
 Horizontal schedule day rows should fit each day's own schedules, not stretch to match the busiest day.
 
@@ -35,6 +37,5 @@ Horizontal schedule day rows should fit each day's own schedules, not stretch to
 
 **How to apply:** Keep the calendar viewport full-height, but let individual horizontal rows remain compact and expand only for their own overlapping schedules and all-day entries.
 
-**Why:** After progressively reducing dashboard borders, the user explicitly approved the 3% version (“now we are talking”) and requested the same on all pages. This supersedes the earlier blanket prohibition on section borders.
 
 **Why:** The user extended the direction to the sidebar: “I don't want to see borders anywhere.”

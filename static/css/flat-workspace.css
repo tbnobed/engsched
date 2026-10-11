@@ -568,7 +568,7 @@
     .ql-editor, .ql-toolbar.ql-snow, .ql-container.ql-snow
   ) { background: transparent !important; }
 
-  /* Barely visible section separators, shared across both themes and all pages.
+  /* Daylight-readable section separators, shared across both themes and all pages.
      Keep inputs, individual table rows, icons and navigation unchanged. */
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
     .cc-panel, .cc-kpi, .card, .mobile-card, .tk-panel, .tk-kpi,
@@ -581,7 +581,7 @@
   ),
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.survey-page main,
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.api-docs section {
-    border: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
+    border: 0.5px solid color-mix(in srgb, var(--flat-ink) 14%, transparent) !important;
   }
 
   /* Keep the reply editor identifiable even when it is not focused. */
@@ -592,14 +592,14 @@
 
   /* Calendar sections need internal separators, not only the outside frame. */
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body #schedule-view .day-column {
-    border-inline-start: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
+    border-inline-start: 0.5px solid color-mix(in srgb, var(--flat-ink) 14%, transparent) !important;
   }
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body #schedule-view :is(.calendar-header, .day-header),
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .modern-mobile-calendar :is(.calendar-header, .timeline-header),
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .ticket-reference-page :is(.tr-compose-tabs, .tr-activity-head) {
-    border-bottom: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
+    border-bottom: 0.5px solid color-mix(in srgb, var(--flat-ink) 14%, transparent) !important;
   }
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .ticket-reference-page .tr-meta-cell:not(:last-child) {
-    border-inline-end: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
+    border-inline-end: 0.5px solid color-mix(in srgb, var(--flat-ink) 14%, transparent) !important;
   }
 }
