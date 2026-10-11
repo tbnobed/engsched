@@ -39,11 +39,13 @@
 .ti .ti-widget-tools { position:relative; justify-content:flex-end; border:0; padding-top:0; margin-top:10px; }
 .ti .ti-widget-actions-toggle { min-width:36px; font-size:24px; line-height:1; background:transparent; border:0; }
 .ti .ti-widget-actions-panel {
-  position:absolute; bottom:calc(100% + 4px); right:0; z-index:20;
+  position:fixed; inset:auto; margin:0; z-index:1060;
   display:flex; flex-direction:column; gap:2px; padding:8px;
   width:176px; max-width:calc(100vw - 48px);
+  overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box;
   background:var(--ti-raised); color:var(--ti-ink); border:0; border-radius:10px;
 }
+.ti .ti-widget-actions-panel::backdrop { background:transparent; pointer-events:none; }
 .ti .ti-widget-actions-panel button { justify-content:flex-start; width:100%; border:0; min-height:36px; }
 .ti .ti-widget-actions-panel .ti-drag-handle { border:0; min-height:36px; }
 .ti-widget:has(.ti-widget-actions-panel:not([hidden])) { position:relative; z-index:21; }

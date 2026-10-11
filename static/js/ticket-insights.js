@@ -20,9 +20,30 @@
   let reportKey = Object.hasOwn(reportNames, query.get('report')) ? query.get('report') : 'volume';
   let tableStates = [];
   let openWidgetActions;
+  function positionWidgetActions() {
+    if (!openWidgetActions) return;
+    const { panel, toggle } = openWidgetActions;
+    const anchor = toggle.getBoundingClientRect();
+    const viewport = window.visualViewport;
+    const leftEdge = (viewport?.offsetLeft || 0) + 8;
+    const topEdge = (viewport?.offsetTop || 0) + 8;
+    const rightEdge = leftEdge + (viewport?.width || document.documentElement.clientWidth) - 16;
+    const bottomEdge = topEdge + (viewport?.height || window.innerHeight) - 16;
+    if (anchor.bottom < topEdge || anchor.top > bottomEdge || anchor.right < leftEdge || anchor.left > rightEdge) {
+      closeWidgetActions();
+      return;
+    }
+    const above = Math.max(0, anchor.top - topEdge - 4);
+    const below = Math.max(0, bottomEdge - anchor.bottom - 4);
+    const preferBelow = panel.scrollHeight <= below || below > above;
+    panel.style.maxHeight = `${preferBelow ? below : above}px`;
+    panel.style.left = `${Math.max(leftEdge, Math.min(anchor.right - panel.offsetWidth, rightEdge - panel.offsetWidth))}px`;
+    panel.style.top = `${Math.max(topEdge, Math.min(preferBelow ? anchor.bottom + 4 : anchor.top - panel.offsetHeight - 4, bottomEdge - panel.offsetHeight))}px`;
+  }
   function closeWidgetActions(restoreFocus = false) {
     if (!openWidgetActions) return;
     const { panel, toggle } = openWidgetActions;
+    if (panel.hidePopover && panel.matches(':popover-open')) panel.hidePopover();
     panel.hidden = true;
     toggle.setAttribute('aria-expanded', 'false');
     openWidgetActions = null;
@@ -40,6 +61,10 @@
   document.addEventListener('focusin', event => {
     if (openWidgetActions && !openWidgetActions.tools.contains(event.target)) closeWidgetActions();
   });
+  window.addEventListener('resize', positionWidgetActions);
+  document.addEventListener('scroll', positionWidgetActions, true);
+  window.visualViewport?.addEventListener('resize', positionWidgetActions);
+  window.visualViewport?.addEventListener('scroll', positionWidgetActions);
 
   function el(tag, cls, text) {
     const node = document.createElement(tag);
@@ -684,6 +709,8 @@
       const panel = el('div', 'ti-widget-actions-panel');
       panel.id = `ti-widget-actions-${widget.id}`;
       panel.hidden = true;
+      // The top layer escapes overflow clipping without detaching inherited styles.
+      panel.setAttribute('popover', 'manual');
       panel.setAttribute('role', 'group');
       panel.setAttribute('aria-label', `${title} actions`);
       const toggle = button('⋯', () => {
@@ -693,6 +720,8 @@
           panel.hidden = false;
           toggle.setAttribute('aria-expanded', 'true');
           openWidgetActions = { tools, panel, toggle };
+          panel.showPopover?.();
+          positionWidgetActions();
           panel.querySelector('button:not(:disabled)')?.focus();
         }
       }, 'ti-widget-actions-toggle');
