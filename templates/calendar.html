@@ -2,8 +2,8 @@
 
 {% block content %}
 <script defer src="{{ url_for('static', filename='js/schedule-height.js') }}"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/schedule-orientation.css', v=3) }}">
-<script defer src="{{ url_for('static', filename='js/schedule-orientation.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/schedule-orientation.css', v=4) }}">
+<script defer src="{{ url_for('static', filename='js/schedule-orientation.js', v=4) }}"></script>
 <div class="calendar-container schedule-flat" id="schedule-view">
     {% set _route = 'personal_schedule' if personal_view else 'calendar' %}
     {% set _nav_args = {} if personal_view else {'location_id': selected_location, 'technician_id': selected_technician} %}

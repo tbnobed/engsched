@@ -21,7 +21,7 @@
     function refresh() {
         const root = document.getElementById('schedule-view');
         if (!root) return;
-        let rowMin = 80;
+        const rowHeights = [];
         root.querySelectorAll('.day-slots').forEach(day => {
             const events = Array.from(day.querySelectorAll('.schedule-event'));
             const allDay = events.filter(event => event.dataset.allDay === 'true');
@@ -46,10 +46,10 @@
                 event.style.setProperty('--horizontal-duration', `${value.duration}%`);
                 event.style.setProperty('--horizontal-lane', `${allDay.length * 32 + value.lane * 44 + 4}px`);
             });
-            rowMin = Math.max(rowMin, allDay.length * 32 + lanes * 44 + 8);
+            rowHeights.push(`${Math.max(80, allDay.length * 32 + lanes * 44 + 8)}px`);
         });
         const grid = root.querySelector('.calendar-grid');
-        if (grid) grid.style.setProperty('--horizontal-row-min', `${rowMin}px`);
+        if (grid) grid.style.setProperty('--horizontal-day-rows', rowHeights.join(' '));
     }
     function setMode(mode, persist = true) {
         const root = document.getElementById('schedule-view');

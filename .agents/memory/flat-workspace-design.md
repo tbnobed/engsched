@@ -29,6 +29,12 @@ Apply the same blended, borderless treatment to shared navigation: no sidebar ou
 
 Current section styling: use the approved barely visible 0.5px, 3%-opacity borders across all pages, retaining blended surfaces and existing positions. Keep navigation and individual controls unchanged.
 
+Horizontal schedule day rows should fit each day's own schedules, not stretch to match the busiest day.
+
+**Why:** The user rejected oversized rows for days with only one or two schedules.
+
+**How to apply:** Keep the calendar viewport full-height, but let individual horizontal rows remain compact and expand only for their own overlapping schedules and all-day entries.
+
 **Why:** After progressively reducing dashboard borders, the user explicitly approved the 3% version (“now we are talking”) and requested the same on all pages. This supersedes the earlier blanket prohibition on section borders.
 
 **Why:** The user extended the direction to the sidebar: “I don't want to see borders anywhere.”

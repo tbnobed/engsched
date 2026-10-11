@@ -12,7 +12,7 @@ function event(top, height, left = '0%', width = '100%', allDay = false) {
         }
     };
 }
-function fixture(events, stored = null, blocked = false) {
+function fixture(events, stored = null, blocked = false, otherDays = []) {
     const classes = new Set();
     const grid = { scrollLeft: 0, scrollTop: 0, style: { setProperty(k, v) { this[k] = v; } } };
     const buttons = ['vertical', 'horizontal'].map(mode => ({
@@ -24,7 +24,7 @@ function fixture(events, stored = null, blocked = false) {
         classList: { contains: k => classes.has(k), toggle(k, active) { active ? classes.add(k) : classes.delete(k); } },
         querySelector: () => grid,
         querySelectorAll(selector) {
-            return selector === '.day-slots' ? [{ querySelectorAll: () => events }] : buttons;
+            return selector === '.day-slots' ? [events, ...otherDays].map(items => ({ querySelectorAll: () => items })) : buttons;
         }
     };
     let start;
@@ -77,7 +77,10 @@ fixture(personal, 'horizontal');
 assert.notEqual(personal[0].style['--horizontal-lane'], personal[1].style['--horizontal-lane']);
 assert.equal(personal[0].style['--horizontal-lane'], personal[2].style['--horizontal-lane']);
 const busy = fixture(Array.from({ length: 9 }, () => event(600, 120)));
-assert.equal(busy.grid.style['--horizontal-row-min'], '404px');
+assert.equal(busy.grid.style['--horizontal-day-rows'], '404px');
+const mixedWeek = fixture(Array.from({ length: 9 }, () => event(600, 120)), 'horizontal', false,
+    [[event(600, 120)], [event(600, 120), event(630, 120)], []]);
+assert.equal(mixedWeek.grid.style['--horizontal-day-rows'], '404px 80px 96px 80px');
 assert.equal(fixture([], 'horizontal').classes.has('schedule-horizontal'), true);
 assert.equal(fixture([], 'garbage').classes.has('schedule-horizontal'), false);
 const denied = fixture([], null, true);
@@ -90,7 +93,8 @@ for (const path of ['templates/calendar.html', 'templates/personal_schedule.html
 }
 const css = fs.readFileSync('static/css/schedule-orientation.css', 'utf8');
 assert.ok(css.includes('repeat(24, minmax(72px, 1fr))'));
-assert.ok(css.includes('repeat(7, minmax(var(--horizontal-row-min), 1fr))'));
+assert.ok(css.includes('36px var(--horizontal-day-rows, repeat(7, 80px))'));
+assert.ok(css.includes('align-content: start'));
 assert.ok(css.includes('overflow: auto !important'));
 const marker = css.match(/#schedule-view\.schedule-horizontal \.current-time-line \{([^}]+)\}/)[1];
 assert.match(marker, /height:\s*100%\s*!important/);
