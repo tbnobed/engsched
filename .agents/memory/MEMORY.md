@@ -4,3 +4,5 @@
 - [Sidebar branding](sidebar-branding.md) — Separate the TBN logo above the application name, not beside it.
 - [Ticket layout sizing](ticket-layout-sizing.md) — Use available width, readable conversation text, and proportional right-hand cards; avoid capped, centered layouts.
 - [Ticket reporting reliability](ticket-reporting-decisions.md) — Legacy AI and inbound-email proxy authors can mislead metrics; missing historical events must stay explicit.
+- [HTTPS form protection](flask-https-csrf.md) — no-referrer breaks Flask-WTF on HTTPS; use same-origin without weakening CSRF.
+- [Integration write boundaries](api-integration-boundaries.md) — API retries must not silently send emails, run AI, or cancel unrelated appointments.

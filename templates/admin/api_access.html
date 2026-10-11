@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/api-access.css') }}">
+<section class="aa" id="api-access" aria-label="API access management">
+  <header class="aa-header">
+    <div><span class="aa-eyebrow">TBN Plex Engineering / Administration</span><h1>API access</h1><p>Manage scoped credentials for trusted server-to-server integrations. Administrators can manage keys belonging to all users.</p></div>
+    <div class="aa-actions"><a class="aa-button" id="aa-docs" href="/api/v1/docs" target="_blank" rel="noopener noreferrer">API documentation <span class="aa-muted">(new tab)</span></a><button type="button" class="aa-primary" id="aa-create" disabled>Create API key</button></div>
+  </header>
+  <div class="aa-connection" aria-label="API connection details">
+    <div><span>API base URL</span><code id="aa-base">/api/v1</code></div>
+    <div><span>Authentication</span><strong>Bearer token</strong></div>
+    <div><span>Rate limit</span><strong id="aa-rate">Loading…</strong></div>
+    <div><span>Access model</span><strong>Explicit scopes · Admin-owned</strong></div>
+  </div>
+  <div id="aa-feedback" class="aa-feedback" role="status" aria-live="polite"></div>
+  <section class="aa-panel" aria-labelledby="aa-keys-heading">
+    <div class="aa-panel-head"><div><span class="aa-eyebrow">01 / Credentials</span><h2 id="aa-keys-heading">Integration keys <small id="aa-count"></small></h2><p>Only key prefixes are stored in this view. Full tokens are revealed once, at creation or rotation.</p></div><button type="button" id="aa-refresh-keys">Refresh keys</button></div>
+    <div id="aa-keys" aria-busy="true"><div class="aa-skeleton" role="status" aria-label="Loading API keys"></div></div>
+  </section>
+  <section class="aa-panel" aria-labelledby="aa-guide-heading">
+    <div class="aa-panel-head"><div><span class="aa-eyebrow">02 / Integration essentials</span><h2 id="aa-guide-heading">Connect from your server</h2></div></div>
+    <div class="aa-panel-body aa-guide">
+      <div><h3>Keep credentials out of the browser</h3><p>Store tokens in your server’s secret manager or protected environment. Never embed keys in browser code, public code, URLs, or logs.</p><pre><code id="aa-example"></code></pre><p>This example uses a placeholder, not a live key. Select <code>tickets:read</code> to use it. See the documentation for complete endpoint contracts.</p></div>
+      <div><h3>Know the boundaries</h3><ul>
+        <li>Scopes confer access across <strong>all tickets and schedules</strong>, not just the owner’s records. Write scopes do not imply read access; select each permission explicitly.</li>
+        <li>Keys stop working if their owner loses administrator access or is deleted.</li>
+        <li>API mutations <strong>do not send emails or run AI</strong>.</li>
+        <li>Ticket <code>DELETE</code> archives a ticket. Schedule <code>DELETE</code> permanently removes one entry.</li>
+        <li>Rotation immediately revokes the old key and preserves its original expiry. Update your integration immediately.</li>
+      </ul></div>
+    </div>
+  </section>
+  <section class="aa-panel" aria-labelledby="aa-audit-heading">
+    <div class="aa-panel-head"><div><span class="aa-eyebrow">03 / Activity</span><h2 id="aa-audit-heading">Successful writes</h2><p>The latest 50 successful API writes. No request bodies, headers, or secrets are displayed. Reads and failed requests are not included.</p></div><button type="button" id="aa-refresh-audit">Refresh activity</button></div>
+    <div id="aa-audit" aria-busy="true"><div class="aa-skeleton" role="status" aria-label="Loading API activity"></div></div>
+  </section>
+  <dialog id="aa-create-dialog" aria-labelledby="aa-create-title">
+    <div class="aa-dialog-head"><h2 id="aa-create-title">Create API key</h2><button type="button" id="aa-close-create" aria-label="Close creation form">Close</button></div>
+    <div class="aa-dialog-body">
+      <form id="aa-create-form">
+        <fieldset class="aa-form-fields" id="aa-create-fields">
+          <label>Integration name<input id="aa-name" name="name" required maxlength="80" autocomplete="off" placeholder="e.g. Engineering schedule sync"></label>
+          <label>Expires in days<input id="aa-days" name="expires_days" type="number" min="1" max="365" step="1" value="90" required aria-describedby="aa-expiry-help"><small id="aa-expiry-help">1–365 days. Default: 90 days.</small></label>
+          <fieldset><legend>Permissions · Select at least one</legend><div class="aa-scope-options" id="aa-scopes"></div></fieldset>
+          <p class="aa-muted"><small>Write permissions do not include read permissions. Grant only what the integration needs.</small></p>
+        </fieldset>
+        <p class="aa-form-error" id="aa-create-error" role="alert"></p>
+        <div class="aa-actions"><button type="submit" class="aa-primary" id="aa-submit-create">Create key</button><button type="button" id="aa-cancel-create">Cancel</button></div>
+      </form>
+    </div>
+  </dialog>
+  <dialog id="aa-confirm-dialog" aria-labelledby="aa-confirm-title" aria-describedby="aa-confirm-description">
+    <div class="aa-dialog-head"><h2 id="aa-confirm-title">Confirm key action</h2></div>
+    <div class="aa-dialog-body"><p id="aa-confirm-name"></p><div class="aa-note" id="aa-confirm-description"></div><p class="aa-form-error" id="aa-confirm-error" role="alert"></p><div class="aa-actions"><button type="button" id="aa-confirm-cancel" autofocus>Cancel</button><button type="button" class="aa-danger" id="aa-confirm-submit">Confirm</button></div></div>
+  </dialog>
+  <dialog id="aa-token-dialog" aria-labelledby="aa-token-title" aria-describedby="aa-token-description">
+    <div class="aa-dialog-head"><h2 id="aa-token-title">Save your API key now</h2></div>
+    <div class="aa-dialog-body"><div class="aa-note" id="aa-token-description">This is the only time the full token will be shown. Copy it into a secure server-side secret store before dismissing. It cannot be retrieved later.</div><p id="aa-token-name"></p><code class="aa-token" id="aa-token"></code><p class="aa-token-message" id="aa-copy-status" role="status" aria-live="polite"></p><div class="aa-actions"><button type="button" class="aa-primary" id="aa-copy">Copy key</button><button type="button" id="aa-hide">Hide and dismiss key</button></div></div>
+  </dialog>
+  <noscript><div class="aa-state aa-error"><h3>JavaScript is required</h3><p>Enable JavaScript to securely manage API credentials and view activity.</p></div></noscript>
+</section>
+<script src="{{ url_for('static', filename='js/api-access.js') }}" defer></script>
+{% endblock %}

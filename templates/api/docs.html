@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Plex Engineering API Reference</title>
+  <style>
+    :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0b111a;color:#e4edf5;font:16px/1.6 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:36px 24px}h1,h2,h3{line-height:1.3}h1{font-size:34px}h2{margin-top:36px}a{color:#91d8e5}p,li{max-width:90ch}code,pre{font-family:ui-monospace,monospace}pre{padding:16px;background:#080d14;border:1px solid #304257;overflow:auto;border-radius:8px;font-size:14px}section{background:#131f2d;border:1px solid #2b3d52;border-radius:10px;padding:20px;margin:16px 0}details{margin:12px 0}summary{cursor:pointer;color:#91d8e5;overflow-wrap:anywhere}.method{color:#91d8e5;text-transform:uppercase;font-weight:700;margin-right:10px}th,td{text-align:left;vertical-align:top;padding:8px;border-bottom:1px solid #304257}table{width:100%;border-collapse:collapse;font-size:14px}.scroll{overflow:auto}.muted{color:#a7bacb}@media(max-width:600px){main{padding:20px 14px}h1{font-size:28px}section{padding:14px}}
+    h3 code,p code,li code{overflow-wrap:anywhere}section,details{min-width:0}.scroll,pre{max-width:100%}
+  </style>
+</head>
+<body><main>
+  <p class="muted">TBN PLEX ENGINEERING · API V1</p>
+  <h1>Tickets and technician schedules</h1>
+  <p>Integrate from your application’s backend using an API key. Base path: <code>/api/v1</code> on this application’s host. Use HTTPS outside local development.</p>
+  <p><a href="/admin/api-access">Manage API keys (admin)</a> · <a href="/api/v1/openapi.json">Download OpenAPI specification</a></p>
+  <h2>Authentication and permissions</h2>
+  <p>Create a key under <strong>Admin → API Access</strong>. Save it securely when shown: the full key cannot be retrieved later. Read and write scopes are separate and apply to <strong>all</strong> tickets or schedules, not just records assigned to the key owner. Directory scope exposes user names and email addresses.</p>
+  <pre>Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json</pre>
+  <p><code>X-API-Key: YOUR_API_KEY</code> is also supported. Login cookies and keys in URLs do not authenticate API requests. Never put a key in public frontend code. Cross-origin browser access is not enabled; use your backend. Expired/revoked keys and keys whose owner was deleted or lost admin access return 401.</p>
+  <h2>Examples</h2>
+  <p>Replace <code>https://YOUR_APP_HOST</code> with your application’s actual host, and load <code>PLEX_API_KEY</code> from your server’s secret manager. These examples never require a password or session cookie.</p>
+  <pre>curl "https://YOUR_APP_HOST/api/v1/tickets?status=open&amp;page_size=50" \
+  -H "Authorization: Bearer $PLEX_API_KEY"
+
+curl "https://YOUR_APP_HOST/api/v1/tickets" \
+  -H "Authorization: Bearer $PLEX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: source-system-event-123" \
+  -d '{"title":"Studio monitor issue","description":"No signal on monitor 2.","category_id":1,"priority":2}'
+
+curl "https://YOUR_APP_HOST/api/v1/schedules?technician_id=1&amp;start=2026-10-01T00:00:00Z&amp;end=2026-11-01T00:00:00Z" \
+  -H "Authorization: Bearer $PLEX_API_KEY"
+
+curl "https://YOUR_APP_HOST/api/v1/schedules" \
+  -H "Authorization: Bearer $PLEX_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: source-booking-456" \
+  -d '{"technician_id":1,"start_time":"2026-11-03T09:00:00-08:00","end_time":"2026-11-03T10:00:00-08:00","description":"Studio maintenance"}'</pre>
+  <p>Look up actual IDs in <code>/technicians</code>, <code>/categories</code> and <code>/locations</code>; the example IDs are placeholders.</p>
+  <h2>Integration rules</h2>
+  <ul>
+    <li>JSON envelopes: single records use <code>{"data": {...}}</code>. Lists use <code>{"data": [...], "meta": {"page":1,"page_size":50,"total":12,"pages":1}}</code>. Lists are ordered by ID, with up to 100 rows per page. Pagination is live, not a frozen snapshot.</li>
+    <li>120 requests per minute per key, shared across server workers. Respect <code>429</code> and <code>Retry-After</code>. Responses include <code>X-Request-ID</code>; authenticated responses also include rate-limit headers.</li>
+    <li>JSON request bodies are limited to 256 KiB. PATCH updates only supplied fields; unknown fields and invalid types are rejected. Send null to clear nullable fields, not an empty string.</li>
+    <li>Use an <code>Idempotency-Key</code> on POST to prevent duplicates after retries. Keys are scoped to one API key, replay successful requests for 24 hours and cannot be reused for a different path/payload. Rotating an API key starts a new idempotency namespace. PATCH/DELETE do not accept this header.</li>
+    <li>API writes record history/audit entries but <strong>do not send email, run AI, or automatically cancel other bookings</strong>. A posted comment is recorded, not emailed to the requester. Internal notes appear in ticket history.</li>
+    <li>Ticket DELETE archives rather than destroys; use PATCH <code>{"archived":false}</code> to restore. Schedule DELETE permanently removes that one entry. API v1 does not upload/download attachments or mutate recurring templates.</li>
+    <li>Dates require ISO 8601 offsets. Responses use UTC; display in the technician/user timezone. Schedule windows use half-open overlap: entry.end &gt; start and entry.start &lt; end. Adjacent entries are allowed, overlapping entries return 409 without changing existing appointments.</li>
+    <li>All-day entries require <code>time_off:true</code> and midnight start/end boundaries in the technician’s profile timezone, with an exclusive end (the following midnight for one day). Schedule entries are limited to 366 days. Weekly templates describe patterns; they do not represent automatically generated future bookings.</li>
+    <li>Input descriptions/comments are plain text. HTML response fields reflect existing rich text and must be sanitized before rendering in another application.</li>
+  </ul>
+  <h2>Endpoint reference</h2>
+  {% for path, methods in spec.paths.items() %}
+  <section>
+    <h3><code>/api/v1{{ path }}</code></h3>
+    {% for method, operation in methods.items() %}
+    <details>
+      <summary><span class="method">{{ method }}</span>{{ operation.summary }}</summary>
+      <p>{{ operation.description }}</p>
+      {% if operation.parameters %}
+      <div class="scroll"><table><thead><tr><th>Parameter</th><th>Where</th><th>Type / rule</th></tr></thead><tbody>
+      {% for param in operation.parameters %}<tr><td><code>{{ param.name }}</code>{% if param.required %} (required){% endif %}</td><td>{{ param['in'] }}</td><td>{{ param.schema.type }}. {{ param.description or param.schema.description or '' }}</td></tr>{% endfor %}
+      </tbody></table></div>
+      {% endif %}
+      {% if operation.requestBody %}<p>JSON body schema:</p><pre>{{ operation.requestBody.content['application/json'].schema | tojson(indent=2) }}</pre>{% endif %}
+    </details>
+    {% endfor %}
+  </section>
+  {% endfor %}
+  <h2>Payload schemas</h2>
+  {% for name in ['TicketInput','ScheduleInput','ContentInput'] %}<details><summary>{{ name }}</summary><pre>{{ spec.components.schemas[name] | tojson(indent=2) }}</pre></details>{% endfor %}
+  <h2>Errors and retries</h2>
+  <pre>{"error":{"code":403,"message":"Required permission: tickets:read."},"request_id":"..."}</pre>
+  <p>400 means invalid input; 401 means invalid credentials; 403 means a missing scope; 404 means the record/path was not found; 405 means the method is unsupported; 409 means a scheduling or idempotency conflict. Retry 429 after its specified delay; retry transient 500 errors with backoff and the same POST idempotency key. Do not automatically retry validation or permission failures.</p>
+</main></body></html>

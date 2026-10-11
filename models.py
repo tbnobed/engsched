@@ -181,6 +181,41 @@ class TicketDashboardLayout(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(pytz.UTC))
 
 
+class ApplicationAPIKey(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+    token_hash = db.Column(db.String(64), unique=True, nullable=False)
+    prefix = db.Column(db.String(20), nullable=False)
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'))
+    scopes = db.Column(db.JSON, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(pytz.UTC))
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    revoked_at = db.Column(db.DateTime(timezone=True))
+    last_used_at = db.Column(db.DateTime(timezone=True))
+    rate_window = db.Column(db.DateTime(timezone=True))
+    rate_count = db.Column(db.Integer, nullable=False, default=0)
+
+
+class ApplicationAPIAudit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key_id = db.Column(db.Integer, db.ForeignKey('application_api_key.id', ondelete='SET NULL'))
+    key_name = db.Column(db.String(80), nullable=False)
+    method = db.Column(db.String(10), nullable=False)
+    path = db.Column(db.String(255), nullable=False)
+    status = db.Column(db.Integer, nullable=False)
+    request_id = db.Column(db.String(36), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(pytz.UTC))
+
+
+class ApplicationAPIReplay(db.Model):
+    key_id = db.Column(db.Integer, db.ForeignKey('application_api_key.id', ondelete='CASCADE'), primary_key=True)
+    idempotency_key = db.Column(db.String(128), primary_key=True)
+    fingerprint = db.Column(db.String(64), nullable=False)
+    response = db.Column(db.JSON, nullable=False)
+    status = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(pytz.UTC))
+
+
 class TicketReportingSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     targets = db.Column(db.JSON, nullable=False, default=list)

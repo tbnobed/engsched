@@ -458,6 +458,31 @@ from ticket_insights import insights
 app.register_blueprint(insights)
 from ticket_reporting_controls import reporting_controls
 app.register_blueprint(reporting_controls)
+from api_access import api_admin
+from api_v1_resources import api_v1
+import api_v1_docs
+app.register_blueprint(api_admin)
+csrf.exempt(api_v1)
+app.register_blueprint(api_v1)
+
+
+@app.after_request
+def versioned_api_routing_errors(response):
+    """Flask routing errors happen before a blueprint's error handler."""
+    from flask import request, jsonify
+    if (request.path == '/api/v1' or request.path.startswith('/api/v1/')) and response.status_code >= 400 and not response.is_json:
+        from http import HTTPStatus
+        from uuid import uuid4
+        status = response.status_code
+        request_id = str(uuid4())
+        converted = jsonify(error={'code': status, 'message': HTTPStatus(status).phrase}, request_id=request_id)
+        converted.status_code = status
+        if 'Allow' in response.headers:
+            converted.headers['Allow'] = response.headers['Allow']
+        converted.headers['X-Request-ID'] = request_id
+        converted.headers['Cache-Control'] = 'no-store'
+        return converted
+    return response
 
 
 
