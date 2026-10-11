@@ -1,4 +1,18 @@
 /* Light Theme CSS */
+/* Schedule-only palette; shared flat geometry lives in style.css. */
+.calendar-container.schedule-flat {
+  --schedule-surface: #e9eef3;
+  --schedule-day: #f4f6f8;
+  --schedule-alternate: #edf1f5;
+  --schedule-weekend: #f1efec;
+  --schedule-today: #e3edf7;
+  --schedule-text: #243348;
+  --schedule-muted: #52647a;
+  --schedule-accent: #305f96;
+  --schedule-on-accent: #f5f8fc;
+  --schedule-ooo: #eee5d8;
+  --schedule-ooo-text: #725127;
+}
 :root {
   --light-bg: #f8f9fa;
   --light-panel: #ffffff;

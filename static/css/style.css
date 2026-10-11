@@ -1143,3 +1143,288 @@ div[style*="gradient"] {
     box-shadow: 0 0 0 2px rgba(106,166,255,.18);
     color: #e8edf5;
 }
+
+/* Flat weekly canvas — only the two desktop schedule templates opt in.
+   Keep the 64px headers, 60px hours and absolute event coordinates unchanged:
+   calendar drag/resize code depends on that geometry. ID specificity deliberately
+   beats the legacy theme rules without changing other calendar/dashboard views. */
+:where(#schedule-view) {
+    --schedule-surface: #edf1f5;
+    --schedule-day: #f4f6f8;
+    --schedule-alternate: #eef2f5;
+    --schedule-weekend: #f1efec;
+    --schedule-today: #e4edf7;
+    --schedule-text: #243348;
+    --schedule-muted: #52647a;
+    --schedule-accent: #305f96;
+    --schedule-on-accent: #f5f8fc;
+    --schedule-ooo: #eee5d8;
+    --schedule-ooo-text: #725127;
+}
+#schedule-view {
+    display: flex;
+    flex-direction: column;
+    height: var(--schedule-available-height, calc(100dvh - 100px));
+    min-height: 260px;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 12px 0 0;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: var(--schedule-text);
+    font-family: inherit;
+}
+
+#schedule-view .cc-header {
+    flex: 0 0 auto;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 4px 0 0 !important;
+    margin-bottom: 18px !important;
+    overflow: visible;
+}
+#schedule-view .cc-header::before { display: none; }
+#schedule-view .cc-title,
+#schedule-view .day-header-date { color: var(--schedule-text) !important; }
+#schedule-view .cc-subtitle,
+#schedule-view .cc-filter-icon,
+#schedule-view .day-header-name,
+#schedule-view .day-header-month,
+#schedule-view .hour-slot { color: var(--schedule-muted) !important; }
+#schedule-view .cc-nav {
+    background: transparent !important;
+    border: 0 !important;
+    padding: 0;
+    gap: 6px;
+    box-shadow: none !important;
+}
+#schedule-view .cc-filter-row { border: 0 !important; padding-top: 0; }
+#schedule-view .cc-filter,
+#schedule-view .cc-btn,
+#schedule-view .cc-icon-btn,
+#schedule-view .cc-today-btn {
+    background: var(--schedule-surface) !important;
+    color: var(--schedule-text) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    transition: transform .12s ease, opacity .12s ease;
+}
+#schedule-view .cc-filter:focus-within { box-shadow: none !important; }
+#schedule-view .cc-select,
+#schedule-view .cc-filter select,
+#schedule-view .cc-filter input { color: var(--schedule-text) !important; }
+#schedule-view .cc-select option {
+    background: var(--schedule-day);
+    color: var(--schedule-text);
+}
+#schedule-view .cc-btn-primary,
+#schedule-view .cc-today-btn {
+    background: var(--schedule-accent) !important;
+    color: var(--schedule-on-accent) !important;
+}
+#schedule-view #bulk-select-toggle.btn-outline-warning {
+    background: var(--schedule-accent) !important;
+    color: var(--schedule-on-accent) !important;
+}
+#schedule-view .cc-btn:hover,
+#schedule-view .cc-icon-btn:hover,
+#schedule-view .cc-today-btn:hover { opacity: .85; transform: none; }
+
+#schedule-view .calendar-grid {
+    /* One complete row: 64px sticky heading + 24 hours at 60px.
+       A viewport-sized grid otherwise paints columns only to their minimum
+       height while the final hour slots overflow beyond their backgrounds. */
+    grid-template-rows: 1504px;
+    align-items: stretch;
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none !important;
+    overflow-y: auto !important;
+    width: 100%;
+    grid-template-columns: 64px repeat(7, minmax(0, 1fr));
+    gap: 6px;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow-x: auto !important;
+    /* The existing vertical scroll and sticky-header behavior is retained. */
+    scrollbar-color: var(--schedule-muted) transparent;
+}
+#schedule-view .calendar-grid::-webkit-scrollbar-track { background: transparent; }
+#schedule-view .calendar-grid::-webkit-scrollbar-thumb { background: var(--schedule-muted); }
+#schedule-view .time-column {
+    height: 1504px;
+    min-height: 1504px;
+    background: var(--schedule-day) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+#schedule-view .day-column {
+    height: 1504px;
+    min-height: 1504px;
+    min-width: 0;
+    background: var(--schedule-day) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+#schedule-view .day-column.day-1,
+#schedule-view .day-column.day-3 { background: var(--schedule-alternate) !important; }
+#schedule-view .day-column.weekend { background: var(--schedule-weekend) !important; }
+#schedule-view .day-column.today { background: var(--schedule-today) !important; }
+#schedule-view .day-header,
+#schedule-view .day-header.weekend,
+#schedule-view .day-header.today {
+    background: var(--schedule-day) !important;
+    color: var(--schedule-text) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+#schedule-view .day-header.weekend { background: var(--schedule-weekend) !important; }
+#schedule-view .day-column.day-1:not(.today) > .day-header,
+#schedule-view .day-column.day-3:not(.today) > .day-header { background: var(--schedule-alternate) !important; }
+#schedule-view .day-header.today { background: var(--schedule-today) !important; }
+#schedule-view .day-header.today .day-header-date {
+    color: var(--schedule-accent) !important;
+    text-shadow: none !important;
+}
+#schedule-view .day-header.today .day-header-name,
+#schedule-view .day-header.today .day-header-month { color: var(--schedule-accent) !important; }
+#schedule-view .time-column::before {
+    background: var(--schedule-day) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+#schedule-view .hour-slot,
+#schedule-view .time-slot,
+#schedule-view .day-column.weekend .time-slot {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transition: none;
+}
+#schedule-view .time-slot:hover {
+    background: color-mix(in srgb, var(--schedule-accent) 9%, transparent) !important;
+}
+
+#schedule-view .schedule-event,
+#schedule-view .schedule-event:hover,
+#schedule-view .schedule-event.all-day-time-off,
+#schedule-view .sched-bar-fill,
+#schedule-view .schedule-event:hover .sched-bar-fill,
+#schedule-view .sched-avatar,
+#schedule-view .sched-avatar:hover,
+#schedule-view .bulk-check {
+    border: 0 !important;
+    box-shadow: none !important;
+    transition: transform .15s ease, opacity .15s ease;
+}
+#schedule-view .sched-bar { padding: 0; }
+#schedule-view .sched-bar-fill {
+    inset: 2px 3px;
+    background: color-mix(in srgb, var(--user-color) 20%, var(--schedule-day));
+    border-radius: 5px;
+}
+#schedule-view .schedule-event.sched-bar:hover .sched-bar-fill {
+    background: color-mix(in srgb, var(--user-color) 30%, var(--schedule-day));
+}
+#schedule-view .schedule-event.bulk-selected .sched-bar-fill {
+    background: color-mix(in srgb, var(--user-color) 38%, var(--schedule-day));
+}
+#schedule-view .sched-bar-name,
+#schedule-view .sched-bar-time {
+    color: var(--schedule-text);
+    text-shadow: none;
+}
+#schedule-view .sched-bar-time { opacity: .85; }
+#schedule-view .sched-avatar {
+    background: color-mix(in srgb, var(--user-color) 25%, var(--schedule-day));
+    color: var(--schedule-text);
+}
+#schedule-view .bulk-check {
+    background: var(--schedule-surface);
+    color: var(--schedule-muted);
+}
+#schedule-view .bulk-check svg { opacity: 0; }
+#schedule-view .bulk-selected .bulk-check {
+    background: var(--schedule-accent);
+    color: var(--schedule-on-accent);
+}
+#schedule-view .bulk-selected .bulk-check svg { opacity: 1; color: inherit; }
+#schedule-view .schedule-event.all-day-time-off {
+    background: var(--schedule-ooo) !important;
+    border-radius: 5px !important;
+}
+#schedule-view .ooo-banner { color: var(--schedule-ooo-text) !important; }
+#schedule-view .current-time-line { box-shadow: none !important; z-index: 3; }
+
+/* Flat surfaces in the schedule editor, without removing state indicators. */
+#schedule-view .modal-content,
+#schedule-view .modal-header,
+#schedule-view .modal-footer,
+#schedule-view .mini-calendar,
+#schedule-view .month-navigator,
+#schedule-view .selected-dates,
+#schedule-view #selected-dates-container,
+#schedule-view .range-preview,
+#schedule-view .date-tag,
+#schedule-view .dow-chip span,
+#schedule-view .btn,
+#schedule-view .form-control,
+#schedule-view .form-select {
+    border: 0 !important;
+    box-shadow: none !important;
+}
+#schedule-view .mini-calendar,
+#schedule-view .month-navigator,
+#schedule-view .selected-dates,
+#schedule-view #selected-dates-container {
+    padding: 6px 0 !important;
+    background: transparent !important;
+}
+#schedule-view .day-item.today {
+    border: 0 !important;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    font-weight: 700;
+}
+/* Restore keyboard focus locally despite legacy global *:focus resets. */
+#schedule-view :focus-visible {
+    outline: 2px solid var(--schedule-accent) !important;
+    outline-offset: 3px !important;
+}
+#schedule-view .btn-check:focus-visible + .btn,
+#schedule-view .dow-chip input:focus-visible + span {
+    outline: 2px solid var(--schedule-accent) !important;
+    outline-offset: 3px !important;
+}
+#schedule-view .dow-chip input {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+
+@media (max-width: 768px) {
+    #schedule-view .calendar-grid {
+        grid-template-columns: 48px repeat(7, minmax(104px, 1fr));
+        gap: 4px;
+    }
+    #schedule-view .cc-header-row { gap: 12px; }
+    #schedule-view .cc-title-block { flex-basis: 100%; min-width: 0; }
+    #schedule-view .cc-actions { flex-wrap: wrap; }
+    #schedule-view .cc-actions .cc-btn span { display: inline; }
+    #schedule-view .cc-nav { justify-content: flex-start; flex-wrap: wrap; }
+    #schedule-view .cc-filter { flex: 1 1 180px; max-width: 100%; }
+}

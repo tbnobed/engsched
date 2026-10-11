@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="calendar-container">
+<script defer src="{{ url_for('static', filename='js/schedule-height.js') }}"></script>
+<div class="calendar-container schedule-flat" id="schedule-view">
     <div class="calendar-header cc-header">
         <div class="cc-header-row">
             <div class="cc-title-block">
@@ -77,7 +78,7 @@
                          data-location-id="{{ schedule.location_id or '' }}"
                          data-bs-toggle="modal" data-bs-target="#scheduleModal">
                         <div class="ooo-banner">
-                            <span>🏖️</span><strong>{{ schedule.technician.username }}</strong>&nbsp;&mdash;&nbsp;OOO ALL DAY
+                            <strong>{{ schedule.technician.username }}</strong>&nbsp;&mdash;&nbsp;OOO ALL DAY
                         </div>
                     </div>
                     {% else %}
@@ -93,7 +94,7 @@
                          data-location-id="{{ schedule.location_id or '' }}"
                          data-bs-toggle="modal" data-bs-target="#scheduleModal"
                          data-toggle="tooltip" data-html="true"
-                         title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}&ndash;{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br>&#128205; {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
+                          title="<div class='hover-content'><strong>{{ schedule.technician.username }}</strong> <span class='text-muted'>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%m/%d/%y') }}</span><br>{{ schedule.start_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }}&ndash;{{ schedule.end_time.astimezone(current_user.get_timezone_obj()).strftime('%H:%M') }} ({{ ((schedule.end_time - schedule.start_time).total_seconds() / 3600)|int }}h){% if schedule.location %}<br>Location: {{ schedule.location.name }}{% endif %}{{ ('<br>' + schedule.description) if schedule.description else '' }}</div>">
                         <div class="sched-bar-fill"></div>
                         <div class="sched-bar-label">
                             <span class="sched-bar-name">{% if schedule.time_off %}Time Off{% else %}{{ schedule.technician.username }}{% endif %}</span>

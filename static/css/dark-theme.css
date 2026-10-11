@@ -1,4 +1,18 @@
 /* Modern Dark Theme CSS - Plex Studios */
+/* Schedule-only palette; shared flat geometry lives in style.css. */
+.calendar-container.schedule-flat {
+  --schedule-surface: #202d40;
+  --schedule-day: #141e2c;
+  --schedule-alternate: #182333;
+  --schedule-weekend: #211f2b;
+  --schedule-today: #1c3047;
+  --schedule-text: #e3ebf5;
+  --schedule-muted: #a4b4c8;
+  --schedule-accent: #91b8e5;
+  --schedule-on-accent: #142439;
+  --schedule-ooo: #332c23;
+  --schedule-ooo-text: #dfc298;
+}
 :root {
   /* Base colors - more modern shades */
   --dark-bg: #0d1117;
