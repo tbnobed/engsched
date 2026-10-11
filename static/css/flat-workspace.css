@@ -574,7 +574,7 @@
     .cc-panel, .cc-kpi, .card, .mobile-card, .tk-panel, .tk-kpi,
     .ad-panel, .ad-kpi, .ti-panel, .ti-widget, .ti-filters,
     .ti-summary-metric, .ti-settings-section, .aa-panel, .aa-connection,
-    .tr-card, .tr-side-card, .tr-meta, .tr-composer, .tr-activity-card,
+    .tr-card, .tr-side-card, .tr-meta, .tr-composer, .tr-activity-card, .ticket-ai,
     .schedule-card, .time-off-card, .ticket-card, .quick-link-card,
     .stat-card, .login-card, .modal-content, .tk-drawer,
     .ti dialog, .aa dialog, #schedule-view, .mini-calendar
@@ -582,5 +582,18 @@
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.survey-page main,
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.api-docs section {
     border: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
+  }
+
+  /* Calendar sections need internal separators, not only the outside frame. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body #schedule-view .day-column {
+    border-inline-start: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body #schedule-view :is(.calendar-header, .day-header),
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .modern-mobile-calendar :is(.calendar-header, .timeline-header),
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .ticket-reference-page :is(.tr-compose-tabs, .tr-activity-head) {
+    border-bottom: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .ticket-reference-page .tr-meta-cell:not(:last-child) {
+    border-inline-end: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
   }
 }

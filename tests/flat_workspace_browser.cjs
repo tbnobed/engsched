@@ -73,10 +73,12 @@ const markup = `
           const style = await computed(id);
           const sections = ["card", "ticket-panel", "admin-kpi", "report-panel",
             "api-panel", "detail-card", "detail-side", "modal", "drawer",
-            "mobile-event", "mobile-link"];
+            "mobile-event", "mobile-link", "assistant"];
           if (sections.includes(id)) {
             assert(style.border.every(value => parseFloat(value) > 0 && parseFloat(value) <= 1), `${theme}/${width}/${id}: hairline separator`);
             assert.match(style.borderColor, /0\.03\b/, `${theme}/${width}/${id}: three-percent separator`);
+          } else if (id === "mobile-header") {
+            assert(parseFloat(style.border[2]) > 0 && parseFloat(style.border[2]) <= 1, "Mobile calendar header separator");
           } else {
             assert.deepEqual(style.border, ["0px", "0px", "0px", "0px"], `${theme}/${width}/${id}: no extra internal border`);
           }
