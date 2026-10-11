@@ -174,6 +174,44 @@
     background-size:16px 12px !important;
     padding-right:2.5rem !important;
 }
+/* Ticket detail has its own surface tokens; do not let them force dark mode. */
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page {
+    --tr-bg:#f4f6fa;--tr-panel:#ffffff;--tr-panel-raised:#edf2f7;
+    --tr-border:#cbd5e1;--tr-border-soft:#dce3ec;--tr-ink:#1e293b;
+    --tr-muted:#475569;--tr-faint:#64748b;--tr-purple:#5b5ff0;
+    --tr-purple-bright:#5145bd;--tr-gold:#84612e;color-scheme:light;
+}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page :is(.tr-crumb-current,.tr-meta-value,.tr-tab.active,.tr-activity-head h2,.tr-author,.tr-activity-content,.tr-detail-line dd,.ql-editor) {color:var(--tr-ink)}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page :is(.tr-time,.tr-detail-line,.tr-timezone,.tr-compose-placeholder,.tr-history-row) {color:var(--tr-muted)}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page :is(.tr-btn,.tr-icon-button,.tr-file-label,.tr-canned,.tr-after-status,.tr-canned-menu,.tr-menu,.tr-canned-choice) {background:var(--tr-panel-raised);color:var(--tr-ink);border-color:var(--tr-border)}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page :is(.tr-btn,.tr-icon-button,.tr-canned-choice):hover {background:#e1e7f0;color:var(--tr-ink);border-color:#94a3b8}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .tr-btn-primary {background:var(--tr-purple);color:#ffffff;border-color:var(--tr-purple)}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .tr-btn-primary:hover {background:#4944c6;color:#ffffff}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page :is(.form-control,.form-select,.tr-meta-value select option) {background:#ffffff;color:var(--tr-ink);border-color:var(--tr-border)}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page :is(input,textarea)::placeholder {color:#64748b;opacity:1}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .tr-avatar {background:#e2e9f3;color:#405679}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .tr-author .tr-avatar {background:#f4ead8;color:#84612e}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .tr-activity-content a {color:var(--tr-purple-bright)}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page :is(.tr-activity-content blockquote,.ql-editor blockquote) {color:var(--tr-muted);border-color:#94a3b8}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .ticket-ai :is(.card-title,.text-muted,.form-text) {color:var(--tr-muted)!important}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .ticket-ai :is(details,.ticket-ai-content) {color:var(--tr-ink)}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .ticket-ai :is(.ticket-ai-message,[data-ai-badge],[data-ai-empty] .btn) {background:var(--tr-panel-raised)!important;color:var(--tr-ink)!important;border-color:var(--tr-border)!important}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .ticket-ai [data-ai-form] {border-color:var(--tr-border)}
+:is(body.light-theme, [data-bs-theme="light"]) :is(.ticket-reference-page .modal-content,.tr-ticket-modal .modal-content) {background:#ffffff!important;color:#1e293b!important;border-color:#cbd5e1!important}
+:is(body.light-theme, [data-bs-theme="light"]) :is(.tr-ticket-modal,.ticket-reference-page .modal) :is(.modal-header,.modal-footer,.modal-body) {background:#f8fafc!important;border-color:#cbd5e1!important;color:#1e293b}
+:is(body.light-theme, [data-bs-theme="light"]) :is(.tr-ticket-modal,.ticket-reference-page .modal) .btn-close {filter:none!important}
+/* Quill's toolbar and picker must remain legible on the light composer. */
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .ql-snow .ql-stroke {stroke:#475569}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .ql-snow .ql-fill {fill:#475569}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .ql-snow .ql-picker {color:#475569}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .ql-snow :is(.ql-picker-options,.ql-tooltip) {background:#ffffff;color:#1e293b;border-color:#cbd5e1}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .tr-requester-name {color:var(--tr-ink)}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page :is(.tr-side-title,.tr-requester-email) {color:var(--tr-muted)}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .tr-requester .tr-avatar {background:#f4ead8;color:#84612e}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .tr-note-tag {color:#84612e}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .tr-comment-delete {color:#64748b}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .tr-comment-delete:hover {color:#a13b27}
+:is(body.light-theme, [data-bs-theme="light"]) .ticket-reference-page .ticket-inline-image img {background:var(--tr-panel-raised)!important;border-color:var(--tr-border)!important}
 @media (max-width: 1100px) {
     .ticket-reference-page .tr-columns { grid-template-columns:minmax(0,1fr) minmax(320px, 34%);gap:20px; }
 }

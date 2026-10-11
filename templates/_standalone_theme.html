@@ -1,0 +1,18 @@
+{# Standalone public pages use the saved theme, or the system theme when anonymous.
+   This only changes presentation; it never saves a user preference. #}
+<script>
+  (() => {
+    const savedTheme = {{ (current_user.theme_preference if current_user is defined and current_user.is_authenticated else none) | tojson }};
+    const systemTheme = window.matchMedia('(prefers-color-scheme: light)');
+    const applyTheme = () => {
+      const theme = savedTheme === 'light' || savedTheme === 'dark'
+        ? savedTheme : (systemTheme.matches ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-bs-theme', theme);
+      if (document.body) document.body.classList.toggle('light-theme', theme === 'light');
+    };
+    applyTheme();
+    document.addEventListener('DOMContentLoaded', applyTheme, { once: true });
+    if (systemTheme.addEventListener) systemTheme.addEventListener('change', applyTheme);
+  })();
+</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/standalone-theme.css') }}">

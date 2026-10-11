@@ -1,0 +1,20 @@
+/* Theme-only overrides for public reference and feedback pages. */
+html[data-bs-theme="light"] {color-scheme:light;color:#1e293b;background:#f4f6fa}
+html[data-bs-theme="light"] body {background:#f4f6fa;color:#1e293b}
+html[data-bs-theme="light"] .api-docs :is(section,pre) {background:#ffffff;border-color:#cbd5e1}
+html[data-bs-theme="light"] .api-docs :is(a,summary,.method) {color:#17657b}
+html[data-bs-theme="light"] .api-docs .muted {color:#475569}
+html[data-bs-theme="light"] .api-docs :is(th,td) {border-color:#cbd5e1}
+html[data-bs-theme="light"] .survey-page main {background:#ffffff;border-color:#cbd5e1}
+html[data-bs-theme="light"] .survey-page :is(p,.scale) {color:#475569}
+html[data-bs-theme="light"] .survey-page small {color:#17657b}
+html[data-bs-theme="light"] .survey-page .rating {border-color:#94a3b8}
+html[data-bs-theme="light"] .survey-page .rating:has(input:checked) {background:#e0eff3;border-color:#17657b}
+html[data-bs-theme="light"] .survey-page input {accent-color:#17657b}
+html[data-bs-theme="light"] .survey-page textarea {background:#ffffff;color:#1e293b;border-color:#94a3b8}
+html[data-bs-theme="light"] .survey-page textarea::placeholder {color:#64748b;opacity:1}
+html[data-bs-theme="light"] .survey-page button {background:#17657b;border-color:#17657b;color:#ffffff}
+html[data-bs-theme="light"] .survey-page button:hover {background:#124f62}
+html[data-bs-theme="light"] .survey-page :focus-visible {outline-color:#17657b}
+html[data-bs-theme="light"] .survey-page .error {background:#fff3eb;color:#8a3b14;border-color:#b87346}
+html[data-bs-theme="light"] .survey-page .note {border-color:#cbd5e1}

@@ -366,7 +366,7 @@
     </style>
     {% include "_sidebar_styles.html" %}
 </head>
-<body class="{% if current_user.is_authenticated %}app-sidebar-layout{% if current_user.theme_preference == 'light' %} light-theme{% endif %}{% endif %}"{% if current_user.is_authenticated and current_user.theme_preference == 'dark' %} data-bs-theme="dark"{% endif %}>
+<body class="{% if current_user.is_authenticated %}app-sidebar-layout{% if current_user.theme_preference == 'light' %} light-theme{% endif %}{% endif %}"{% if current_user.is_authenticated %} data-bs-theme="{{ 'light' if current_user.theme_preference == 'light' else 'dark' }}"{% endif %}>
     {% include "_sidebar.html" %}
     {% if not current_user.is_authenticated %}
     <header class="p-3 d-flex justify-content-between">

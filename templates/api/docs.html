@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en"{% if current_user is defined and current_user.is_authenticated %} data-bs-theme="{{ 'light' if current_user.theme_preference == 'light' else 'dark' }}"{% endif %}>
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Plex Engineering API Reference</title>
@@ -7,8 +7,9 @@
     :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0b111a;color:#e4edf5;font:16px/1.6 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:36px 24px}h1,h2,h3{line-height:1.3}h1{font-size:34px}h2{margin-top:36px}a{color:#91d8e5}p,li{max-width:90ch}code,pre{font-family:ui-monospace,monospace}pre{padding:16px;background:#080d14;border:1px solid #304257;overflow:auto;border-radius:8px;font-size:14px}section{background:#131f2d;border:1px solid #2b3d52;border-radius:10px;padding:20px;margin:16px 0}details{margin:12px 0}summary{cursor:pointer;color:#91d8e5;overflow-wrap:anywhere}.method{color:#91d8e5;text-transform:uppercase;font-weight:700;margin-right:10px}th,td{text-align:left;vertical-align:top;padding:8px;border-bottom:1px solid #304257}table{width:100%;border-collapse:collapse;font-size:14px}.scroll{overflow:auto}.muted{color:#a7bacb}@media(max-width:600px){main{padding:20px 14px}h1{font-size:28px}section{padding:14px}}
     h3 code,p code,li code{overflow-wrap:anywhere}section,details{min-width:0}.scroll,pre{max-width:100%}
   </style>
+  {% include "_standalone_theme.html" %}
 </head>
-<body><main>
+<body class="api-docs"><main>
   <p class="muted">TBN PLEX ENGINEERING · API V1</p>
   <h1>Tickets and technician schedules</h1>
   <p>Integrate from your application’s backend using an API key. Base path: <code>/api/v1</code> on this application’s host. Use HTTPS outside local development.</p>

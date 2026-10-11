@@ -1329,6 +1329,16 @@ body.light-theme .tk-btn:hover { background: #e6ecf5 !important; border-color:#c
 body.light-theme .tk-pager button:hover:not(:disabled) { background:#e6ecf5 !important; border-color:#c7d0de !important; }
 body.light-theme .cc-shell, body.light-theme .tk-shell { color: #1a2433; }
 
+/* Ticket queue controls that still use literal dark helper colors. */
+body.light-theme .tk-shell {color-scheme:light}
+body.light-theme .tk-chip:hover {background:#e6ecf5;border-color:#c7d0de}
+body.light-theme .tk-pill-pri-2 {color:#9a4c0d}
+body.light-theme .tk-drawer-error {color:#a13b27;background:#fff0ed;border-color:#d6a197}
+body.light-theme :is(.tk-input,.tk-drawer input,.tk-drawer textarea)::placeholder {color:#64748b;opacity:1}
+body.light-theme .tk-shell ::-webkit-scrollbar-thumb {background:#b4c0d0}
+body.light-theme :is(.tk-pager button.active,.tk-bulk-bar .count,.tk-row-action:hover) {color:#ffffff}
+body.light-theme :is(.tk-drawer,.tk-bulk-bar) {color-scheme:light}
+
 /* Calendar page (calendar.html) — .calendar-container is hardcoded dark
    in style.css. Override to a clean light look in light mode. */
 body.light-theme .calendar-container {
