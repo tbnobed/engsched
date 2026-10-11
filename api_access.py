@@ -5,6 +5,7 @@ import secrets
 
 from flask import Blueprint, jsonify, request, render_template
 from flask_login import current_user, login_required
+from flask_wtf.csrf import CSRFError, generate_csrf
 from app import db
 from models import ApplicationAPIKey, ApplicationAPIAudit, User
 from ticket_insights_service import utc
@@ -58,6 +59,18 @@ def private(response):
 @login_required
 def page():
     return render_template('admin/api_access.html')
+
+
+@api_admin.get('/api/admin/api-keys/csrf')
+@login_required
+def fresh_csrf():
+    return jsonify(csrf_token=generate_csrf())
+
+
+@api_admin.errorhandler(CSRFError)
+def csrf_failure(error):
+    return jsonify(error='Security verification failed. Reload this page and try again.',
+                   code='csrf_failed'), 400
 
 
 @api_admin.route('/api/admin/api-keys', methods=['GET', 'POST'])

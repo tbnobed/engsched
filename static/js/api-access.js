@@ -49,14 +49,17 @@
   async function request(path, method = 'GET', data) {
     const headers = { Accept: 'application/json' };
     if (method !== 'GET') {
-      const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+      // A tab may remain open past Flask-WTF's token lifetime. Refresh before
+      // writing, never retry the write itself (creation reveals a key once).
+      const fresh = await request('/api/admin/api-keys/csrf');
+      const csrf = fresh.csrf_token;
       if (!csrf) throw new Error('The security token is missing. Reload this page before trying again.');
       headers['X-CSRFToken'] = csrf;
       headers['Content-Type'] = 'application/json';
     }
     let response;
     try {
-      response = await fetch(path, { method, credentials: 'same-origin', cache: 'no-store', headers, ...(data !== undefined ? { body: JSON.stringify(data) } : {}) });
+      response = await fetch(path, { method, credentials: 'same-origin', cache: 'no-store', referrerPolicy: 'same-origin', headers, ...(data !== undefined ? { body: JSON.stringify(data) } : {}) });
     } catch (_) {
       throw new Error('Cannot reach the server. Check your connection and retry.');
     }
@@ -71,6 +74,17 @@
         429: 'Too many requests. Wait a moment before retrying.'
       };
       // Do not surface arbitrary server responses: they may contain sensitive data.
+      const detail = await response.json().catch(() => null);
+      if (detail?.code === 'csrf_failed') {
+        throw new Error('Security verification failed. Reload this page and try again. If it persists, sign out and sign back in.');
+      }
+      const safeErrors = new Set([
+        'Provide name, scopes and expires_days.',
+        'Name must contain 1–80 characters.',
+        'Select at least one valid scope.',
+        'Expiration must be 1–365 days.'
+      ]);
+      if (safeErrors.has(detail?.error)) throw new Error(detail.error);
       throw new Error(messages[response.status] || 'The server could not complete this request. Please retry.');
     }
     try { return await response.json(); }

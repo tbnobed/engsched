@@ -125,6 +125,31 @@ class APIV1Tests(unittest.TestCase):
         self.assertEqual(tech.get('/api/admin/api-keys').status_code, 403)
         self.assertEqual(tech.post('/api/admin/api-keys', json=payload, headers=th).status_code, 403)
 
+    def test_refresh_expired_key_form_token(self):
+        import time
+        from unittest.mock import patch
+        admin, _ = self.admin_client()
+        endpoint = '/api/admin/api-keys/csrf'
+        self.assertEqual(self.app.test_client().get(endpoint).status_code, 401)
+        tech, _ = self.admin_client(self.tech)
+        self.assertEqual(tech.get(endpoint).status_code, 403)
+        def expired_token():
+            from flask_wtf.csrf import generate_csrf
+            with patch('itsdangerous.TimestampSigner.get_timestamp', return_value=int(time.time()) - 7200):
+                return generate_csrf()
+        with patch('api_access.generate_csrf', side_effect=expired_token):
+            stale = admin.get(endpoint).get_json()['csrf_token']
+        payload = {'name': self.label, 'expires_days': 90,
+                   'scopes': ['tickets:read', 'tickets:write', 'schedules:read', 'directory:read']}
+        rejected = admin.post('/api/admin/api-keys', json=payload, headers={'X-CSRFToken': stale})
+        self.assertEqual(rejected.status_code, 400)
+        self.assertEqual(rejected.get_json()['code'], 'csrf_failed')
+        refreshed = admin.get(endpoint)
+        self.assertIn('no-store', refreshed.headers['Cache-Control'])
+        accepted = admin.post('/api/admin/api-keys', json=payload,
+                              headers={'X-CSRFToken': refreshed.get_json()['csrf_token']})
+        self.assertEqual(accepted.status_code, 201)
+
     def test_ticket_lifecycle_comments_notes_and_history(self):
         payload = dict(self.ticket_payload(), description='<script>alert(1)</script>\nPlain text')
         response = self.request('POST', '/tickets', payload)
