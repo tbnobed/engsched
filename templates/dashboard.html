@@ -3,7 +3,7 @@
 
 {% block content %}
 <style>
-  /* Main dashboard only: flat workspace, with distinct section colors.
+  /* Main dashboard only: blended color washes over a shared neutral canvas.
      Keep these tokens on the shell so reporting/calendar palettes stay intact. */
   .cc-shell {
     --cc-bg: #0b0f15;
@@ -96,7 +96,8 @@
     background: var(--cc-bg);
     height: 100%;
     color: var(--cc-text);
-    border-radius: 0;
+    border-radius: 14px;
+    overflow: hidden;
     margin: 0;
     font-family: 'Segoe UI',system-ui,sans-serif;
     flex: 1;
@@ -116,20 +117,29 @@
   .cc-clock .big { font-size: 20px; font-weight:700; }
   .cc-clock .sub { color: var(--cc-muted); font-size: 12px; }
   .cc-grid {
-    display:grid; gap: 12px; padding: 0;
+    display:grid; gap: 0; padding: 0;
+    /* One continuous surface, rather than separate painted cards. */
+    background:
+      radial-gradient(ellipse 30% 100% at 0% 35%, var(--cc-rail), transparent 100%),
+      radial-gradient(ellipse 55% 55% at 50% 20%, var(--cc-panel), transparent 100%),
+      radial-gradient(ellipse 55% 65% at 50% 100%, var(--cc-tickets), transparent 100%),
+      radial-gradient(ellipse 30% 100% at 100% 35%, var(--cc-bookings), transparent 100%),
+      var(--cc-bg);
     grid-template-columns: clamp(160px, 14vw, 240px) minmax(0, 1fr) clamp(180px, 17vw, 280px);
     grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas: "people metrics bookings" "people timeline bookings" "people tickets bookings";
     flex: 1; min-height: 0;
   }
   .cc-panel {
-    background: var(--cc-panel); border:0;
-    border-radius: 14px; overflow:hidden; display:flex; flex-direction:column;
+    --cc-section-tint: var(--cc-panel);
+    background: transparent;
+    border:0;
+    border-radius: 0; overflow:hidden; display:flex; flex-direction:column;
     min-width:0; min-height:0;
   }
-  .cc-people-panel { grid-area:people; background: var(--cc-rail); }
-  .cc-bookings-panel { grid-area:bookings; background: var(--cc-bookings); }
-  .cc-tickets-panel { grid-area:tickets; background: var(--cc-tickets); }
+  .cc-people-panel { grid-area:people; --cc-section-tint: var(--cc-rail); }
+  .cc-bookings-panel { grid-area:bookings; --cc-section-tint: var(--cc-bookings); }
+  .cc-tickets-panel { grid-area:tickets; --cc-section-tint: var(--cc-tickets); }
   .cc-timeline-panel { grid-area:timeline; }
   #ccTicketsList, #ccBookingsList { flex:1; min-height:0; overflow:auto; }
   #ccTicketsList {
@@ -147,8 +157,26 @@
 
   /* People rail */
   .cc-people { display:flex; flex-direction:column; gap:4px; padding:4px 8px 12px; overflow:auto; min-height:0; flex:1; }
-  .cc-person { display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:8px; cursor:pointer; transition:none; }
-  .cc-person:hover { background: var(--cc-people-hover); }
+  .cc-person { --cc-row-hover:var(--cc-people-hover); display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:8px; cursor:pointer; transition:none; }
+  /* Fade a translucent wash, not a solid replacement row background.
+     Only opacity animates; the existing link focus outline stays above it. */
+  .cc-person, .cc-ticket-row { position:relative; isolation:isolate; }
+  .cc-person::before, .cc-ticket-row::before {
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:-1;
+    pointer-events:none;
+    border-radius:inherit;
+    background:linear-gradient(90deg,
+      transparent,
+      color-mix(in srgb, var(--cc-row-hover) 70%, transparent) 25%,
+      color-mix(in srgb, var(--cc-row-hover) 70%, transparent) 75%,
+      transparent);
+    opacity:0;
+    transition:opacity .18s ease;
+  }
+  .cc-person:hover::before, .cc-ticket-row:hover::before { opacity:1; }
   /* Shared legacy CSS clears focus with !important; restore it locally.
      Inset outlines remain visible inside the scrolling, clipped panels. */
   .cc-shell :focus-visible {
@@ -168,12 +196,18 @@
   .cc-pill.ooo { background: var(--cc-warn-bg); color: var(--cc-warn); }
 
   /* KPI strip */
-  .cc-kpis { grid-area:metrics; display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:8px; }
-  .cc-kpi { background: transparent; border:0; border-radius:14px; padding: 18px 16px; min-width:0; }
-  .cc-kpi:nth-child(1) { background:var(--cc-kpi-active); }
-  .cc-kpi:nth-child(2) { background:var(--cc-kpi-priority); }
-  .cc-kpi:nth-child(3) { background:var(--cc-kpi-shift); }
-  .cc-kpi:nth-child(4) { background:var(--cc-kpi-bookings); }
+  .cc-kpis { grid-area:metrics; display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:0; }
+  .cc-kpi {
+    background:radial-gradient(ellipse at 50% 15%,
+      color-mix(in srgb, var(--cc-summary-tint) 85%, transparent),
+      color-mix(in srgb, var(--cc-summary-tint) 35%, transparent) 55%,
+      transparent 100%);
+    border:0; border-radius:0; padding:12px 14px; min-width:0;
+  }
+  .cc-kpi:nth-child(1) { --cc-summary-tint:var(--cc-kpi-active); }
+  .cc-kpi:nth-child(2) { --cc-summary-tint:var(--cc-kpi-priority); }
+  .cc-kpi:nth-child(3) { --cc-summary-tint:var(--cc-kpi-shift); }
+  .cc-kpi:nth-child(4) { --cc-summary-tint:var(--cc-kpi-bookings); }
   .cc-kpi .lbl { color:var(--cc-muted); font-size:11px; text-transform:uppercase; letter-spacing:.6px; }
   .cc-kpi .val { font-size:30px; font-weight:600; letter-spacing:-.8px; font-variant-numeric:tabular-nums; margin-top:8px; line-height:1; color: var(--cc-text); }
   .cc-kpi .delta { font-size:11px; color: var(--cc-muted); margin-top:6px; }
@@ -190,7 +224,7 @@
     display:grid; grid-template-columns: 80px 1fr; align-items:center;
     padding: 6px 0; border:0; border-radius:8px; position:relative; min-height: 48px;
   }
-  .cc-lane:nth-child(even) { background:rgba(128,160,194,.07); }
+  .cc-lane:nth-child(even) { background:linear-gradient(90deg, transparent, rgba(128,160,194,.045) 35%, transparent); }
   .cc-lane .lname { font-size:12px; color:var(--cc-muted); display:flex; align-items:center; gap:6px; }
   .cc-lane .track { position:relative; height:32px; border-radius:6px; }
   .cc-block {
@@ -207,12 +241,17 @@
 
   /* Tickets */
   .cc-ticket-row {
+    --cc-row-hover:var(--cc-ticket-hover);
     display:grid; grid-template-columns: 44px minmax(0,1fr) auto; gap:8px;
     padding: 12px 16px; border:0; border-radius:8px; cursor:pointer;
     transition:none; text-decoration:none;
   }
-  .cc-ticket-row:nth-child(even) { background:var(--cc-ticket-alternate); }
-  .cc-ticket-row:hover { background: var(--cc-ticket-hover); }
+  .cc-ticket-row:nth-child(even) {
+    background:linear-gradient(90deg, transparent,
+      color-mix(in srgb, var(--cc-ticket-alternate) 32%, transparent) 35%,
+      color-mix(in srgb, var(--cc-ticket-alternate) 32%, transparent) 65%,
+      transparent);
+  }
   .cc-ticket-row .title, .cc-ticket-row .sub, .cc-booking .n { overflow-wrap:anywhere; }
   .cc-ticket-row .num { font-family: 'JetBrains Mono', monospace; color: var(--cc-muted); font-size:12px; align-self:center; }
   .cc-ticket-row .title { font-size:13px; font-weight:500; color: var(--cc-text); }
@@ -226,7 +265,12 @@
 
   /* Bookings */
   .cc-booking { padding: 14px 16px; border:0; border-radius:8px; display:flex; gap:12px; align-items:flex-start; }
-  .cc-booking:nth-child(even) { background:var(--cc-booking-alternate); }
+  .cc-booking:nth-child(even) {
+    background:linear-gradient(90deg, transparent,
+      color-mix(in srgb, var(--cc-booking-alternate) 32%, transparent) 35%,
+      color-mix(in srgb, var(--cc-booking-alternate) 32%, transparent) 65%,
+      transparent);
+  }
   .cc-booking .swatch { width:4px; align-self:stretch; min-height:36px; border-radius:2px; }
   .cc-booking .t { font-size:11px; color: var(--cc-muted); margin-top:2px; }
   .cc-booking .n { font-weight:600; font-size:13px; color: var(--cc-text); }
@@ -235,6 +279,11 @@
   .cc-shell ::-webkit-scrollbar { width:8px; height:8px; }
   .cc-shell { scrollbar-color:var(--cc-muted) transparent; scrollbar-width:thin; }
   .cc-shell ::-webkit-scrollbar-thumb { background: var(--cc-muted); border-radius:4px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cc-person::before, .cc-ticket-row::before, .cc-block { transition:none; }
+    .cc-block:hover { transform:none; }
+  }
 
   @media (min-width: 1200px) {
     .cc-kpis { grid-template-columns:repeat(4,minmax(0,1fr)); }
@@ -252,7 +301,7 @@
     main.container-fluid:has(.cc-shell) > .row,
     main.container-fluid:has(.cc-shell) > .row > .col-12,
     .cc-shell { height:auto; }
-    .cc-grid { grid-template-columns: minmax(0,1fr); grid-template-rows:auto; grid-template-areas:"metrics" "people" "timeline" "tickets" "bookings"; gap:12px; }
+    .cc-grid { grid-template-columns: minmax(0,1fr); grid-template-rows:auto; grid-template-areas:"metrics" "people" "timeline" "tickets" "bookings"; gap:0; }
     .cc-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .cc-timeline-panel { height:320px; }
     .cc-people-panel { max-height:320px; }

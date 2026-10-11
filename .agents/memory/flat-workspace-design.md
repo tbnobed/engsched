@@ -5,9 +5,9 @@ description: User's visual direction for the main dashboard and schedule views.
 
 Keep the main dashboard and schedules minimal, flat, and fluid. Separate sections with different background shades rather than decorative borders, shadows, or nested outlined cards. Support both light and dark themes.
 
-For the dashboard, flat does not mean sharp corners: use softly rounded sections and consistent smaller rounding on rows and badges.
+For the dashboard, use one continuous softly edged surface with no gutters between sections or KPIs. Blend distinct near-black color regions into each other instead of painting separate rounded cards. Keep content padding and smaller rounding on rows/badges.
 
-**Why:** The user clarified, “I don't want sharp edges, i want the sections to blend in and flow cleaner.”
+**Why:** The user rejected a radius-only change, then clarified, “I don't want gaps between sections everything needs to flow and blend.”
 
 **Why:** The user requested removing borders from schedules, then explicitly extended that direction to the dashboard with “different shades of colors to seperate sections.”
 
