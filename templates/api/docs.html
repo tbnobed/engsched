@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"{% if current_user is defined and current_user.is_authenticated %} data-bs-theme="{{ 'light' if current_user.theme_preference == 'light' else 'dark' }}"{% endif %}>
+<html lang="en" data-flat-workspace{% if current_user is defined and current_user.is_authenticated %} data-bs-theme="{{ 'light' if current_user.theme_preference == 'light' else 'dark' }}"{% endif %}>
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Plex Engineering API Reference</title>

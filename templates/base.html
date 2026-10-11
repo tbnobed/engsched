@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-flat-workspace>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -365,6 +365,7 @@
         }
     </style>
     {% include "_sidebar_styles.html" %}
+    {% include "_flat_workspace_styles.html" %}
 </head>
 <body class="{% if current_user.is_authenticated %}app-sidebar-layout{% if current_user.theme_preference == 'light' %} light-theme{% endif %}{% endif %}"{% if current_user.is_authenticated %} data-bs-theme="{{ 'light' if current_user.theme_preference == 'light' else 'dark' }}"{% endif %}>
     {% include "_sidebar.html" %}

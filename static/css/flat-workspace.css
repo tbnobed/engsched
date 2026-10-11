@@ -1,0 +1,570 @@
+/*
+ * Continuous workspace / restrained chromatic washes.
+ * Opt-in is on the five document layouts, not on arbitrary descendants.
+ * Repeated attributes intentionally outrank legacy page/theme !important rules;
+ * stylesheet download order is not part of the cascade contract.
+ * Only named surfaces lose borders. SVG strokes, canvas charts, native radios,
+ * checkboxes, calendar coordinates and scroll containers are never reset.
+ * Screen-only: existing report print layouts remain in charge.
+ */
+@media screen {
+  html[data-flat-workspace][data-bs-theme="light"] .login-logo img {
+    filter: brightness(0);
+    opacity: .85;
+  }
+  html[data-flat-workspace] {
+    --flat-canvas: #0b0f15;
+    --flat-blue: #0e1621;
+    --flat-green: #0c1917;
+    --flat-plum: #18111e;
+    --flat-amber: #1b160f;
+    --flat-rose: #211217;
+    --flat-input: #152131;
+    --flat-hover: #1c2c3c;
+    --flat-ink: #e5edf5;
+    --flat-muted: #acbbcb;
+    --flat-accent: #9bbde2;
+    --flat-on-accent: #132438;
+    --flat-good: #91ceb5;
+    --flat-warn: #e0c18b;
+    --flat-bad: #efa5a2;
+    --flat-check: #71869c;
+    background: var(--flat-canvas);
+    color-scheme: dark;
+  }
+  html[data-flat-workspace][data-bs-theme="light"],
+  html[data-flat-workspace]:has(body.light-theme) {
+    --flat-canvas: #e9eef2;
+    --flat-blue: #dfeaf5;
+    --flat-green: #dceee8;
+    --flat-plum: #eee0f0;
+    --flat-amber: #f2e6d3;
+    --flat-rose: #f3dfe3;
+    --flat-input: #cedeed;
+    --flat-hover: #cbdfe9;
+    --flat-ink: #253548;
+    --flat-muted: #56677a;
+    --flat-accent: #365f8a;
+    --flat-on-accent: #edf3f8;
+    --flat-good: #28654e;
+    --flat-warn: #7c5925;
+    --flat-bad: #a13f44;
+    --flat-check: #60778e;
+    color-scheme: light;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body {
+    --dark-bg: var(--flat-canvas);
+    --dark-panel: var(--flat-blue);
+    --dark-card: var(--flat-blue);
+    --dark-text: var(--flat-ink);
+    --dark-text-secondary: var(--flat-muted);
+    --dark-muted: var(--flat-muted);
+    --dark-accent: var(--flat-accent);
+    --dark-hover: var(--flat-hover);
+    --dark-active: var(--flat-input);
+    --dark-input-bg: var(--flat-input);
+    --dark-border: var(--flat-check);
+    --dark-success: var(--flat-good);
+    --dark-warning: var(--flat-warn);
+    --dark-danger: var(--flat-bad);
+    --dark-info: var(--flat-accent);
+    --light-bg: var(--flat-canvas);
+    --light-panel: var(--flat-blue);
+    --light-card: var(--flat-blue);
+    --light-text: var(--flat-ink);
+    --light-muted: var(--flat-muted);
+    --light-accent: var(--flat-accent);
+    --light-hover: var(--flat-hover);
+    --light-input-bg: var(--flat-input);
+    --primary-color: var(--flat-accent);
+    --cc-bg: var(--flat-canvas);
+    --cc-panel: var(--flat-blue);
+    --cc-panel-2: var(--flat-input);
+    --cc-text: var(--flat-ink);
+    --cc-muted: var(--flat-muted);
+    --cc-accent: var(--flat-accent);
+    --cc-border: var(--flat-check);
+    --cc-good: var(--flat-good);
+    --cc-warn: var(--flat-warn);
+    --cc-bad: var(--flat-bad);
+    --ad-bg: var(--flat-canvas);
+    --ad-panel: var(--flat-blue);
+    --ad-panel2: var(--flat-input);
+    --ad-text: var(--flat-ink);
+    --ad-muted: var(--flat-muted);
+    --ad-border: var(--flat-check);
+    --ad-accent: var(--flat-accent);
+    --ad-accent2: var(--flat-accent);
+    --ad-good: var(--flat-good);
+    --ad-warn: var(--flat-warn);
+    --ad-bad: var(--flat-bad);
+    background: var(--flat-canvas) !important;
+    color: var(--flat-ink) !important;
+    color-scheme: inherit;
+  }
+  /* Root paint joins adjacent regions; panel washes fade to that same canvas. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    main.container-fluid:not(:has(.cc-shell)), main.mobile-content,
+    .tk-shell, .admin-cc, .tickets-dashboard, .ti, .aa,
+    .ticket-reference-page, .modern-schedule-container, .modern-mobile-calendar
+  ) {
+    background:
+      radial-gradient(ellipse at 0% 25%, var(--flat-green), transparent 65%),
+      radial-gradient(ellipse at 95% 65%, var(--flat-plum), transparent 65%),
+      radial-gradient(ellipse at 50% 0%, var(--flat-blue), transparent 75%),
+      var(--flat-canvas) !important;
+    color: var(--flat-ink) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 14px;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(.tk-shell, .admin-cc) {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  /* Resource-specific variables also support dynamically inserted content. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .ti {
+    --ti-bg: var(--flat-canvas); --ti-panel: var(--flat-blue);
+    --ti-raised: var(--flat-input); --ti-ink: var(--flat-ink);
+    --ti-muted: var(--flat-muted); --ti-accent: var(--flat-accent);
+    --ti-border: var(--flat-check);
+    color-scheme: inherit;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .aa {
+    --aa-bg: var(--flat-canvas); --aa-panel: var(--flat-blue);
+    --aa-raised: var(--flat-input); --aa-ink: var(--flat-ink);
+    --aa-muted: var(--flat-muted); --aa-accent: var(--flat-accent);
+    --aa-warning: var(--flat-warn); --aa-border: var(--flat-check);
+    color-scheme: inherit;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .ticket-reference-page {
+    --tr-bg: var(--flat-canvas); --tr-panel: var(--flat-blue);
+    --tr-panel-raised: var(--flat-input); --tr-ink: var(--flat-ink);
+    --tr-muted: var(--flat-muted); --tr-faint: var(--flat-muted);
+    --tr-purple: var(--flat-accent); --tr-purple-bright: var(--flat-accent);
+    --tr-gold: var(--flat-warn); --tr-border: var(--flat-check);
+    --tr-border-soft: var(--flat-check);
+  }
+  /* Do not change template columns, flex sizing or scroll/height contracts. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .tk-body, .tk-kpis, .ad-grid, .ad-kpis, .tr-columns, .ti-grid,
+    .ti-directory-layout, .ti-report-summary, .quick-links-grid,
+    .schedule-list, .schedules-timeline
+  ) { gap: 0 !important; }
+  /* Bootstrap gutters are collapsed only for adjacent surface columns, never
+     for form fields or the dashboard's full-height wrapper. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body
+    .row:has(> [class*="col-"] > :is(.card, .mobile-card)) {
+    --bs-gutter-x: 0;
+    --bs-gutter-y: 0;
+    margin-block: 0 !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body
+    [class*="col-"]:has(> :is(.card, .mobile-card)) {
+    padding-inline: 0 !important;
+    margin-block: 0 !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .card, .mobile-card, .tk-panel, .tk-kpi, .ad-panel, .ad-kpi,
+    .ti-panel, .ti-widget, .ti-summary-metric, .ti-settings-section,
+    .aa-panel, .aa-connection, .tr-card, .tr-side-card, .tr-meta,
+    .tr-composer, .tr-activity-card, .schedule-card, .time-off-card,
+    .ticket-card, .quick-link-card
+  ) {
+    --flat-section: var(--flat-blue);
+    background: radial-gradient(ellipse at 50% 30%, var(--flat-section), transparent 100%) !important;
+    color: var(--flat-ink) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin-block: 0 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .card, .mobile-card, .tk-panel, .tk-kpi, .ad-panel, .ad-kpi,
+    .ti-panel, .ti-widget, .ti-summary-metric, .ti-settings-section,
+    .aa-panel, .tr-card, .tr-side-card, .schedule-card, .ticket-card, .quick-link-card
+  ):nth-child(4n+2) { --flat-section: var(--flat-plum); }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .card, .mobile-card, .tk-panel, .tk-kpi, .ad-panel, .ad-kpi,
+    .ti-panel, .ti-widget, .ti-summary-metric, .ti-settings-section,
+    .aa-panel, .tr-card, .tr-side-card, .schedule-card, .ticket-card, .quick-link-card
+  ):nth-child(4n+3) { --flat-section: var(--flat-green); }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .card, .mobile-card, .tk-panel, .tk-kpi, .ad-panel, .ad-kpi,
+    .ti-panel, .ti-widget, .ti-summary-metric, .ti-settings-section,
+    .aa-panel, .tr-card, .tr-side-card, .schedule-card, .ticket-card, .quick-link-card
+  ):nth-child(4n+4) { --flat-section: var(--flat-amber); }
+  /* These have real inner padding; removing boxes must not remove readability. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .card-header, .card-footer, .card-body, .tk-panel-h, .ad-panel-head,
+    .ti-panel-head, .aa-panel-head, .tr-meta-cell, .tr-activity-head,
+    .tr-compose-footer, .tr-compose-tabs, .day-header-modern,
+    .section-header, .timeline-header, .schedule-header
+  ) {
+    background: transparent !important;
+    color: var(--flat-ink) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .tk-kpis, .ad-kpis, .tr-meta
+  ) { margin-bottom: 0 !important; }
+  /* Menus/dialogs are softly edged surfaces; no decorative floating shadows. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .modal-content, .dropdown-menu, .tr-menu, .tr-canned-menu,
+    .tk-inline-popover, .tk-kbd-help, .tk-drawer, .ti dialog, .aa dialog,
+    .custom-timezone-selector, .ql-picker-options, .ql-tooltip
+  ) {
+    background: var(--flat-blue) !important;
+    color: var(--flat-ink) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 12px !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .modal-header, .modal-footer, .tk-drawer-head, .tk-drawer-foot,
+    .tk-drawer-row, .ti-dialog-head, .aa-dialog-head, .dropdown-divider,
+    .timezone-option, .tr-history-row, .tr-activity-list, .tr-opening,
+    .tr-compose-area, .ti-methodology, .ti-filter-footer, .ti-list li,
+    .aa-guide, .aa-note
+  ) { border: 0 !important; box-shadow: none !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .dropdown-item, .timezone-option, .tr-canned-choice, .ti-picker-item
+  ) { color: var(--flat-ink) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .dropdown-item, .timezone-option, .tr-canned-choice, .ti-picker-item
+  ):is(:hover, :focus, .active, .selected) {
+    background: var(--flat-hover) !important;
+    color: var(--flat-ink) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .form-control:not(.form-control-color), .form-select, .login-input,
+    .tk-input, .tk-select, .ad-date-group input, .ti input:not([type="checkbox"]):not([type="radio"]),
+    .ti select, .ti textarea, .aa input:not([type="checkbox"]):not([type="radio"]),
+    .aa select, .aa textarea, .survey-page textarea
+  ) {
+    background-color: var(--flat-input) !important;
+    color: var(--flat-ink) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 6px !important;
+    color-scheme: inherit;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    input, textarea
+  )::placeholder { color: var(--flat-muted) !important; opacity: 1; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .form-label, .form-check-label, .form-text, .text-muted,
+    .tk-shell .sub, .tk-shell .lbl, .ad-sub, .ad-email,
+    .tr-subtitle, .tr-time, .tr-crumbs, .tr-crumb-current, .tr-meta-value,
+    .tr-requester-name, .tr-requester-email, .tr-detail-line, .tr-author,
+    .tr-activity-label, .tr-file-name, .tr-viewlink, .tr-empty,
+    .ticket-description, .mobile-title, .empty-text, .location-info,
+    .day-name, .day-date, .week-title, .year-subtitle, .description-text,
+    .time-text, .event-location, .event-time, .event-description
+  ) { color: var(--flat-ink) !important; text-shadow: none !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .text-muted, .form-text, .tr-subtitle, .tr-time, .tr-requester-email,
+    .ad-sub, .ad-email, .year-subtitle, .event-time, .empty-text
+  ) { color: var(--flat-muted) !important; }
+  /* Borderless table rhythm, with no change to data/column geometry. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .table, .tk-table, .ad-table, .ti table, .aa table, .api-docs table
+  ) { color: var(--flat-ink) !important; border: 0 !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .table, .tk-table, .ad-table, .ti table, .aa table, .api-docs table
+  ) :is(th, td) {
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: var(--flat-ink) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .table, .tk-table, .ad-table, .ti table, .aa table, .api-docs table
+  ) tbody tr:nth-child(even) {
+    background: linear-gradient(90deg, transparent, var(--flat-plum), transparent) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .table, .tk-table, .ad-table, .ti table, .aa table
+  ) tbody tr:hover {
+    background: linear-gradient(90deg, transparent, var(--flat-hover), transparent) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .list-group-item, .comment, .time-off-entry, .active-user-card,
+    .quick-link-grid-item a, .top-bar-quick-link, .stat-card,
+    .mobile-card .shadow-sm, .ti-target-row, .ti-requester-choice,
+    .ti-metric, .ti-summary-metric, .ti-picker-item, .aa-scope
+  ) {
+    border: 0 !important;
+    box-shadow: none !important;
+    background: linear-gradient(90deg, transparent, var(--flat-green), transparent) !important;
+    color: var(--flat-ink) !important;
+    transform: none !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .btn, .tk-btn, .tk-row-action, .tk-chip, .ad-btn, .ad-date-group,
+    .ti button, .ti-button, .ti-drag-handle, .aa button, .aa-button,
+    .tr-btn, .tr-icon-button, .tr-tab, .tr-canned, .tr-quote-toggle,
+    .quick-action-btn, .action-btn, .nav-btn, .add-btn, .add-schedule-btn,
+    .tk-sort, .tk-pager, .tk-bulk-bar, .ti-tabs, .ti-pagination,
+    .tr-attachment-display, .ticket-header-gradient
+  ) {
+    border: 0 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .btn-secondary, [class*="btn-outline-"], .tk-btn, .tk-chip, .ad-btn,
+    .ti-button, .aa-button, .tr-btn, .tr-icon-button, .tr-tab,
+    .quick-action-btn, .action-btn, .nav-btn, .add-btn, .add-schedule-btn
+  ) {
+    background: var(--flat-input) !important;
+    color: var(--flat-ink) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .btn-primary, .tk-btn.primary, .ad-btn-primary, .ti .ti-primary,
+    .aa .aa-primary, .tr-btn-primary, .tr-send, .login-btn, .survey-page button
+  ) {
+    background: var(--flat-accent) !important;
+    color: var(--flat-on-accent) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .btn-danger, .tk-btn.bad, .ad-btn-danger, .aa .aa-danger
+  ) { background: var(--flat-rose) !important; color: var(--flat-bad) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .alert, .login-alert, .tk-drawer-error, .ti-error, .aa-error, .aa-form-error,
+    .survey-page .error, .tk-empty, .ti-state, .aa-state, .empty-state, .no-links
+  ) { border: 0 !important; box-shadow: none !important; color: var(--flat-ink); }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .alert-danger, .login-alert-error, .tk-drawer-error, .ti-error,
+    .aa-error, .aa-form-error, .survey-page .error, .invalid-feedback
+  ) { color: var(--flat-bad) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .alert-danger, .login-alert-error, .tk-drawer-error, .ti-error, .aa-error, .survey-page .error
+  ) { background: var(--flat-rose) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .alert-info, .login-alert-info
+  ) { background: var(--flat-blue) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .alert-warning, .alert-success
+  ) { background: var(--flat-amber) !important; }
+  /* Preserve affordances (including hidden-input labels) rather than resetting
+     every input border. SVG paths, spinners and chart lines are untouched. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body
+    :is(input[type="checkbox"], input[type="radio"]) {
+    accent-color: var(--flat-accent);
+    border-color: var(--flat-check) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :focus-visible,
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .btn-check:focus-visible + .btn,
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .dow-chip input:focus-visible + span,
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .rating:has(input:focus-visible) {
+    outline: 2px solid var(--flat-accent) !important;
+    outline-offset: -2px !important;
+    /* Legacy transition:all must not animate (or delay) keyboard focus. */
+    transition-property: transform, opacity !important;
+  }
+  /* Schedule paint only: the fixed 64px header + 1440px day and all overflow,
+     sticky headers, event positioning and view-height rules stay untouched. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .calendar-container.schedule-flat {
+    --schedule-surface: var(--flat-blue);
+    --schedule-day: var(--flat-blue);
+    --schedule-alternate: var(--flat-green);
+    --schedule-weekend: var(--flat-plum);
+    --schedule-today: var(--flat-input);
+    --schedule-text: var(--flat-ink);
+    --schedule-muted: var(--flat-muted);
+    --schedule-accent: var(--flat-accent);
+    --schedule-on-accent: var(--flat-on-accent);
+    --schedule-ooo: var(--flat-amber);
+    --schedule-ooo-text: var(--flat-warn);
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body #schedule-view .calendar-grid {
+    gap: 0 !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .modern-mobile-calendar .hour-line, .modern-mobile-calendar .timeline-event-card,
+    .modern-mobile-calendar .timeline-duration-line, .modern-mobile-calendar .timeline-container,
+    .modern-mobile-calendar .timeline-grid, .modern-mobile-calendar .timeline-scroll,
+    .mini-calendar, .dow-chip, .day-item, .selected-date-pill
+  ) { border: 0 !important; box-shadow: none !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .modern-mobile-calendar .timeline-event-card, .modern-mobile-calendar .timeline-header,
+    .modern-mobile-calendar .hour-slot, .modern-mobile-calendar .timeline-scroll,
+    .modern-mobile-calendar .timeline-wrapper
+  ) { background-color: transparent !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .mobile-header, .bottom-nav
+  ) {
+    border: 0 !important; box-shadow: none !important;
+    background: var(--flat-canvas) !important; color: var(--flat-ink) !important;
+  }
+  /* Auth/public pages join the workspace palette, including all survey states. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .login-wrapper {
+    min-height: 100dvh;
+    background:
+      radial-gradient(ellipse at 20% 60%, var(--flat-green), transparent 65%),
+      radial-gradient(ellipse at 85% 20%, var(--flat-plum), transparent 65%),
+      var(--flat-canvas) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .login-card,
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.survey-page main,
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.api-docs section {
+    background: radial-gradient(ellipse at 50% 20%, var(--flat-blue), transparent 100%) !important;
+    border: 0 !important; box-shadow: none !important; border-radius: 14px !important;
+    color: var(--flat-ink) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .login-card { backdrop-filter: none; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .login-title, .survey-page legend, .survey-page .rating
+  ) { color: var(--flat-ink) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .login-subtitle, .login-footer, .remember-label, .input-icon,
+    .survey-page p, .survey-page .scale, .api-docs .muted
+  ) { color: var(--flat-muted) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.survey-page :is(.note, .rating) {
+    border: 0 !important;
+    background: var(--flat-blue);
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.survey-page .rating:has(input:checked) {
+    background: var(--flat-input) !important;
+    color: var(--flat-accent) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.api-docs section {
+    margin-block: 0 !important;
+    border-radius: 0 !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.api-docs section:nth-of-type(even) {
+    background: radial-gradient(ellipse at center, var(--flat-green), transparent 100%) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.api-docs pre {
+    border: 0 !important; box-shadow: none !important;
+    background: var(--flat-input) !important; color: var(--flat-ink) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.api-docs :is(a, summary, .method),
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.survey-page small {
+    color: var(--flat-accent) !important;
+  }
+  /* Column-wrapped cards are usually each their parent's first child. Give
+     those siblings distinct color families too, not identical blue panels. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body
+    .row > [class*="col-"]:nth-child(2n) > .card { --flat-section: var(--flat-plum); }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body
+    .row > [class*="col-"]:nth-child(3n) > .card { --flat-section: var(--flat-green); }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body
+    .row > [class*="col-"]:nth-child(4n) > .card { --flat-section: var(--flat-amber); }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .mobile-card
+    :is(.shadow-sm, .stat-card):nth-child(4n+2) {
+    background: linear-gradient(90deg, transparent, var(--flat-rose), transparent) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .mobile-card
+    :is(.shadow-sm, .stat-card):nth-child(4n+3) {
+    background: linear-gradient(90deg, transparent, var(--flat-blue), transparent) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .mobile-card
+    :is(.shadow-sm, .stat-card):nth-child(4n+4) {
+    background: linear-gradient(90deg, transparent, var(--flat-amber), transparent) !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .mobile-card
+    :is(div:has(> .shadow-sm), div:has(> .stat-card)) { gap: 0 !important; }
+  /* Named embedded surfaces not represented by Bootstrap cards. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .ti-widget-tools, .ti-report-head, .ti-interaction, .ti-response-content,
+    .ti-directory-list, .ti-report-nav a, .ti-tabs a, .ti-config,
+    .aa-feedback, .aa-token, .aa pre, .aa fieldset fieldset,
+    .tr-file-label, .tr-after-status, .tr-compose-area .ql-toolbar.ql-snow,
+    .ticket-ai, .ticket-ai-message, .ticket-ai [data-ai-badge], .ticket-ai [data-ai-form],
+    .ad-avatar, .ad-avatar-fallback, .ad-swatch, .ad-pill, .tk-pill-cat,
+    .tk-filters, .tk-search-row, .tk-refresh-ind, .tk-new,
+    .auto-refresh-indicator, .stat-pill, .empty-day, .link-icon,
+    .calendar-header, .modern-mobile-calendar .timeline-wrapper,
+    .modern-mobile-calendar .hour-slot, .modern-mobile-calendar .hour-label,
+    .modern-mobile-calendar .event-avatar, .modern-mobile-calendar .user-avatar,
+    .modern-mobile-calendar .time-dot, .modern-mobile-calendar .time-marker,
+    .modern-mobile-calendar .time-label, .modern-mobile-calendar .timeoff-badge,
+    .modern-mobile-calendar .ooo-badge, .modern-mobile-calendar .description,
+    .modern-mobile-calendar .timeline-profile-pic
+  ) { border: 0 !important; box-shadow: none !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .ti-response-content, .ti-directory-list, .aa pre, .aa-token,
+    .tr-after-status, .ticket-ai-message, .stat-pill, .empty-day,
+    .link-icon, .modern-mobile-calendar .description
+  ) { background: var(--flat-blue) !important; color: var(--flat-ink) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .ticket-ai, .ticket-header-gradient, .calendar-header
+  ) {
+    background: radial-gradient(ellipse at 50% 30%, var(--flat-plum), transparent 100%) !important;
+    color: var(--flat-ink) !important;
+    margin-block: 0 !important;
+    border-radius: 0 !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .modern-mobile-calendar .timeline-title, .modern-mobile-calendar .hour-time,
+    .modern-mobile-calendar .hour-period, .modern-mobile-calendar .current-date,
+    .modern-mobile-calendar .current-date-sub, .modern-mobile-calendar .date-display,
+    .modern-mobile-calendar .schedule-time-indicator, .modern-mobile-calendar .user-name,
+    .modern-mobile-calendar .description, .quick-link-card .link-title,
+    .quick-link-card .link-description, .quick-link-card .link-icon
+  ) { color: var(--flat-ink) !important; text-shadow: none !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .ti-tabs a[aria-current="page"],
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .ti-report-nav a[aria-current="page"],
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .ti-requester-choice[aria-pressed="true"],
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .tk-chip.active {
+    background: var(--flat-input) !important;
+    color: var(--flat-accent) !important;
+    box-shadow: none !important;
+    font-weight: 700;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .tr-tab.active {
+    color: var(--flat-accent) !important;
+  }
+  /* Sticky headings must remain opaque so scrolled rows never bleed through. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .table, .tk-table, .ad-table, .ti table, .aa table
+  ) thead th { background: var(--flat-blue) !important; color: var(--flat-muted) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .table, .tk-table, .ad-table, .ti table, .aa table
+  ) tr { border: 0 !important; }
+  /* Same hue meaning in both modes, with readable foregrounds on tinted badges. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .badge.bg-danger, .tk-pill-pri-3, .ti .ti-error, .ad-pill-hidden
+  ) { background: var(--flat-rose) !important; color: var(--flat-bad) !important; border: 0 !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .badge.bg-warning, .tk-pill-pri-2, .tk-pill-st-pending
+  ) { background: var(--flat-amber) !important; color: var(--flat-warn) !important; border: 0 !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .badge.bg-success, .tk-pill-st-in_progress, .ad-pill-tech, .aa-status-active
+  ) { background: var(--flat-green) !important; color: var(--flat-good) !important; border: 0 !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .badge.bg-primary, .badge.bg-info, .tk-pill-pri-1, .tk-pill-st-open, .ad-pill-admin
+  ) { background: var(--flat-input) !important; color: var(--flat-accent) !important; border: 0 !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .form-control.is-invalid, .form-select.is-invalid, .login-input.is-invalid
+  ) { background-color: var(--flat-rose) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .was-validated
+    :is(.form-control, .form-select):invalid { background-color: var(--flat-rose) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .ti-skeleton,
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .aa-skeleton {
+    background: var(--flat-input) !important;
+    border: 0 !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .form-control-color, .input-group-text, .ql-toolbar.ql-snow,
+    .ql-container.ql-snow, .mobile-title, .flat-schedule-automation,
+    .ticket-inline-image
+  ) { border: 0 !important; box-shadow: none !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .input-group-text, .mobile-title, .flat-schedule-automation,
+    .badge.bg-light, .badge.bg-secondary
+  ) { background: var(--flat-blue) !important; color: var(--flat-ink) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .mobile-title h2, .ql-editor
+  ) { color: var(--flat-ink) !important; }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .ql-editor, .ql-toolbar.ql-snow, .ql-container.ql-snow
+  ) { background: transparent !important; }
+}

@@ -1,9 +1,15 @@
 ---
 name: Flat dashboard and schedule design
-description: User's visual direction for the main dashboard and schedule views.
+description: App-wide blended, borderless styling and dashboard-specific layout constraints.
 ---
 
 Keep the main dashboard and schedules minimal, flat, and fluid. Separate sections with different background shades rather than decorative borders, shadows, or nested outlined cards. Support both light and dark themes.
+
+Apply this same continuous, blended, borderless styling throughout the application, including admin, ticketing, mobile, sign-in and public pages.
+
+**Why:** The user asked to apply “this same type of styling to every other page in our app,” with a complete inventory first so no pages were missed.
+
+**How to apply:** Include nested dialogs, forms, tables and states in coverage, without altering routes or behavior. Retain focus indicators, checkbox affordances, icon strokes and meaningful chart lines; the prohibition is on decorative borders.
 
 For the dashboard, use one continuous softly edged surface with no gutters between sections or KPIs. Blend distinct near-black color regions into each other instead of painting separate rounded cards. Keep content padding and smaller rounding on rows/badges.
 
