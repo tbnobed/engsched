@@ -584,6 +584,12 @@
     border: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
   }
 
+  /* Keep the reply editor identifiable even when it is not focused. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body
+    .ticket-reference-page .tr-compose-area .ql-container.ql-snow {
+    border: 1px solid color-mix(in srgb, var(--flat-accent) 65%, transparent) !important;
+  }
+
   /* Calendar sections need internal separators, not only the outside frame. */
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body #schedule-view .day-column {
     border-inline-start: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
