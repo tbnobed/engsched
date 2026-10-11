@@ -36,6 +36,17 @@
 @media(min-width:1700px){.ti-filter-grid{grid-template-columns:repeat(8,minmax(0,1fr))}.ti-widget{grid-column:span 3}}
 @media(max-width:1000px){.ti-widget{grid-column:span 6}.ti-config{grid-template-columns:1fr}.ti-header{align-items:start}.ti{padding:20px 12px 36px}}
 @media(max-width:767px){.ti-grid{grid-template-columns:1fr}.ti-widget,.ti-widget[data-size=medium],.ti-widget[data-size=large]{grid-column:1}.ti-filter-grid{grid-template-columns:1fr}.ti-picker{grid-template-columns:1fr}.ti h1{font-size:27px}.ti-filters{padding:16px}.ti-config{grid-template-columns:1fr}.ti-dialog-body{padding:16px}.ti-header .ti-actions{width:100%}.ti-header .ti-actions>*{flex:1}.ti-report-nav{gap:6px}.ti td,.ti th{padding:12px}.ti-bar{font-size:14px}}
+.ti .ti-widget-tools { position:relative; justify-content:flex-end; border:0; padding-top:0; margin-top:10px; }
+.ti .ti-widget-actions-toggle { min-width:36px; font-size:24px; line-height:1; background:transparent; border:0; }
+.ti .ti-widget-actions-panel {
+  position:absolute; bottom:calc(100% + 4px); right:0; z-index:20;
+  display:flex; flex-direction:column; gap:2px; padding:8px;
+  width:176px; max-width:calc(100vw - 48px);
+  background:var(--ti-raised); color:var(--ti-ink); border:0; border-radius:10px;
+}
+.ti .ti-widget-actions-panel button { justify-content:flex-start; width:100%; border:0; min-height:36px; }
+.ti .ti-widget-actions-panel .ti-drag-handle { border:0; min-height:36px; }
+.ti-widget:has(.ti-widget-actions-panel:not([hidden])) { position:relative; z-index:21; }
 @media(prefers-reduced-motion:reduce){.ti-skeleton:after{animation:none}}
 @media print{
   body.app-sidebar-layout{padding:0!important;margin:0!important;background:#f8f8f5!important;color:#17202b!important}

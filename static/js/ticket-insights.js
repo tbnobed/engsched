@@ -19,6 +19,27 @@
   let controller, generation = 0, dragId, dialogReturn;
   let reportKey = Object.hasOwn(reportNames, query.get('report')) ? query.get('report') : 'volume';
   let tableStates = [];
+  let openWidgetActions;
+  function closeWidgetActions(restoreFocus = false) {
+    if (!openWidgetActions) return;
+    const { panel, toggle } = openWidgetActions;
+    panel.hidden = true;
+    toggle.setAttribute('aria-expanded', 'false');
+    openWidgetActions = null;
+    if (restoreFocus && toggle.isConnected) toggle.focus();
+  }
+  document.addEventListener('click', event => {
+    if (openWidgetActions && !openWidgetActions.tools.contains(event.target)) closeWidgetActions();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && openWidgetActions) {
+      event.preventDefault();
+      closeWidgetActions(true);
+    }
+  });
+  document.addEventListener('focusin', event => {
+    if (openWidgetActions && !openWidgetActions.tools.contains(event.target)) closeWidgetActions();
+  });
 
   function el(tag, cls, text) {
     const node = document.createElement(tag);
@@ -603,6 +624,7 @@
     return box;
   }
   function renderWidgets() {
+    closeWidgetActions();
     if (!data) return;
     const grid = $('ti-widgets');
     grid.replaceChildren();
@@ -621,10 +643,15 @@
       const header = el('div', 'ti-widget-heading');
       const heading = el('div');
       heading.append(el('h3', '', title), el('div', 'ti-widget-caption', `${widget.scope === 'me' ? 'Assigned to me' : 'Team'} · ${['created', 'resolved', 'volume', 'first_response', 'resolution_time'].includes(widget.type) ? 'Selected period' : widget.type === 'categories' ? 'Period & current backlog' : 'Current snapshot'}`));
-      const configure = button('Configure', () => { settings.hidden = !settings.hidden; configure.setAttribute('aria-expanded', String(!settings.hidden)); });
+      const configure = button('Configure', () => {
+        settings.hidden = !settings.hidden;
+        configure.setAttribute('aria-expanded', String(!settings.hidden));
+        closeWidgetActions(true);
+        if (!settings.hidden) settings.querySelector('select')?.focus();
+      });
       configure.setAttribute('aria-label', `Configure ${title}`);
       configure.setAttribute('aria-expanded', 'false');
-      header.append(heading, configure);
+      header.append(heading);
       const settings = widgetConfig(widget); settings.hidden = true;
       card.append(header, settings);
       if (!source) {
@@ -654,13 +681,31 @@
         } else card.append(el('p', 'ti-widget-caption', matching.length ? 'Open matching tickets →' : 'No qualifying tickets under the current filters.'));
       }
       const tools = el('div', 'ti-widget-tools');
+      const panel = el('div', 'ti-widget-actions-panel');
+      panel.id = `ti-widget-actions-${widget.id}`;
+      panel.hidden = true;
+      panel.setAttribute('role', 'group');
+      panel.setAttribute('aria-label', `${title} actions`);
+      const toggle = button('⋯', () => {
+        const wasOpen = !panel.hidden;
+        closeWidgetActions();
+        if (!wasOpen) {
+          panel.hidden = false;
+          toggle.setAttribute('aria-expanded', 'true');
+          openWidgetActions = { tools, panel, toggle };
+          panel.querySelector('button:not(:disabled)')?.focus();
+        }
+      }, 'ti-widget-actions-toggle');
+      toggle.setAttribute('aria-label', `Actions for ${title}`);
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-controls', panel.id);
       const handle = el('span', 'ti-drag-handle', 'Drag to reorder');
       handle.draggable = true;
       handle.title = 'Drag this handle, or use Move up / Move down';
       handle.addEventListener('dragstart', event => {
         dragId = widget.id; event.dataTransfer.setData('text/plain', widget.id); event.dataTransfer.effectAllowed = 'move'; card.classList.add('dragging');
       });
-      handle.addEventListener('dragend', () => { dragId = undefined; card.classList.remove('dragging'); });
+      handle.addEventListener('dragend', () => { dragId = undefined; card.classList.remove('dragging'); closeWidgetActions(); });
       card.addEventListener('dragover', event => { if (dragId && dragId !== widget.id) { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; } });
       card.addEventListener('drop', event => {
         event.preventDefault();
@@ -677,7 +722,8 @@
         if (!window.confirm(`Remove “${title}” from your workspace?`)) return;
         layout.widgets = layout.widgets.filter(item => item.id !== widget.id); markDirty(); renderWidgets();
       });
-      tools.append(handle, up, down, remove); card.append(tools); grid.append(card);
+      panel.append(configure, handle, up, down, remove);
+      tools.append(toggle, panel); card.append(tools); grid.append(card);
     });
   }
   function moveWidget(index, delta) {
@@ -686,7 +732,7 @@
     layout.widgets.splice(index + delta, 0, widget);
     markDirty(); renderWidgets();
     const card = Array.from($('ti-widgets').children).find(node => node.dataset.widgetId === id);
-    card?.querySelector('button')?.focus();
+    card?.querySelector('.ti-widget-actions-toggle')?.focus();
   }
   function markDirty() {
     dirty = true;
@@ -774,7 +820,7 @@
       if (page === 'overview') {
         $('ti-add').disabled = layout.widgets.length >= 20;
         $('ti-reset').disabled = false; $('ti-preset').disabled = false;
-        $('ti-save-state').textContent = 'Saved to your account · Drag handles or move buttons to reorder.';
+        $('ti-save-state').textContent = 'Saved to your account · Open a widget’s ⋯ menu to reorder or remove it.';
       }
       await loadData();
     } catch (error) {
