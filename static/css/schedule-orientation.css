@@ -1,7 +1,7 @@
 /* Shared visibility fixes; vertical days keep their aligned 24-hour scale. */
 #schedule-view:not(.schedule-horizontal) .day-column .day-slots .time-slot,
 #schedule-view:not(.schedule-horizontal) .time-column .hour-slot {
-    border-bottom: .5px solid color-mix(in srgb, var(--schedule-text) 14%, transparent) !important;
+    border-bottom: .5px solid color-mix(in srgb, var(--schedule-text) 10%, transparent) !important;
 }
 #schedule-view:not(.schedule-horizontal) .current-time-line {
     left: 0;
@@ -24,7 +24,7 @@
     gap: 2px;
     padding: 3px;
     background: var(--schedule-day);
-    border: .5px solid color-mix(in srgb, var(--schedule-text) 14%, transparent);
+    border: .5px solid color-mix(in srgb, var(--schedule-text) 10%, transparent);
     border-radius: 7px;
 }
 #schedule-view .schedule-view-switch button {
@@ -78,7 +78,7 @@
     grid-template-columns: 88px minmax(1728px, 1fr);
     height: auto;
     min-height: 0;
-    border-bottom: .5px solid color-mix(in srgb, var(--schedule-text) 14%, transparent) !important;
+    border-bottom: .5px solid color-mix(in srgb, var(--schedule-text) 10%, transparent) !important;
 }
 #schedule-view.schedule-horizontal .day-header {
     position: sticky !important;
@@ -98,7 +98,7 @@
 #schedule-view.schedule-horizontal .day-column .day-slots .time-slot {
     height: 100%;
     border: 0 !important;
-    border-right: .5px solid color-mix(in srgb, var(--schedule-text) 14%, transparent) !important;
+    border-right: .5px solid color-mix(in srgb, var(--schedule-text) 10%, transparent) !important;
 }
 #schedule-view.schedule-horizontal .schedule-event {
     left: var(--horizontal-start) !important;
