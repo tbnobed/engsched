@@ -9,9 +9,11 @@
   const reportNames = {
     volume: 'Ticket volume', aging: 'Backlog aging', first_response: 'First response',
     resolution_time: 'Resolution time', workload: 'Technician workload',
-    categories: 'Categories', stalled: 'Stalled tickets'
+    categories: 'Categories', stalled: 'Stalled tickets',
+    targets: 'Service targets', requesters: 'Requester demand', reopened: 'Reopened tickets',
+    handoffs: 'Assignment handoffs', satisfaction: 'Customer satisfaction', ai_usage: 'AI assistance usage'
   };
-  const keys = ['start', 'end', 'technician', 'category', 'priority', 'status', 'source', 'stalled_days'];
+  const keys = ['start', 'end', 'technician', 'category', 'priority', 'status', 'source', 'department', 'location', 'stalled_days'];
   let config, data, myData, savedLayout, layout, dirty = false, saving = false;
   let query = new URLSearchParams(location.search);
   let controller, generation = 0, dragId, dialogReturn;
@@ -93,7 +95,7 @@
     return `/tickets/reports?${params}`;
   }
   function fillFilters() {
-    const sources = { technician: 'technicians', category: 'categories', priority: 'priorities', status: 'statuses', source: 'sources' };
+    const sources = { technician: 'technicians', category: 'categories', priority: 'priorities', status: 'statuses', source: 'sources', department: 'departments', location: 'locations' };
     Object.entries(sources).forEach(([key, source]) => {
       const select = form.elements.namedItem(key);
       const existing = new Set(Array.from(select.options, option => option.value));
@@ -121,6 +123,10 @@
       if (query.has(key)) input.value = query.get(key);
     });
     $('ti-timezone').textContent = `Dates & activity in ${config.timezone}`;
+    if (config.is_admin && config.settings_url) {
+      $('ti-settings-link').href = config.settings_url;
+      $('ti-settings-link').hidden = false;
+    }
     $('ti-apply').disabled = false;
     syncLinks();
   }
@@ -246,15 +252,23 @@
   }
   function ticketCell(row, key, options) {
     const value = row[key];
+    if (key === '_review') {
+      if (options.plain) return el('span');
+      return canReview(row) ? button('Review / rate', () => reviewAI(row), 'ti-link-button') : el('span', 'ti-muted', 'Unavailable');
+    }
     if (options.tickets && (key === 'id' || key === 'title')) return safeLink(row.url, key === 'id' ? `#${value}` : value);
-    if (row.ticket_url && ['ticket_id', 'ticket', 'title', 'subject'].includes(key)) return safeLink(row.ticket_url, value ?? `#${row.ticket_id}`);
-    if (value === null || value === undefined) return el('span', 'ti-muted', 'Not tracked');
-    if (/_hours$/.test(key) || ['first_response', 'resolution_time'].includes(key)) return el('span', '', duration(value));
-    if (/_at$/.test(key)) return el('span', '', displayDate(value));
+    if (row.ticket_id && ['ticket_id', 'ticket', 'title', 'subject'].includes(key)) {
+      const url = row.ticket_url || data?.tickets.find(ticket => String(ticket.id) === String(row.ticket_id))?.url;
+      if (url) return safeLink(url, value ?? `#${row.ticket_id}`);
+    }
+    if (value === null || value === undefined) return el('span', 'ti-muted', options.report === 'targets' && ['response_target', 'resolution_target'].includes(key) ? 'Not configured' : 'Not tracked');
+    if (/_hours$/.test(key) || key === 'hours') return el('span', '', number(value));
+    if (['first_response', 'resolution_time'].includes(key)) return el('span', '', duration(value));
+    if (/_at$/.test(key) || ['last_reopened', 'interval_start', 'interval_end'].includes(key)) return el('span', '', displayDate(value));
     if (typeof value === 'boolean') return el('span', '', value ? 'Yes' : 'No');
     if (Array.isArray(value)) return el('span', '', value.join(', '));
     if (typeof value === 'object') return el('span', '', JSON.stringify(value));
-    if (!options.plain && options.report && typeof value === 'number' &&
+    if (!options.plain && ['volume', 'workload', 'categories', 'requesters'].includes(options.report) && typeof value === 'number' &&
         ['created', 'resolved', 'completed', 'open', 'high_priority', 'overdue'].includes(key)) {
       return button(number(value), () => openReportRow(row, options.report, key), 'ti-link-button');
     }
@@ -269,20 +283,21 @@
       }
       if (report === 'workload' && ticket.assignee !== row.technician) return false;
       if (report === 'categories' && ticket.category !== row.category) return false;
+      if (report === 'requesters' && ticket.requester_key !== row.requester_key) return false;
       if (key === 'created') return ticket.in_created_period;
       if (key === 'completed' || key === 'resolved') return ticket.in_resolved_period;
       if (key === 'high_priority') return ticket.is_open && ticket.priority >= 2;
       if (key === 'overdue') return ticket.is_overdue;
       return ticket.is_open;
     });
-    openTickets(`${row.date || row.technician || row.category} / ${key.replaceAll('_', ' ')}`, matching);
+    openTickets(`${row.date || row.requester || row.technician || row.category} / ${key.replaceAll('_', ' ')}`, matching);
   }
   function createTable(columns, rows, options = {}) {
     const panel = el('div', 'ti-table-block');
     const controls = el('div', 'ti-table-controls');
     const searchLabel = el('label', '', 'Search these rows');
     const search = el('input');
-    search.type = 'search'; search.placeholder = 'Ticket, technician, category…';
+    search.type = 'search'; search.placeholder = 'Search report rows…';
     searchLabel.append(search);
     const sizeLabel = el('label', '', 'Rows per page');
     const size = el('select');
@@ -293,7 +308,7 @@
     const caption = el('caption', '', options.tickets ? 'Matching tickets' : 'Filtered report rows');
     caption.style.captionSide = 'top'; caption.style.padding = '0 20px 10px'; caption.style.color = 'var(--ti-muted)';
     const head = el('thead'), headRow = el('tr');
-    columns.forEach(column => { const th = el('th', '', column.label); th.scope = 'col'; headRow.append(th); });
+      columns.forEach(column => { const th = el('th', column.key === '_review' ? 'ti-no-print' : '', column.label); th.scope = 'col'; headRow.append(th); });
     head.append(headRow);
     const tbody = el('tbody');
     table.append(caption, head, tbody); tableWrap.append(table);
@@ -310,7 +325,7 @@
     function makeRow(row, plain = false) {
       const tr = el('tr');
       columns.forEach(column => {
-        const td = el('td'); td.append(ticketCell(row, column.key, { ...options, plain: options.plain || plain })); tr.append(td);
+        const td = el('td', column.key === '_review' ? 'ti-no-print' : ''); td.append(ticketCell(row, column.key, { ...options, plain: options.plain || plain })); tr.append(td);
       });
       return tr;
     }
@@ -347,6 +362,91 @@
     if (options.print) tableStates = [render];
     return panel;
   }
+  function mutationOptions(method, payload) {
+    return { method, headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' }, body: JSON.stringify(payload) };
+  }
+  function feedbackControls() {
+    const section = el('section', 'ti-interaction');
+    section.append(el('h3', '', 'Collect feedback'), el('p', '', 'Manually share this permission-bearing link only with the requester. No email is sent automatically. Links expire after 30 days. Creating another link invalidates the previous unsubmitted link; an existing response cannot be replaced.'));
+    const controls = el('div', 'ti-feedback-controls'), label = el('label', '', 'Resolved or closed ticket');
+    const select = el('select'), placeholder = el('option', '', 'Choose a ticket…'); placeholder.value = ''; select.append(placeholder);
+    (data.feedback_eligible || []).forEach(ticket => {
+      const option = el('option', '', `#${ticket.id} · ${ticket.title}`); option.value = String(ticket.id); select.append(option);
+    });
+    label.append(select);
+    const status = el('p', 'ti-inline-status'); status.setAttribute('role', 'status');
+    const result = el('div', 'ti-feedback-result'); result.hidden = true;
+    const create = button('Create feedback link', async () => {
+      if (!select.value) return;
+      if (!window.confirm('Create a feedback link? This replaces any old unsubmitted link for this ticket. An existing response cannot be replaced. No email will be sent. Share only with the requester.')) return;
+      create.disabled = true; select.disabled = true; result.replaceChildren(); result.hidden = true;
+      status.dataset.error = 'false'; status.textContent = 'Creating feedback link…';
+      try {
+        const response = await request('/api/ticket-insights/feedback-links', mutationOptions('POST', { ticket_id: Number(select.value) }));
+        if (typeof response.path !== 'string' || !/^\/feedback\/[^/?#]+$/.test(response.path)) throw new Error('The server did not return a valid feedback link. Please retry.');
+        const url = window.location.origin + response.path;
+        const linkLabel = el('label', '', 'Private requester feedback link'), input = el('input');
+        input.readOnly = true; input.value = url; input.addEventListener('focus', () => input.select()); linkLabel.append(input);
+        const actions = el('div', 'ti-actions');
+        const copyButton = button('Copy link', async () => {
+          try {
+            if (!navigator.clipboard?.writeText) throw new Error('Clipboard access is unavailable.');
+            await navigator.clipboard.writeText(url);
+            status.dataset.error = 'false'; status.textContent = 'Link copied. Share it only with the requester.';
+          } catch (_) {
+            status.dataset.error = 'true'; status.textContent = 'Could not copy the link. Select the link above and copy it manually, or try Copy link again.';
+            input.focus(); input.select();
+          }
+        });
+        const open = safeLink(url, 'Open link in new tab', 'ti-button'); open.target = '_blank'; open.rel = 'noopener noreferrer';
+        actions.append(copyButton, open); result.append(linkLabel, actions);
+        result.hidden = false;
+        status.textContent = `Link created. Expires ${displayDate(response.expires_at)}. No email has been sent.`;
+      } catch (error) {
+        result.replaceChildren(); result.hidden = true; status.dataset.error = 'true'; status.textContent = `${error.message} You can retry creating the link.`;
+      } finally {
+        select.disabled = false; create.disabled = !select.value;
+      }
+    }, 'ti-primary');
+    create.disabled = true;
+    select.addEventListener('change', () => { create.disabled = !select.value; result.replaceChildren(); result.hidden = true; status.textContent = ''; });
+    controls.append(label, create); section.append(controls, result, status);
+    if (!(data.feedback_eligible || []).length) section.append(el('p', '', 'No resolved or closed tickets are eligible in the current filters. Adjust the workspace filters to find a ticket.'));
+    return section;
+  }
+  function canReview(row) {
+    return Number.isInteger(row.message_id) && row.status === 'completed';
+  }
+  function reviewAI(row) {
+    const body = openDialog(`AI response / Ticket #${row.ticket_id}`);
+    body.append(el('p', 'ti-muted', row.title), el('div', 'ti-response-content', row.response_content || 'No response content recorded.'));
+    const status = el('p', 'ti-inline-status'); status.setAttribute('role', 'status');
+    const votes = el('p', 'ti-muted'), actions = el('div', 'ti-actions');
+    const choices = [[true, 'Helpful'], [false, 'Not helpful'], [null, 'Clear my rating']];
+    const buttons = choices.map(([helpful, label]) => {
+      const control = button(label, async () => {
+        buttons.forEach(item => { item.disabled = true; });
+        status.dataset.error = 'false'; status.textContent = 'Saving your rating…';
+        try {
+          const response = await request(`/api/ticket-insights/ai/${encodeURIComponent(row.message_id)}/rating`, mutationOptions('PUT', { helpful }));
+          if (typeof response.helpful_votes !== 'number' || typeof response.not_helpful_votes !== 'number' || ![true, false, null].includes(response.my_rating)) throw new Error('The server did not confirm your rating. Try again.');
+          Object.assign(row, { helpful_votes: response.helpful_votes, not_helpful_votes: response.not_helpful_votes, my_rating: response.my_rating });
+          update(); await loadData();
+          status.textContent = helpful === null ? 'Your rating was cleared.' : 'Your rating was saved.';
+        } catch (error) { status.dataset.error = 'true'; status.textContent = `${error.message} Please try again.`; }
+        finally { update(); }
+      });
+      actions.append(control); return control;
+    });
+    function update() {
+      votes.textContent = `${number(row.helpful_votes || 0)} helpful · ${number(row.not_helpful_votes || 0)} not helpful · Your rating: ${row.my_rating === true ? 'Helpful' : row.my_rating === false ? 'Not helpful' : 'Not rated'}`;
+      buttons.forEach((control, index) => {
+        control.disabled = choices[index][0] === null && row.my_rating == null;
+        if (index < 2) control.setAttribute('aria-pressed', String(row.my_rating === choices[index][0]));
+      });
+    }
+    body.append(votes, actions, status); update();
+  }
   function renderReport() {
     const report = data.reports[reportKey];
     if (!report || !Array.isArray(report.rows) || !Array.isArray(report.columns)) {
@@ -377,7 +477,25 @@
       header.append(summary);
       if (report.missing_history) header.append(el('p', 'ti-muted', `${number(report.missing_history)} completed tickets in the filtered dataset have no recorded completion timestamp and cannot be assigned to a historical period.`));
     }
-    panel.append(header, createTable(report.columns, report.rows, { report: reportKey, print: true }));
+    if (Array.isArray(report.summary)) {
+      const summary = el('div', 'ti-report-summary');
+      report.summary.forEach(metric => {
+        const item = el('div', 'ti-summary-metric');
+        item.append(el('span', '', metric.label), el('strong', '', metric.value == null ? (reportKey === 'targets' ? 'Not configured' : 'Not tracked') : metric.value));
+        summary.append(item);
+      });
+      header.append(summary);
+    }
+    if (reportKey === 'targets') {
+      header.append(el('p', '', 'Unset service targets are not configured, not zero. Targets use calendar hours, without business-hour schedules or pauses. Current policies apply retrospectively.'));
+      if (config.is_admin && config.settings_url) header.append(safeLink(config.settings_url, 'Configure service targets', 'ti-no-print'));
+      else header.append(el('p', 'ti-muted', 'An administrator can configure service targets in Report settings.'));
+    }
+    const columns = report.columns.filter(column => !['response_content', '_review'].includes(column.key));
+    if (reportKey === 'ai_usage') columns.push({ key: '_review', label: 'Review' });
+    panel.append(header);
+    if (reportKey === 'satisfaction') panel.append(feedbackControls());
+    panel.append(createTable(columns, report.rows, { report: reportKey, print: true }));
     $('ti-report').replaceChildren(panel);
     const params = new URLSearchParams(query); params.delete('report');
     const exportLink = $('ti-export');
@@ -395,7 +513,7 @@
       const selected = Array.from(field.options || []).find(option => option.value === value);
       labels.push(`${key.replaceAll('_', ' ')}: ${selected?.textContent || value}`);
     });
-    return labels.length ? `Applied filters — ${labels.join(' · ')}` : 'Applied filters — All technicians, categories, priorities, statuses and sources.';
+    return labels.length ? `Applied filters — ${labels.join(' · ')}` : 'Applied filters — All technicians, categories, priorities, statuses, sources, departments and locations.';
   }
   function ticketsFor(type, source) {
     const tickets = source.tickets;

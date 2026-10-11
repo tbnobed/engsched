@@ -181,6 +181,37 @@ class TicketDashboardLayout(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(pytz.UTC))
 
 
+class TicketReportingSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    targets = db.Column(db.JSON, nullable=False, default=list)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(pytz.UTC))
+
+
+class TicketRequesterProfile(db.Model):
+    key = db.Column(db.String(330), primary_key=True)
+    department = db.Column(db.String(100), nullable=False, default='')
+    location = db.Column(db.String(100), nullable=False, default='')
+
+
+class TicketFeedback(db.Model):
+    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='CASCADE'), primary_key=True)
+    token_hash = db.Column(db.String(64), nullable=False, unique=True)
+    invited_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'))
+    invited_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    responded_at = db.Column(db.DateTime(timezone=True))
+    score = db.Column(db.Integer)
+    comment = db.Column(db.Text, nullable=False, default='')
+    __table_args__ = (db.CheckConstraint('score IS NULL OR (score >= 1 AND score <= 5)', name='ticket_feedback_score_range'),)
+
+
+class TicketAIRating(db.Model):
+    message_id = db.Column(db.Integer, db.ForeignKey('ticket_ai_message.id', ondelete='CASCADE'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
+    helpful = db.Column(db.Boolean, nullable=False)
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(pytz.UTC))
+
+
 class TicketAIMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id', ondelete='CASCADE'), nullable=False, index=True)

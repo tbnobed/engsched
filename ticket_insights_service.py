@@ -15,6 +15,12 @@ REPORT_NAMES = {
     'first_response': 'First-response time', 'resolution_time': 'Resolution time',
     'workload': 'Technician workload', 'categories': 'Category and issue trends',
     'stalled': 'Waiting and stalled tickets',
+    'targets': 'Response and resolution targets',
+    'requesters': 'Requester and department demand',
+    'reopened': 'Reopened tickets',
+    'handoffs': 'Assignment and handoff history',
+    'satisfaction': 'Customer satisfaction',
+    'ai_usage': 'AI assistance usage',
 }
 CATALOG = [
     ('my_open', 'My open tickets', 'Unresolved tickets currently assigned to you.'),
@@ -39,6 +45,12 @@ def utc(value):
     if value is None:
         return None
     return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+
+
+def requester_key(ticket):
+    if ticket.external_email:
+        return 'email:' + ticket.external_email.strip().casefold()
+    return f'user:{ticket.created_by}'
 
 
 class _Text(HTMLParser):
@@ -209,6 +221,7 @@ def build_insights(tickets, comments, histories, users, categories, email_ids, f
             'last_human_at': last_human.isoformat(), 'due_at': due.isoformat() if due else None,
             'pending_days': round((now - max(pending_entries)).total_seconds() / 86400, 2) if pending_entries else None,
             'first_response_hours': round((response_at - created).total_seconds() / 3600, 2) if response_at else None,
+            'first_response_at': response_at.isoformat() if response_at else None,
             'resolution_hours': round((completed - created).total_seconds() / 3600, 2) if completed else None,
             'completed_at': completed.isoformat() if completed else None,
             'is_open': is_open, 'is_overdue': bool(is_open and due and due < now),

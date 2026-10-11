@@ -456,6 +456,8 @@ app.register_blueprint(auth)
 app.register_blueprint(health_bp)
 from ticket_insights import insights
 app.register_blueprint(insights)
+from ticket_reporting_controls import reporting_controls
+app.register_blueprint(reporting_controls)
 
 
 

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ticket-insights.css') }}">
+<section class="ti" id="ticket-report-settings" aria-label="Report settings">
+  <header class="ti-header">
+    <div><span class="ti-eyebrow">TBN Plex Engineering / Service operations</span><h1>Report settings</h1><p class="ti-muted">Define service expectations. Give requester demand its context.</p></div>
+    <a class="ti-button" href="/tickets/reports">Back to reports</a>
+  </header>
+  <section class="ti-panel ti-settings-section" aria-labelledby="trs-target-heading">
+    <span class="ti-eyebrow">01 / Service policy</span><h2 id="trs-target-heading">Service targets</h2>
+    <p>Optional targets in calendar hours, with no business-hour schedules or pauses. Current policies apply retrospectively to report history. Blank means not configured; it does not mean zero. Enter 0.01 to 8,760 hours.</p>
+    <div id="trs-target-status" role="status" aria-live="polite"></div>
+    <form id="trs-target-form" hidden>
+      <div id="trs-target-fields"></div>
+      <div class="ti-actions"><button class="ti-primary" type="submit" id="trs-target-save">Save targets</button><span class="ti-muted" id="trs-updated"></span></div>
+    </form>
+    <div id="trs-target-loading" class="ti-skeleton" aria-label="Loading service targets"></div>
+  </section>
+  <section class="ti-panel ti-settings-section" aria-labelledby="trs-directory-heading">
+    <span class="ti-eyebrow">02 / Requester directory</span><h2 id="trs-directory-heading">Department &amp; location</h2>
+    <p>Choose a requester to update their reporting details. Clearing both fields removes the mapping, not the user or their tickets. Changes are available only to administrators.</p>
+    <div id="trs-directory-status" role="status" aria-live="polite"></div>
+    <div class="ti-directory-layout">
+      <div><label>Find a requester<input id="trs-search" type="search" placeholder="Search name, email, department or location" disabled></label><div id="trs-directory" class="ti-directory-list"><div class="ti-skeleton" aria-label="Loading requesters"></div></div></div>
+      <form id="trs-requester-form" class="ti-requester-form">
+        <fieldset id="trs-requester-fields" disabled>
+          <legend id="trs-requester-name">Choose a requester to edit</legend>
+          <label>Department<input name="department" maxlength="100" autocomplete="off"></label>
+          <label>Location<input name="location" maxlength="100" autocomplete="off"></label>
+          <p class="ti-muted">Leave a field blank for “Not assigned”.</p>
+          <div class="ti-actions"><button type="submit" class="ti-primary">Save details</button><button type="button" id="trs-clear">Clear details</button></div>
+        </fieldset>
+      </form>
+    </div>
+  </section>
+  <noscript><div class="ti-state ti-error">Enable JavaScript to load and save report settings.</div></noscript>
+</section>
+<script src="{{ url_for('static', filename='js/ticket-report-settings.js') }}" defer></script>
+{% endblock %}

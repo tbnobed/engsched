@@ -10,9 +10,12 @@ from sqlalchemy.orm import joinedload
 
 from app import db
 from models import (ProcessedEmail, Ticket, TicketCategory, TicketComment,
-                    TicketDashboardLayout, TicketHistory, User)
+                    TicketDashboardLayout, TicketHistory, User, TicketRequesterProfile,
+                    TicketFeedback, TicketAIMessage, TicketAIRating)
 from ticket_insights_service import (CATALOG, PRIORITIES, REPORT_NAMES, STATUS_NAMES,
-                                     build_insights, default_layout, utc, validate_layout)
+                                     build_insights, default_layout, utc, validate_layout, requester_key)
+from ticket_insights_extended import extend_insights
+from ticket_reporting_controls import settings_payload
 
 insights = Blueprint('insights', __name__)
 
@@ -52,14 +55,18 @@ def reports():
 @login_required
 def config():
     saved = db.session.get(TicketDashboardLayout, current_user.id)
+    profiles = TicketRequesterProfile.query.all()
     return jsonify(
         user_id=current_user.id, timezone=str(profile_timezone()),
+        is_admin=current_user.is_admin, settings_url='/tickets/report-settings',
         options={
             'technicians': [{'id': user.id, 'name': user.username} for user in User.query.order_by(User.username)],
             'categories': [{'id': category.id, 'name': category.name} for category in TicketCategory.query.order_by(TicketCategory.name)],
             'statuses': [{'id': key, 'name': name} for key, name in STATUS_NAMES.items()],
             'priorities': [{'id': key, 'name': name} for key, name in PRIORITIES.items()],
             'sources': [{'id': 'email', 'name': 'Email'}, {'id': 'web', 'name': 'Web'}],
+            'departments': [{'id': value, 'name': value} for value in sorted({row.department for row in profiles if row.department})],
+            'locations': [{'id': value, 'name': value} for value in sorted({row.location for row in profiles if row.location})],
         },
         catalog=[dict(type=kind, title=title, description=description) for kind, title, description in CATALOG],
         layout=saved.layout if saved else default_layout(),
@@ -117,6 +124,11 @@ def read_filters():
                 raise ValueError(f'Invalid {key.replace("_", " ")} filter.')
         filters[key] = value
     filters['stalled_days'] = int(filters['stalled_days'])
+    for key in ('department', 'location'):
+        value = request.args.get(key, 'all').strip()
+        if not value or len(value) > 100:
+            raise ValueError(f'Invalid {key} filter.')
+        filters[key] = value
     return filters
 
 
@@ -137,6 +149,17 @@ def load_data(filters):
     if filters['status'] != 'all':
         query = query.filter(Ticket.status == filters['status'])
     tickets = query.all()
+    profiles = {profile.key: profile for profile in TicketRequesterProfile.query.all()}
+    for attribute in ('department', 'location'):
+        selected = filters[attribute]
+        if selected != 'all':
+            def matches(ticket):
+                profile = profiles.get(requester_key(ticket))
+                value = getattr(profile, attribute, '') if profile else ''
+                return not value if selected == '__unmapped__' else value == selected
+            tickets = [ticket for ticket in tickets if matches(ticket)]
+    # Keep all subsequent event queries restricted to the same ticket population.
+    query = query.filter(Ticket.id.in_([ticket.id for ticket in tickets]))
     ids_query = query.with_entities(Ticket.id)
     comments = TicketComment.query.options(joinedload(TicketComment.user)).filter(TicketComment.ticket_id.in_(ids_query)).all()
     histories = TicketHistory.query.filter(TicketHistory.ticket_id.in_(ids_query)).all()
@@ -151,8 +174,14 @@ def load_data(filters):
             email_ids.add(ticket.id)
     users = {user.id: user for user in User.query.all()}
     categories = {category.id: category.name for category in TicketCategory.query.all()}
-    return build_insights(tickets, comments, histories, users, categories, email_ids,
-                          filters, current_user.id, profile_timezone())
+    payload = build_insights(tickets, comments, histories, users, categories, email_ids,
+                             filters, current_user.id, profile_timezone())
+    surveys = TicketFeedback.query.filter(TicketFeedback.ticket_id.in_(ids_query)).all()
+    messages = TicketAIMessage.query.filter(TicketAIMessage.ticket_id.in_(ids_query)).all()
+    message_ids = db.session.query(TicketAIMessage.id).filter(TicketAIMessage.ticket_id.in_(ids_query))
+    ratings = TicketAIRating.query.filter(TicketAIRating.message_id.in_(message_ids)).all()
+    return extend_insights(payload, tickets, histories, users, filters, profile_timezone(), current_user.id,
+                           settings_payload()['targets'], profiles, surveys, messages, ratings)
 
 
 @insights.route('/api/ticket-insights/data')
