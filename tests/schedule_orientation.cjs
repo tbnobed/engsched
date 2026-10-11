@@ -92,6 +92,10 @@ for (const path of ['templates/calendar.html', 'templates/personal_schedule.html
     assert.ok(template.includes('js/schedule-orientation.js'));
 }
 const css = fs.readFileSync('static/css/schedule-orientation.css', 'utf8');
+const verticalMarker = css.match(/#schedule-view:not\(\.schedule-horizontal\) \.current-time-line \{([^}]+)\}/)[1];
+assert.match(verticalMarker, /width:\s*100%/);
+assert.match(verticalMarker, /z-index:\s*24/);
+assert.ok(css.includes('#schedule-view:not(.schedule-horizontal) .day-column .day-slots .time-slot'));
 assert.ok(css.includes('repeat(24, minmax(72px, 1fr))'));
 assert.ok(css.includes('36px var(--horizontal-day-rows, repeat(7, 80px))'));
 assert.ok(css.includes('align-content: start'));

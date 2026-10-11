@@ -1,3 +1,23 @@
+/* Shared visibility fixes; vertical days keep their aligned 24-hour scale. */
+#schedule-view:not(.schedule-horizontal) .day-column .day-slots .time-slot,
+#schedule-view:not(.schedule-horizontal) .time-column .hour-slot {
+    border-bottom: .5px solid color-mix(in srgb, var(--schedule-text) 3%, transparent) !important;
+}
+#schedule-view:not(.schedule-horizontal) .current-time-line {
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 2px !important;
+    z-index: 24;
+}
+#schedule-view:not(.schedule-horizontal) .current-time-line::before {
+    left: 0;
+}
+#schedule-view:not(.schedule-horizontal) .current-time-line::after {
+    left: 10px;
+    top: 4px;
+    line-height: 1.4;
+}
 /* Same continuous workspace, with time running left to right. */
 #schedule-view .schedule-view-switch {
     display: inline-flex;
