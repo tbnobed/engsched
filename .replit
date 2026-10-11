@@ -38,3 +38,8 @@ externalPort = 80
 
 [agent]
 integrations = ["python_sendgrid:1.0.0"]
+
+[userenv]
+
+[userenv.shared]
+STUDIO_BOOKING_API_URLS = "https://plex.bookstud.io,https://nash.bookstud.io,https://tust.bookstud.io"

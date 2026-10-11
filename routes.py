@@ -369,93 +369,11 @@ def api_team_stats():
 @app.route('/api/studio-bookings')
 @login_required
 def api_studio_bookings():
-    """Fetch today's studio bookings from the public API"""
-    try:
-        user_tz = pytz.timezone(current_user.get_timezone())
-        today = datetime.now(user_tz)
-        
-        # Construct dates like JavaScript: setHours(0,0,0,0) and setHours(23,59,59,999)
-        start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0)
-        end_of_day = today.replace(hour=23, minute=59, second=59, microsecond=999000)  # 999ms = 999000μs
-        
-        # Convert to UTC and format as ISO strings
-        start_of_day_utc = start_of_day.astimezone(pytz.UTC)
-        end_of_day_utc = end_of_day.astimezone(pytz.UTC)
-        
-        start_time = start_of_day_utc.isoformat().replace('+00:00', 'Z')
-        end_time = end_of_day_utc.isoformat().replace('+00:00', 'Z')
-        
-        # Make request to studio booking API - configurable base URL
-        studio_api_base = os.environ.get('STUDIO_BOOKING_API_URL', 'https://plex.bookstud.io')
-        api_url = f"{studio_api_base}/api/public/bookings?start={start_time}&end={end_time}"
-        
-        app.logger.debug(f"Studio bookings API request: {api_url}")
-        
-        response = requests.get(api_url, timeout=10)
-        response.raise_for_status()
-        
-        raw_bookings = response.json()
-        
-        # Filter bookings to only include those that occur on today's date in user timezone
-        today_date = today.date()
-        filtered_bookings = []
-        
-        for booking in raw_bookings:
-            booking_in_today = False
-            
-            if booking.get('start'):
-                try:
-                    # Parse UTC time from API
-                    start_utc = datetime.fromisoformat(booking['start'].replace('Z', '+00:00'))
-                    start_local = start_utc.astimezone(user_tz)
-                    
-                    # Check if booking starts on today's date in user timezone
-                    if start_local.date() == today_date:
-                        booking_in_today = True
-                except (ValueError, KeyError):
-                    pass
-            
-            if booking.get('end'):
-                try:
-                    # Parse UTC time from API
-                    end_utc = datetime.fromisoformat(booking['end'].replace('Z', '+00:00'))
-                    end_local = end_utc.astimezone(user_tz)
-                    
-                    # Also check if booking ends on today's date in user timezone  
-                    if end_local.date() == today_date:
-                        booking_in_today = True
-                except (ValueError, KeyError):
-                    pass
-            
-            # Only include bookings that have any part on today's date in user timezone
-            if booking_in_today:
-                filtered_bookings.append(booking)
-        
-        return jsonify({
-            'success': True,
-            'bookings': filtered_bookings,
-            'date': today.strftime('%Y-%m-%d'),
-            'debug': {
-                'start_time': start_time,
-                'end_time': end_time,
-                'timezone': current_user.get_timezone()
-            }
-        })
-        
-    except requests.exceptions.RequestException as e:
-        app.logger.error(f"Error fetching studio bookings: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': 'Unable to fetch studio bookings',
-            'message': str(e)
-        }), 500
-    except Exception as e:
-        app.logger.error(f"Unexpected error in studio bookings API: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': 'Unexpected error',
-            'message': str(e)
-        }), 500
+    """Fetch today's bookings from all configured production calendars."""
+    from studio_bookings import get_studio_bookings
+    result = get_studio_bookings(pytz.timezone(current_user.get_timezone()))
+    return jsonify(result), 200 if result['success'] else 502
+
 
 @app.route('/api/inbound-email', methods=['POST'])
 @csrf.exempt
@@ -5207,60 +5125,14 @@ def mobile_dashboard():
                 today_schedules.append(schedule)
     
     # Get studio bookings (if API is available)
-    studio_bookings = []
-    try:
-        studio_api_url = os.environ.get('STUDIO_BOOKING_API_URL', 'https://plex.bookstud.io')
-        if studio_api_url:
-            api_start = today_start_utc.strftime('%Y-%m-%dT%H:%M:%SZ')
-            api_end = today_end_utc.strftime('%Y-%m-%dT%H:%M:%S.%fZ')[:-3] + 'Z'
-            api_url = f"{studio_api_url}/api/public/bookings?start={api_start}&end={api_end}"
-            
-            response = requests.get(api_url, timeout=10)
-            if response.status_code == 200:
-                raw_bookings = response.json()
-                
-                # Convert booking times to user timezone and filter for today only
-                for booking in raw_bookings:
-                    booking_in_today = False
-                    
-                    if booking.get('start'):
-                        try:
-                            # Parse UTC time from API
-                            start_utc = datetime.fromisoformat(booking['start'].replace('Z', '+00:00'))
-                            start_local = start_utc.astimezone(user_tz)
-                            booking['start_local'] = start_local.strftime('%H:%M')
-                            
-                            # Check if booking starts on today's date in user timezone
-                            if start_local.date() == today:
-                                booking_in_today = True
-                        except (ValueError, KeyError):
-                            booking['start_local'] = ''
-                    
-                    if booking.get('end'):
-                        try:
-                            # Parse UTC time from API
-                            end_utc = datetime.fromisoformat(booking['end'].replace('Z', '+00:00'))
-                            end_local = end_utc.astimezone(user_tz)
-                            booking['end_local'] = end_local.strftime('%H:%M')
-                            
-                            # Also check if booking ends on today's date in user timezone
-                            if end_local.date() == today:
-                                booking_in_today = True
-                        except (ValueError, KeyError):
-                            booking['end_local'] = ''
-                    
-                    # Only include bookings that have any part on today's date in user timezone
-                    if booking_in_today:
-                        booking['is_today'] = True
-                
-                # Filter to only include bookings that occur on today's date in user timezone
-                studio_bookings = [b for b in raw_bookings if b.get('is_today', False)]
-    except Exception as e:
-        app.logger.debug(f"Could not fetch studio bookings: {str(e)}")
+    from studio_bookings import get_studio_bookings
+    studio_result = get_studio_bookings(user_tz)
+    studio_bookings = studio_result['bookings']
     
     return render_template('mobile/dashboard.html', 
                          today_schedules=today_schedules,
                          studio_bookings=studio_bookings,
+                         studio_result=studio_result,
                          user_timezone=user_tz)
 
 

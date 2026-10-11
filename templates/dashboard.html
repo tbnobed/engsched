@@ -538,6 +538,7 @@
       const headerCount = document.getElementById('ccBookingHeaderCount');
       const kpiCount = document.getElementById('ccBookingCount');
       const kpiDelta = document.getElementById('ccBookingDelta');
+      if (!data.success) throw new Error(data.error || 'Unable to load bookings');
 
       if (data.success && data.bookings && data.bookings.length > 0) {
         const bookings = data.bookings;
@@ -549,13 +550,14 @@
           const end = new Date(b.end);
           if (start <= now && end >= now) inProgress++;
           const fmt = (d) => new Intl.DateTimeFormat('en-US', { timeZone: userTz, hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
-          const color = b.color || '#6aa6ff';
+          const color = /^#[0-9a-f]{3,8}$/i.test(b.color || '') ? b.color : '#6aa6ff';
           const loc = b.location || b.type || '';
           html += `
             <div class="cc-booking">
               <div class="swatch" style="background:${color};"></div>
               <div style="flex:1; min-width:0;">
                 <div class="n">${escapeHtml(b.title || 'Studio Booking')}</div>
+                <div class="t">${escapeHtml(b.source_name || '')}</div>
                 <div class="t">${fmt(start)} – ${fmt(end)}${loc ? ' · ' + escapeHtml(loc) : ''}</div>
               </div>
             </div>`;
@@ -570,9 +572,22 @@
         kpiCount.textContent = '0';
         kpiDelta.textContent = 'None scheduled';
       }
+      if (data.partial) {
+        const unavailable = (data.sources || []).filter(source => !source.success).map(source => source.name);
+        const warning = document.createElement('div');
+        warning.className = 'cc-empty';
+        warning.setAttribute('role', 'status');
+        warning.textContent = unavailable.length ? `Unavailable: ${unavailable.join(', ')}. Showing available calendars only.` : 'Some bookings could not be read. Totals may be incomplete.';
+        list.prepend(warning);
+        if (!data.bookings.length) list.lastElementChild.textContent = 'No bookings in the available calendars.';
+        headerCount.textContent += ' · partial';
+        kpiDelta.textContent += ' · partial data';
+      }
     }).catch(() => {
       document.getElementById('ccBookingsList').innerHTML = '<div class="cc-empty" style="color: var(--cc-bad);">Unable to load bookings</div>';
       document.getElementById('ccBookingDelta').textContent = 'Connection error';
+      document.getElementById('ccBookingHeaderCount').textContent = 'Unavailable';
+      document.getElementById('ccBookingCount').textContent = '—';
     });
   }
 

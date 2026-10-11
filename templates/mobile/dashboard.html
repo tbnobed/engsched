@@ -146,7 +146,7 @@
 </div>
 
 <!-- Studio Bookings Section -->
-{% if studio_bookings %}
+{% if studio_bookings or not studio_result.success or studio_result.partial %}
 <div class="mobile-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">
@@ -155,6 +155,11 @@
         </h5>
     </div>
     
+    {% if not studio_result.success %}
+    <p role="status">Unable to load production calendars.</p>
+    {% elif studio_result.partial %}
+    <p role="status">Showing available bookings only. Some calendar data is unavailable.</p>
+    {% endif %}
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
     {% for booking in studio_bookings %}
     <div class="d-flex flex-column p-2 rounded text-center"
@@ -162,6 +167,7 @@
         <div class="flex-grow-1" style="min-width: 0; width: 100%; overflow: hidden;">
             <div class="fw-semibold" style="font-size: 0.9rem; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;">{{ booking.title }}</div>
             <small class="text-muted" style="font-size: 0.75rem; line-height: 1.2;">
+                <div>{{ booking.source_name }}</div>
                 <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{% if booking.start_local %}{{ booking.start_local }}{% endif %}{% if booking.start_local and booking.end_local %} - {% endif %}{% if booking.end_local %}{{ booking.end_local }}{% endif %}</div>
                 {% if booking.type %}
                 <div style="margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ booking.type[:15] }}{% if booking.type|length > 15 %}...{% endif %}</div>
