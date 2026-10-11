@@ -3,17 +3,50 @@
 
 {% block content %}
 <style>
-  :root {
-    --cc-bg: #0c1118;
-    --cc-panel: #131a25;
-    --cc-panel-2: #18212f;
-    --cc-border: #232d3d;
-    --cc-muted: #8a97ac;
-    --cc-text: #e8edf5;
-    --cc-accent: #6aa6ff;
-    --cc-good: #4ade80;
-    --cc-warn: #facc15;
-    --cc-bad:  #f87171;
+  /* Main dashboard only: flat workspace, with tonal section separation.
+     Keep these tokens on the shell so reporting/calendar palettes stay intact. */
+  .cc-shell {
+    --cc-bg: #18222e;
+    --cc-panel: #1e2b39;
+    --cc-panel-2: #2b3b4b;
+    --cc-rail: #22303e;
+    --cc-tickets: #24313d;
+    --cc-muted: #acbbcb;
+    --cc-text: #e5edf5;
+    --cc-accent: #9bbde2;
+    --cc-good: #91ceb5;
+    --cc-warn: #e0c18b;
+    --cc-bad: #efa5a2;
+    --cc-high: #e5b18c;
+    --cc-good-bg: #293f3b;
+    --cc-warn-bg: #3b362d;
+    --cc-bad-bg: #453239;
+    --cc-high-bg: #40362f;
+    --cc-accent-bg: #2b3c50;
+    --cc-guide: rgba(172,187,203,.1);
+    color-scheme: dark;
+  }
+  body.light-theme .cc-shell {
+    --cc-bg: #e9eef2;
+    --cc-panel: #f4f6f8;
+    --cc-panel-2: #dfe7ee;
+    --cc-rail: #e3eaf0;
+    --cc-tickets: #edf1f4;
+    --cc-muted: #56677a;
+    --cc-text: #253548;
+    --cc-accent: #365f8a;
+    --cc-good: #28654e;
+    --cc-warn: #7c5925;
+    --cc-bad: #a13f44;
+    --cc-high: #915426;
+    --cc-good-bg: #dcebe3;
+    --cc-warn-bg: #eee5d5;
+    --cc-bad-bg: #f0dfe1;
+    --cc-high-bg: #efe3d9;
+    --cc-accent-bg: #dce7f1;
+    --cc-guide: rgba(86,103,122,.12);
+    color: var(--cc-text);
+    color-scheme: light;
   }
   /* Fill the available viewport, vertically centered around the shell */
   main.container-fluid:has(.cc-shell) {
@@ -27,9 +60,9 @@
   .cc-shell {
     background: var(--cc-bg);
     color: var(--cc-text);
-    border-radius: 14px;
+    border-radius: 0;
     margin: 0;
-    font-family: 'Inter','Segoe UI',system-ui,sans-serif;
+    font-family: 'Segoe UI',system-ui,sans-serif;
     height: calc(100vh - 110px);
     display: flex;
     flex-direction: column;
@@ -37,34 +70,43 @@
   .cc-topbar {
     display:flex; align-items:center; justify-content:center;
     padding: 10px 20px; background: transparent;
-    border-bottom: 1px solid var(--cc-border);
-    border-radius: 14px 14px 0 0;
+    border: 0;
+    border-radius: 0;
   }
   .cc-brand { font-weight:700; letter-spacing:.4px; display:flex; align-items:center; gap:10px; color: var(--cc-text); }
-  .cc-brand .dot { width:10px; height:10px; border-radius:50%; background: var(--cc-good); box-shadow:0 0 12px var(--cc-good); }
+  .cc-brand .dot { width:10px; height:10px; border-radius:50%; background: var(--cc-good); }
   .cc-clock { font-variant-numeric: tabular-nums; text-align:right; }
   .cc-clock .big { font-size: 20px; font-weight:700; }
   .cc-clock .sub { color: var(--cc-muted); font-size: 12px; }
   .cc-grid {
-    display:grid; gap: 16px; padding: 16px;
+    display:grid; gap: 20px; padding: 16px;
     grid-template-columns: 280px minmax(0, 1fr) 320px;
     grid-template-rows: auto minmax(0, 1.4fr) minmax(0, 1fr);
     flex: 1; min-height: 0;
   }
   .cc-panel {
-    background: var(--cc-panel); border:1px solid var(--cc-border);
-    border-radius: 14px; overflow:hidden; display:flex; flex-direction:column;
+    background: var(--cc-panel); border:0;
+    border-radius: 0; overflow:hidden; display:flex; flex-direction:column;
+    min-width:0;
   }
+  .cc-people-panel, .cc-bookings-panel { background: var(--cc-rail); }
+  .cc-tickets-panel { background: var(--cc-tickets); }
   .cc-panel-h {
-    padding: 12px 16px; display:flex; align-items:center; justify-content:space-between;
-    border-bottom:1px solid var(--cc-border); font-weight:600; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:var(--cc-muted);
+    padding: 18px 16px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px;
+    border:0; font-weight:600; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:var(--cc-text);
   }
-  .cc-panel-h .count { background: var(--cc-panel-2); color:var(--cc-text); padding:2px 8px; border-radius:999px; font-size:11px; }
+  .cc-panel-h .count { background: transparent; color:var(--cc-muted); padding:2px 0; border-radius:0; font-size:11px; font-variant-numeric:tabular-nums; }
 
   /* People rail */
-  .cc-people { display:flex; flex-direction:column; gap:6px; padding:10px; overflow:auto; }
-  .cc-person { display:flex; align-items:center; gap:10px; padding:8px; border-radius:10px; cursor:pointer; transition: background .15s; }
+  .cc-people { display:flex; flex-direction:column; gap:4px; padding:4px 8px 12px; overflow:auto; }
+  .cc-person { display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:0; cursor:pointer; transition:none; }
   .cc-person:hover { background: var(--cc-panel-2); }
+  /* Shared legacy CSS clears focus with !important; restore it locally.
+     Inset outlines remain visible inside the scrolling, clipped panels. */
+  .cc-shell :focus-visible {
+    outline: 2px solid var(--cc-accent) !important;
+    outline-offset: -2px;
+  }
   .cc-avatar {
     width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     color:white; font-weight:700; font-size:13px; flex-shrink:0; background-size:cover; background-position:center;
@@ -72,78 +114,87 @@
   .cc-person .info { flex:1; min-width:0; }
   .cc-person .name { font-weight:600; font-size:13px; color: var(--cc-text); }
   .cc-person .meta { font-size:11px; color: var(--cc-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .cc-pill { font-size:10px; padding:2px 7px; border-radius:999px; font-weight:600; }
-  .cc-pill.on { background: rgba(74,222,128,.15); color: var(--cc-good); }
-  .cc-pill.off { background: rgba(138,151,172,.15); color: var(--cc-muted); }
-  .cc-pill.ooo { background: rgba(250,204,21,.15); color: var(--cc-warn); }
+  .cc-pill { font-size:10px; padding:3px 6px; border-radius:2px; font-weight:600; }
+  .cc-pill.on { background: var(--cc-good-bg); color: var(--cc-good); }
+  .cc-pill.off { background: var(--cc-panel-2); color: var(--cc-muted); }
+  .cc-pill.ooo { background: var(--cc-warn-bg); color: var(--cc-warn); }
 
   /* KPI strip */
-  .cc-kpis { display:grid; grid-template-columns: repeat(4,1fr); gap:14px; }
-  .cc-kpi { background: var(--cc-panel); border:1px solid var(--cc-border); border-radius:14px; padding: 14px 16px; }
+  .cc-kpis { display:grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap:0; background:var(--cc-panel); }
+  .cc-kpi { background: transparent; border:0; border-radius:0; padding: 18px 16px; min-width:0; }
   .cc-kpi .lbl { color:var(--cc-muted); font-size:11px; text-transform:uppercase; letter-spacing:.6px; }
-  .cc-kpi .val { font-size:28px; font-weight:700; margin-top:4px; line-height:1; color: var(--cc-text); }
+  .cc-kpi .val { font-size:30px; font-weight:600; letter-spacing:-.8px; font-variant-numeric:tabular-nums; margin-top:8px; line-height:1; color: var(--cc-text); }
   .cc-kpi .delta { font-size:11px; color: var(--cc-muted); margin-top:6px; }
 
   /* Timeline */
   .cc-timeline-head {
     display:grid; grid-template-columns: 80px 1fr; padding: 8px 16px;
-    border-bottom:1px solid var(--cc-border); color:var(--cc-muted); font-size:11px;
+    border:0; color:var(--cc-muted); font-size:11px;
   }
   .cc-hours { position:relative; height:14px; }
   .cc-hours .htick { position:absolute; transform: translateX(-50%); white-space:nowrap; }
   .cc-lanes { flex:1; overflow:auto; padding: 6px 16px 14px; position:relative; }
   .cc-lane {
     display:grid; grid-template-columns: 80px 1fr; align-items:center;
-    padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,.04); position:relative; min-height: 48px;
+    padding: 6px 0; border:0; position:relative; min-height: 48px;
   }
+  .cc-lane:nth-child(even) { background:var(--cc-tickets); }
   .cc-lane .lname { font-size:12px; color:var(--cc-muted); display:flex; align-items:center; gap:6px; }
-  .cc-lane .track { position:relative; height:32px; border-radius:8px; }
+  .cc-lane .track { position:relative; height:32px; border-radius:0; }
   .cc-block {
-    position:absolute; top:2px; bottom:2px; border-radius:6px; padding: 4px 10px;
+    position:absolute; top:2px; bottom:2px; border-radius:2px; padding: 4px 10px;
     color:white; font-size:11px; font-weight:600; display:flex; align-items:center;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.15), 0 4px 12px rgba(0,0,0,.35);
+    box-shadow: none;
     cursor:pointer; transition: transform .15s; overflow:hidden; white-space:nowrap;
     text-overflow:ellipsis;
   }
-  .cc-block.ooo { background: repeating-linear-gradient(45deg,#374151,#374151 8px,#1f2937 8px,#1f2937 16px) !important; color:#cbd5e1; }
+  .cc-block.ooo { background: var(--cc-warn-bg) !important; color:var(--cc-warn); }
   .cc-block:hover { transform: translateY(-1px); }
-  .cc-now-line { position:absolute; top:0; bottom:0; width:2px; background: var(--cc-bad); box-shadow:0 0 8px var(--cc-bad); z-index:5; pointer-events:none; }
+  .cc-now-line { position:absolute; top:0; bottom:0; width:2px; background: var(--cc-bad); z-index:5; pointer-events:none; }
   .cc-now-line::after { content:""; position:absolute; top:-4px; left:-4px; width:10px; height:10px; border-radius:50%; background: var(--cc-bad); }
 
   /* Tickets */
   .cc-ticket-row {
     display:grid; grid-template-columns: 50px 1fr auto; gap:10px;
-    padding: 10px 14px; border-bottom: 1px solid var(--cc-border); cursor:pointer;
-    transition: background .15s; text-decoration:none;
+    padding: 12px 16px; border:0; cursor:pointer;
+    transition:none; text-decoration:none;
   }
+  .cc-ticket-row:nth-child(even) { background:var(--cc-panel); }
   .cc-ticket-row:hover { background: var(--cc-panel-2); }
   .cc-ticket-row .num { font-family: 'JetBrains Mono', monospace; color: var(--cc-muted); font-size:12px; align-self:center; }
   .cc-ticket-row .title { font-size:13px; font-weight:500; color: var(--cc-text); }
   .cc-ticket-row .sub { font-size:11px; color: var(--cc-muted); margin-top:2px; }
-  .cc-badge-pri { font-size:10px; padding:3px 8px; border-radius:999px; font-weight:700; align-self:center; }
-  .cc-pri-3 { background:rgba(248,113,113,.2); color: var(--cc-bad); }
-  .cc-pri-2 { background:rgba(251,146,60,.2); color: #fb923c; }
-  .cc-pri-1 { background:rgba(250,204,21,.2); color: var(--cc-warn); }
-  .cc-pri-0 { background:rgba(106,166,255,.2); color: var(--cc-accent); }
-  .cc-new-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background: var(--cc-bad); margin-left:6px; box-shadow:0 0 6px var(--cc-bad); }
+  .cc-badge-pri { font-size:10px; padding:3px 8px; border-radius:2px; font-weight:600; align-self:center; }
+  .cc-pri-3 { background:var(--cc-bad-bg); color: var(--cc-bad); }
+  .cc-pri-2 { background:var(--cc-high-bg); color: var(--cc-high); }
+  .cc-pri-1 { background:var(--cc-warn-bg); color: var(--cc-warn); }
+  .cc-pri-0 { background:var(--cc-accent-bg); color: var(--cc-accent); }
+  .cc-new-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background: var(--cc-bad); margin-left:6px; }
 
   /* Bookings */
-  .cc-booking { padding: 10px 14px; border-bottom:1px solid var(--cc-border); display:flex; gap:10px; align-items:flex-start; }
+  .cc-booking { padding: 14px 16px; border:0; display:flex; gap:12px; align-items:flex-start; }
+  .cc-booking:nth-child(even) { background:var(--cc-tickets); }
   .cc-booking .swatch { width:4px; align-self:stretch; min-height:36px; border-radius:2px; }
   .cc-booking .t { font-size:11px; color: var(--cc-muted); margin-top:2px; }
   .cc-booking .n { font-weight:600; font-size:13px; color: var(--cc-text); }
   .cc-empty { padding: 30px 16px; text-align:center; color: var(--cc-muted); font-size:13px; }
 
   .cc-shell ::-webkit-scrollbar { width:8px; height:8px; }
-  .cc-shell ::-webkit-scrollbar-thumb { background: #1f2937; border-radius:8px; }
+  .cc-shell { scrollbar-color:var(--cc-muted) transparent; scrollbar-width:thin; }
+  .cc-shell ::-webkit-scrollbar-thumb { background: var(--cc-muted); border-radius:2px; }
 
   @media (max-width: 1200px) {
     .cc-grid { grid-template-columns: 240px 1fr; }
-    .cc-bookings-panel { grid-column: 1 / span 2; grid-row: auto; }
+    .cc-bookings-panel { grid-column: 1 / span 2; grid-row: auto !important; max-height:260px; }
+    .cc-shell { height:auto; min-height:calc(100vh - 110px); }
+    .cc-grid { grid-template-rows:auto minmax(240px,1.4fr) minmax(180px,1fr); }
   }
   @media (max-width: 768px) {
-    .cc-grid { grid-template-columns: 1fr; }
-    .cc-people-panel, .cc-tickets-panel, .cc-timeline-panel, .cc-bookings-panel { grid-column: 1; grid-row: auto; }
+    .cc-grid { grid-template-columns: minmax(0,1fr); grid-template-rows:auto; gap:16px; padding:12px; }
+    .cc-people-panel, .cc-kpis, .cc-tickets-panel, .cc-timeline-panel, .cc-bookings-panel { grid-column: 1 !important; grid-row: auto !important; }
+    .cc-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .cc-timeline-panel { min-height:260px; }
+    .cc-people-panel { max-height:320px; }
   }
 </style>
 
@@ -227,7 +278,7 @@
                   </span>
                   <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ tech_data.user.username.split()[0] }}</span>
                 </div>
-                <div class="track" style="background: repeating-linear-gradient(to right, rgba(255,255,255,.02) 0 1px, transparent 1px calc(100%/{{ ns.hour_cols }}));">
+                <div class="track" style="background: repeating-linear-gradient(to right, var(--cc-guide) 0 1px, transparent 1px calc(100%/{{ ns.hour_cols }}));">
                   {% for sched in tech_data.schedules %}
                     {% set s_local = sched.start_time.astimezone(tz) %}
                     {% set e_local = sched.end_time.astimezone(tz) %}
@@ -243,7 +294,7 @@
                     {% if (left_pct + width_pct) > 100 %}{% set width_pct = 100 - left_pct %}{% endif %}
                     {% if width_pct > 0 %}
                     <div class="cc-block {% if sched.time_off %}ooo{% endif %}"
-                         style="left:{{ left_pct }}%; width:{{ width_pct }}%; background: linear-gradient(135deg, {{ sched.technician.color or '#6aa6ff' }}, {{ sched.technician.color or '#4f46e5' }}cc);"
+                         style="left:{{ left_pct }}%; width:{{ width_pct }}%; background: {{ sched.technician.color or '#6aa6ff' }};"
                          title="{{ sched.technician.username }} · {{ s_local.strftime('%H:%M') }}–{{ e_local.strftime('%H:%M') }}{% if sched.location %} · {{ sched.location.name }}{% endif %}{% if sched.description %} · {{ sched.description }}{% endif %}">
                       {% if sched.time_off %}{{ sched.description or 'Time Off' }}
                       {% elif sched.location %}{{ sched.location.name }}{% if sched.description %} · {{ sched.description }}{% endif %}

@@ -6,3 +6,4 @@
 - [Ticket reporting reliability](ticket-reporting-decisions.md) — Legacy AI and inbound-email proxy authors can mislead metrics; missing historical events must stay explicit.
 - [HTTPS form protection](flask-https-csrf.md) — no-referrer breaks Flask-WTF on HTTPS; use same-origin without weakening CSRF.
 - [Integration write boundaries](api-integration-boundaries.md) — API retries must not silently send emails, run AI, or cancel unrelated appointments.
+- [Flat workspace design](flat-workspace-design.md) — Main dashboard and schedules use tonal backgrounds, not decorative borders or shadows, in both themes.
