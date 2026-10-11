@@ -240,6 +240,12 @@
   .cc-now-line::after { content:""; position:absolute; top:-4px; left:-4px; width:10px; height:10px; border-radius:50%; background: var(--cc-bad); }
 
   /* Tickets */
+  .cc-ticket-controls { display:flex; align-items:center; gap:12px; }
+  .cc-ticket-controls select { background:var(--cc-tickets); color:var(--cc-text); border:0; border-radius:5px; padding:6px 9px; font-size:12px; }
+  .cc-ticket-row .summary { color:var(--cc-muted); font-size:12px; margin-top:5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
+  .cc-ticket-row .details { display:flex; flex-wrap:wrap; gap:4px 14px; margin-top:6px; }
+  #ccTicketScopeStatus:empty { display:none; }
+  #ccTicketScopeStatus { color:var(--cc-bad); padding:8px 16px; font-size:12px; }
   .cc-ticket-row {
     --cc-row-hover:var(--cc-ticket-hover);
     display:grid; grid-template-columns: 44px minmax(0,1fr) auto; gap:8px;
@@ -428,20 +434,28 @@
 
     <!-- Full-height ticket column alongside the timeline -->
     <div class="cc-panel cc-tickets-panel">
-      <div class="cc-panel-h"><span>Active Tickets</span><span class="count">{{ kpi_active }}</span></div>
+      <div class="cc-panel-h"><span>Active Tickets</span><div class="cc-ticket-controls"><select id="ccTicketScope" aria-label="Tickets shown"><option value="all" {{ 'selected' if ticket_scope == 'all' }}>All tickets</option><option value="me" {{ 'selected' if ticket_scope == 'me' }}>My tickets</option></select><span class="count" id="ccTicketCount">{{ recent_tickets|length }}</span></div></div>
+      <div id="ccTicketScopeStatus" role="status" aria-live="polite"></div>
       <div id="ccTicketsList" tabindex="0" role="region" aria-label="Active tickets">
         {% for ticket in recent_tickets %}
         <a class="cc-ticket-row" href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}">
           <div class="num">#{{ ticket.id }}</div>
           <div>
             <div class="title">
-              {{ ticket.title[:70] }}{% if ticket.title|length > 70 %}…{% endif %}
+              {{ ticket.title }}
               {% if ticket.has_unread_activity %}<span class="cc-new-dot" title="New activity"></span>{% endif %}
             </div>
             <div class="sub">
-              {% if ticket.assigned_to %}{{ ticket.assigned_technician.username }}{% else %}Unassigned{% endif %}
+              Assigned: {% if ticket.assigned_to %}{{ ticket.assigned_technician.username }}{% else %}Unassigned{% endif %}
               · {{ ticket.status.replace('_', ' ').title() }}
               · {{ ticket.created_at.astimezone(current_user.get_timezone_obj()).strftime('%m/%d %H:%M') }}
+            </div>
+            <div class="summary">{{ ticket.description|striptags|truncate(240) }}</div>
+            <div class="sub details">
+              <span>Requester: {{ ticket.get_display_name() }}</span>
+              <span>Category: {{ ticket.category.name if ticket.category else 'Uncategorized' }}</span>
+              <span>Updated: {{ ticket.updated_at.astimezone(current_user.get_timezone_obj()).strftime('%m/%d %H:%M') if ticket.updated_at else 'Not recorded' }}</span>
+              {% if ticket.due_date %}<span>Due: {{ ticket.due_date.astimezone(current_user.get_timezone_obj()).strftime('%m/%d %H:%M') }}</span>{% endif %}
             </div>
           </div>
           <span class="cc-badge-pri cc-pri-{{ ticket.priority }}">
@@ -451,7 +465,7 @@
         {% else %}
         <div class="cc-empty">
           <i data-feather="check-circle" style="width:32px;height:32px;"></i>
-          <div style="margin-top:8px;">No active tickets</div>
+          <div style="margin-top:8px;">{{ 'No active tickets assigned to you' if ticket_scope == 'me' else 'No active tickets' }}</div>
         </div>
         {% endfor %}
       </div>
@@ -558,14 +572,35 @@
   // Auto-refresh tickets every 30s — guarded against overlapping/stale responses
   let ticketRefreshInFlight = null;
   let ticketRefreshSeq = 0;
-  function refreshTickets() {
-    if (document.hidden) return;
+  const ticketScope = document.getElementById('ccTicketScope');
+  let savedTicketScope = ticketScope.value;
+  ticketScope.addEventListener('change', async () => {
+    ticketScope.disabled = true;
+    const status = document.getElementById('ccTicketScopeStatus');
+    status.textContent = '';
+    if (ticketRefreshInFlight) ticketRefreshInFlight.abort();
+    ++ticketRefreshSeq;
+    try {
+      const response = await fetch('/api/ticket-insights/main-scope', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content },
+        body: JSON.stringify({ scope: ticketScope.value })
+      });
+      if (!response.ok) throw new Error('Could not save your ticket selection. Please try again.');
+      savedTicketScope = ticketScope.value;
+      await refreshTickets(true);
+    } catch (error) {
+      ticketScope.value = savedTicketScope;
+      status.textContent = error.message;
+    } finally { ticketScope.disabled = false; }
+  });
+  function refreshTickets(force = false) {
+    if (document.hidden || (ticketScope.disabled && !force)) return;
     if (ticketRefreshInFlight) ticketRefreshInFlight.abort();
     const ctrl = new AbortController();
     ticketRefreshInFlight = ctrl;
     const mySeq = ++ticketRefreshSeq;
-    fetch('/dashboard', { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: ctrl.signal })
-      .then(r => r.text())
+    return fetch('/dashboard', { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: ctrl.signal })
+      .then(r => { if (!r.ok) throw new Error('Could not refresh tickets.'); return r.text(); })
       .then(html => {
         if (mySeq !== ticketRefreshSeq) return; // stale
         const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -575,10 +610,16 @@
           const scrollTop = cur.scrollTop;
           cur.innerHTML = fresh.innerHTML;
           cur.scrollTop = scrollTop;
+          document.getElementById('ccTicketCount').textContent = doc.getElementById('ccTicketCount').textContent;
+          savedTicketScope = doc.getElementById('ccTicketScope').value;
+          ticketScope.value = savedTicketScope;
+          document.getElementById('ccTicketScopeStatus').textContent = '';
+        } else {
+          throw new Error('Could not refresh tickets. Please reload the page.');
         }
         if (window.feather) feather.replace();
       })
-      .catch(() => {})
+      .catch(error => { if (error.name !== 'AbortError') document.getElementById('ccTicketScopeStatus').textContent = error.message; })
       .finally(() => { if (ticketRefreshInFlight === ctrl) ticketRefreshInFlight = null; });
   }
   setInterval(refreshTickets, 30000);

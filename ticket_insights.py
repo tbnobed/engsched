@@ -82,6 +82,9 @@ def save_layout():
         layout = validate_layout(request.get_json(silent=True))
     except ValueError as exc:
         return jsonify(error=str(exc)), 400
+    preferences = db.session.get(TicketDashboardLayout, current_user.id)
+    if preferences and 'main_ticket_scope' in preferences.layout:
+        layout['main_ticket_scope'] = preferences.layout['main_ticket_scope']
     # Upsert keeps first saves from two browser tabs from violating the user key.
     if db.engine.dialect.name == 'postgresql':
         from sqlalchemy.dialects.postgresql import insert
@@ -98,6 +101,24 @@ def save_layout():
             db.session.add(TicketDashboardLayout(user_id=current_user.id, layout=layout))
     db.session.commit()
     return jsonify(layout=layout)
+
+
+@insights.route('/api/ticket-insights/main-scope', methods=['PUT'])
+@login_required
+def save_main_ticket_scope():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or payload.get('scope') not in ('all', 'me'):
+        return jsonify(error='Choose All tickets or My tickets.'), 400
+    saved = db.session.get(TicketDashboardLayout, current_user.id)
+    layout = dict(saved.layout) if saved else default_layout()
+    layout['main_ticket_scope'] = payload['scope']
+    if saved:
+        saved.layout = layout
+        saved.updated_at = datetime.now(timezone.utc)
+    else:
+        db.session.add(TicketDashboardLayout(user_id=current_user.id, layout=layout))
+    db.session.commit()
+    return jsonify(scope=payload['scope'])
 
 
 def read_filters():

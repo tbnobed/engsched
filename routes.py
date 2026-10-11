@@ -92,11 +92,16 @@ def dashboard():
     today_end_utc = today_end_local.astimezone(pytz.UTC)
     
     # Get relevant ticket information with unread activity detection
+    from models import TicketDashboardLayout
+    preferences = db.session.get(TicketDashboardLayout, current_user.id)
+    ticket_scope = (preferences.layout if preferences else {}).get('main_ticket_scope', 'all')
     # Sort by date first so new tickets always appear, then by priority for grouping
     recent_tickets = Ticket.query.filter(
         Ticket.status.in_(['open', 'in_progress', 'pending']),
         Ticket.archived == False
     ).order_by(Ticket.created_at.desc(), Ticket.priority.desc()).all()
+    if ticket_scope == 'me':
+        recent_tickets = [ticket for ticket in recent_tickets if ticket.assigned_to == current_user.id]
     
     # Add unread activity indicators using the new universal badge system
     # NEW badges now disappear when ANY technician interacts with the ticket
@@ -254,7 +259,8 @@ def dashboard():
     # Timeline range — always show full 24 hours
     range_start_h, range_end_h = 0, 24
 
-    return render_template('dashboard.html', 
+    return render_template('dashboard.html',
+        ticket_scope=ticket_scope,
                          recent_tickets=recent_tickets,
                          schedules_by_tech=schedules_by_tech,
                          today=today,
