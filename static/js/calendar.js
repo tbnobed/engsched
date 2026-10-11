@@ -19,12 +19,9 @@ document.addEventListener('DOMContentLoaded', function() {
             var startHour = start.getHours() + start.getMinutes() / 60;
             var endHour = end.getHours() + end.getMinutes() / 60;
             if (endHour <= startHour) endHour = 24;
+            // Canonical vertical coordinates: 24 hours = 1440px even when
+            // the CSS view is horizontal (its slots have row-height instead).
             var slotHeight = 60;
-            var parent = el.closest('.day-slots');
-            if (parent) {
-                var firstSlot = parent.querySelector('.time-slot');
-                if (firstSlot) slotHeight = firstSlot.offsetHeight || 60;
-            }
             var top = startHour * slotHeight;
             var height = (endHour - startHour) * slotHeight;
             el.style.position = 'absolute';
@@ -36,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 avatar.style.top = Math.round(height / 2) + 'px';
             }
         });
+        if (window.ScheduleOrientation) window.ScheduleOrientation.refresh();
     }
 
     // Handle schedule event clicks
@@ -652,16 +650,17 @@ document.addEventListener('DOMContentLoaded', function() {
             // Fallback to local time
             currentHour = now.getHours();
             currentMinute = now.getMinutes();
-            const currentSecond = now.getSeconds();
+            currentSecond = now.getSeconds();
             timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
         
         // Calculate position with second-level precision for smoother updates
-        const totalMinutes = currentHour * 60 + currentMinute + (currentSecond / 60);
+        const totalMinutes = (currentHour % 24) * 60 + currentMinute + (currentSecond / 60);
         const topPosition = Math.round(totalMinutes); // Round to nearest pixel
         
         timeLines.forEach(timeLine => {
             timeLine.style.top = `${topPosition}px`;
+            timeLine.style.setProperty('--horizontal-now', `${totalMinutes / 1440 * 100}%`);
             timeLine.style.display = 'block';
             timeLine.setAttribute('data-time', timeString);
         });

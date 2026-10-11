@@ -2,6 +2,8 @@
 
 {% block content %}
 <script defer src="{{ url_for('static', filename='js/schedule-height.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/schedule-orientation.css') }}">
+<script defer src="{{ url_for('static', filename='js/schedule-orientation.js') }}"></script>
 <div class="calendar-container schedule-flat" id="schedule-view">
     <div class="calendar-header cc-header">
         <div class="cc-header-row">
@@ -29,6 +31,7 @@
                 </a>
             </div>
             <div class="cc-actions">
+                {% include "_schedule_orientation.html" %}
                 <button type="button" class="cc-btn cc-btn-ghost" id="bulk-select-toggle" title="Select multiple schedules">
                     <i data-feather="check-square"></i> <span>Select</span>
                 </button>

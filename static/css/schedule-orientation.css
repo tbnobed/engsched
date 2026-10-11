@@ -1,0 +1,111 @@
+/* Same continuous workspace, with time running left to right. */
+#schedule-view .schedule-view-switch {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    background: var(--schedule-day);
+    border: .5px solid color-mix(in srgb, var(--schedule-text) 3%, transparent);
+    border-radius: 7px;
+}
+#schedule-view .schedule-view-switch button {
+    border: 0;
+    border-radius: 5px;
+    padding: 7px 10px;
+    background: transparent;
+    color: var(--schedule-muted);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+#schedule-view .schedule-view-switch button[aria-pressed="true"] {
+    background: var(--schedule-today);
+    color: var(--schedule-text);
+}
+#schedule-view.schedule-horizontal .calendar-grid {
+    --horizontal-row-min: 80px;
+    display: grid;
+    grid-template-columns: minmax(1816px, 1fr);
+    grid-template-rows: 36px repeat(7, minmax(var(--horizontal-row-min), 1fr));
+    overflow: auto !important;
+    gap: 0 !important;
+    align-items: stretch;
+}
+#schedule-view.schedule-horizontal .time-column {
+    display: grid;
+    grid-template-columns: 88px repeat(24, minmax(72px, 1fr));
+    height: 36px;
+    min-height: 36px;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+#schedule-view.schedule-horizontal .time-column::before {
+    content: 'Day';
+    height: 36px;
+    position: sticky !important;
+    left: 0;
+    padding: 8px;
+    font-size: 11px;
+    color: var(--schedule-muted);
+}
+#schedule-view.schedule-horizontal .hour-slot {
+    height: 36px;
+    padding: 8px;
+    font-size: 11px;
+}
+#schedule-view.schedule-horizontal .day-column {
+    display: grid;
+    grid-template-columns: 88px minmax(1728px, 1fr);
+    height: auto;
+    min-height: 0;
+    border-bottom: .5px solid color-mix(in srgb, var(--schedule-text) 3%, transparent) !important;
+}
+#schedule-view.schedule-horizontal .day-header {
+    position: sticky !important;
+    left: 0;
+    top: auto;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    z-index: 25;
+}
+#schedule-view.schedule-horizontal .day-slots {
+    display: grid;
+    grid-template-columns: repeat(24, minmax(72px, 1fr));
+    height: 100%;
+    min-height: 0;
+}
+#schedule-view.schedule-horizontal .time-slot {
+    height: 100%;
+    border-right: .5px solid color-mix(in srgb, var(--schedule-text) 3%, transparent) !important;
+}
+#schedule-view.schedule-horizontal .schedule-event {
+    left: var(--horizontal-start) !important;
+    width: var(--horizontal-duration) !important;
+    top: var(--horizontal-lane) !important;
+    height: 42px !important;
+    right: auto !important;
+    transition: none;
+}
+#schedule-view.schedule-horizontal .schedule-event.all-day-time-off {
+    left: 0 !important;
+    width: 100% !important;
+    right: auto !important;
+    height: 30px !important;
+}
+#schedule-view.schedule-horizontal .ooo-banner { padding: 6px 10px; }
+#schedule-view.schedule-horizontal .sched-avatar { display: none; }
+#schedule-view.schedule-horizontal .sched-bar-label {
+    top: 6px;
+    left: 9px;
+}
+#schedule-view.schedule-horizontal .current-time-line {
+    left: var(--horizontal-now, 0%) !important;
+    top: 0 !important;
+    bottom: 0;
+    right: auto;
+    width: 2px;
+    height: 100%;
+}
+#schedule-view.schedule-horizontal .current-time-line::before { left: -4px; top: 0; }
+#schedule-view.schedule-horizontal .current-time-line::after { left: 5px; top: 0; }
