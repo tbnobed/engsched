@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% macro workspace(page) %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/ticket-insights.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ticket-insights.css', v=2) }}">
 <section class="ti" id="ticket-insights" data-page="{{ page }}" aria-label="Ticket insights">
   <header class="ti-header">
     <div><span class="ti-eyebrow">TBN Plex Engineering / Service operations</span><h1>{{ 'Ticket overview' if page == 'overview' else 'Ticket reports' }}</h1><p class="ti-muted">{{ 'Your queue, your team, and what needs attention.' if page == 'overview' else 'Trace every number back to the work behind it.' }}</p></div>
@@ -39,7 +39,7 @@
   {% if page == 'overview' %}
   <div class="ti-toolbar">
     <div><h2>Your workspace</h2><span id="ti-save-state" class="ti-save-state" role="status">Loading saved layout…</span></div>
-    <div class="ti-actions"><label>Start from a preset<select id="ti-preset" disabled><option value="">Choose preset…</option><option value="team">Team operations</option><option value="my">My daily work</option></select></label><button type="button" id="ti-reset" disabled>Reset layout</button></div>
+    <div class="ti-actions ti-preset-actions"><label>Start from a preset<select id="ti-preset" disabled><option value="">Choose preset…</option><option value="team">Team operations</option><option value="my">My daily work</option></select></label><button type="button" id="ti-reset" disabled>Reset layout</button></div>
   </div>
   <div id="ti-widgets" class="ti-grid" aria-live="polite"><div class="ti-skeleton"></div><div class="ti-skeleton"></div></div>
   {% else %}
@@ -54,6 +54,6 @@
   </dialog>
   <noscript><div class="ti-state ti-error">JavaScript is required to load reports and your saved widget layout. Enable JavaScript and reload this page.</div></noscript>
 </section>
-<script src="{{ url_for('static', filename='js/ticket-insights.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/ticket-insights.js', v=2) }}" defer></script>
 {% endmacro %}
 {% block content %}{{ workspace('overview') }}{% endblock %}

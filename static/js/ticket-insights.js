@@ -15,6 +15,7 @@
   };
   const keys = ['start', 'end', 'technician', 'category', 'priority', 'status', 'source', 'department', 'location', 'stalled_days'];
   let config, data, myData, savedLayout, layout, dirty = false, saving = false;
+  let autosaveTimer;
   let query = new URLSearchParams(location.search);
   let controller, generation = 0, dragId, dialogReturn;
   let reportKey = Object.hasOwn(reportNames, query.get('report')) ? query.get('report') : 'volume';
@@ -969,9 +970,16 @@
   }
   function markDirty() {
     dirty = true;
-    $('ti-save-state').textContent = 'Unsaved layout changes · Save to keep them across sessions.';
+    $('ti-save-state').textContent = 'Saving your workspace…';
     $('ti-save').disabled = saving;
     $('ti-add').disabled = layout.widgets.length >= 20;
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(saveLayout, 250);
+  }
+  function rememberFilters() {
+    if (page !== 'overview') return;
+    layout.filters = Object.fromEntries(keys.filter(key => query.has(key)).map(key => [key, query.get(key)]));
+    markDirty();
   }
   function makeWidget(type, scope = 'team', size = 'small') {
     return { id: window.crypto?.randomUUID ? window.crypto.randomUUID() : `widget-${Date.now()}-${Math.random().toString(36).slice(2)}`, type, size, scope, limit: 5 };
@@ -1009,16 +1017,20 @@
     if (saving || !dirty) return;
     saving = true;
     $('ti-save').disabled = true;
+    $('ti-reset').disabled = true;
     const outgoing = copy(layout);
+    let confirmed = false;
     $('ti-save-state').textContent = 'Saving your layout…';
     try {
       const result = await request('/api/ticket-insights/layout', {
         method: 'PUT',
+        keepalive: true,
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' },
         body: JSON.stringify(outgoing)
       });
       if (!result.layout || !Array.isArray(result.layout.widgets)) throw new Error('The server did not confirm the saved layout.');
       savedLayout = copy(result.layout);
+      confirmed = true;
       dirty = JSON.stringify(layout) !== JSON.stringify(outgoing);
       if (JSON.stringify(layout) === JSON.stringify(outgoing)) {
         layout = copy(result.layout); dirty = false;
@@ -1032,15 +1044,20 @@
       $('ti-save-state').textContent = 'Save failed · Your changes remain on this page.';
     } finally {
       saving = false; $('ti-save').disabled = !dirty;
+      $('ti-reset').disabled = false;
+      if (dirty && confirmed) {
+        clearTimeout(autosaveTimer);
+        autosaveTimer = setTimeout(saveLayout, 0);
+      }
     }
   }
   function applyPreset(preset) {
     if (!preset) return;
-    if (!window.confirm('Replace the current workspace with this preset? It will not be saved until you choose Save layout.')) { $('ti-preset').value = ''; return; }
+    if (!window.confirm('Replace your widgets with this preset? Your choice will be saved automatically.')) { $('ti-preset').value = layout.preset; return; }
     const types = preset === 'my' ? ['my_open', 'overdue', 'high_priority', 'my_queue', 'stalled'] : ['unassigned', 'high_priority', 'overdue', 'volume', 'workload', 'aging'];
     const catalog = new Set(config.catalog.map(item => item.type));
-    layout = { version: 1, preset, widgets: types.filter(type => catalog.has(type)).map(type => makeWidget(type, preset === 'my' ? 'me' : 'team', ['volume', 'workload', 'aging', 'my_queue', 'stalled'].includes(type) ? 'medium' : 'small')) };
-    markDirty(); $('ti-preset').value = '';
+    layout = { version: 1, preset, filters: layout.filters || {}, widgets: types.filter(type => catalog.has(type)).map(type => makeWidget(type, preset === 'my' ? 'me' : 'team', ['volume', 'workload', 'aging', 'my_queue', 'stalled'].includes(type) ? 'medium' : 'small')) };
+    markDirty(); $('ti-preset').value = preset;
     if (needsMine() && !myData) loadData(); else renderWidgets();
   }
   async function init() {
@@ -1049,10 +1066,15 @@
       config = await request('/api/ticket-insights/config');
       if (!config.layout || !Array.isArray(config.catalog) || !config.options) throw new Error('Your insights configuration is incomplete.');
       savedLayout = copy(config.layout); layout = copy(config.layout);
+      if (page === 'overview' && !keys.some(key => query.has(key))) {
+        query = new URLSearchParams(layout.filters || {});
+        history.replaceState(null, '', `${location.pathname}?${query}`);
+      }
       fillFilters();
       if (page === 'overview') {
         $('ti-add').disabled = layout.widgets.length >= 20;
         $('ti-reset').disabled = false; $('ti-preset').disabled = false;
+        $('ti-preset').value = layout.preset;
         $('ti-save-state').textContent = 'Saved to your account · Open a widget’s ⋯ menu to reorder or remove it.';
       }
       await loadData();
@@ -1065,6 +1087,7 @@
     event.preventDefault();
     if (!config || !validateDates()) return;
     query = filterQuery();
+    rememberFilters();
     history.replaceState(null, '', `${location.pathname}?${query}`);
     syncLinks(); loadData();
   });
@@ -1074,6 +1097,7 @@
     form.reset(); form.elements.namedItem('end').setCustomValidity('');
     query = new URLSearchParams();
     if (page === 'reports') query.set('report', reportKey);
+    rememberFilters();
     history.replaceState(null, '', `${location.pathname}?${query}`);
     syncLinks(); loadData();
   });
@@ -1089,9 +1113,16 @@
     $('ti-reset').addEventListener('click', () => {
       if (!window.confirm('Discard unsaved changes and restore the last server-saved layout?')) return;
       layout = copy(savedLayout); dirty = false;
+      clearTimeout(autosaveTimer);
+      $('ti-preset').value = layout.preset;
+      query = new URLSearchParams(layout.filters || {});
+      form.reset();
+      fillFilters();
+      history.replaceState(null, '', `${location.pathname}?${query}`);
+      syncLinks();
       $('ti-save').disabled = true; $('ti-add').disabled = layout.widgets.length >= 20;
       $('ti-save-state').textContent = 'Restored the last server-saved layout.';
-      if (needsMine() && !myData) loadData(); else renderWidgets();
+      loadData();
     });
     window.addEventListener('beforeunload', event => {
       if (!dirty) return;

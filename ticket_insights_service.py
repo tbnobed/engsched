@@ -157,7 +157,18 @@ def validate_layout(layout):
         if type(widget.get('limit')) is not int or widget['limit'] not in {5, 10, 20}:
             raise ValueError('Widget lists can show 5, 10, or 20 tickets.')
         cleaned.append({key: widget[key] for key in ('id', 'type', 'size', 'scope', 'limit')})
-    return {'version': 1, 'preset': layout['preset'], 'widgets': cleaned}
+    filters = layout.get('filters', {})
+    allowed_filters = {'start', 'end', 'technician', 'category', 'priority', 'status',
+                       'source', 'department', 'location', 'stalled_days'}
+    if not isinstance(filters, dict) or any(
+        key not in allowed_filters or not isinstance(value, str) or len(value) > 200
+        for key, value in filters.items()
+    ):
+        raise ValueError('Invalid dashboard filters.')
+    result = {'version': 1, 'preset': layout['preset'], 'widgets': cleaned}
+    if 'filters' in layout:
+        result['filters'] = filters
+    return result
 
 
 def build_insights(tickets, comments, histories, users, categories, email_ids, filters, user_id, tz, now=None):

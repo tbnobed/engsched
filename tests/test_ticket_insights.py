@@ -131,6 +131,17 @@ class TicketInsightsTests(unittest.TestCase):
         self.assertEqual(validate_layout(default_layout()), default_layout())
         self.assertEqual(validate_layout({'version': 1, 'preset': 'my', 'widgets': []})['widgets'], [])
 
+    def test_layout_remembers_filters(self):
+        layout = default_layout('my')
+        layout['filters'] = {'priority': '2', 'technician': '17', 'start': '2026-10-01'}
+        self.assertEqual(validate_layout(layout), layout)
+        layout['filters'] = {}
+        self.assertEqual(validate_layout(layout)['filters'], {})
+        for invalid in ([], {'unknown': 'x'}, {'priority': 2}, {'source': 'x' * 201}):
+            layout['filters'] = invalid
+            with self.assertRaises(ValueError):
+                validate_layout(layout)
+
     def test_layout_rejects_malformed_ids_types_and_sizes(self):
         for field, value in [('id', '<script>'), ('type', 'unknown'), ('size', 'huge'), ('limit', True)]:
             layout = default_layout()
