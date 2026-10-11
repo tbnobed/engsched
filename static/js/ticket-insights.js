@@ -340,7 +340,22 @@
     });
     openTickets(`${row.date || row.requester || row.technician || row.category} / ${key.replaceAll('_', ' ')}`, matching);
   }
+  function compareReportValues(a, b, key, direction) {
+    // Unknown measurements remain last in either direction, never become zero.
+    const missing = value => value === null || value === undefined || value === '';
+    if (missing(a) || missing(b)) return Number(missing(a)) - Number(missing(b));
+    let result;
+    if (typeof a === 'number' && typeof b === 'number') result = a - b;
+    else if (typeof a === 'boolean' && typeof b === 'boolean') result = Number(a) - Number(b);
+    else if ((/_at$/.test(key) || ['date', 'last_reopened', 'interval_start', 'interval_end'].includes(key)) &&
+      Number.isFinite(Date.parse(a)) && Number.isFinite(Date.parse(b))) result = Date.parse(a) - Date.parse(b);
+    else result = String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+    return direction === 'descending' ? -result : result;
+  }
   function createTable(columns, rows, options = {}) {
+    let sortKey = null, sortDirection = 'ascending';
+    const sortHeaders = [];
+    const sorted = items => sortKey ? [...items].sort((a, b) => compareReportValues(a[sortKey], b[sortKey], sortKey, sortDirection)) : items;
     const panel = el('div', 'ti-table-block');
     const controls = el('div', 'ti-table-controls');
     const searchLabel = el('label', '', 'Search these rows');
@@ -356,7 +371,25 @@
     const caption = el('caption', '', options.tickets ? 'Matching tickets' : 'Filtered report rows');
     caption.style.captionSide = 'top'; caption.style.padding = '0 20px 10px'; caption.style.color = 'var(--ti-muted)';
     const head = el('thead'), headRow = el('tr');
-      columns.forEach(column => { const th = el('th', column.key === '_review' ? 'ti-no-print' : '', column.label); th.scope = 'col'; headRow.append(th); });
+    columns.forEach(column => {
+      const th = el('th', column.key === '_review' ? 'ti-no-print' : '');
+      th.scope = 'col';
+      if (column.key === '_review') th.textContent = column.label;
+      else {
+        const indicator = el('span', 'ti-sort-indicator', '↕');
+        indicator.setAttribute('aria-hidden', 'true');
+        const toggle = button(column.label, () => {
+          sortDirection = sortKey === column.key && sortDirection === 'ascending' ? 'descending' : 'ascending';
+          sortKey = column.key;
+          currentPage = 1;
+          render();
+        }, 'ti-sort-button');
+        toggle.append(indicator);
+        th.append(toggle);
+        sortHeaders.push({ th, toggle, indicator, column });
+      }
+      headRow.append(th);
+    });
     head.append(headRow);
     const tbody = el('tbody');
     table.append(caption, head, tbody); tableWrap.append(table);
@@ -379,7 +412,13 @@
     }
     function render() {
       const term = search.value.trim().toLocaleLowerCase();
-      const matching = rows.filter(row => columns.some(column => String(row[column.key] ?? '').toLocaleLowerCase().includes(term)));
+      const matching = sorted(rows.filter(row => columns.some(column => String(row[column.key] ?? '').toLocaleLowerCase().includes(term))));
+      sortHeaders.forEach(({ th, toggle, indicator, column }) => {
+        const active = sortKey === column.key;
+        th.setAttribute('aria-sort', active ? sortDirection : 'none');
+        indicator.textContent = active ? (sortDirection === 'ascending' ? '↑' : '↓') : '↕';
+        toggle.setAttribute('aria-label', `${column.label}: sort ${active && sortDirection === 'ascending' ? 'descending' : 'ascending'}`);
+      });
       const limit = Number(size.value);
       const pages = Math.max(1, Math.ceil(matching.length / limit));
       currentPage = Math.max(1, Math.min(currentPage, pages));
@@ -399,7 +438,7 @@
         // Print and CSV retain every server-filtered row, independently of client search/pagination.
         const printTable = el('table'), printBody = el('tbody');
         printTable.append(head.cloneNode(true));
-        rows.forEach(row => printBody.append(makeRow(row, true)));
+        sorted(rows).forEach(row => printBody.append(makeRow(row, true)));
         printTable.append(printBody);
         printable.replaceChildren(printTable);
       }

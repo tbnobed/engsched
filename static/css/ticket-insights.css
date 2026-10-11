@@ -92,6 +92,9 @@
 .ti-drag-handle{display:inline-flex;align-items:center;padding:3px 9px;min-height:32px;border:1px dashed var(--ti-border);border-radius:5px;color:var(--ti-muted);font-size:13px;cursor:grab}.ti-drag-handle:active{cursor:grabbing}
 @media(min-width:1700px){.ti-filter-grid{grid-template-columns:repeat(8,minmax(0,1fr))}.ti-widget{grid-column:span 3}}
 @media(max-width:1000px){.ti-widget{grid-column:span 6}.ti-config{grid-template-columns:1fr}.ti-header{align-items:start}.ti{padding:20px 12px 36px}}
+.ti th .ti-sort-button { display: inline-flex; align-items: center; gap: 8px; padding: 0; min-height: 28px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; }
+.ti th .ti-sort-button:hover, .ti th[aria-sort=ascending], .ti th[aria-sort=descending] { color: var(--ti-accent); }
+.ti-sort-indicator { font-size: 14px; }
 .ti .ti-preset-actions { align-items: flex-end; }
 .ti .ti-preset-actions label { margin: 0; }
 .ti .ti-preset-actions select, .ti .ti-preset-actions > button { height: 42px; margin-bottom: 0; }

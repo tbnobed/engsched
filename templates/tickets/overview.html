@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% macro workspace(page) %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/ticket-insights.css', v=2) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ticket-insights.css', v=3) }}">
 <section class="ti" id="ticket-insights" data-page="{{ page }}" aria-label="Ticket insights">
   <header class="ti-header">
     <div><span class="ti-eyebrow">TBN Plex Engineering / Service operations</span><h1>{{ 'Ticket overview' if page == 'overview' else 'Ticket reports' }}</h1><p class="ti-muted">{{ 'Your queue, your team, and what needs attention.' if page == 'overview' else 'Trace every number back to the work behind it.' }}</p></div>
@@ -54,6 +54,6 @@
   </dialog>
   <noscript><div class="ti-state ti-error">JavaScript is required to load reports and your saved widget layout. Enable JavaScript and reload this page.</div></noscript>
 </section>
-<script src="{{ url_for('static', filename='js/ticket-insights.js', v=2) }}" defer></script>
+<script src="{{ url_for('static', filename='js/ticket-insights.js', v=3) }}" defer></script>
 {% endmacro %}
 {% block content %}{{ workspace('overview') }}{% endblock %}
