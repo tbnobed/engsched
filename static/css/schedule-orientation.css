@@ -75,8 +75,9 @@
     height: 100%;
     min-height: 0;
 }
-#schedule-view.schedule-horizontal .time-slot {
+#schedule-view.schedule-horizontal .day-column .day-slots .time-slot {
     height: 100%;
+    border: 0 !important;
     border-right: .5px solid color-mix(in srgb, var(--schedule-text) 3%, transparent) !important;
 }
 #schedule-view.schedule-horizontal .schedule-event {
@@ -94,10 +95,20 @@
     height: 30px !important;
 }
 #schedule-view.schedule-horizontal .ooo-banner { padding: 6px 10px; }
-#schedule-view.schedule-horizontal .sched-avatar { display: none; }
+#schedule-view.schedule-horizontal .sched-avatar {
+    display: flex;
+    top: 50% !important;
+    left: 7px;
+    width: 28px;
+    height: 28px;
+    transform: translateY(-50%);
+}
+#schedule-view.schedule-horizontal .sched-avatar:hover {
+    transform: translateY(-50%);
+}
 #schedule-view.schedule-horizontal .sched-bar-label {
     top: 6px;
-    left: 9px;
+    left: 42px;
 }
 #schedule-view.schedule-horizontal .current-time-line {
     left: var(--horizontal-now, 0%) !important;
