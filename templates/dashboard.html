@@ -124,7 +124,7 @@
   }
   .cc-panel {
     background: var(--cc-panel); border:0;
-    border-radius: 0; overflow:hidden; display:flex; flex-direction:column;
+    border-radius: 14px; overflow:hidden; display:flex; flex-direction:column;
     min-width:0; min-height:0;
   }
   .cc-people-panel { grid-area:people; background: var(--cc-rail); }
@@ -147,7 +147,7 @@
 
   /* People rail */
   .cc-people { display:flex; flex-direction:column; gap:4px; padding:4px 8px 12px; overflow:auto; min-height:0; flex:1; }
-  .cc-person { display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:0; cursor:pointer; transition:none; }
+  .cc-person { display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:8px; cursor:pointer; transition:none; }
   .cc-person:hover { background: var(--cc-people-hover); }
   /* Shared legacy CSS clears focus with !important; restore it locally.
      Inset outlines remain visible inside the scrolling, clipped panels. */
@@ -162,14 +162,14 @@
   .cc-person .info { flex:1; min-width:0; }
   .cc-person .name { font-weight:600; font-size:13px; color: var(--cc-text); }
   .cc-person .meta { font-size:11px; color: var(--cc-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .cc-pill { font-size:10px; padding:3px 6px; border-radius:2px; font-weight:600; }
+  .cc-pill { font-size:10px; padding:3px 6px; border-radius:6px; font-weight:600; }
   .cc-pill.on { background: var(--cc-good-bg); color: var(--cc-good); }
   .cc-pill.off { background: var(--cc-panel-2); color: var(--cc-muted); }
   .cc-pill.ooo { background: var(--cc-warn-bg); color: var(--cc-warn); }
 
   /* KPI strip */
   .cc-kpis { grid-area:metrics; display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:8px; }
-  .cc-kpi { background: transparent; border:0; border-radius:0; padding: 18px 16px; min-width:0; }
+  .cc-kpi { background: transparent; border:0; border-radius:14px; padding: 18px 16px; min-width:0; }
   .cc-kpi:nth-child(1) { background:var(--cc-kpi-active); }
   .cc-kpi:nth-child(2) { background:var(--cc-kpi-priority); }
   .cc-kpi:nth-child(3) { background:var(--cc-kpi-shift); }
@@ -188,13 +188,13 @@
   .cc-lanes { flex:1; overflow:auto; padding: 6px 16px 14px; position:relative; }
   .cc-lane {
     display:grid; grid-template-columns: 80px 1fr; align-items:center;
-    padding: 6px 0; border:0; position:relative; min-height: 48px;
+    padding: 6px 0; border:0; border-radius:8px; position:relative; min-height: 48px;
   }
   .cc-lane:nth-child(even) { background:rgba(128,160,194,.07); }
   .cc-lane .lname { font-size:12px; color:var(--cc-muted); display:flex; align-items:center; gap:6px; }
-  .cc-lane .track { position:relative; height:32px; border-radius:0; }
+  .cc-lane .track { position:relative; height:32px; border-radius:6px; }
   .cc-block {
-    position:absolute; top:2px; bottom:2px; border-radius:2px; padding: 4px 10px;
+    position:absolute; top:2px; bottom:2px; border-radius:6px; padding: 4px 10px;
     color:white; font-size:11px; font-weight:600; display:flex; align-items:center;
     box-shadow: none;
     cursor:pointer; transition: transform .15s; overflow:hidden; white-space:nowrap;
@@ -208,7 +208,7 @@
   /* Tickets */
   .cc-ticket-row {
     display:grid; grid-template-columns: 44px minmax(0,1fr) auto; gap:8px;
-    padding: 12px 16px; border:0; cursor:pointer;
+    padding: 12px 16px; border:0; border-radius:8px; cursor:pointer;
     transition:none; text-decoration:none;
   }
   .cc-ticket-row:nth-child(even) { background:var(--cc-ticket-alternate); }
@@ -217,7 +217,7 @@
   .cc-ticket-row .num { font-family: 'JetBrains Mono', monospace; color: var(--cc-muted); font-size:12px; align-self:center; }
   .cc-ticket-row .title { font-size:13px; font-weight:500; color: var(--cc-text); }
   .cc-ticket-row .sub { font-size:11px; color: var(--cc-muted); margin-top:2px; }
-  .cc-badge-pri { font-size:10px; padding:3px 8px; border-radius:2px; font-weight:600; align-self:center; }
+  .cc-badge-pri { font-size:10px; padding:3px 8px; border-radius:6px; font-weight:600; align-self:center; }
   .cc-pri-3 { background:var(--cc-bad-bg); color: var(--cc-bad); }
   .cc-pri-2 { background:var(--cc-high-bg); color: var(--cc-high); }
   .cc-pri-1 { background:var(--cc-warn-bg); color: var(--cc-warn); }
@@ -225,7 +225,7 @@
   .cc-new-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background: var(--cc-bad); margin-left:6px; }
 
   /* Bookings */
-  .cc-booking { padding: 14px 16px; border:0; display:flex; gap:12px; align-items:flex-start; }
+  .cc-booking { padding: 14px 16px; border:0; border-radius:8px; display:flex; gap:12px; align-items:flex-start; }
   .cc-booking:nth-child(even) { background:var(--cc-booking-alternate); }
   .cc-booking .swatch { width:4px; align-self:stretch; min-height:36px; border-radius:2px; }
   .cc-booking .t { font-size:11px; color: var(--cc-muted); margin-top:2px; }
@@ -234,7 +234,7 @@
 
   .cc-shell ::-webkit-scrollbar { width:8px; height:8px; }
   .cc-shell { scrollbar-color:var(--cc-muted) transparent; scrollbar-width:thin; }
-  .cc-shell ::-webkit-scrollbar-thumb { background: var(--cc-muted); border-radius:2px; }
+  .cc-shell ::-webkit-scrollbar-thumb { background: var(--cc-muted); border-radius:4px; }
 
   @media (min-width: 1200px) {
     .cc-kpis { grid-template-columns:repeat(4,minmax(0,1fr)); }
