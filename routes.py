@@ -96,7 +96,7 @@ def dashboard():
     recent_tickets = Ticket.query.filter(
         Ticket.status.in_(['open', 'in_progress', 'pending']),
         Ticket.archived == False
-    ).order_by(Ticket.created_at.desc(), Ticket.priority.desc()).limit(10).all()
+    ).order_by(Ticket.created_at.desc(), Ticket.priority.desc()).all()
     
     # Add unread activity indicators using the new universal badge system
     # NEW badges now disappear when ANY technician interacts with the ticket

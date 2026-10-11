@@ -132,6 +132,13 @@
   .cc-tickets-panel { grid-area:tickets; background: var(--cc-tickets); }
   .cc-timeline-panel { grid-area:timeline; }
   #ccTicketsList, #ccBookingsList { flex:1; min-height:0; overflow:auto; }
+  #ccTicketsList {
+    height: 0;
+    flex: 1 1 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+  }
   .cc-panel-h {
     padding: 18px 16px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px;
     border:0; font-weight:600; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:var(--cc-text); flex-shrink:0;
@@ -373,7 +380,7 @@
     <!-- Full-height ticket column alongside the timeline -->
     <div class="cc-panel cc-tickets-panel">
       <div class="cc-panel-h"><span>Active Tickets</span><span class="count">{{ kpi_active }}</span></div>
-      <div style="overflow:auto;" id="ccTicketsList">
+      <div id="ccTicketsList" tabindex="0" role="region" aria-label="Active tickets">
         {% for ticket in recent_tickets %}
         <a class="cc-ticket-row" href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}">
           <div class="num">#{{ ticket.id }}</div>
@@ -515,7 +522,11 @@
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const fresh = doc.getElementById('ccTicketsList');
         const cur = document.getElementById('ccTicketsList');
-        if (fresh && cur) cur.innerHTML = fresh.innerHTML;
+        if (fresh && cur) {
+          const scrollTop = cur.scrollTop;
+          cur.innerHTML = fresh.innerHTML;
+          cur.scrollTop = scrollTop;
+        }
         if (window.feather) feather.replace();
       })
       .catch(() => {})
