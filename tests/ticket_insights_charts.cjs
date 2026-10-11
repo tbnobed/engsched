@@ -9,7 +9,8 @@ class Node {
     this.events = {};
     this.classList = {
       contains: name => this.className.split(' ').includes(name),
-      add: name => { this.className += ` ${name}`; }
+      add: name => { this.className += ` ${name}`; },
+      remove: name => { this.className = this.className.split(' ').filter(item => item !== name).join(' '); }
     };
     this.className = '';
   }
@@ -24,6 +25,7 @@ root.dataset = { page: 'overview' };
 const preference = { matches: false, addEventListener(name, fn) { this.change = fn; } };
 const context = vm.createContext({
   document: { getElementById: () => root, addEventListener() {}, createElement: tag => new Node(tag),
+    createElementNS: (_, tag) => new Node(tag),
     createTextNode: text => new Node('text', text) },
   window: { matchMedia: () => preference, addEventListener() {} },
   location: { search: '', origin: 'https://example.invalid' },
@@ -35,7 +37,7 @@ const body = script.slice(0, script.lastIndexOf("  form.addEventListener('submit
 vm.runInContext(body + `
   config = { user_id: 8 }; data = { timezone: 'UTC' };
   globalThis.helpers = { chartValue, distribution, queueDistribution, ticketsFor,
-    renderBars, renderVolume, animateWidget, duration, renderWidgets,
+    renderBars, renderVolume, animateWidget, duration, renderWidgets, renderRing, renderHistogram,
     setupWidgets: (catalog, widgets, source) => {
       config = { user_id: 8, catalog }; layout = { widgets }; data = source; myData = source;
     },
@@ -86,6 +88,27 @@ const unavailable = new Node();
 h.renderBars(unavailable, undefined, source, 'Test', 5);
 assert.equal(walk(unavailable).filter(node => node.tag === 'button').length, 0);
 assert.ok(walk(unavailable).some(node => node.textContent.includes('unavailable')));
+const ringParent = new Node();
+h.renderRing(ringParent, [{ label: 'Measured', count: 2, ids: [1, 2] },
+  { label: 'Zero', count: 0, ids: [] }], source, 'Priority');
+const arcs = walk(ringParent).filter(node => node.attributes.class?.includes('ti-ring-segment'));
+assert.equal(arcs.length, 1);
+assert.equal(arcs[0].attributes['stroke-dasharray'], '100 0');
+const ringRow = walk(ringParent).find(node => node.className === 'ti-ring-row');
+ringRow.events.click();
+assert.deepEqual(plain(drilldown.rows.map(row => row.id)), [1, 2]);
+const zeroRing = new Node();
+h.renderRing(zeroRing, [{ label: 'Zero', count: 0, ids: [] }], source, 'Priority');
+assert.equal(walk(zeroRing).filter(node => node.attributes.class?.includes('ti-ring-segment')).length, 0);
+const unknownRing = new Node();
+h.renderRing(unknownRing, [{ label: 'Missing', count: null, ids: [] }], source, 'Priority');
+assert.equal(walk(unknownRing).filter(node => node.attributes.class?.includes('ti-ring-segment')).length, 0);
+assert.ok(walk(unknownRing).some(node => node.attributes['aria-label']?.includes('Total not tracked')));
+const histParent = new Node();
+h.renderHistogram(histParent, dist.groups, source, 'Tracked duration');
+const histColumn = walk(histParent).find(node => node.className === 'ti-hist-column');
+histColumn.events.click();
+assert.deepEqual(plain(drilldown.rows.map(row => row.id)), [1]);
 source.tickets[2].completed_at = '2026-10-10T01:00:00Z'; // Previous day in source timezone.
 const volume = new Node();
 h.renderVolume(volume, source, ['resolved'], true);
@@ -151,7 +174,7 @@ h.setupWidgets(catalog.map(type => ({ type, title: type })), catalog.map(type =>
 h.renderWidgets();
 assert.equal(root.children.length, 15);
 for (const card of root.children) {
-  assert.ok(walk(card).some(node => ['ti-bars', 'ti-volume'].includes(node.className)),
+  assert.ok(walk(card).some(node => ['ti-bars', 'ti-histogram', 'ti-ring-plot'].includes(node.className) || node.className.includes('ti-daily-plot')),
     `${card.dataset.widgetId} must contain a real-data graph`);
   const panel = walk(card).find(node => node.className === 'ti-widget-actions-panel');
   assert.equal(panel.hidden, true);
@@ -160,6 +183,39 @@ for (const card of root.children) {
 const reportVolume = new Node();
 h.renderVolume(reportVolume, source);
 assert.equal(walk(reportVolume).filter(node => node.className === 'ti-column-ink').length, 0);
+const observed = new Map();
+const observer = {
+  observe: node => observed.set(node, true), unobserve: node => observed.delete(node),
+  disconnect: () => observed.clear()
+};
+context.IntersectionObserver = class {
+  constructor(callback) { observer.callback = callback; return observer; }
+};
+vm.runInContext(body + `
+  config = { user_id: 8 }; data = { timezone: 'UTC' };
+  globalThis.visibleHelpers = { animateWidget, cleanupChartAnimations };
+})();`, context);
+card.isConnected = true;
+const beforeEntry = animations.length;
+context.visibleHelpers.animateWidget(card, { ...widget, id: 'offscreen' }, source);
+assert.equal(animations.length, beforeEntry, 'offscreen chart must wait');
+assert.ok(card.classList.contains('ti-chart-pending'));
+observer.callback([{ target: card, isIntersecting: true }]);
+assert.equal(animations.length, beforeEntry + 2);
+assert.ok(animations.at(-1).options.duration >= 800);
+assert.equal(observed.size, 0);
+context.visibleHelpers.animateWidget(card, { ...widget, id: 'offscreen' }, source);
+assert.equal(animations.length, beforeEntry + 2, 'visible unchanged chart must not replay');
+context.visibleHelpers.animateWidget(card, { ...widget, id: 'removed' }, source);
+context.visibleHelpers.cleanupChartAnimations();
+assert.equal(observed.size, 0);
+assert.ok(!card.classList.contains('ti-chart-pending'));
+context.visibleHelpers.animateWidget(card, { ...widget, id: 'reduced-pending' }, source);
+preference.matches = true;
+preference.change({ matches: true });
+assert.equal(observed.size, 0);
+assert.equal(animations.length, beforeEntry + 2);
+assert.ok(!card.classList.contains('ti-chart-pending'));
 // Critical manual top-layer menu and report renderer isolation remain present.
 assert.ok(script.includes("panel.setAttribute('popover', 'manual')"));
 assert.ok(script.includes('positionWidgetActions();'));

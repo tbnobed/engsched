@@ -567,4 +567,10 @@
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
     .ql-editor, .ql-toolbar.ql-snow, .ql-container.ql-snow
   ) { background: transparent !important; }
+
+  /* Dashboard-only separators; other pages retain the borderless theme. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .cc-shell :is(.cc-panel, .cc-kpi),
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body #ticket-insights[data-page="overview"] :is(.ti-widget, .ti-filters) {
+    border: 1px solid color-mix(in srgb, var(--flat-ink) 13%, transparent) !important;
+  }
 }

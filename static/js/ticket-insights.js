@@ -199,6 +199,7 @@
   }
   function needsMine() { return page === 'overview' && layout.widgets.some(widget => widget.scope === 'me'); }
   function skeleton() {
+    cleanupChartAnimations();
     const container = page === 'overview' ? $('ti-widgets') : $('ti-report');
     container.replaceChildren(el('div', 'ti-skeleton'), el('div', 'ti-skeleton'));
     container.setAttribute('aria-busy', 'true');
@@ -603,16 +604,38 @@
   }
   const widgetChartSignatures = new Map();
   const runningChartAnimations = new Set();
+  const pendingChartEntries = new Map();
   const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const chartObserver = typeof IntersectionObserver === 'function' ? new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const play = pendingChartEntries.get(entry.target);
+      chartObserver.unobserve(entry.target);
+      pendingChartEntries.delete(entry.target);
+      if (entry.target.isConnected) play?.();
+    });
+  }, { threshold: 0.12 }) : null;
+  function cleanupChartAnimations() {
+    runningChartAnimations.forEach(animation => animation.cancel());
+    pendingChartEntries.forEach((_, card) => {
+      chartObserver?.unobserve(card);
+      card.classList.remove('ti-chart-pending');
+    });
+    pendingChartEntries.clear();
+  }
   motionPreference.addEventListener?.('change', event => {
-    if (event.matches) runningChartAnimations.forEach(animation => animation.cancel());
+    if (event.matches) {
+      runningChartAnimations.forEach(animation => animation.cancel());
+      pendingChartEntries.forEach(play => play());
+      pendingChartEntries.clear();
+      chartObserver?.disconnect();
+    }
   });
   function animateWidget(card, widget, source) {
     // Reordering, saving and opening an actions menu must not replay charts.
     const signature = JSON.stringify([widget.type, widget.scope, widget.limit, source]);
     const previous = widgetChartSignatures.get(widget.id);
-    widgetChartSignatures.set(widget.id, signature);
-    if (previous === signature || motionPreference.matches || !card.animate) return;
+    if (previous === signature) return;
     function run(node, frames, options) {
       const animation = node.animate(frames, options);
       runningChartAnimations.add(animation);
@@ -620,19 +643,97 @@
       animation.addEventListener('finish', done, { once: true });
       animation.addEventListener('cancel', done, { once: true });
     }
-    // Opacity on the article avoids a transformed ancestor of the fixed menu.
-    run(card, [{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
-    card.querySelectorAll('.ti-bar-fill, .ti-column-ink').forEach((ink, index) => {
-      const axis = ink.classList.contains('ti-bar-fill') ? 'X' : 'Y';
-      run(ink, [{ transform: `scale${axis}(0)` }, { transform: `scale${axis}(1)` }],
-        { duration: 380, delay: Math.min(index * 12, 120), easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'backwards' });
+    function play() {
+      widgetChartSignatures.set(widget.id, signature);
+      card.classList.remove('ti-chart-pending');
+      if (motionPreference.matches || !card.animate) return;
+      // Never transform the article: the actions popover must stay viewport-fixed.
+      run(card, [{ opacity: .45 }, { opacity: 1 }], { duration: 800, easing: 'ease-out' });
+      card.querySelectorAll('.ti-bar-fill, .ti-column-ink, .ti-ring-segment').forEach((ink, index) => {
+        const ring = ink.classList.contains('ti-ring-segment');
+        const axis = ink.classList.contains('ti-bar-fill') ? 'X' : 'Y';
+        run(ink, ring ? [{ opacity: 0, transform: 'scale(.88)' }, { opacity: 1, transform: 'scale(1)' }]
+          : [{ transform: `scale${axis}(0)` }, { transform: `scale${axis}(1)` }],
+        { duration: 950, delay: Math.min(index * 35, 150), easing: 'cubic-bezier(.16,.65,.3,1)', fill: 'backwards' });
+      });
+    }
+    if (motionPreference.matches || !card.animate || !chartObserver) { play(); return; }
+    card.classList.add('ti-chart-pending');
+    pendingChartEntries.set(card, play);
+    chartObserver.observe(card);
+  }
+  function svgNode(tag, attributes = {}) {
+    const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, value));
+    return node;
+  }
+  function renderRing(container, groups, source, title) {
+    if (!Array.isArray(groups)) { container.append(el('p', 'ti-muted', 'Breakdown unavailable.')); return; }
+    const complete = groups.every(group => chartValue(group.count) !== null);
+    const total = groups.reduce((sum, group) => sum + (chartValue(group.count) ?? 0), 0);
+    const plot = el('div', 'ti-ring-plot');
+    const ring = svgNode('svg', { viewBox: '0 0 160 160', role: 'img', 'aria-label': `${title}: ${complete ? `${number(total)} tickets` : 'Total not tracked'}. Breakdown listed alongside.` });
+    ring.append(svgNode('circle', { cx: 80, cy: 80, r: 59, class: 'ti-ring-track' }));
+    let offset = 0;
+    groups.forEach((group, index) => {
+      const count = chartValue(group.count);
+      if (!complete || !count || !total) return;
+      const length = count / total * 100;
+      const arc = svgNode('circle', { cx: 80, cy: 80, r: 59, pathLength: 100,
+        'stroke-dasharray': `${length} ${100 - length}`, 'stroke-dashoffset': -offset,
+        class: `ti-ring-segment ti-series-${index % 5}` });
+      const rotated = svgNode('g', { transform: 'rotate(-90 80 80)' });
+      rotated.append(arc);
+      ring.append(rotated); offset += length;
     });
+    const center = svgNode('text', { x: 80, y: 78, 'text-anchor': 'middle', class: 'ti-ring-total' });
+    center.textContent = complete ? number(total) : '—';
+    const caption = svgNode('text', { x: 80, y: 99, 'text-anchor': 'middle', class: 'ti-ring-caption' });
+    caption.textContent = !complete ? 'not tracked' : total ? 'tickets' : 'no tickets';
+    ring.append(center, caption);
+    const legend = el('div', 'ti-ring-legend');
+    groups.forEach((group, index) => {
+      const ids = new Set((group.ids || []).map(String));
+      const count = chartValue(group.count);
+      const row = button('', () => openTickets(`${title} / ${group.label}`,
+        source.tickets.filter(ticket => ids.has(String(ticket.id)))), 'ti-ring-row');
+      row.setAttribute('aria-label', `${group.label}: ${count === null ? 'Not tracked' : number(count)} tickets. Open matching tickets.`);
+      row.append(el('i', `ti-series-${index % 5}`), el('span', '', group.label),
+        el('strong', '', count === null ? '—' : number(count)));
+      legend.append(row);
+    });
+    plot.append(ring, legend); container.append(plot);
+  }
+  function renderHistogram(container, groups, source, title) {
+    const maximum = Math.max(1, ...groups.map(group => chartValue(group.count) ?? 0));
+    const plot = el('div', 'ti-histogram');
+    plot.style.setProperty('--ti-plot-max', maximum);
+    const scale = el('div', 'ti-plot-scale');
+    [maximum, Math.round(maximum / 2), 0].forEach(value => scale.append(el('span', '', number(value))));
+    const columns = el('div', 'ti-hist-columns');
+    groups.forEach(group => {
+      const count = chartValue(group.count);
+      const ids = new Set(group.ids.map(String));
+      const column = button('', () => openTickets(`${title} / ${group.label}`,
+        source.tickets.filter(ticket => ids.has(String(ticket.id)))), 'ti-hist-column');
+      column.setAttribute('aria-label', `${group.label}: ${count === null ? 'Not tracked' : number(count)} tickets. Open matching tickets.`);
+      const track = el('span', 'ti-hist-track'), ink = el('span', 'ti-column-ink');
+      ink.hidden = count === null;
+      ink.style.height = `${(count ?? 0) / maximum * 100}%`;
+      ink.setAttribute('aria-hidden', 'true');
+      track.append(ink, el('strong', 'ti-hist-value', count === null ? '—' : number(count)));
+      column.append(track, el('span', 'ti-hist-label', group.label));
+      columns.append(column);
+    });
+    plot.append(scale, columns); container.append(plot);
   }
   function renderDistribution(container, result, source, title) {
     container.append(el('p', 'ti-chart-heading', result.title || 'Tracked calendar hours · Ticket counts'));
     if (!result.measured && result.missing) {
       container.append(el('p', 'ti-widget-caption', 'Distribution unavailable: no qualifying measured values.'));
-    } else renderBars(container, result.groups, source, title, result.groups.length);
+    } else if (result.title?.startsWith('Current priority')) renderRing(container, result.groups, source, title);
+    else if (!result.title) renderHistogram(container, result.groups, source, title);
+    else renderBars(container, result.groups, source, title, result.groups.length);
     if (result.missing) container.append(el('p', 'ti-widget-caption', `${number(result.missing)} rows not tracked; excluded from the distribution (not zero).`));
   }
   function renderBars(container, groups, source, title, limit) {
@@ -642,8 +743,13 @@
     }
     const all = groups;
     const shown = all.slice(0, limit);
-    const max = Math.max(1, ...all.map(item => Number(item.count) || 0));
+    const max = Math.max(1, ...all.map(item => chartValue(item.count) ?? 0));
     const bars = el('div', 'ti-bars');
+    if (container.classList.contains('ti-widget')) {
+      const axis = el('div', 'ti-bar-axis');
+      [0, Math.round(max / 2), max].forEach(value => axis.append(el('span', '', number(value))));
+      bars.append(axis);
+    }
     shown.forEach(group => {
       const ids = new Set((group.ids || []).map(String));
       const matching = source.tickets.filter(ticket => ids.has(String(ticket.id)));
@@ -674,6 +780,13 @@
     series.forEach(type => { const span = el('span', type === 'resolved' ? 'resolved' : ''); span.append(el('i'), document.createTextNode(type === 'created' ? 'Created' : 'Completed')); legend.append(span); });
     const scroll = el('div', 'ti-chart-scroll'); scroll.tabIndex = 0; scroll.setAttribute('aria-label', 'Daily ticket volume. Scroll horizontally to view all dates.');
     const chart = el('div', 'ti-volume');
+    if (overview) {
+      chart.classList.add('ti-daily-plot');
+      scroll.classList.add('ti-daily-scroll');
+      const axis = el('div', 'ti-plot-scale');
+      [maximum, Math.round(maximum / 2), 0].forEach(value => axis.append(el('span', '', number(value))));
+      scroll.append(axis);
+    }
     days.forEach(day => {
       const group = el('div', 'ti-day'), bars = el('div', 'ti-day-bars');
       series.forEach(type => {
@@ -725,6 +838,7 @@
     return box;
   }
   function renderWidgets() {
+    cleanupChartAnimations();
     closeWidgetActions();
     if (!data) return;
     const grid = $('ti-widgets');
@@ -758,7 +872,8 @@
       if (!source) {
         card.append(el('p', 'ti-muted', 'Assignment data is not loaded.'), button('Load assignment data', loadData));
       } else if (['aging', 'workload', 'categories', 'status'].includes(widget.type)) {
-        renderBars(card, source.charts[widget.type], source, title, widget.limit);
+        if (widget.type === 'status') renderRing(card, source.charts.status, source, title);
+        else renderBars(card, source.charts[widget.type], source, title, widget.limit);
         if (widget.type === 'categories') card.append(el('p', 'ti-widget-caption', 'Groups use the server-provided ticket membership. The Categories report separates period arrivals and current backlog.'), safeLink(reportURL('categories', widget.scope), 'Open category report'));
       } else if (widget.type === 'volume') {
         renderVolume(card, source, ['created', 'resolved'], true);
