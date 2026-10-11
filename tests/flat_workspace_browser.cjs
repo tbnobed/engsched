@@ -60,6 +60,7 @@ const markup = `
           const s = getComputedStyle(el);
           return {
             border: [s.borderTopWidth, s.borderRightWidth, s.borderBottomWidth, s.borderLeftWidth],
+            borderColor: s.borderTopColor,
             shadow: s.boxShadow, background: s.backgroundColor, image: s.backgroundImage,
             color: s.color, gap: s.gap, margin: s.marginBottom,
             outline: s.outlineWidth, height: s.height,
@@ -70,7 +71,15 @@ const markup = `
           "assistant-message", "menu", "modal", "drawer", "mobile-header", "mobile-timeline",
           "mobile-event", "mobile-stat", "mobile-empty", "mobile-link", "table-cell", "table-row"]) {
           const style = await computed(id);
-          assert.deepEqual(style.border, ["0px", "0px", "0px", "0px"], `${theme}/${width}/${id}: decorative border`);
+          const sections = ["card", "ticket-panel", "admin-kpi", "report-panel",
+            "api-panel", "detail-card", "detail-side", "modal", "drawer",
+            "mobile-event", "mobile-link"];
+          if (sections.includes(id)) {
+            assert(style.border.every(value => parseFloat(value) > 0 && parseFloat(value) <= 1), `${theme}/${width}/${id}: hairline separator`);
+            assert.match(style.borderColor, /0\.03\b/, `${theme}/${width}/${id}: three-percent separator`);
+          } else {
+            assert.deepEqual(style.border, ["0px", "0px", "0px", "0px"], `${theme}/${width}/${id}: no extra internal border`);
+          }
           assert.equal(style.shadow, "none", `${theme}/${width}/${id}: decorative shadow`);
         }
         for (const id of ["ticket-grid", "admin-grid", "report-grid", "detail-grid", "calendar-grid"]) {

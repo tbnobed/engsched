@@ -27,8 +27,8 @@ For the main dashboard, each section needs a clearly distinct dark color family,
 
 Apply the same blended, borderless treatment to shared navigation: no sidebar outline, logo/clock separators, submenu rules, or outlined settings/mobile controls. Preserve menu order, branding, and keyboard focus indicators.
 
-Dashboard exception: use very thin, subtle section borders while retaining the blended surfaces and existing positions. Do not extend these lines to the sidebar or other pages.
+Current section styling: use the approved barely visible 0.5px, 3%-opacity borders across all pages, retaining blended surfaces and existing positions. Keep navigation and individual controls unchanged.
 
-**Why:** The user subsequently requested “very think border lines to all sections on in the dashboard,” interpreted as thin section separators.
+**Why:** After progressively reducing dashboard borders, the user explicitly approved the 3% version (“now we are talking”) and requested the same on all pages. This supersedes the earlier blanket prohibition on section borders.
 
 **Why:** The user extended the direction to the sidebar: “I don't want to see borders anywhere.”

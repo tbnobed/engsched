@@ -568,9 +568,19 @@
     .ql-editor, .ql-toolbar.ql-snow, .ql-container.ql-snow
   ) { background: transparent !important; }
 
-  /* Dashboard-only separators; other pages retain the borderless theme. */
-  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .cc-shell :is(.cc-panel, .cc-kpi),
-  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body #ticket-insights[data-page="overview"] :is(.ti-widget, .ti-filters) {
+  /* Barely visible section separators, shared across both themes and all pages.
+     Keep inputs, individual table rows, icons and navigation unchanged. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    .cc-panel, .cc-kpi, .card, .mobile-card, .tk-panel, .tk-kpi,
+    .ad-panel, .ad-kpi, .ti-panel, .ti-widget, .ti-filters,
+    .ti-summary-metric, .ti-settings-section, .aa-panel, .aa-connection,
+    .tr-card, .tr-side-card, .tr-meta, .tr-composer, .tr-activity-card,
+    .schedule-card, .time-off-card, .ticket-card, .quick-link-card,
+    .stat-card, .login-card, .modal-content, .tk-drawer,
+    .ti dialog, .aa dialog, #schedule-view, .mini-calendar
+  ),
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.survey-page main,
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body.api-docs section {
     border: 0.5px solid color-mix(in srgb, var(--flat-ink) 3%, transparent) !important;
   }
 }
