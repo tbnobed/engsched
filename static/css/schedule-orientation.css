@@ -116,7 +116,12 @@
     bottom: 0;
     right: auto;
     width: 2px;
-    height: 100%;
+    height: 100% !important;
+    z-index: 24;
 }
 #schedule-view.schedule-horizontal .current-time-line::before { left: -4px; top: 0; }
-#schedule-view.schedule-horizontal .current-time-line::after { left: 5px; top: 0; }
+#schedule-view.schedule-horizontal .current-time-line::after {
+    left: 5px;
+    top: 6px;
+    line-height: 1.4;
+}
