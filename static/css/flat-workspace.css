@@ -602,4 +602,179 @@
   html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .ticket-reference-page .tr-meta-cell:not(:last-child) {
     border-inline-end: 0.5px solid color-mix(in srgb, var(--flat-ink) 10%, transparent) !important;
   }
+
+  /* Shared popup contract. Named IDs in :is deliberately raise specificity
+     above legacy ID/theme rules, including styles loaded after this sheet.
+     Ordinary dropdowns and action menus are not part of this override. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #ti-dialog, #aa-create-dialog, .modal-content, dialog, .tk-drawer,
+    .tk-kbd-help, .tk-inline-popover:has(form)
+  ) {
+    --flat-popup-divider: color-mix(in srgb, var(--flat-ink) 10%, transparent);
+    --bs-modal-bg: var(--flat-blue);
+    --bs-modal-color: var(--flat-ink);
+    --bs-modal-border-color: var(--flat-popup-divider);
+    --bs-modal-header-border-color: var(--flat-popup-divider);
+    --bs-modal-footer-border-color: var(--flat-popup-divider);
+    background: var(--flat-blue) !important;
+    color: var(--flat-ink) !important;
+    border: 1px solid var(--flat-popup-divider) !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.5;
+    color-scheme: inherit;
+    max-height: calc(100vh - 2rem);
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal, dialog, .tk-drawer, .tk-inline-popover:has(form)
+  ) :is(
+    .modal-header, .modal-body, .modal-footer,
+    .ti-dialog-head, .ti-dialog-body, .aa-dialog-head, .aa-dialog-body,
+    .tk-drawer-head, .tk-drawer-body, .tk-drawer-foot
+  ) {
+    background: var(--flat-blue) !important;
+    color: var(--flat-ink) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 1rem 1.25rem !important;
+    min-width: 0;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal, dialog, .tk-drawer
+  ) :is(.modal-header, .ti-dialog-head, .aa-dialog-head, .tk-drawer-head) {
+    border-bottom: 1px solid var(--flat-popup-divider) !important;
+    gap: 1rem;
+    flex-shrink: 0;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal, dialog, .tk-drawer
+  ) :is(.modal-footer, .tk-drawer-foot) {
+    border-top: 1px solid var(--flat-popup-divider) !important;
+    gap: .5rem;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal, dialog, .tk-drawer, .tk-inline-popover:has(form)
+  ) :is(.modal-title, h2, h3, label, legend, .form-label) {
+    color: var(--flat-ink) !important;
+    text-shadow: none !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal, dialog, .tk-drawer, .tk-inline-popover:has(form)
+  ) :is(.modal-title, .ti-dialog-head h2, .aa-dialog-head h2, .tk-drawer-head h3) {
+    font-size: 1.125rem;
+    line-height: 1.4;
+    font-weight: 600;
+    margin: 0;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal, dialog, .tk-drawer, .tk-inline-popover:has(form)
+  ) :is(
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+    textarea, select, .ql-container.ql-snow
+  ) {
+    background-color: var(--flat-input) !important;
+    color: var(--flat-ink) !important;
+    border: 1px solid color-mix(in srgb, var(--flat-ink) 28%, transparent) !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1.5;
+    padding: .625rem .75rem;
+    max-width: 100%;
+    color-scheme: inherit;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal, dialog, .tk-drawer, .tk-inline-popover:has(form)
+  ) :is(input:not([type="hidden"]), textarea, select, .ql-container):is(:focus, :focus-within) {
+    border-color: var(--flat-accent) !important;
+    outline: 2px solid var(--flat-accent) !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal, dialog, .tk-drawer, .tk-inline-popover:has(form)
+  ) :is(.is-invalid, .was-validated input:invalid, .was-validated select:invalid, .was-validated textarea:invalid) {
+    border-color: var(--flat-bad) !important;
+  }
+  /* Bootstrap's close glyph must follow the effective theme, not a stale
+     btn-close-white class; currentColor also respects body.light-theme. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal
+  ) .btn-close {
+    background: transparent !important;
+    color: var(--flat-ink) !important;
+    filter: none !important;
+    opacity: .8;
+    position: relative;
+    flex-shrink: 0;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal
+  ) .btn-close::before,
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal
+  ) .btn-close::after {
+    content: "";
+    position: absolute;
+    width: 1rem;
+    height: 2px;
+    background: currentColor;
+    top: calc(50% - 1px);
+    left: calc(50% - .5rem);
+    transform: rotate(45deg);
+    pointer-events: none;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #editTicketModal, .modal
+  ) .btn-close::after { transform: rotate(-45deg); }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #ti-dialog, #aa-create-dialog, dialog
+  ) {
+    padding: 0 !important;
+    max-width: calc(100vw - 2rem);
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+    #ti-dialog, #aa-create-dialog, dialog
+  )::backdrop {
+    background: color-mix(in srgb, var(--flat-canvas) 75%, transparent);
+  }
+  /* Keep the drawer's existing offscreen transform and visibility handlers.
+     Its form needs a bounded flex height for the body to scroll independently. */
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(#tkDrawer, .tk-drawer) {
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 10px 0 0 10px !important;
+    overflow: hidden;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(#tkDrawer, .tk-drawer) > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+  html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(#tkDrawer, .tk-drawer) .tk-drawer-body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  @media (max-width: 767px) {
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(
+      #editTicketModal, .modal, dialog, .tk-drawer
+    ) :is(.modal-header, .modal-body, .modal-footer, .ti-dialog-head, .ti-dialog-body, .aa-dialog-head, .aa-dialog-body, .tk-drawer-head, .tk-drawer-body, .tk-drawer-foot) {
+      padding: 1rem !important;
+    }
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body :is(#tkDrawer, .tk-drawer) .tk-drawer-row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
 }

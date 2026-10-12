@@ -10,7 +10,7 @@ from sqlalchemy import func
 
 from app import app, db
 from models import Ticket, TicketComment, TicketAIMessage
-from ai_text import without_emojis
+from ai_text import without_emojis, format_ai_response
 
 ai = Blueprint("ticket_ai", __name__)
 
@@ -26,7 +26,8 @@ For follow-ups respond directly, incorporate reported test results, and avoid
 repeating failed steps. Flag service interruptions, data loss, or live broadcast
 risk before suggesting changes; prefer reversible checks first. Never request
 passwords or secrets. You cannot inspect attachments or access equipment.
-Write professional plain text with short headings and numbered steps.
+Write concise Markdown with short ## headings, blank lines between sections,
+and each numbered diagnostic step or bullet on its own line.
 Do not use emojis, decorative symbols, or HTML."""
 
 
@@ -196,6 +197,7 @@ def conversation(ticket_id):
             messages=[{
                 "id": r.id, "role": r.role,
                 "content": without_emojis(r.content) if r.role == "assistant" else r.content,
+                "content_html": format_ai_response(r.content) if r.role == "assistant" else None,
                 "status": r.status, "error": r.error,
                 "created_at": r.created_at.isoformat() + "Z",
             } for r in rows],

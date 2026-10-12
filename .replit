@@ -36,6 +36,10 @@ outputType = "webview"
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 8766
+externalPort = 3001
+
 [agent]
 integrations = ["python_sendgrid:1.0.0"]
 
