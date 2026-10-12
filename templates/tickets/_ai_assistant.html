@@ -6,7 +6,7 @@
 .ticket-ai .ticket-ai-content :is(ol,ul) { padding-left: 1.5rem; margin: 0 0 1rem; }
 .ticket-ai .ticket-ai-content li { padding-left: .2rem; margin-bottom: .65rem; }
 .ticket-ai .ticket-ai-message-user .ticket-ai-content { white-space: pre-wrap; }
-.ticket-ai .ticket-ai-conversation { max-height: none; overflow: visible; overflow-wrap: anywhere; }
+.ticket-ai .ticket-ai-conversation { height: min(55vh, 520px); overflow-y: auto; overflow-wrap: anywhere; overscroll-behavior: contain; padding: .5rem; }
 .ticket-ai .ticket-ai-message + .ticket-ai-message { margin-top: 1rem; }
 .ticket-reference-page .ticket-ai .ticket-ai-skeleton { height: .7rem; border-radius: .25rem; background: rgba(139, 145, 162, .16); margin: .65rem 0; }
 .ticket-reference-page .ticket-ai .ticket-ai-skeleton:last-child { width: 64%; }
@@ -36,7 +36,7 @@
             <button type="button" class="btn btn-outline-primary btn-sm" data-ai-analyze disabled>Analyze ticket</button>
         </div>
         <p class="visually-hidden" data-ai-status role="status" aria-live="polite">Loading conversation…</p>
-        <details class="ticket-ai-followup">
+        <details class="ticket-ai-followup" open>
         <summary>Ask a follow-up</summary>
         <p id="ticket-ai-notice" class="text-muted small mt-2">Ticket details, comments, and your questions are sent to OpenAI. This conversation is shared with people who can access this ticket; it is not emailed externally. Check AI suggestions before acting.</p>
         <form data-ai-form aria-describedby="ticket-ai-notice">
@@ -126,24 +126,19 @@
         const signature = JSON.stringify(messages);
         if (signature === lastMessages) {
             if (revealLatest) {
-                conversation.scrollTop = 0;
+                conversation.scrollTop = conversation.scrollHeight;
                 find('[data-ai-latest]').hidden = true;
                 revealLatest = false;
             }
             return;
         }
+        const firstRender = lastMessages === '';
         lastMessages = signature;
-        const nearTop = conversation.scrollTop < 80;
+        const nearBottom = conversation.scrollHeight - conversation.clientHeight - conversation.scrollTop < 80;
         const previousScrollTop = conversation.scrollTop;
-        const previousScrollHeight = conversation.scrollHeight;
         const fragment = document.createDocumentFragment();
-        // Newest exchange first, with each question above its response.
-        const exchanges = [];
+        // The API returns chronological history: newest response at the bottom.
         messages.forEach(message => {
-            if (message.role === 'user' || !exchanges.length) exchanges.push([]);
-            exchanges[exchanges.length - 1].push(message);
-        });
-        exchanges.reverse().flat().forEach(message => {
             const article = document.createElement('article');
             article.className = 'ticket-ai-message' + (message.role === 'user' ? ' ticket-ai-message-user' : '');
             const header = document.createElement('div');
@@ -199,8 +194,8 @@
             fragment.appendChild(article);
         });
         conversation.replaceChildren(fragment);
-        const showLatest = nearTop || revealLatest || followResponse;
-        conversation.scrollTop = showLatest ? 0 : previousScrollTop + conversation.scrollHeight - previousScrollHeight;
+        const showLatest = firstRender || nearBottom || revealLatest || followResponse;
+        conversation.scrollTop = showLatest ? conversation.scrollHeight : previousScrollTop;
         find('[data-ai-latest]').hidden = showLatest;
         revealLatest = false;
     }
@@ -279,11 +274,11 @@
     analyze.addEventListener('click', () => submit('', ''));
     find('[data-ai-reload]').addEventListener('click', load);
     find('[data-ai-latest]').addEventListener('click', () => {
-        conversation.scrollTop = 0;
+        conversation.scrollTop = conversation.scrollHeight;
         find('[data-ai-latest]').hidden = true;
     });
     conversation.addEventListener('scroll', () => {
-        if (conversation.scrollTop < 80) find('[data-ai-latest]').hidden = true;
+        if (conversation.scrollHeight - conversation.clientHeight - conversation.scrollTop < 80) find('[data-ai-latest]').hidden = true;
         else followResponse = false;
     });
     question.addEventListener('input', controls);
