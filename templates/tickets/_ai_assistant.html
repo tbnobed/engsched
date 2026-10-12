@@ -28,6 +28,7 @@
             <span data-ai-error-text></span>
             <button class="btn btn-sm btn-outline-danger mt-2 d-block" type="button" data-ai-reload>Refresh conversation</button>
         </div>
+        <button type="button" class="btn btn-sm btn-outline-primary mb-2" data-ai-latest hidden>Show latest messages</button>
         <div class="ticket-ai-conversation" data-ai-conversation role="region" aria-label="Shared AI conversation" tabindex="0"></div>
         <div data-ai-empty hidden>
             <p class="text-muted small mb-2">Summarize this ticket and suggest next steps.</p>
@@ -71,6 +72,8 @@
     let timer = null;
     let lastMessages = '';
     let reloadRequired = false;
+    let revealLatest = false;
+    let followResponse = false;
 
     function controls() {
         const locked = !ready || !enabled || busy || submitting || fetching || reloadRequired;
@@ -120,14 +123,26 @@
 
     function render(messages) {
         const signature = JSON.stringify(messages);
-        if (signature === lastMessages) return;
+        if (signature === lastMessages) {
+            if (revealLatest) {
+                conversation.scrollTop = 0;
+                find('[data-ai-latest]').hidden = true;
+                revealLatest = false;
+            }
+            return;
+        }
         lastMessages = signature;
         const nearTop = conversation.scrollTop < 80;
         const previousScrollTop = conversation.scrollTop;
         const previousScrollHeight = conversation.scrollHeight;
         const fragment = document.createDocumentFragment();
-        // The API returns chronological history; render a copy newest-first.
-        [...messages].reverse().forEach(message => {
+        // Newest exchange first, with each question above its response.
+        const exchanges = [];
+        messages.forEach(message => {
+            if (message.role === 'user' || !exchanges.length) exchanges.push([]);
+            exchanges[exchanges.length - 1].push(message);
+        });
+        exchanges.reverse().flat().forEach(message => {
             const article = document.createElement('article');
             article.className = 'ticket-ai-message' + (message.role === 'user' ? ' ticket-ai-message-user' : '');
             const header = document.createElement('div');
@@ -183,7 +198,10 @@
             fragment.appendChild(article);
         });
         conversation.replaceChildren(fragment);
-        conversation.scrollTop = nearTop ? 0 : previousScrollTop + conversation.scrollHeight - previousScrollHeight;
+        const showLatest = nearTop || revealLatest || followResponse;
+        conversation.scrollTop = showLatest ? 0 : previousScrollTop + conversation.scrollHeight - previousScrollHeight;
+        find('[data-ai-latest]').hidden = showLatest;
+        revealLatest = false;
     }
 
     function schedule(delay) {
@@ -206,6 +224,7 @@
             busy = data.busy;
             reloadRequired = false;
             render(data.messages);
+            if (!busy) followResponse = false;
             find('[data-ai-empty]').hidden = !enabled || data.messages.length > 0 || busy;
             find('[data-ai-disabled]').hidden = enabled;
             errorBox.hidden = true;
@@ -235,6 +254,8 @@
                 body: JSON.stringify(suffix ? {} : { question: text })
             });
             if (!suffix && question.value === text) question.value = '';
+            revealLatest = true;
+            followResponse = true;
             busy = true;
             await load();
         } catch (error) {
@@ -256,6 +277,14 @@
     });
     analyze.addEventListener('click', () => submit('', ''));
     find('[data-ai-reload]').addEventListener('click', load);
+    find('[data-ai-latest]').addEventListener('click', () => {
+        conversation.scrollTop = 0;
+        find('[data-ai-latest]').hidden = true;
+    });
+    conversation.addEventListener('scroll', () => {
+        if (conversation.scrollTop < 80) find('[data-ai-latest]').hidden = true;
+        else followResponse = false;
+    });
     question.addEventListener('input', controls);
     window.addEventListener('pagehide', () => window.clearTimeout(timer));
     load();
