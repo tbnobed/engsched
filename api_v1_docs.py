@@ -14,7 +14,8 @@ def spec():
         'description': prop('string', minLength=1, maxLength=50000, description='Plain text, escaped safely for the application.'),
         'category_id': prop('integer', minimum=1),
         'priority': prop('integer', minimum=0, maximum=3, default=0, description='0 Low, 1 Medium, 2 High, 3 Urgent'),
-        'assigned_to': nullable_id, 'requester_id': prop('integer', minimum=1, description='Defaults to the API-key owner.'),
+        'assigned_to': nullable_id, 'group_id': nullable_id,
+        'requester_id': prop('integer', minimum=1, description='Defaults to the API-key owner.'),
         'external_email': prop(['string', 'null'], format='email', maxLength=255),
         'external_name': prop(['string', 'null'], maxLength=100),
         'due_date': dict(date, type=['string', 'null']),
@@ -47,7 +48,13 @@ def spec():
             'id': prop('integer'), 'username': prop('string'), 'email': prop('string', format='email'),
             'timezone': prop('string'), 'show_on_dashboard': prop('boolean')}},
         'Category': {'type': 'object', 'properties': {
-            'id': prop('integer'), 'name': prop('string'), 'description': prop(['string', 'null'])}},
+            'id': prop('integer'), 'name': prop('string'), 'description': prop(['string', 'null']),
+            'default_group_id': nullable_id, 'default_assignee_id': nullable_id}},
+        'Group': {'type': 'object', 'properties': {
+            'id': prop('integer'), 'name': prop('string'), 'description': prop(['string', 'null']),
+            'manager_user_id': nullable_id, 'enabled': prop('boolean'),
+            'notifications_enabled': prop('boolean'),
+            'member_ids': {'type': 'array', 'items': prop('integer')}}},
         'Location': {'type': 'object', 'properties': {
             'id': prop('integer'), 'name': prop('string'), 'description': prop(['string', 'null']), 'active': prop('boolean')}},
         'ScheduleTemplate': {'type': 'object', 'properties': {
@@ -108,6 +115,7 @@ def spec():
     operation('/tickets', 'get', 'List tickets (unarchived by default)', 'tickets:read', listing=True, output='Ticket', filters=[
         ('status', ticket_input['status']), ('priority', prop('integer', minimum=0, maximum=3)),
         ('category_id', prop('integer')), ('assigned_to', prop('string', description='User ID or unassigned')),
+        ('group_id', prop('string', description='Group ID or none')),
         ('requester_id', prop('integer')), ('archived', prop('boolean', default=False)),
         ('updated_since', date), ('q', prop('string', maxLength=200))])
     operation('/tickets', 'post', 'Create a ticket; no email or AI side effects', 'tickets:write', 'TicketInput',
@@ -130,9 +138,10 @@ def spec():
     operation('/schedule-templates', 'get', 'Read weekly patterns, not automatically expanded future bookings', 'schedules:read', listing=True,
               filters=[('technician_id', prop('integer')), ('active', prop('boolean'))], output='ScheduleTemplate')
     for path, title in (('technicians', 'technician IDs, names, email and timezone (all app users)'),
-                        ('categories', 'ticket categories'), ('locations', 'locations including active flag')):
+                        ('categories', 'ticket categories'), ('groups', 'groups and resolved members'),
+                        ('locations', 'locations including active flag')):
         operation('/' + path, 'get', 'List ' + title, 'directory:read', listing=True,
-                  output={'technicians': 'Technician', 'categories': 'Category', 'locations': 'Location'}[path])
+                  output={'technicians': 'Technician', 'categories': 'Category', 'groups': 'Group', 'locations': 'Location'}[path])
     return {
         'openapi': '3.1.0', 'info': {'title': 'Plex Engineering API', 'version': '1.0.0',
             'description': 'Server-to-server ticket and technician scheduling integration. Bearer API keys are managed by administrators.'},

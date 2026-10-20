@@ -1,0 +1,16 @@
+{# Shared by desktop, mobile, and modal forms. #}
+{% set selected_group = request.form.get('group_id', ticket.group_id if ticket is defined else '__default__') %}
+<div class="mb-3 field">
+  <label class="form-label">Group</label>
+  <select name="group_id" class="form-select" data-ticket-group data-filter-members="{{ 'true' if ticket_group_filter_assignees else 'false' }}">
+    {% if ticket is not defined %}<option value="__default__" {% if selected_group == '__default__' %}selected{% endif %}>Use category default</option>{% endif %}
+    <option value="" {% if not selected_group %}selected{% endif %}>No group</option>
+    {% for group in ticket_group_options %}
+      {% if group.enabled or selected_group|string == group.id|string %}
+      <option value="{{ group.id }}" data-members="{{ group.member_ids|tojson|forceescape }}" {% if selected_group|string == group.id|string %}selected{% endif %}>{{ group.name }}{% if not group.enabled %} (disabled — existing assignment){% endif %}</option>
+      {% endif %}
+    {% endfor %}
+  </select>
+  <div class="form-text text-warning" data-group-assignee-notice role="status" hidden></div>
+</div>
+<script src="{{ url_for('static', filename='js/ticket-groups.js') }}" defer></script>

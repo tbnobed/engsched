@@ -43,6 +43,11 @@ if [ "$1" = "gunicorn" ] || [ "$1" = "python" ] || [ "$1" = "flask" ]; then
   fi
   echo "============================================"
   
+  # Fail startup if Groups DDL fails. Run in a single transaction using the
+  # same advisory lock as Flask initialization; no app import is required.
+  PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 --single-transaction \
+    -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /app/ticket_groups_schema.sql
+
   echo "Starting the application with: $@"
   exec "$@"
 fi

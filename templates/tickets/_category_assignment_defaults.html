@@ -1,0 +1,24 @@
+{% set selected_group = request.form.get('default_group_id', category.default_group_id if category is defined else '') %}
+<div class="mb-3">
+  <label class="form-label">Default Group</label>
+  <select name="default_group_id" class="form-select" data-ticket-group data-assignee-name="default_assignee_id" data-filter-members="{{ 'true' if ticket_group_filter_assignees else 'false' }}">
+    <option value="">No group</option>
+    {% for group in ticket_group_options %}
+    {% if group.enabled or selected_group|string == group.id|string %}
+    <option value="{{ group.id }}" data-members="{{ group.member_ids|tojson|forceescape }}" {% if selected_group|string == group.id|string %}selected{% endif %}>{{ group.name }}{% if not group.enabled %} (disabled){% endif %}</option>
+    {% endif %}
+    {% endfor %}
+  </select>
+  <div class="form-text text-warning" data-group-assignee-notice role="status" hidden></div>
+</div>
+<div class="mb-3">
+  <label class="form-label">Default Assignee</label>
+  {% set selected_assignee = request.form.get('default_assignee_id', category.default_assignee_id if category is defined else '') %}
+  <select name="default_assignee_id" class="form-select">
+    <option value="">Unassigned</option>
+    {% for user in ticket_group_users %}
+    <option value="{{ user.id }}" {% if selected_assignee|string == user.id|string %}selected{% endif %}>{{ user.username }}</option>
+    {% endfor %}
+  </select>
+</div>
+<script src="{{ url_for('static', filename='js/ticket-groups.js') }}" defer></script>

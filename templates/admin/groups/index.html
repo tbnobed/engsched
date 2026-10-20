@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <div><div class="text-muted small">Settings / Users &amp; Groups</div><h1 class="h3 mb-0">Groups</h1></div>
+        {% if current_user.is_admin %}<a href="{{ url_for('ticket_groups.edit') }}" class="btn btn-primary">Create group</a>{% endif %}
+    </div>
+    <form method="get" class="d-flex flex-wrap gap-2 mb-3">
+        <label class="visually-hidden" for="groupSearch">Search groups</label>
+        <input type="search" id="groupSearch" name="q" value="{{ search }}" class="form-control w-auto" placeholder="Search name or description">
+        <label class="visually-hidden" for="groupEnabled">Group status</label>
+        <select name="enabled" id="groupEnabled" class="form-select w-auto">
+            <option value="enabled" {% if enabled == 'enabled' %}selected{% endif %}>Enabled only</option>
+            <option value="disabled" {% if enabled == 'disabled' %}selected{% endif %}>Disabled only</option>
+            <option value="all" {% if enabled == 'all' %}selected{% endif %}>All groups</option>
+        </select>
+        <button class="btn btn-outline-primary">Apply</button>
+    </form>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr><th>Name</th><th>Description</th><th>Manager</th><th>Resolved members</th><th>Notifications</th><th>Enabled</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+            <tbody>
+            {% for group in groups %}
+                <tr>
+                    <td><a href="{{ url_for('ticket_groups.detail', group_id=group.id) }}">{{ group.name }}</a></td>
+                    <td>{{ group.description or '—' }}</td><td>{{ group.manager.username if group.manager else '—' }}</td>
+                    <td>{{ counts[group.id] }}</td><td>{{ 'On' if group.notifications_enabled else 'Off' }}</td>
+                    <td>{{ 'Yes' if group.enabled else 'No' }}</td>
+                    <td>{% if current_user.is_admin %}<a href="{{ url_for('ticket_groups.edit', group_id=group.id) }}">Edit</a>{% endif %}</td>
+                </tr>
+            {% else %}<tr><td colspan="7" class="text-muted py-4">No groups match these filters.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if current_user.is_admin %}
+    <section class="card mt-4"><div class="card-body">
+        <h2 class="h5">Assignment settings</h2>
+        <form method="post" action="{{ url_for('ticket_groups.settings') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-check mb-2">
+                <input type="checkbox" class="form-check-input" id="filterAssignees" name="filter_assignees" {% if filter_assignees %}checked{% endif %}>
+                <label class="form-check-label" for="filterAssignees">Filter assignees to the selected group's resolved members</label>
+            </div>
+            <p class="text-muted small">Enabled by default. Turn this off to allow any individual assignee alongside a group.</p>
+            <button class="btn btn-primary">Save settings</button>
+        </form>
+    </div></section>
+    {% endif %}
+</div>
+{% endblock %}

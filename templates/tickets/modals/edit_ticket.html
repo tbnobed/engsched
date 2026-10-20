@@ -9,6 +9,7 @@
             <form method="POST" action="{{ url_for('tickets.edit_ticket', ticket_id=ticket['id']) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-body">
+                    {% include 'tickets/_assignment_fields.html' %}
                     <div class="mb-3">
                         <label class="form-label">Title</label>
                         <input type="text" name="title" class="form-control" value="{{ ticket['title'] }}" required>

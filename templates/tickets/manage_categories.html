@@ -24,6 +24,7 @@
                             {{ form.priority_level.label(class="form-label") }}
                             {{ form.priority_level(class="form-select") }}
                         </div>
+                        {% include 'tickets/_category_assignment_defaults.html' %}
                         <button type="submit" class="btn btn-primary">Add Category</button>
                     </form>
                 </div>
@@ -41,6 +42,7 @@
                                 <tr>
                                     <th>Name</th>
                                     <th>Description</th>
+                                    <th>Default Group / Assignee</th>
                                     <th>Default Priority</th>
                                     <th>Actions</th>
                                 </tr>
@@ -50,6 +52,7 @@
                                 <tr>
                                     <td>{{ category.name }}</td>
                                     <td>{{ category.description }}</td>
+                                    <td>{{ category.default_group.name if category.default_group else 'No group' }} / {{ category.default_assignee.username if category.default_assignee else 'Unassigned' }}</td>
                                     <td>
                                         {% if category.priority_level == 0 %}
                                             <span class="badge bg-success">Low</span>

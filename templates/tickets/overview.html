@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% macro workspace(page) %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/ticket-insights.css', v=3) }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ticket-insights.css', v=4) }}">
 <section class="ti" id="ticket-insights" data-page="{{ page }}" aria-label="Ticket insights">
   <header class="ti-header">
     <div><span class="ti-eyebrow">TBN Plex Engineering / Service operations</span><h1>{{ 'Ticket overview' if page == 'overview' else 'Ticket reports' }}</h1><p class="ti-muted">{{ 'Your queue, your team, and what needs attention.' if page == 'overview' else 'Trace every number back to the work behind it.' }}</p></div>
@@ -24,6 +24,7 @@
     <div class="ti-filter-grid">
       <label>From<input type="date" name="start" aria-label="Start date"></label>
       <label>Through<input type="date" name="end" aria-label="End date"></label>
+      <label>Group<select name="group"><option value="all">All groups</option><option value="none">No group</option><option value="my_groups">My groups</option></select></label>
       <label>Technician<select name="technician"><option value="all">All technicians</option><option value="me">Assigned to me</option><option value="unassigned">Unassigned</option></select></label>
       <label>Category<select name="category"><option value="all">All categories</option></select></label>
       <label>Priority<select name="priority"><option value="all">All priorities</option></select></label>
@@ -32,6 +33,7 @@
       <label>Department<select name="department"><option value="all">All departments</option><option value="__unmapped__">Not assigned</option></select></label>
       <label>Location<select name="location"><option value="all">All locations</option><option value="__unmapped__">Not assigned</option></select></label>
       <label>Stalled after<select name="stalled_days"><option value="3">3 days</option><option value="7" selected>7 days</option><option value="14">14 days</option><option value="30">30 days</option></select></label>
+      <label>Group by<select name="group_by"><option value="none">Default breakdown</option><option value="group">Group ownership</option></select></label>
     </div>
     <div class="ti-filter-footer"><p>Dates are inclusive. Current backlog, workload, aging and stalled tickets ignore the date range.</p><div class="ti-actions"><button type="button" id="ti-clear">Clear</button><button type="submit" class="ti-primary" id="ti-apply" disabled>Apply filters</button></div></div>
   </form>
@@ -54,6 +56,6 @@
   </dialog>
   <noscript><div class="ti-state ti-error">JavaScript is required to load reports and your saved widget layout. Enable JavaScript and reload this page.</div></noscript>
 </section>
-<script src="{{ url_for('static', filename='js/ticket-insights.js', v=3) }}" defer></script>
+<script src="{{ url_for('static', filename='js/ticket-insights.js', v=4) }}" defer></script>
 {% endmacro %}
 {% block content %}{{ workspace('overview') }}{% endblock %}

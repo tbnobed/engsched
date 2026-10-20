@@ -102,6 +102,18 @@ def dashboard():
     ).order_by(Ticket.created_at.desc(), Ticket.priority.desc()).all()
     if ticket_scope == 'me':
         recent_tickets = [ticket for ticket in recent_tickets if ticket.assigned_to == current_user.id]
+    from ticket_groups import user_group_ids
+    if ticket_scope in ('my_groups', 'unassigned_groups'):
+        memberships = user_group_ids(current_user.id)
+        recent_tickets = [ticket for ticket in recent_tickets if ticket.group_id in memberships
+                          and (ticket_scope != 'unassigned_groups' or ticket.assigned_to is None)]
+    group_filter = request.args.get('group_id', '')
+    if group_filter == 'none':
+        recent_tickets = [ticket for ticket in recent_tickets if ticket.group_id is None]
+    elif group_filter.isdigit():
+        recent_tickets = [ticket for ticket in recent_tickets if ticket.group_id == int(group_filter)]
+    if request.args.get('group_by') == 'group':
+        recent_tickets.sort(key=lambda ticket: (ticket.group.name.casefold() if ticket.group else '', -ticket.id))
     
     # Add unread activity indicators using the new universal badge system
     # NEW badges now disappear when ANY technician interacts with the ticket
@@ -953,7 +965,11 @@ def inbound_email_webhook():
                 # Send comment notification to all relevant parties
                 try:
                     from email_utils import send_ticket_comment_notification
-                    if sender_user:
+                    if existing_ticket.group_id and not existing_ticket.assigned_to:
+                        from ticket_groups import notify_group
+                        if notify_group(existing_ticket, 'comment') is False:
+                            raise RuntimeError('Group comment notification delivery failed.')
+                    elif sender_user:
                         send_ticket_comment_notification(existing_ticket, new_comment, sender_user)
                     else:
                         # External reply: the comment is stored under primary_admin
@@ -1149,6 +1165,14 @@ def inbound_email_webhook():
             email_notifications=True
         )
         
+        from ticket_groups import apply_category_defaults, apply_assignment
+        with db.session.no_autoflush:
+            apply_category_defaults(new_ticket)
+            default_group_id, default_assignee_id = new_ticket.group_id, new_ticket.assigned_to
+            new_ticket.group_id, new_ticket.group = None, None
+            new_ticket.assigned_to, new_ticket.assigned_technician = None, None
+            apply_assignment(new_ticket, default_group_id, default_assignee_id,
+                             actor_id=created_by_id, notify=False, event='new_ticket')
         db.session.add(new_ticket)
         db.session.flush()  # Get ticket ID for attachment naming
         
@@ -1221,7 +1245,22 @@ def inbound_email_webhook():
         try:
             from email_utils import send_new_ticket_notification
             creator = User.query.get(created_by_id)
-            if creator:
+            if new_ticket.group_id:
+                from ticket_groups import notify_group, resolved_user_ids
+                if notify_group(new_ticket, 'new_ticket') is False:
+                    raise RuntimeError('Group new-ticket notification delivery failed.')
+                group = new_ticket.group
+                covered = (group.notifications_enabled and group.notify_new_ticket
+                           and new_ticket.assigned_to in resolved_user_ids(group.id))
+                if new_ticket.assigned_to and not covered:
+                    from email_utils import send_ticket_assigned_notification
+                    if send_ticket_assigned_notification(ticket=new_ticket, assigned_by=creator) is False:
+                        raise RuntimeError('Assignee notification delivery failed.')
+            elif new_ticket.assigned_to:
+                from email_utils import send_ticket_assigned_notification
+                if send_ticket_assigned_notification(ticket=new_ticket, assigned_by=creator) is False:
+                    raise RuntimeError('Assignee notification delivery failed.')
+            elif creator:
                 app.logger.info(f"Sending new ticket notification to all users for ticket #{new_ticket.id}")
                 notification_result = send_new_ticket_notification(
                     ticket=new_ticket,
@@ -5072,7 +5111,30 @@ def mobile_dashboard():
     today_start_utc = today_start_local.astimezone(pytz.UTC)
     today_end_utc = today_end_local.astimezone(pytz.UTC)
     
-    # No need for active tickets since we have a dedicated tickets page
+    # Keep a compact, group-aware active-ticket list alongside the team overview.
+    from ticket_groups import assignment_options, user_group_ids
+    group_filter = request.args.get('group', 'all')
+    group_view = request.args.get('group_view', '')
+    ticket_query = Ticket.query.filter(
+        Ticket.archived == False, Ticket.status.notin_(['closed', 'resolved']))
+    if group_filter == 'none':
+        ticket_query = ticket_query.filter(Ticket.group_id.is_(None))
+    elif group_filter != 'all':
+        try:
+            ticket_query = ticket_query.filter(Ticket.group_id == int(group_filter))
+        except ValueError:
+            flash('Choose a valid ticket group.', 'error')
+            ticket_query = ticket_query.filter(False)
+    if group_view in ('my_groups', 'unassigned_groups'):
+        ticket_query = ticket_query.filter(Ticket.group_id.in_(user_group_ids(current_user.id)))
+        if group_view == 'unassigned_groups':
+            ticket_query = ticket_query.filter(Ticket.assigned_to.is_(None))
+    mobile_group_ticket_count = ticket_query.count()
+    if request.args.get('group_by') == 'group':
+        ticket_query = ticket_query.order_by(Ticket.group_id, Ticket.created_at.desc())
+    else:
+        ticket_query = ticket_query.order_by(Ticket.created_at.desc())
+    mobile_group_tickets = ticket_query.limit(20).all()
     
     # Get today's schedules with extended range for all-day OOO entries
     extended_start = today_start_utc - timedelta(hours=24)
@@ -5130,6 +5192,9 @@ def mobile_dashboard():
     studio_bookings = studio_result['bookings']
     
     return render_template('mobile/dashboard.html', 
+                         mobile_group_tickets=mobile_group_tickets,
+                         mobile_group_ticket_count=mobile_group_ticket_count,
+                         ticket_group_options=assignment_options(),
                          today_schedules=today_schedules,
                          studio_bookings=studio_bookings,
                          studio_result=studio_result,
@@ -5173,6 +5238,10 @@ def mobile_tickets():
             pass
     
     # Get tickets ordered by priority and creation date
+    from ticket_routes import _group_filtered_query
+    query = _group_filtered_query(query)
+    if request.args.get('group_by') == 'group':
+        query = query.order_by(Ticket.group_id)
     tickets = query.order_by(Ticket.priority.desc(), Ticket.created_at.desc()).all()
     
     # Unread activity indicators are now handled by the has_unread_activity property

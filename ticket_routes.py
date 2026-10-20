@@ -8,6 +8,81 @@ from sqlalchemy import text, or_, func
 from app import app, is_mobile_device  # Import app for logging and mobile detection
 from email_utils import send_ticket_assigned_notification, send_ticket_comment_notification, send_ticket_status_notification, send_new_ticket_notification
 import bleach
+from ticket_groups import (assignment_options, filter_assignees_enabled,
+                           apply_assignment, apply_category_defaults,
+                           notify_group, user_group_ids, resolved_user_ids)
+
+
+@app.context_processor
+def ticket_group_context():
+    if not current_user.is_authenticated:
+        return {}
+    return {
+        'ticket_group_options': assignment_options(),
+        'ticket_group_filter_assignees': filter_assignees_enabled(),
+        'ticket_group_users': User.query.order_by(User.username).all(),
+    }
+
+
+def _assignment_id(value):
+    return None if value in (None, '', '0', '__default__') else int(value)
+
+
+def _notify_ticket_assignment(ticket, old_group=None, old_assignee=None, event='reassigned'):
+    """Deliver once per recipient when shared and individual ownership overlap."""
+    group_covers_assignee = False
+    if ticket.group_id and (event == 'new_ticket' or old_group != ticket.group_id):
+        if notify_group(ticket, event) is False:
+            raise RuntimeError('Group notification delivery failed.')
+        group = ticket.group
+        flag = 'notify_new_ticket' if event == 'new_ticket' else 'notify_reassigned'
+        group_covers_assignee = (group.notifications_enabled and getattr(group, flag)
+                                  and ticket.assigned_to in resolved_user_ids(group.id))
+    if ticket.assigned_to and not group_covers_assignee and (event == 'new_ticket' or old_assignee != ticket.assigned_to):
+        if send_ticket_assigned_notification(ticket=ticket, assigned_by=current_user) is False:
+            raise RuntimeError('Assignee notification delivery failed.')
+
+
+def _notify_ticket_comment(ticket, comment):
+    if ticket.group_id and not ticket.assigned_to:
+        if notify_group(ticket, 'comment') is False:
+            raise RuntimeError('Group comment notification delivery failed.')
+    else:
+        send_ticket_comment_notification(ticket=ticket, comment=comment, commented_by=current_user)
+
+
+def _group_filtered_query(query):
+    group = request.args.get('group', 'all')
+    view = request.args.get('group_view', '')
+    if group == 'none':
+        query = query.filter(Ticket.group_id.is_(None))
+    elif group != 'all':
+        try:
+            query = query.filter(Ticket.group_id == int(group))
+        except ValueError:
+            query = query.filter(False)
+    if view in ('my_groups', 'unassigned_groups'):
+        query = query.filter(Ticket.group_id.in_(user_group_ids(current_user.id)),
+                             Ticket.status.notin_(['closed', 'resolved']))
+        if view == 'unassigned_groups':
+            query = query.filter(Ticket.assigned_to.is_(None))
+    return query
+
+
+def _category_assignment_defaults(category):
+    group_id = _assignment_id(request.form.get('default_group_id'))
+    assignee_id = _assignment_id(request.form.get('default_assignee_id'))
+    if group_id:
+        option = next((g for g in assignment_options() if g['id'] == group_id), None)
+        if not option or (not option['enabled'] and group_id != category.default_group_id):
+            raise ValueError('Choose an enabled default group.')
+        if (assignee_id and filter_assignees_enabled()
+                and assignee_id not in option['member_ids']):
+            raise ValueError('The default assignee must belong to the default group.')
+    if assignee_id and not db.session.get(User, assignee_id):
+        raise ValueError('The default assignee does not exist.')
+    category.default_group_id = group_id
+    category.default_assignee_id = assignee_id
 
 def sanitize_html(html_content):
     """Sanitize HTML content to prevent XSS while allowing safe formatting and images"""
@@ -110,7 +185,11 @@ def standalone_dashboard():
             app.logger.error(f"Invalid category value: {category_filter}")
             
     # Get tickets based on filters
-    tickets = query.order_by(Ticket.created_at.desc()).all()
+    query = _group_filtered_query(query)
+    if request.args.get('group_by') == 'group':
+        tickets = query.outerjoin(Ticket.group).order_by(Ticket.group_id, Ticket.created_at.desc()).all()
+    else:
+        tickets = query.order_by(Ticket.created_at.desc()).all()
     app.logger.debug(f"STANDALONE DASHBOARD - Found {len(tickets)} tickets")
     
     # Convert to dictionaries for the template
@@ -122,6 +201,8 @@ def standalone_dashboard():
             'status': ticket.status,
             'priority': ticket.priority,
             'assigned_to': ticket.assigned_to,
+            'group_id': ticket.group_id,
+            'group': ticket.group,
             'created_by': ticket.created_by,
             'created_at': ticket.created_at,
             'updated_at': ticket.updated_at,
@@ -357,8 +438,12 @@ def tickets_dashboard():
         )
         app.logger.debug(f"After search query filter: {str(query.statement.compile(compile_kwargs={'literal_binds': True}))}")
 
-    # Show all tickets for all users, ordered by creation date (newest first)
-    tickets = query.order_by(Ticket.created_at.desc()).all()
+    # Shared ownership views retain all existing status/category/search filters.
+    query = _group_filtered_query(query)
+    if request.args.get('group_by') == 'group':
+        tickets = query.order_by(Ticket.group_id, Ticket.created_at.desc()).all()
+    else:
+        tickets = query.order_by(Ticket.created_at.desc()).all()
     
     # Add special debug logs for status filter
     app.logger.debug(f"Status filter applied: '{raw_status_filter}'")
@@ -429,6 +514,8 @@ def tickets_dashboard():
             'status': ticket.status,
             'priority': ticket.priority,
             'assigned_to': ticket.assigned_to,
+            'group_id': ticket.group_id,
+            'group': ticket.group,
             'created_by': ticket.created_by,
             'created_at': ticket.created_at,
             'updated_at': ticket.updated_at,
@@ -563,6 +650,8 @@ def create_ticket():
 
     # Populate technician choices for all users
     form.assigned_to.choices = [(u.id, u.username) for u in User.query.all()]
+    form.assigned_to.choices.insert(0, (0, 'Unassigned'))
+    form.assigned_to.choices.insert(0, (-1, 'Use category default'))
 
     if form.validate_on_submit():
         try:
@@ -590,13 +679,29 @@ def create_ticket():
                 category_id=form.category_id.data,
                 priority=form.priority.data,
                 created_by=current_user.id,
-                assigned_to=form.assigned_to.data,
+                assigned_to=None,
                 due_date=due_date
             )
 
             # Add ticket to session
             db.session.add(ticket)
             db.session.flush()  # This assigns the ID but doesn't commit
+            explicit_group = request.form.get('group_id', '__default__') != '__default__'
+            explicit_assignee = ('assigned_to' in request.form
+                                 and request.form.get('assigned_to') != '-1')
+            with db.session.no_autoflush:
+                ticket.group_id = _assignment_id(request.form.get('group_id')) if explicit_group else None
+                ticket.assigned_to = _assignment_id(request.form.get('assigned_to')) if explicit_assignee else None
+                apply_category_defaults(ticket, explicit_group=explicit_group,
+                                        explicit_assignee=explicit_assignee)
+                new_group, new_assignee = ticket.group_id, ticket.assigned_to
+                ticket.group_id, ticket.group = None, None
+                ticket.assigned_to, ticket.assigned_technician = None, None
+                assignment = apply_assignment(
+                    ticket, new_group, new_assignee,
+                    actor_id=current_user.id, notify=False, event='new_ticket')
+                if assignment['assignee_cleared']:
+                    flash('The assignee was cleared because they are not a member of the selected group.', 'warning')
             
             # Handle file upload if present
             if form.attachment.data:
@@ -650,7 +755,7 @@ def create_ticket():
             # Send new ticket notification to all users
             try:
                 app.logger.info(f"Sending new ticket notification to all users for ticket #{ticket.id}")
-                notification_result = send_new_ticket_notification(
+                notification_result = True if ticket.group_id or ticket.assigned_to else send_new_ticket_notification(
                     ticket=ticket,
                     created_by=current_user
                 )
@@ -665,18 +770,14 @@ def create_ticket():
                 app.logger.error(f"Exception traceback: {traceback.format_exc()}")
             
             # Send email notification if the ticket is assigned to someone
-            if ticket.assigned_to:
+            if ticket.group_id or ticket.assigned_to:
                 try:
                     app.logger.info(f"Sending initial assignment notification for ticket #{ticket.id}")
-                    technician = User.query.get(ticket.assigned_to)
-                    app.logger.info(f"Assigned technician: {technician.username} (ID: {technician.id})")
                     
                     # Now send the notification
                     from email_utils import send_ticket_assigned_notification
-                    result = send_ticket_assigned_notification(
-                        ticket=ticket,
-                        assigned_by=current_user
-                    )
+                    _notify_ticket_assignment(ticket, event='new_ticket')
+                    result = True
                     
                     app.logger.info(f"Initial assignment notification result: {result}")
                     if not result:
@@ -685,6 +786,7 @@ def create_ticket():
                         app.logger.info("Initial ticket assignment notification sent successfully!")
                 except Exception as e:
                     app.logger.error(f"Failed to send initial assignment notification: {str(e)}")
+                    flash('Ticket saved, but assignment notification delivery failed.', 'warning')
                     # Print full exception traceback for debugging
                     import traceback
                     app.logger.error(f"Exception traceback: {traceback.format_exc()}")
@@ -702,7 +804,7 @@ def create_ticket():
         except ValueError as ve:
             db.session.rollback()
             app.logger.error(f"Validation error in ticket creation: {str(ve)}")
-            flash('Error validating ticket data. Please try again.', 'error')
+            flash(str(ve), 'error')
             
             # Choose template based on device type
             if is_mobile_device():
@@ -793,6 +895,8 @@ def view_ticket(ticket_id):
         'status': ticket_obj.status,
         'priority': ticket_obj.priority,
         'assigned_to': ticket_obj.assigned_to,
+        'group_id': ticket_obj.group_id,
+        'group': ticket_obj.group,
         'created_by': ticket_obj.created_by,
         'created_at': ticket_obj.created_at,
         'updated_at': ticket_obj.updated_at,
@@ -1018,13 +1122,10 @@ def add_comment(ticket_id):
                 app.logger.debug(f"Sending comment notification for ticket #{ticket.id}")
                 
                 # The email function will create an app context if needed
-                send_ticket_comment_notification(
-                    ticket=ticket,
-                    comment=comment,
-                    commented_by=current_user
-                )
+                _notify_ticket_comment(ticket, comment)
             except Exception as e:
                 app.logger.error(f"Failed to send comment notification: {str(e)}")
+                flash('Comment saved, but notification delivery failed.', 'warning')
                 import traceback
                 app.logger.error(f"Exception traceback: {traceback.format_exc()}")
                 # Continue anyway - the comment was saved
@@ -1065,7 +1166,7 @@ def add_comment(ticket_id):
                             details=f'Status changed from {old_status} to {after_status}',
                             created_at=datetime.now(pytz.UTC)))
                     db.session.commit()
-                    send_ticket_comment_notification(ticket=ticket, comment=comment, commented_by=current_user)
+                    _notify_ticket_comment(ticket, comment)
                     app.logger.info(f"Comment successfully added after sequence fix for ticket #{ticket.id}")
                     flash('Comment added successfully', 'success')
                     return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
@@ -1331,156 +1432,60 @@ def mobile_update_status(ticket_id):
 @tickets.route('/tickets/<int:ticket_id>/assign', methods=['POST'])
 @login_required
 def assign_ticket(ticket_id):
-    """Assign ticket to a technician"""
-    # Get the ticket first
+    """Assign shared ownership and/or an individual in a single transaction."""
     ticket = Ticket.query.get_or_404(ticket_id)
-    
-    # Allow any authenticated user to assign tickets
-    # This is aligned with the permission model where all users can update ticket status
-    app.logger.debug(f"User {current_user.id} is assigning ticket #{ticket_id}")
-    app.logger.debug(f"User details: admin={current_user.is_admin}, created={ticket.created_by == current_user.id}, assigned={ticket.assigned_to == current_user.id}")
-    
-    app.logger.info(f"Starting ticket assignment process for ticket #{ticket_id}")
-    
-    # Get the technician ID from the form - it's named 'assigned_to' in the template
-    technician_id = request.form.get('assigned_to')
-    note = request.form.get('note', '')
-    
-    app.logger.info(f"Request form data: technician_id={technician_id}, note={note}")
-    
-    if technician_id:
-        # Assigning ticket to technician
-        technician = User.query.get_or_404(technician_id)
-        app.logger.info(f"Found technician: {technician.username} (ID: {technician.id}), email: {technician.email}")
-
-        # No-op guard: if the ticket is already assigned to this technician,
-        # don't write a history row or send another "assigned to you" email.
-        if ticket.assigned_to == technician.id:
-            app.logger.info(
-                f"Ticket #{ticket.id} is already assigned to {technician.username}; skipping re-assignment."
-            )
-            flash('Ticket is already assigned to that technician', 'info')
-            return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
-
-        # Update ticket
-        ticket.assigned_to = technician.id
-        details = f"Assigned to {technician.username}"
+    old_group, old_assignee = ticket.group_id, ticket.assigned_to
+    try:
+        assignment = apply_assignment(ticket,
+                         _assignment_id(request.form.get('group_id', ticket.group_id)),
+                         _assignment_id(request.form.get('assigned_to')),
+                         actor_id=current_user.id, notify=False)
+        if assignment['assignee_cleared']:
+            flash('The assignee was cleared because they are not a member of the selected group.', 'warning')
+        note = request.form.get('note', '').strip()
         if note:
-            details += f" - Note: {note}"
-        
-        app.logger.info(f"Updating ticket #{ticket.id} assigned_to: {ticket.assigned_to}")
-        
-        # Mark ticket as viewed by the person doing the assignment
-        # This removes the NEW badge since the ticket has been actively managed
-        try:
-            ticket.mark_as_viewed(current_user.id)
-            app.logger.debug(f"Marked ticket #{ticket.id} as viewed by user {current_user.id}")
-        except Exception as e:
-            app.logger.warning(f"Failed to mark ticket #{ticket.id} as viewed: {str(e)}")
-            # Don't let this affect the main functionality
-        
-        # Save the ticket assignment first
+            db.session.add(TicketHistory(ticket_id=ticket.id, user_id=current_user.id,
+                                         action='assignment_note', details=note,
+                                         created_at=datetime.now(pytz.UTC)))
+        ticket.mark_as_viewed(current_user.id)
         db.session.commit()
-        
-        # Create history entry directly instead of using log_history method
-        try:
-            history = TicketHistory(
-                ticket_id=ticket.id,
-                user_id=current_user.id,
-                action="assigned",
-                details=details,
-                created_at=datetime.now(pytz.UTC)
-            )
-            db.session.add(history)
-            db.session.commit()
-            app.logger.debug("Added assignment history entry")
-        except Exception as e:
-            app.logger.error(f"Error creating assignment history entry: {str(e)}")
-            # Continue anyway since ticket was assigned successfully
-            pass
-        app.logger.info(f"Committed ticket assignment to database")
-        
-        # Send notification email to the assigned technician
-        try:
-            # Create a fresh session for the email notification to avoid detached instance errors
-            # Fresh session creation removed
-            fresh_ticket = Ticket.query.get(ticket_id)
-            
-            if fresh_ticket:
-                app.logger.info(f"Sending assignment notification for ticket #{fresh_ticket.id}")
-                
-                # Additional debug info
-                app.logger.info(f"Ticket assigned to user ID: {fresh_ticket.assigned_to}")
-                tech = User.query.get(fresh_ticket.assigned_to)
-                app.logger.info(f"Assigned technician: {tech.username}, Email: {tech.email}")
-                app.logger.info(f"Current user (assigner): {current_user.username}, Email: {current_user.email}")
-                
-                # Check email settings
-                from email_utils import get_email_settings
-                settings = get_email_settings()
-                app.logger.info(f"Email settings: Admin email = {settings.admin_email_group}")
-                
-                # Check if we're in an application context
-                from flask import has_app_context
-                app.logger.info(f"Before with clause: has_app_context = {has_app_context()}")
-                
-                # Use the fresh ticket instance to avoid detached instance errors
-                app.logger.info("Calling send_ticket_assigned_notification with fresh ticket instance")
-                from email_utils import send_ticket_assigned_notification
-                result = send_ticket_assigned_notification(
-                    ticket=fresh_ticket,
-                    assigned_by=current_user
-                )
-                
-                app.logger.info(f"Assignment notification result: {result}")
-                if not result:
-                    app.logger.error("Ticket assignment notification failed!")
-                else:
-                    app.logger.info("Ticket assignment notification sent successfully!")
-                
-                # Close the fresh session when done
-            else:
-                app.logger.error(f"Could not find ticket #{ticket_id} in fresh session for notification")
-        except Exception as e:
-            app.logger.error(f"Failed to send assignment notification: {str(e)}")
-            # Print full exception traceback for debugging
-            import traceback
-            app.logger.error(f"Exception traceback: {traceback.format_exc()}")
-    else:
-        # Unassigning ticket
-        ticket.assigned_to = None
-        app.logger.info(f"Unassigned ticket #{ticket.id}")
-        
-        # Mark ticket as viewed by the person doing the unassignment
-        # This removes the NEW badge since the ticket has been actively managed
-        try:
-            ticket.mark_as_viewed(current_user.id)
-            app.logger.debug(f"Marked ticket #{ticket.id} as viewed by user {current_user.id}")
-        except Exception as e:
-            app.logger.warning(f"Failed to mark ticket #{ticket.id} as viewed: {str(e)}")
-            # Don't let this affect the main functionality
-        
-        db.session.commit()
-        
-        # Create history entry directly
-        try:
-            history = TicketHistory(
-                ticket_id=ticket.id,
-                user_id=current_user.id,
-                action="unassigned",
-                details="Ticket was unassigned",
-                created_at=datetime.now(pytz.UTC)
-            )
-            db.session.add(history)
-            db.session.commit()
-            app.logger.debug("Added unassignment history entry")
-        except Exception as e:
-            app.logger.error(f"Error creating unassignment history entry: {str(e)}")
-            # Continue anyway since ticket was unassigned successfully
-            pass
-    
-    flash('Ticket assigned successfully', 'success')
+    except (ValueError, TypeError) as exc:
+        db.session.rollback()
+        flash(str(exc), 'error')
+        return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
+    try:
+        _notify_ticket_assignment(ticket, old_group, old_assignee)
+    except Exception:
+        app.logger.exception('Ticket saved but assignment notification failed')
+        flash('Assignment saved, but notification delivery failed.', 'warning')
+    flash('Ticket assignment saved', 'success')
     return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
+
+
+@tickets.route('/tickets/<int:ticket_id>/take', methods=['POST'])
+@login_required
+def take_ticket(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+    if ticket.group_id not in user_group_ids(current_user.id):
+        flash('You must be a member of this ticket group to take this ticket.', 'error')
+        return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
+    old_assignee = ticket.assigned_to
+    try:
+        apply_assignment(ticket, ticket.group_id, current_user.id,
+                         actor_id=current_user.id, notify=False)
+        db.session.commit()
+        flash('Ticket assigned to you.', 'success')
+    except ValueError as exc:
+        db.session.rollback()
+        flash(str(exc), 'error')
+        return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
+    try:
+        _notify_ticket_assignment(ticket, ticket.group_id, old_assignee)
+    except Exception:
+        app.logger.exception('Ticket taken but assignment notification failed')
+        flash('Assignment saved, but notification delivery failed.', 'warning')
+    return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket_id)
+
 
 @tickets.route('/tickets/<int:ticket_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -1496,6 +1501,20 @@ def edit_ticket(ticket_id):
         # Log all form data for debugging
         app.logger.debug(f"Form data received: {request.form}")
         
+        old_group, old_assignee = ticket.group_id, ticket.assigned_to
+        try:
+            assignment = apply_assignment(
+                ticket,
+                _assignment_id(request.form.get('group_id', ticket.group_id)),
+                _assignment_id(request.form.get('assigned_to', ticket.assigned_to)),
+                actor_id=current_user.id, notify=False)
+            if assignment['assignee_cleared']:
+                flash('The assignee was cleared because they are not a member of the selected group.', 'warning')
+        except (ValueError, TypeError) as exc:
+            db.session.rollback()
+            flash(str(exc), 'error')
+            return mobile_aware_redirect('tickets.view_ticket', ticket_id=ticket.id)
+
         # Get form data directly
         old_title = ticket.title
         old_description = ticket.description
@@ -1560,6 +1579,11 @@ def edit_ticket(ticket_id):
         
         # Always commit ticket changes first
         db.session.commit()
+        try:
+            _notify_ticket_assignment(ticket, old_group, old_assignee)
+        except Exception:
+            app.logger.exception('Ticket saved but assignment notification failed')
+            flash('Ticket saved, but notification delivery failed.', 'warning')
         
         # Create history entry directly if there are changes
         if changes:
@@ -1700,6 +1724,12 @@ def manage_categories():
             description=form.description.data,
             priority_level=form.priority_level.data
         )
+        try:
+            _category_assignment_defaults(category)
+        except (ValueError, TypeError) as exc:
+            flash(str(exc), 'error')
+            return render_template('tickets/manage_categories.html', form=form,
+                                   categories=TicketCategory.query.order_by(TicketCategory.name).all())
         db.session.add(category)
         db.session.commit()
         flash('Category added successfully', 'success')
@@ -1724,6 +1754,12 @@ def edit_category(category_id):
     
     form = TicketCategoryForm(obj=category)
     if form.validate_on_submit():
+        try:
+            _category_assignment_defaults(category)
+        except (ValueError, TypeError) as exc:
+            db.session.rollback()
+            flash(str(exc), 'error')
+            return render_template('tickets/edit_category.html', form=form, category=category)
         category.name = form.name.data
         category.description = form.description.data
         category.priority_level = form.priority_level.data
@@ -1837,7 +1873,8 @@ def unarchive_ticket(ticket_id):
 def archived_tickets():
     """View archived tickets"""
     # Get all archived tickets, ordered by creation date (newest first)
-    tickets = Ticket.query.filter(Ticket.archived == True).order_by(Ticket.created_at.desc()).all()
+    query = _group_filtered_query(Ticket.query.filter(Ticket.archived == True))
+    tickets = query.order_by(Ticket.group_id, Ticket.created_at.desc()).all() if request.args.get('group_by') == 'group' else query.order_by(Ticket.created_at.desc()).all()
     
     # Convert SQLAlchemy objects to simple dictionaries
     archived_tickets = []
@@ -1852,6 +1889,8 @@ def archived_tickets():
             'created_at': ticket.created_at,
             'updated_at': ticket.updated_at,
             'due_date': ticket.due_date,
+            'group_id': ticket.group_id,
+            'group': ticket.group,
             'category': {
                 'id': ticket.category.id,
                 'name': ticket.category.name

@@ -9,11 +9,11 @@
   const reportNames = {
     volume: 'Ticket volume', aging: 'Backlog aging', first_response: 'First response',
     resolution_time: 'Resolution time', workload: 'Technician workload',
-    categories: 'Categories', stalled: 'Stalled tickets',
+    categories: 'Categories', groups: 'Groups', stalled: 'Stalled tickets',
     targets: 'Service targets', requesters: 'Requester demand', reopened: 'Reopened tickets',
     handoffs: 'Assignment handoffs', satisfaction: 'Customer satisfaction', ai_usage: 'AI assistance usage'
   };
-  const keys = ['start', 'end', 'technician', 'category', 'priority', 'status', 'source', 'department', 'location', 'stalled_days'];
+  const keys = ['start', 'end', 'technician', 'group', 'group_by', 'category', 'priority', 'status', 'source', 'department', 'location', 'stalled_days'];
   let config, data, myData, savedLayout, layout, dirty = false, saving = false;
   let autosaveTimer;
   let query = new URLSearchParams(location.search);
@@ -142,7 +142,7 @@
     return `/tickets/reports?${params}`;
   }
   function fillFilters() {
-    const sources = { technician: 'technicians', category: 'categories', priority: 'priorities', status: 'statuses', source: 'sources', department: 'departments', location: 'locations' };
+    const sources = { technician: 'technicians', group: 'groups', category: 'categories', priority: 'priorities', status: 'statuses', source: 'sources', department: 'departments', location: 'locations' };
     Object.entries(sources).forEach(([key, source]) => {
       const select = form.elements.namedItem(key);
       const existing = new Set(Array.from(select.options, option => option.value));
@@ -293,7 +293,7 @@
     body.append(el('p', 'ti-muted', `${number(tickets.length)} matching tickets · Current workspace filters applied`));
     const columns = [
       { key: 'id', label: 'Ticket' }, { key: 'title', label: 'Subject' }, { key: 'status', label: 'Status' },
-      { key: 'priority', label: 'Priority' }, { key: 'assignee', label: 'Technician' },
+      { key: 'priority', label: 'Priority' }, { key: 'group', label: 'Current group' }, { key: 'assignee', label: 'Technician' },
       { key: 'category', label: 'Category' }, { key: 'age_days', label: 'Age (days)' }, { key: 'idle_days', label: 'Idle (days)' }
     ];
     body.append(createTable(columns, tickets, { tickets: true }));
@@ -316,7 +316,7 @@
     if (typeof value === 'boolean') return el('span', '', value ? 'Yes' : 'No');
     if (Array.isArray(value)) return el('span', '', value.join(', '));
     if (typeof value === 'object') return el('span', '', JSON.stringify(value));
-    if (!options.plain && ['volume', 'workload', 'categories', 'requesters'].includes(options.report) && typeof value === 'number' &&
+    if (!options.plain && ['volume', 'workload', 'categories', 'groups', 'requesters'].includes(options.report) && typeof value === 'number' &&
         ['created', 'resolved', 'completed', 'open', 'high_priority', 'overdue'].includes(key)) {
       return button(number(value), () => openReportRow(row, options.report, key), 'ti-link-button');
     }
@@ -324,6 +324,7 @@
   }
   function openReportRow(row, report, key) {
     const matching = data.tickets.filter(ticket => {
+      if (query.get('group_by') === 'group' && Object.hasOwn(row, 'group_id') && ticket.group_id !== row.group_id) return false;
       if (report === 'volume') {
         return key === 'created'
           ? ticket.in_created_period && ticket.created_display.slice(0, 10) === row.date
@@ -331,6 +332,7 @@
       }
       if (report === 'workload' && ticket.assignee !== row.technician) return false;
       if (report === 'categories' && ticket.category !== row.category) return false;
+      if (report === 'groups' && ticket.group_id !== row.group_id) return false;
       if (report === 'requesters' && ticket.requester_key !== row.requester_key) return false;
       if (key === 'created') return ticket.in_created_period;
       if (key === 'completed' || key === 'resolved') return ticket.in_resolved_period;
@@ -338,7 +340,7 @@
       if (key === 'overdue') return ticket.is_overdue;
       return ticket.is_open;
     });
-    openTickets(`${row.date || row.requester || row.technician || row.category} / ${key.replaceAll('_', ' ')}`, matching);
+    openTickets(`${row.date || row.requester || row.technician || row.category || row.group} / ${key.replaceAll('_', ' ')}`, matching);
   }
   function compareReportValues(a, b, key, direction) {
     // Unknown measurements remain last in either direction, never become zero.
@@ -355,7 +357,13 @@
   function createTable(columns, rows, options = {}) {
     let sortKey = null, sortDirection = 'ascending';
     const sortHeaders = [];
-    const sorted = items => sortKey ? [...items].sort((a, b) => compareReportValues(a[sortKey], b[sortKey], sortKey, sortDirection)) : items;
+    const grouped = query.get('group_by') === 'group' && columns.some(column => column.key === 'group') &&
+      (options.tickets || options.report !== 'groups');
+    const sorted = items => {
+      const result = sortKey ? [...items].sort((a, b) => compareReportValues(a[sortKey], b[sortKey], sortKey, sortDirection)) : [...items];
+      if (grouped) result.sort((a, b) => compareReportValues(a.group, b.group, 'group', 'ascending') || (a.group_id || 0) - (b.group_id || 0));
+      return result;
+    };
     const panel = el('div', 'ti-table-block');
     const controls = el('div', 'ti-table-controls');
     const searchLabel = el('label', '', 'Search these rows');
@@ -410,6 +418,20 @@
       });
       return tr;
     }
+    function appendRows(target, items, plain = false) {
+      let previous;
+      items.forEach(row => {
+        const identity = String(row.group_id ?? 'none');
+        if (grouped && identity !== previous) {
+          const heading = el('tr', 'ti-group-heading'), cell = el('th', '', row.group);
+          cell.colSpan = columns.length;
+          cell.scope = 'rowgroup';
+          heading.append(cell); target.append(heading);
+        }
+        previous = identity;
+        target.append(makeRow(row, plain));
+      });
+    }
     function render() {
       const term = search.value.trim().toLocaleLowerCase();
       const matching = sorted(rows.filter(row => columns.some(column => String(row[column.key] ?? '').toLocaleLowerCase().includes(term))));
@@ -423,7 +445,7 @@
       const pages = Math.max(1, Math.ceil(matching.length / limit));
       currentPage = Math.max(1, Math.min(currentPage, pages));
       tbody.replaceChildren();
-      matching.slice((currentPage - 1) * limit, currentPage * limit).forEach(row => tbody.append(makeRow(row)));
+      appendRows(tbody, matching.slice((currentPage - 1) * limit, currentPage * limit));
       if (!matching.length) {
         const row = el('tr'), cell = el('td');
         cell.colSpan = Math.max(1, columns.length);
@@ -438,7 +460,7 @@
         // Print and CSV retain every server-filtered row, independently of client search/pagination.
         const printTable = el('table'), printBody = el('tbody');
         printTable.append(head.cloneNode(true));
-        sorted(rows).forEach(row => printBody.append(makeRow(row, true)));
+        appendRows(printBody, sorted(rows), true);
         printTable.append(printBody);
         printable.replaceChildren(printTable);
       }
@@ -581,6 +603,12 @@
     const columns = report.columns.filter(column => !['response_content', '_review'].includes(column.key));
     if (reportKey === 'ai_usage') columns.push({ key: '_review', label: 'Review' });
     panel.append(header);
+    if (reportKey === 'groups') {
+      const chart = el('div', 'ti-group-report-chart');
+      chart.append(el('h3', '', 'Current open tickets by group'));
+      renderBars(chart, data.charts.groups, data, 'Group workload', data.charts.groups.length);
+      panel.append(chart);
+    }
     if (reportKey === 'satisfaction') panel.append(feedbackControls());
     panel.append(createTable(columns, report.rows, { report: reportKey, print: true }));
     $('ti-report').replaceChildren(panel);
@@ -596,11 +624,11 @@
       const field = form.elements.namedItem(key);
       if (!field || ['start', 'end'].includes(key)) return;
       const value = query.get(key) || (key === 'stalled_days' ? '7' : 'all');
-      if (value === 'all' || value === 'team') return;
+      if (value === 'all' || value === 'team' || (key === 'group_by' && value === 'none')) return;
       const selected = Array.from(field.options || []).find(option => option.value === value);
       labels.push(`${key.replaceAll('_', ' ')}: ${selected?.textContent || value}`);
     });
-    return labels.length ? `Applied filters — ${labels.join(' · ')}` : 'Applied filters — All technicians, categories, priorities, statuses, sources, departments and locations.';
+    return labels.length ? `Applied filters — ${labels.join(' · ')}` : 'Applied filters — All technicians, groups, categories, priorities, statuses, sources, departments and locations.';
   }
   function ticketsFor(type, source) {
     const tickets = source.tickets;
@@ -673,7 +701,7 @@
   });
   function animateWidget(card, widget, source) {
     // Reordering, saving and opening an actions menu must not replay charts.
-    const signature = JSON.stringify([widget.type, widget.scope, widget.limit, source]);
+    const signature = JSON.stringify([widget.type, widget.scope, widget.limit, widget.group_by, query.get('group_by'), source]);
     const previous = widgetChartSignatures.get(widget.id);
     if (previous === signature) return;
     function run(node, frames, options) {
@@ -863,10 +891,13 @@
       ['scope', 'Assignment scope', [['team', 'Team'], ['me', 'Assigned to me']]],
       ['limit', 'List / group limit', [[5, '5 rows'], [10, '10 rows'], [20, '20 rows']]]
     ];
+    if (['aging', 'workload', 'categories', 'status'].includes(widget.type)) {
+      controls.push(['group_by', 'Group by', [['default', 'Workspace default'], ['group', 'Group ownership']]]);
+    }
     controls.forEach(([key, title, options]) => {
       const label = el('label', '', title), select = el('select');
       options.forEach(([value, text]) => { const option = el('option', '', text); option.value = value; select.append(option); });
-      select.value = String(widget[key]);
+      select.value = String(widget[key] ?? 'default');
       select.addEventListener('change', () => {
         widget[key] = key === 'limit' ? Number(select.value) : select.value;
         markDirty();
@@ -911,10 +942,25 @@
       card.append(header, settings);
       if (!source) {
         card.append(el('p', 'ti-muted', 'Assignment data is not loaded.'), button('Load assignment data', loadData));
-      } else if (['aging', 'workload', 'categories', 'status'].includes(widget.type)) {
-        if (widget.type === 'status') renderRing(card, source.charts.status, source, title);
-        else renderBars(card, source.charts[widget.type], source, title, widget.limit);
-        if (widget.type === 'categories') card.append(el('p', 'ti-widget-caption', 'Groups use the server-provided ticket membership. The Categories report separates period arrivals and current backlog.'), safeLink(reportURL('categories', widget.scope), 'Open category report'));
+      } else if (['aging', 'workload', 'categories', 'status', 'groups'].includes(widget.type)) {
+        const byGroup = widget.type === 'groups' || widget.group_by === 'group' || query.get('group_by') === 'group';
+        let chartGroups = source.charts[widget.type];
+        if (byGroup) {
+          const population = source.tickets.filter(ticket => widget.type === 'categories' ? ticket.in_created_period :
+            widget.type === 'status' ? !ticket.archived : ticket.is_open);
+          const ownership = new Map();
+          population.forEach(ticket => {
+            const identity = String(ticket.group_id ?? 'none');
+            if (!ownership.has(identity)) ownership.set(identity, { label: ticket.group, count: 0, ids: [] });
+            const entry = ownership.get(identity); entry.count++; entry.ids.push(ticket.id);
+          });
+          chartGroups = [...ownership.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+          card.append(el('p', 'ti-widget-caption', 'Grouped by current group ownership. Disabled groups are retained.'));
+        }
+        if (widget.type === 'status' && !byGroup) renderRing(card, chartGroups, source, title);
+        else renderBars(card, chartGroups, source, title, widget.limit);
+        if (byGroup) card.append(safeLink(reportURL('groups', widget.scope), 'Open group metrics report'));
+        else if (widget.type === 'categories') card.append(el('p', 'ti-widget-caption', 'Breakdowns use server-provided ticket membership. The Categories report separates period arrivals and current backlog.'), safeLink(reportURL('categories', widget.scope), 'Open category report'));
       } else if (widget.type === 'volume') {
         renderVolume(card, source, ['created', 'resolved'], true);
       } else if (['first_response', 'resolution_time'].includes(widget.type)) {
@@ -940,7 +986,7 @@
           const list = el('ul', 'ti-list');
           ordered.slice(0, widget.limit).forEach(ticket => {
             const li = el('li');
-            li.append(safeLink(ticket.url, `#${ticket.id}  ${ticket.title}`), el('small', '', `${ticket.assignee || 'Unassigned'} · ${ticket.status} · ${ticket.idle_days} days idle`));
+            li.append(safeLink(ticket.url, `#${ticket.id}  ${ticket.title}`), el('small', '', `${ticket.group} · ${ticket.assignee || 'Unassigned'} · ${ticket.status} · ${ticket.idle_days} days idle`));
             list.append(li);
           });
           card.append(list, el('p', 'ti-widget-caption', `${Math.min(matching.length, widget.limit)} of ${matching.length} shown${widget.type === 'stalled' ? ` · At least ${query.get('stalled_days') || 7} days without human activity` : ' · Overdue first, then priority and age'}`));
@@ -1038,7 +1084,7 @@
         text.append(el('h3', '', item.title), el('p', '', item.description));
         const add = button('Add', () => {
           if (layout.widgets.length >= 20) return;
-          const size = ['volume', 'aging', 'workload', 'categories', 'status', 'my_queue', 'stalled'].includes(item.type) ? 'medium' : 'small';
+          const size = ['volume', 'aging', 'workload', 'groups', 'categories', 'status', 'my_queue', 'stalled'].includes(item.type) ? 'medium' : 'small';
           const scope = ['my_open', 'my_queue'].includes(item.type) ? 'me' : 'team';
           layout.widgets.push(makeWidget(item.type, scope, size));
           markDirty();

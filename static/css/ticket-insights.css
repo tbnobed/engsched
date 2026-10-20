@@ -1,3 +1,5 @@
+.ti .ti-group-heading th{background:var(--ti-raised);color:var(--ti-ink);white-space:normal;font-size:14px}
+.ti-group-report-chart{padding:20px;border-bottom:1px solid var(--ti-border)}
 .ti {
   --ti-bg:#0c1119;--ti-panel:#121a26;--ti-raised:#182333;--ti-border:#2a3648;--ti-ink:#e5edf5;--ti-muted:#a2b1c3;--ti-accent:#8ccede;--ti-yellow:#eded96;
   color:var(--ti-ink);background:var(--ti-bg);font:16px/1.55 "DM Sans",system-ui,sans-serif;min-height:100dvh;width:100%;padding:24px 20px 48px; color-scheme:dark;

@@ -66,6 +66,7 @@
             </a>
             
             <form method="GET" action="{{ url_for('tickets.tickets_dashboard') }}" class="d-flex gap-2">
+                {% include 'tickets/_group_filters.html' %}
                 <div>
                     <select name="status" class="form-select form-select-sm">
                         <option value="">All Statuses</option>
@@ -167,12 +168,18 @@
                                     {% if ticket.assigned_technician %}
                                     <span class="me-2">Assigned: {{ ticket.assigned_technician.username }}</span>
                                     {% else %}
-                                    <span class="me-2">Unassigned</span>
+                                    <span class="me-2">Unassigned{% if ticket.group %} in {{ ticket.group.name }}{% endif %}</span>
                                     {% endif %}
                                 </div>
-                                <small class="text-muted">{{ ticket.created_at.strftime('%b %d, %Y') }}</small>
+                                <small class="text-muted">{{ ticket.group.name if ticket.group else 'No group' }} · {{ ticket.created_at.strftime('%b %d, %Y') }}</small>
                             </div>
                         </a>
+                        {% if request.args.get('group_view') in ('my_groups', 'unassigned_groups') and ticket.assigned_to != current_user.id %}
+                        <form method="POST" action="{{ url_for('tickets.take_ticket', ticket_id=ticket.id) }}" class="mb-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Assign to me</button>
+                        </form>
+                        {% endif %}
                     {% endfor %}
                 {% else %}
                     <div class="p-4 text-center text-muted">

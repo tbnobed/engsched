@@ -390,11 +390,31 @@
     <div class="tk-panel">
       <div class="tk-panel-h"><span>Filters</span></div>
       <form id="filter-form" method="GET" autocomplete="off" class="tk-filters">
+        {% if request.args.get('group_view') %}<input type="hidden" name="group_view" value="{{ request.args.get('group_view') }}">{% endif %}
+        <div>
+          <label>Group</label>
+          <select name="group" class="tk-select">
+            <option value="all">All groups</option>
+            <option value="none" {% if request.args.get('group') == 'none' %}selected{% endif %}>No group</option>
+            {% for group in ticket_group_options %}
+            <option value="{{ group.id }}" {% if request.args.get('group') == group.id|string %}selected{% endif %}>{{ group.name }}{% if not group.enabled %} (disabled){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Group by</label>
+          <select name="group_by" class="tk-select">
+            <option value="">None</option>
+            <option value="group" {% if request.args.get('group_by') == 'group' %}selected{% endif %}>Group</option>
+          </select>
+        </div>
         <div class="tk-views-group">
           <label>Quick Views</label>
           <div class="tk-views">
             <a class="tk-chip {% if _v_my_open %}active{% endif %}"  href="?status=open&technician=me"><i data-feather="user"></i> My Open</a>
             <a class="tk-chip {% if _v_unassign %}active{% endif %}" href="?status=open&technician=unassigned"><i data-feather="alert-circle"></i> Unassigned</a>
+            <a class="tk-chip" href="?group_view=my_groups">My Groups' Tickets</a>
+            <a class="tk-chip" href="?group_view=unassigned_groups">Unassigned in my groups</a>
             <a class="tk-chip {% if _v_urgent %}active{% endif %}"   href="?status=open&priority=3"><i data-feather="zap"></i> Urgent</a>
             <a class="tk-chip {% if _v_high %}active{% endif %}"     href="?status=open&priority=2"><i data-feather="trending-up"></i> High Priority</a>
           </div>
@@ -470,11 +490,15 @@
               <th class="tk-sort" data-sort="pri"  data-col="5">Priority</th>
               <th class="tk-sort" data-sort="text" data-col="6">Assigned</th>
               <th class="tk-sort" data-sort="num"  data-col="7">Created</th>
+              <th class="tk-sort" data-sort="text" data-col="8">Group</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {% for ticket in tickets %}
+            {% if request.args.get('group_by') == 'group' and (loop.first or ticket.group_id != loop.previtem.group_id) %}
+            <tr class="tk-group-heading"><td colspan="10">{{ ticket.group.name if ticket.group else 'No group' }}</td></tr>
+            {% endif %}
             <tr class="{% if ticket.has_unread_activity %}unread{% endif %}" data-ticket-id="{{ ticket.id }}" data-status="{{ ticket.status }}" data-priority="{{ ticket.priority }}" data-assigned="{{ ticket.assigned_to or '' }}">
               <td class="col-cb"><input type="checkbox" class="tk-cb" value="{{ ticket.id }}"></td>
               <td class="num">#{{ ticket.id }}</td>
@@ -488,17 +512,25 @@
                 {% set pri_labels = {0:'Low',1:'Med',2:'High',3:'Urgent'} %}
                 <span class="tk-pill tk-pill-pri-{{ ticket.priority }} tk-pill-edit" data-edit="priority" data-value="{{ ticket.priority }}" title="Click to change priority">{{ pri_labels[ticket.priority] }}</span>
               </td>
-              <td>{% if ticket.assigned_technician %}{{ ticket.assigned_technician.username }}{% else %}<span style="color:var(--cc-muted);">—</span>{% endif %}</td>
+              <td>{% if ticket.assigned_technician %}{{ ticket.assigned_technician.username }}{% else %}<span style="color:var(--cc-muted);">Unassigned{% if ticket.group %} in {{ ticket.group.name }}{% endif %}</span>{% endif %}</td>
               <td style="color:var(--cc-muted); font-size:12px;">{{ ticket.created_at.strftime('%m/%d %H:%M') }}</td>
+              <td>{{ ticket.group.name if ticket.group else '—' }}</td>
               <td style="white-space:nowrap;">
                 {% if ticket.assigned_to != current_user.id %}
+                {% if request.args.get('group_view') in ('my_groups', 'unassigned_groups') %}
+                <form method="POST" action="{{ url_for('tickets.take_ticket', ticket_id=ticket.id) }}" style="display:inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="tk-btn">Assign to me</button>
+                </form>
+                {% else %}
                 <button type="button" class="tk-row-action tk-assign-me" title="Assign to me (a)"><i data-feather="user-plus"></i></button>
+                {% endif %}
                 {% endif %}
                 <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" class="tk-btn" style="padding:4px 10px; font-size:11px;">View</a>
               </td>
             </tr>
             {% else %}
-            <tr><td colspan="9"><div class="tk-empty"><i data-feather="inbox"></i><div>No tickets match your filters.</div></div></td></tr>
+            <tr><td colspan="10"><div class="tk-empty"><i data-feather="inbox"></i><div>No tickets match your filters.</div></div></td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -606,15 +638,7 @@
       </div>
 
       <div class="tk-drawer-row">
-        <div class="field">
-          <label for="tk_dr_asn">Assign To</label>
-          <select id="tk_dr_asn" name="assigned_to">
-            <option value="">— Unassigned —</option>
-            {% for technician in technicians %}
-            <option value="{{ technician.id }}">{{ technician.username }}</option>
-            {% endfor %}
-          </select>
-        </div>
+        {% include 'tickets/_assignment_fields.html' %}
         <div class="field">
           <label for="tk_dr_due">Due Date</label>
           <input type="date" id="tk_dr_due" name="due_date">
@@ -682,8 +706,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentPage = 1;
 
   function getRows() {
-    return Array.from(document.querySelectorAll('#tkTable tbody tr'))
-      .filter(tr => !tr.querySelector('.tk-empty'));
+    return Array.from(document.querySelectorAll('#tkTable tbody tr[data-ticket-id]'));
   }
 
   function renderPager() {
@@ -697,6 +720,15 @@ document.addEventListener('DOMContentLoaded', function() {
     rows.forEach((tr, i) => {
       const start = (currentPage - 1) * size;
       tr.style.display = (i >= start && i < start + size) ? '' : 'none';
+    });
+    document.querySelectorAll('#tkTable .tk-group-heading').forEach(heading => {
+      let row = heading.nextElementSibling;
+      let visible = false;
+      while (row && !row.classList.contains('tk-group-heading')) {
+        if (row.dataset.ticketId && row.style.display !== 'none') visible = true;
+        row = row.nextElementSibling;
+      }
+      heading.style.display = visible ? '' : 'none';
     });
 
     if (total === 0) {
@@ -760,6 +792,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function applySort() {
+    if (new URLSearchParams(window.location.search).get('group_by') === 'group') return;
     if (sortState.col === null) return;
     const tbody = document.querySelector('#tkTable tbody');
     const rows = getRows();
@@ -993,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // ============================================================
   let kbdIdx = -1;
   function visibleRows() {
-    return Array.from(document.querySelectorAll('#tkTable tbody tr'))
+    return Array.from(document.querySelectorAll('#tkTable tbody tr[data-ticket-id]'))
       .filter(tr => tr.style.display !== 'none' && !tr.querySelector('.tk-empty'));
   }
   function setKbdFocus(idx) {

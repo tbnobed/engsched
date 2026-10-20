@@ -83,13 +83,15 @@
             <div class="tr-meta-value"><button type="button" data-bs-toggle="modal" data-bs-target="#editTicketModal">{{ priority_labels.get(ticket['priority'], 'Medium') }}</button><i class="tr-caret" data-feather="chevron-down"></i></div>
         </div>
         <div class="tr-meta-cell">
+            <span class="tr-meta-label">Group</span>
+            <div class="tr-meta-value"><button type="button" data-bs-toggle="modal" data-bs-target="#assignTicketModal">{{ ticket.group.name if ticket.group else 'No group' }}</button></div>
             <span class="tr-meta-label">Assignee</span>
             <div class="tr-meta-value">
                 {% if ticket['assigned_technician'] %}
                 {% set assignee_name = ticket['assigned_technician']['username'] %}
                 <span class="tr-avatar">{{ assignee_name[:2]|upper }}</span><button type="button" data-bs-toggle="modal" data-bs-target="#assignTicketModal">{{ assignee_name }}</button>
                 {% else %}
-                <button type="button" data-bs-toggle="modal" data-bs-target="#assignTicketModal">Unassigned</button>
+                <button type="button" data-bs-toggle="modal" data-bs-target="#assignTicketModal">Unassigned{% if ticket.group %} in {{ ticket.group.name }}{% endif %}</button>
                 {% endif %}
                 <i class="tr-caret" data-feather="chevron-down"></i>
             </div>

@@ -1,0 +1,25 @@
+<div class="mb-2">
+  <label class="form-label">Group</label>
+  <select name="group" class="form-select form-select-sm">
+    <option value="all">All groups</option>
+    <option value="none" {% if request.args.get('group') == 'none' %}selected{% endif %}>No group</option>
+    {% for group in ticket_group_options %}
+    <option value="{{ group.id }}" {% if request.args.get('group') == group.id|string %}selected{% endif %}>{{ group.name }}{% if not group.enabled %} (disabled){% endif %}</option>
+    {% endfor %}
+  </select>
+</div>
+<div class="mb-2">
+  <label class="form-label">Group by</label>
+  <select name="group_by" class="form-select form-select-sm">
+    <option value="">None</option>
+    <option value="group" {% if request.args.get('group_by') == 'group' %}selected{% endif %}>Group</option>
+  </select>
+</div>
+<div class="mb-2">
+  <label class="form-label">Shared ownership view</label>
+  <select name="group_view" class="form-select form-select-sm">
+    <option value="">All tickets</option>
+    <option value="my_groups" {% if request.args.get('group_view') == 'my_groups' %}selected{% endif %}>My Groups' Tickets</option>
+    <option value="unassigned_groups" {% if request.args.get('group_view') == 'unassigned_groups' %}selected{% endif %}>Unassigned in my groups</option>
+  </select>
+</div>

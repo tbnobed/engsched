@@ -151,12 +151,85 @@ class Schedule(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
+class TicketGroup(db.Model):
+    __tablename__ = 'ticket_group'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text)
+    manager_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
+    notifications_enabled = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    notify_new_ticket = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    notify_reassigned = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    notify_comment = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    enabled = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true(), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC))
+    updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC), onupdate=lambda: datetime.now(pytz.UTC))
+    manager = db.relationship('User', foreign_keys=[manager_user_id])
+    members = db.relationship('TicketGroupMember', foreign_keys='TicketGroupMember.group_id',
+                              back_populates='group', cascade='all, delete-orphan')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'manager_user_id': self.manager_user_id,
+            'notifications_enabled': self.notifications_enabled,
+            'notify_new_ticket': self.notify_new_ticket,
+            'notify_reassigned': self.notify_reassigned,
+            'notify_comment': self.notify_comment,
+            'enabled': self.enabled,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'members': [member.to_dict() for member in self.members],
+        }
+
+
+class TicketGroupMember(db.Model):
+    __tablename__ = 'ticket_group_member'
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('ticket_group.id', ondelete='CASCADE'), nullable=False, index=True)
+    member_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), index=True)
+    member_group_id = db.Column(db.Integer, db.ForeignKey('ticket_group.id', ondelete='CASCADE'), index=True)
+    group = db.relationship('TicketGroup', foreign_keys=[group_id], back_populates='members')
+    member_user = db.relationship('User', foreign_keys=[member_user_id])
+    member_group = db.relationship('TicketGroup', foreign_keys=[member_group_id])
+    __table_args__ = (
+        db.CheckConstraint('(member_user_id IS NULL) <> (member_group_id IS NULL)', name='ck_ticket_group_member_one_target'),
+        db.CheckConstraint('group_id <> member_group_id', name='ck_ticket_group_member_not_self'),
+        db.UniqueConstraint('group_id', 'member_user_id', name='uq_ticket_group_member_user'),
+        db.UniqueConstraint('group_id', 'member_group_id', name='uq_ticket_group_member_group'),
+    )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'group_id': self.group_id,
+            'member_user_id': self.member_user_id,
+            'member_group_id': self.member_group_id,
+        }
+
+
+class TicketGroupSettings(db.Model):
+    __tablename__ = 'ticket_group_settings'
+    id = db.Column(db.Integer, primary_key=True)
+    filter_assignees = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    __table_args__ = (db.CheckConstraint('id = 1', name='ck_ticket_group_settings_singleton'),)
+
+    def to_dict(self):
+        return {'id': self.id, 'filter_assignees': self.filter_assignees}
+
+
 class TicketCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.String(200))
     icon = db.Column(db.String(50), default='help-circle')  # Feather icon name
     priority_level = db.Column(db.Integer, default=0)  # Higher number = higher priority
+    default_group_id = db.Column(db.Integer, db.ForeignKey('ticket_group.id', ondelete='SET NULL'), index=True)
+    default_assignee_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), index=True)
+    default_group = db.relationship('TicketGroup')
+    default_assignee = db.relationship('User')
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC))
     tickets = db.relationship('Ticket', backref='category', lazy='dynamic')
 
@@ -171,6 +244,10 @@ class TicketCategory(db.Model):
             'description': self.description,
             'icon': self.icon,
             'priority_level': self.priority_level,
+            'default_group_id': self.default_group_id,
+            'default_assignee_id': self.default_assignee_id,
+            'default_group_name': self.default_group.name if self.default_group else None,
+            'default_assignee_username': self.default_assignee.username if self.default_assignee else None,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
@@ -275,6 +352,8 @@ class Ticket(db.Model):
     status = db.Column(db.String(20), default=TicketStatus.OPEN)
     priority = db.Column(db.Integer, default=0)  # 0=Low, 1=Medium, 2=High, 3=Urgent
     assigned_to = db.Column(db.Integer, db.ForeignKey('user.id'))
+    group_id = db.Column(db.Integer, db.ForeignKey('ticket_group.id', ondelete='SET NULL'), index=True)
+    group = db.relationship('TicketGroup', backref='tickets')
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC))
     updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC), onupdate=lambda: datetime.now(pytz.UTC))
@@ -417,6 +496,8 @@ class Ticket(db.Model):
             'status': self.status,
             'priority': self.priority,
             'assigned_to': self.assigned_to,
+            'group_id': self.group_id,
+            'group_name': self.group.name if self.group else None,
             'created_by': self.created_by,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,

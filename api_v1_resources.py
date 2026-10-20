@@ -5,7 +5,8 @@ import re
 
 from flask import abort, g, jsonify, request
 from app import db
-from models import Ticket, TicketCategory, TicketComment, TicketHistory, Schedule, Location, User, RecurringScheduleTemplate
+from models import Ticket, TicketCategory, TicketComment, TicketHistory, Schedule, Location, User, RecurringScheduleTemplate, TicketGroup
+from ticket_groups import apply_assignment, apply_category_defaults, resolved_user_ids
 from api_v1_core import (api_v1, require_scope, fields, integer, boolean, text, timestamp,
                          iso, paginated, query_int, query_bool)
 from ticket_insights_service import comment_text, STATUS_NAMES
@@ -30,6 +31,7 @@ def ticket_json(ticket):
         'id': ticket.id, 'title': ticket.title, 'description': comment_text(ticket.description),
         'description_html': ticket.description, 'category_id': ticket.category_id,
         'status': ticket.status, 'priority': ticket.priority, 'assigned_to': ticket.assigned_to,
+        'group_id': ticket.group_id, 'group_name': ticket.group.name if ticket.group else None,
         'requester_id': ticket.created_by, 'external_email': ticket.external_email,
         'external_name': ticket.external_name, 'archived': bool(ticket.archived),
         'due_date': iso(ticket.due_date), 'created_at': iso(ticket.created_at), 'updated_at': iso(ticket.updated_at),
@@ -51,12 +53,13 @@ def ticket_event(ticket, action, details):
                                action=action, details=details, created_at=datetime.now(timezone.utc)))
 
 
-TICKET_FIELDS = {'title', 'description', 'category_id', 'priority', 'assigned_to', 'requester_id',
+TICKET_FIELDS = {'title', 'description', 'category_id', 'priority', 'assigned_to', 'group_id', 'requester_id',
                  'external_email', 'external_name', 'due_date', 'status', 'archived'}
 
 
 def apply_ticket(ticket, payload, creating=False):
-    before_status, before_owner = ticket.status, ticket.assigned_to
+    before_status = ticket.status
+    desired_group, desired_owner = ticket.group_id, ticket.assigned_to
     for field, value in payload.items():
         if field == 'title':
             ticket.title = text(value, field, 200)
@@ -67,7 +70,9 @@ def apply_ticket(ticket, payload, creating=False):
         elif field == 'priority':
             ticket.priority = integer(value, field, 0, 3)
         elif field == 'assigned_to':
-            ticket.assigned_to = reference(User, value, field, nullable=True)
+            desired_owner = reference(User, value, field, nullable=True)
+        elif field == 'group_id':
+            desired_group = reference(TicketGroup, value, field, nullable=True)
         elif field == 'requester_id':
             ticket.created_by = reference(User, value, field)
         elif field == 'external_name':
@@ -88,16 +93,21 @@ def apply_ticket(ticket, payload, creating=False):
             ticket.status = value
         elif field == 'archived':
             ticket.archived = boolean(value, field)
+    try:
+        if creating:
+            ticket.group_id, ticket.assigned_to = desired_group, desired_owner
+            apply_category_defaults(ticket, explicit_group='group_id' in payload,
+                                    explicit_assignee='assigned_to' in payload)
+            desired_group, desired_owner = ticket.group_id, ticket.assigned_to
+            ticket.group_id, ticket.assigned_to = None, None
+        # API writes intentionally do not trigger notification or AI side effects.
+        apply_assignment(ticket, desired_group, desired_owner, actor_id=g.api_key.owner_id)
+    except ValueError as exc:
+        abort(400, description=str(exc))
     ticket.updated_at = datetime.now(timezone.utc)
     db.session.flush()
     if ticket.status != before_status:
         ticket_event(ticket, 'status_changed', f'Status changed from {before_status} to {ticket.status}')
-    if ticket.assigned_to != before_owner:
-        if ticket.assigned_to:
-            user = db.session.get(User, ticket.assigned_to)
-            ticket_event(ticket, 'assigned', f'Assigned to {user.username} - Note: via API')
-        else:
-            ticket_event(ticket, 'unassigned', 'Unassigned via API')
     ticket_event(ticket, 'created' if creating else 'api_updated',
                  f'{"Created" if creating else "Updated"} via API key: {g.api_key.name}')
 
@@ -125,6 +135,9 @@ def list_tickets():
     if 'assigned_to' in request.args:
         value = request.args['assigned_to']
         query = query.filter(Ticket.assigned_to.is_(None)) if value == 'unassigned' else query.filter(Ticket.assigned_to == query_int('assigned_to'))
+    if 'group_id' in request.args:
+        query = (query.filter(Ticket.group_id.is_(None)) if request.args['group_id'] == 'none'
+                 else query.filter(Ticket.group_id == query_int('group_id')))
     if 'status' in request.args:
         status = request.args['status']
         if status not in STATUS_NAMES:
@@ -318,6 +331,21 @@ def technicians():
 def categories():
     return paginated(TicketCategory.query.order_by(TicketCategory.id), lambda row: {
         'id': row.id, 'name': row.name, 'description': row.description,
+        'default_group_id': row.default_group_id, 'default_assignee_id': row.default_assignee_id,
+    })
+
+
+@api_v1.get('/groups')
+@require_scope('directory:read')
+def groups():
+    query = TicketGroup.query
+    if 'enabled' in request.args:
+        query = query.filter(TicketGroup.enabled == query_bool('enabled', True))
+    return paginated(query.order_by(TicketGroup.id), lambda row: {
+        'id': row.id, 'name': row.name, 'description': row.description,
+        'manager_user_id': row.manager_user_id, 'enabled': row.enabled,
+        'notifications_enabled': row.notifications_enabled,
+        'member_ids': sorted(resolved_user_ids(row.id)),
     })
 
 

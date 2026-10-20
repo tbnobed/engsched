@@ -32,6 +32,8 @@
                     <li><a class="app-sidebar-link" href="{{ url_for('insights.overview') }}">Overview</a></li>
                     <li><a class="app-sidebar-link" href="{{ url_for('mobile_tickets' if sidebar_mobile|default(false) else 'tickets.tickets_dashboard') }}">All Tickets</a></li>
                     <li><a class="app-sidebar-link" href="{{ url_for('mobile_tickets' if sidebar_mobile|default(false) else 'tickets.tickets_dashboard', status='all', technician='me' if not sidebar_mobile|default(false) else current_user.id) }}">My Tickets</a></li>
+                    <li><a class="app-sidebar-link" href="{{ url_for('mobile_tickets' if sidebar_mobile|default(false) else 'tickets.tickets_dashboard', group_view='my_groups') }}">My Groups' Tickets</a></li>
+                    <li><a class="app-sidebar-link" href="{{ url_for('mobile_tickets' if sidebar_mobile|default(false) else 'tickets.tickets_dashboard', group_view='unassigned_groups') }}">Unassigned in my groups</a></li>
                     <li><a class="app-sidebar-link" href="{{ url_for('insights.reports') }}">Reports</a></li>
                 </ul>
             </li>
@@ -62,6 +64,7 @@
                 <button class="app-sidebar-toggle" id="adminDropdown" type="button" aria-expanded="false" aria-controls="sidebarAdmin">Admin</button>
                 <ul class="app-sidebar-sublist" id="sidebarAdmin" hidden>
                     <li><a class="app-sidebar-link" href="{{ url_for('admin_dashboard') }}">User Management</a></li>
+                    <li><a class="app-sidebar-link" href="{{ url_for('ticket_groups.index') }}">Users &amp; Groups · Groups</a></li>
                     <li><a class="app-sidebar-link" href="{{ url_for('admin_locations') }}">Manage Locations</a></li>
                     <li><a class="app-sidebar-link" href="{{ url_for('admin_quick_links') }}">Manage Quick Links</a></li>
                     <li><a class="app-sidebar-link" href="{{ url_for('admin_backup') }}">Backup &amp; Restore</a></li>
@@ -79,6 +82,9 @@
                     <span class="app-sidebar-username">{{ current_user.username }}</span>
                 </button>
                 <ul class="app-sidebar-sublist" id="sidebarProfile" hidden>
+                    {% if can_manage_ticket_groups and not current_user.is_admin %}
+                    <li><a class="app-sidebar-link" href="{{ url_for('ticket_groups.index') }}">Manage My Groups</a></li>
+                    {% endif %}
                     <li><a class="app-sidebar-link" href="{{ url_for('profile') }}">Profile Settings</a></li>
                     <li>
                         {% if sidebar_mobile|default(false) %}

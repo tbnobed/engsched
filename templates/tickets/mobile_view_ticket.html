@@ -285,12 +285,14 @@
         <div class="tab-content">
             <div class="card-body tab-pane show active" id="ticket-info-panel" role="tabpanel" aria-labelledby="ticket-info-tab" tabindex="0">
                 <dl class="row mb-0">
+                    <dt class="col-5">Group</dt>
+                    <dd class="col-7">{{ ticket.group.name if ticket.group else 'No group' }}</dd>
                     <dt class="col-5">Assigned To</dt>
                     <dd class="col-7">
                         {% if ticket['assigned_technician'] %}
                             {{ ticket['assigned_technician']['username'] }}
                         {% else %}
-                            <span class="text-muted">Unassigned</span>
+                            <span class="text-muted">Unassigned{% if ticket.group %} in {{ ticket.group.name }}{% endif %}</span>
                         {% endif %}
                     </dd>
                     <dt class="col-5">Due Date</dt>

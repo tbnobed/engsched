@@ -56,6 +56,40 @@
     </div>
 </div>
 
+<section class="mobile-card" aria-labelledby="mobile-group-tickets-heading">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0" id="mobile-group-tickets-heading">Active Tickets</h5>
+        <span class="text-muted small">{{ mobile_group_ticket_count }} matching</span>
+    </div>
+    <form method="GET" action="{{ url_for('mobile_dashboard') }}" class="mb-3">
+        {% include 'tickets/_group_filters.html' %}
+        <button type="submit" class="btn btn-primary btn-sm">Apply filters</button>
+        <a href="{{ url_for('mobile_dashboard') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
+    </form>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle">
+            <thead><tr><th>Ticket</th><th>Group</th><th>Assignee</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for ticket in mobile_group_tickets %}
+                {% if request.args.get('group_by') == 'group' and (loop.first or ticket.group_id != loop.previtem.group_id) %}
+                <tr><th colspan="4">{{ ticket.group.name if ticket.group else 'No group' }}</th></tr>
+                {% endif %}
+                <tr>
+                    <td><a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id, mobile=1) }}">#{{ ticket.id }} {{ ticket.title }}</a></td>
+                    <td>{{ ticket.group.name if ticket.group else 'No group' }}</td>
+                    <td>{{ ticket.assigned_technician.username if ticket.assigned_technician else ('Unassigned in ' ~ ticket.group.name if ticket.group else 'Unassigned') }}</td>
+                    <td>{{ ticket.status|replace('_', ' ')|title }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-muted">No active tickets match these group filters.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if mobile_group_ticket_count > 20 %}<p class="small text-muted mb-2">Showing the first 20 matching tickets.</p>{% endif %}
+    <a href="{{ url_for('mobile_tickets', group=request.args.get('group', 'all'), group_view=request.args.get('group_view', ''), group_by=request.args.get('group_by', '')) }}" class="btn btn-outline-primary btn-sm">View all matching tickets</a>
+</section>
+
 <!-- Currently Active Section -->
 <div class="mobile-card">
     <div class="d-flex justify-content-between align-items-center mb-3">

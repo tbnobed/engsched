@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <a href="{{ url_for('ticket_groups.index') }}">Users &amp; Groups / Groups</a>
+    <div class="d-flex justify-content-between align-items-center gap-2 mt-3">
+        <h1 class="h3">{{ group.name }} {% if not group.enabled %}<span class="badge bg-secondary">Disabled</span>{% endif %}</h1>
+        {% if current_user.is_admin %}<a href="{{ url_for('ticket_groups.edit', group_id=group.id) }}" class="btn btn-outline-primary">Edit settings</a>{% endif %}
+    </div>
+    <p style="white-space:pre-wrap">{{ group.description or 'No description.' }}</p>
+    <p class="text-muted">Manager: {{ group.manager.username if group.manager else 'None' }} · Notifications: {{ 'On' if group.notifications_enabled else 'Off' }}</p>
+    <p class="small text-muted">
+        New ticket: {{ 'On' if group.notify_new_ticket else 'Off' }} · Reassigned: {{ 'On' if group.notify_reassigned else 'Off' }} ·
+        Unassigned-ticket comments: {{ 'On' if group.notify_comment else 'Off' }}.
+        {% if not group.notifications_enabled %}All events are suppressed by the group notification switch.{% endif %}
+    </p>
+    <div class="row g-4">
+        <section class="col-lg-6"><div class="card h-100"><div class="card-body">
+            <h2 class="h5">Add to group</h2>
+            <p class="text-muted small">Select users and nested groups, then attach them in one click. Cycles are not allowed.</p>
+            <label for="memberSearch" class="form-label">Search users and groups</label>
+            <input type="search" class="form-control mb-2" id="memberSearch" placeholder="Name or email" aria-controls="memberChoices">
+            <form method="post" action="{{ url_for('ticket_groups.add_members', group_id=group.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div id="memberChoices" class="border rounded p-2 mb-3" style="max-height:320px;overflow:auto" role="group" aria-label="Users and groups to add">
+                    {% set direct_users = group.members|selectattr('member_user_id')|map(attribute='member_user_id')|list %}
+                    {% set direct_groups = group.members|selectattr('member_group_id')|map(attribute='member_group_id')|list %}
+                    {% for user in users %}{% if user.id not in direct_users %}
+                    <div class="form-check py-1 member-choice">
+                        <input type="checkbox" class="form-check-input" name="members" value="user:{{ user.id }}" id="memberUser{{ user.id }}">
+                        <label class="form-check-label" for="memberUser{{ user.id }}">User: {{ user.username }} <small class="text-muted">{{ user.email }}</small></label>
+                    </div>{% endif %}{% endfor %}
+                    {% for nested in groups %}{% if nested.id not in direct_groups %}
+                    <div class="form-check py-1 member-choice">
+                        <input type="checkbox" class="form-check-input" name="members" value="group:{{ nested.id }}" id="memberGroup{{ nested.id }}">
+                        <label class="form-check-label" for="memberGroup{{ nested.id }}">Group: {{ nested.name }}{% if not nested.enabled %} (disabled){% endif %}</label>
+                    </div>{% endif %}{% endfor %}
+                </div>
+                <p id="selectionCount" class="small text-muted" aria-live="polite">0 selected</p>
+                <button class="btn btn-primary">Add selected members</button>
+            </form>
+        </div></div></section>
+        <section class="col-lg-6"><div class="card h-100"><div class="card-body">
+            <h2 class="h5">Direct members</h2>
+            <ul class="list-group list-group-flush">
+            {% for member in group.members %}
+                <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                    <span>{% if member.member_user %}User: {{ member.member_user.username }}{% elif member.member_group %}Group: {{ member.member_group.name }}{% if not member.member_group.enabled %} (disabled){% endif %}{% endif %}</span>
+                    <form method="post" action="{{ url_for('ticket_groups.remove_member', group_id=group.id, member_id=member.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-danger" aria-label="Remove {{ member.member_user.username if member.member_user else member.member_group.name }}">Remove</button>
+                    </form>
+                </li>
+            {% else %}<li class="list-group-item text-muted">No direct members.</li>{% endfor %}
+            </ul>
+        </div></div></section>
+    </div>
+    <section class="card mt-4"><div class="card-body">
+        <h2 class="h5">Resolved members ({{ resolved_users|length }})</h2>
+        <p class="small text-muted">Read-only, deduplicated users across all nested groups. Disabled nested groups retain their membership.</p>
+        <ul class="mb-0">{% for user in resolved_users %}<li>{{ user.username }} <span class="text-muted">{{ user.email }}</span></li>{% else %}<li class="text-muted">No resolved users.</li>{% endfor %}</ul>
+    </div></section>
+</div>
+<script>
+document.getElementById('memberSearch').addEventListener('input', function () {
+    const needle = this.value.toLocaleLowerCase();
+    for (const row of document.querySelectorAll('.member-choice')) {
+        row.hidden = !row.textContent.toLocaleLowerCase().includes(needle);
+    }
+});
+document.getElementById('memberChoices').addEventListener('change', function () {
+    document.getElementById('selectionCount').textContent = this.querySelectorAll('input:checked').length + ' selected';
+});
+</script>
+{% endblock %}

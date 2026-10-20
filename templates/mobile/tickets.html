@@ -14,6 +14,12 @@
 </div>
 
 <!-- Filter Controls -->
+<form method="GET" class="mobile-card mb-3">
+    {% include 'tickets/_group_filters.html' %}
+    <input type="hidden" name="status" value="{{ status_filter }}">
+    <input type="hidden" name="priority" value="{{ priority_filter }}">
+    <button type="submit" class="btn btn-primary btn-sm">Apply group filters</button>
+</form>
 <div class="mobile-card mb-3">
     <div class="row g-3">
         <div class="col-6">
@@ -95,13 +101,20 @@
             <div class="d-flex justify-content-between align-items-center small text-muted">
                 <div>
                     <i data-feather="user" style="width: 14px; height: 14px;"></i>
-                    {% if ticket.assigned_technician %}{{ ticket.assigned_technician.username }}{% else %}Unassigned{% endif %}
+                    {{ ticket.group.name if ticket.group else 'No group' }} ·
+                    {% if ticket.assigned_technician %}{{ ticket.assigned_technician.username }}{% else %}Unassigned{% if ticket.group %} in {{ ticket.group.name }}{% endif %}{% endif %}
                 </div>
                 <div>
                     <i data-feather="calendar" style="width: 14px; height: 14px;"></i>
                     {{ ticket.created_at.strftime('%m/%d/%Y') }}
                 </div>
             </div>
+            {% if request.args.get('group_view') in ('my_groups', 'unassigned_groups') and ticket.assigned_to != current_user.id %}
+            <form method="POST" action="{{ url_for('tickets.take_ticket', ticket_id=ticket.id) }}" class="mt-2">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-primary">Assign to me</button>
+            </form>
+            {% endif %}
         </div>
         {% endfor %}
     {% else %}

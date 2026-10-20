@@ -43,13 +43,7 @@
                             {% endfor %}
                         </div>
 
-                        <div class="mb-3">
-                            <label for="assigned_to" class="form-label">Assign To</label>
-                            {{ form.assigned_to(class="form-select" + (" is-invalid" if form.assigned_to.errors else "")) }}
-                            {% for error in form.assigned_to.errors %}
-                            <div class="invalid-feedback">{{ error }}</div>
-                            {% endfor %}
-                        </div>
+                        {% include 'tickets/_assignment_fields.html' %}
 
                         <div class="mb-3">
                             <label for="due_date" class="form-label">Due Date (optional)</label>

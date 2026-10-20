@@ -21,6 +21,7 @@ REPORT_NAMES = {
     'handoffs': 'Assignment and handoff history',
     'satisfaction': 'Customer satisfaction',
     'ai_usage': 'AI assistance usage',
+    'groups': 'Group ownership and service metrics',
 }
 CATALOG = [
     ('my_open', 'My open tickets', 'Unresolved tickets currently assigned to you.'),
@@ -32,6 +33,7 @@ CATALOG = [
     ('volume', 'Created vs completed', 'Daily demand and recorded completions.'),
     ('aging', 'Backlog by age', 'Current unresolved tickets grouped by age.'),
     ('workload', 'Technician workload', 'Current unresolved assignments.'),
+    ('groups', 'Group workload', 'Current open tickets by group; drill into period counts and average service times.'),
     ('categories', 'Category demand', 'Tickets created in the period by category.'),
     ('status', 'Tickets by status', 'Current unarchived tickets by status.'),
     ('my_queue', 'My work queue', 'Your unresolved tickets, oldest first.'),
@@ -157,9 +159,13 @@ def validate_layout(layout):
         if type(widget.get('limit')) is not int or widget['limit'] not in {5, 10, 20}:
             raise ValueError('Widget lists can show 5, 10, or 20 tickets.')
         cleaned.append({key: widget[key] for key in ('id', 'type', 'size', 'scope', 'limit')})
+        if 'group_by' in widget:
+            if widget['group_by'] not in {'default', 'group'}:
+                raise ValueError('Invalid widget grouping.')
+            cleaned[-1]['group_by'] = widget['group_by']
     filters = layout.get('filters', {})
     allowed_filters = {'start', 'end', 'technician', 'category', 'priority', 'status',
-                       'source', 'department', 'location', 'stalled_days'}
+                       'source', 'department', 'location', 'stalled_days', 'group', 'group_by'}
     if not isinstance(filters, dict) or any(
         key not in allowed_filters or not isinstance(value, str) or len(value) > 200
         for key, value in filters.items()
@@ -221,10 +227,14 @@ def build_insights(tickets, comments, histories, users, categories, email_ids, f
         last_human = max(human_updates)
         due = utc(ticket.due_date)
         assignee = users.get(ticket.assigned_to)
+        ticket_group = ticket.group
+        group_name = ticket_group.name + ('' if ticket_group.enabled else ' (disabled)') if ticket_group else 'No group'
         row = {
             'id': ticket.id, 'title': ticket.title, 'url': f'/tickets/{ticket.id}',
             'status': ticket.status, 'priority': ticket.priority,
-            'assignee_id': ticket.assigned_to, 'assignee': assignee.username if assignee else 'Unassigned',
+            'assignee_id': ticket.assigned_to,
+            'assignee': assignee.username if assignee else f'Unassigned in {ticket_group.name}' if ticket_group else 'Unassigned',
+            'group_id': ticket.group_id, 'group': group_name,
             'category': categories.get(ticket.category_id, 'Uncategorized'), 'source': source,
             'created_at': created.isoformat(), 'created_display': created.astimezone(tz).strftime('%Y-%m-%d %H:%M'),
             'age_days': round((now - created).total_seconds() / 86400, 2),
@@ -238,6 +248,7 @@ def build_insights(tickets, comments, histories, users, categories, email_ids, f
             'is_open': is_open, 'is_overdue': bool(is_open and due and due < now),
             'in_created_period': start_at <= created < end_at,
             'in_resolved_period': bool(completed), 'has_response': bool(response_at),
+            'missing_resolution_history': ticket.status in DONE and not events,
             'archived': bool(ticket.archived),
         }
         rows.append(row)
@@ -274,6 +285,8 @@ def build_insights(tickets, comments, histories, users, categories, email_ids, f
     aging = [{'label': label, 'count': len(ids), 'ids': ids} for label, ids in age_groups.items()]
 
     def report(name, description, columns, report_rows, **extra):
+        if filters.get('group_by') == 'group' and name in {'volume', 'workload', 'categories'}:
+            columns = [('group', 'Current group'), *columns]
         return {'title': REPORT_NAMES[name], 'description': description,
                 'columns': [{'key': key, 'label': label} for key, label in columns],
                 'rows': report_rows, **extra}
@@ -283,29 +296,85 @@ def build_insights(tickets, comments, histories, users, categories, email_ids, f
                 'status': STATUS_NAMES.get(row['status'], row['status']), 'assignee': row['assignee'],
                 'category': row['category'], 'priority': PRIORITIES.get(row['priority'], 'Unknown')}
 
+    def partition(key):
+        partitions = defaultdict(list)
+        for row in rows:
+            partitions[(row['group_id'] if filters.get('group_by') == 'group' else None, row[key])].append(row)
+        return partitions.values()
+
     workload_rows = []
-    for name in sorted({row['assignee'] for row in rows}):
-        owned = [row for row in rows if row['assignee'] == name]
+    for owned in partition('assignee'):
+        name = owned[0]['assignee']
         active = [row for row in owned if row['is_open']]
-        workload_rows.append({'technician': name, 'open': len(active),
+        workload_rows.append({'technician': name, 'group_id': owned[0]['group_id'], 'group': owned[0]['group'],
+                              'open': len(active),
                               'high_priority': sum(row['priority'] >= 2 for row in active),
                               'overdue': sum(row['is_overdue'] for row in active),
                               'completed': sum(row['in_resolved_period'] for row in owned),
                               'ticket_ids': [row['id'] for row in active]})
+    workload_rows.sort(key=lambda row: row['technician'])
     category_rows = []
-    for category in sorted({row['category'] for row in rows}):
-        matching = [row for row in rows if row['category'] == category]
+    for matching in partition('category'):
+        category = matching[0]['category']
         durations = [row['resolution_hours'] for row in matching if row['in_resolved_period']]
-        category_rows.append({'category': category,
+        category_rows.append({'category': category, 'group_id': matching[0]['group_id'], 'group': matching[0]['group'],
                               'created': sum(row['in_created_period'] for row in matching),
                               'open': sum(row['is_open'] for row in matching),
                               'completed': len(durations), 'median_hours': median(durations),
                               'ticket_ids': [row['id'] for row in matching if row['in_created_period']]})
+    category_rows.sort(key=lambda row: row['category'])
+    group_rows = []
+    for group_id in sorted({row['group_id'] for row in rows}, key=lambda value: (value is not None, value or 0)):
+        matching = [row for row in rows if row['group_id'] == group_id]
+        arrivals = [row for row in matching if row['in_created_period']]
+        completions = [row for row in matching if row['in_resolved_period']]
+        responses = [row['first_response_hours'] for row in arrivals if row['has_response']]
+        durations = [row['resolution_hours'] for row in completions]
+        group_rows.append({
+            'group_id': group_id, 'group': matching[0]['group'],
+            'open': sum(row['is_open'] for row in matching),
+            'created': len(arrivals), 'completed': len(completions),
+            'average_response_hours': round(sum(responses) / len(responses), 2) if responses else None,
+            'response_measured': len(responses), 'response_untracked': len(arrivals) - len(responses),
+            'average_resolution_hours': round(sum(durations) / len(durations), 2) if durations else None,
+            'resolution_measured': len(durations),
+            'missing_resolution_history': sum(row['missing_resolution_history'] for row in matching),
+            'ticket_ids': [row['id'] for row in matching if row['is_open']],
+        })
+    group_rows.sort(key=lambda row: (row['group'].casefold(), row['group_id'] or 0))
+    volume_rows = [dict(date=v['label'], created=v['created'], resolved=v['resolved'],
+                       net=v['created'] - v['resolved']) for v in volume.values()]
+    if filters.get('group_by') == 'group':
+        grouped_volume = {}
+        for row in rows:
+            for day, kind in ((row['created_display'][:10] if row['in_created_period'] else None, 'created'),
+                              (datetime.fromisoformat(row['completed_at']).astimezone(tz).date().isoformat()
+                               if row['in_resolved_period'] else None, 'resolved')):
+                if day is None:
+                    continue
+                key = (row['group_id'], day)
+                counts = grouped_volume.setdefault(key, {'group_id': row['group_id'], 'group': row['group'],
+                                                         'date': day, 'created': 0, 'resolved': 0})
+                counts[kind] += 1
+        # Include zero-activity days for every group represented in the filtered population.
+        volume_rows = []
+        for ownership in group_rows:
+            for day in volume:
+                counts = grouped_volume.get((ownership['group_id'], day), {
+                    'group_id': ownership['group_id'], 'group': ownership['group'],
+                    'date': day, 'created': 0, 'resolved': 0})
+                volume_rows.append(dict(counts, net=counts['created'] - counts['resolved']))
     reports = {
+        'groups': report('groups',
+                         'Grouped by CURRENT ownership, not the group at creation, reply or completion. Includes disabled groups and no-group tickets. Open is the current unarchived backlog, regardless of dates. Created and unique completed counts use the selected period; completed includes resolved or closed transitions from an unresolved status, not a second resolved-to-closed transition. Average first response uses tickets created in the period with a qualifying recorded human reply; average resolution uses creation to latest recorded completion in the period. Calendar hours. Missing replies are not zero and cannot distinguish unanswered tickets from missing history. Completed tickets without any completion history cannot be dated: that coverage count spans the filtered dataset, not just this period.',
+                         [('group', 'Current group'), ('open', 'Current open'), ('created', 'Created in period'),
+                          ('completed', 'Closed / completed in period'), ('average_response_hours', 'Average first response (hours)'),
+                          ('response_measured', 'Responses measured'), ('response_untracked', 'No reply recorded (creation cohort)'),
+                          ('average_resolution_hours', 'Average resolution (hours)'), ('resolution_measured', 'Resolutions measured'),
+                          ('missing_resolution_history', 'Missing completion history (all dates)')], group_rows),
         'volume': report('volume', 'Created and unique tickets completed per day in the selected timezone. Repeated completions use the latest event in this period; net change is created minus completed, not a historical backlog.',
                          [('date', 'Date'), ('created', 'Created'), ('resolved', 'Completed'), ('net', 'Net change')],
-                         [dict(date=v['label'], created=v['created'], resolved=v['resolved'],
-                               net=v['created'] - v['resolved']) for v in volume.values()]),
+                         volume_rows),
         'aging': report('aging', 'Current unresolved, unarchived tickets. Age is calendar time since creation. This snapshot ignores the date range.',
                         [('ticket_id', 'Ticket'), ('title', 'Title'), ('status', 'Status'), ('priority', 'Priority'),
                          ('assignee', 'Technician'), ('age_days', 'Age (days)'), ('overdue', 'Overdue')],
@@ -341,7 +410,7 @@ def build_insights(tickets, comments, histories, users, categories, email_ids, f
         'methodology': [
             'Times are calendar hours in your profile timezone; no business-hour or SLA targets are configured.',
             'Aging, open workload, and stalled tickets are current snapshots and ignore the selected date range.',
-            'Period reports include archived tickets; current backlog excludes them. Filters use current category, status, priority, source, and assignee, not historical ownership.',
+            'Period reports include archived tickets; current backlog excludes them. Filters and group breakdowns use current group, category, status, priority, source, and assignee, not historical ownership. Disabled groups remain reportable.',
             'First-response time excludes recognized legacy AI analyses, requester replies, and internal notes. Legacy sender identity is used when available.',
             'Missing completion history is not inferred from last-updated timestamps. Deleted/imported events may limit historical accuracy.',
         ],
@@ -356,6 +425,10 @@ def build_insights(tickets, comments, histories, users, categories, email_ids, f
         'tickets': rows,
         'charts': {'volume': list(volume.values()), 'aging': aging,
                    'workload': group(opened, lambda row: row['assignee']),
+                    'groups': [{'group_id': row['group_id'], 'label': row['group'],
+                                'count': row['open'], 'ids': row['ticket_ids']}
+                               for row in sorted(group_rows, key=lambda row: (-row['open'], row['group'].casefold()))
+                               if row['open']],
                    'categories': group(created_rows, lambda row: row['category']),
                    'status': group([row for row in rows if not row['archived']], lambda row: STATUS_NAMES.get(row['status'], row['status']))},
         'reports': reports,

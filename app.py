@@ -257,6 +257,11 @@ def attempt_db_connection_with_retry():
                             "SELECT pg_advisory_xact_lock(72419031)"
                         ))
                     db.metadata.create_all(bind=schema_connection)
+                    if engine.dialect.name == "postgresql":
+                        from pathlib import Path
+                        schema_connection.exec_driver_sql(
+                            Path(__file__).with_name("ticket_groups_schema.sql").read_text()
+                        )
                 logger.info("Database tables created successfully!")
                 return True
         except sqlalchemy.exc.OperationalError as e:
@@ -458,6 +463,8 @@ from ticket_insights import insights
 app.register_blueprint(insights)
 from ticket_reporting_controls import reporting_controls
 app.register_blueprint(reporting_controls)
+from ticket_groups import ticket_groups, can_manage_groups
+app.register_blueprint(ticket_groups)
 from api_access import api_admin
 from api_v1_resources import api_v1
 import api_v1_docs
@@ -490,6 +497,12 @@ def versioned_api_routing_errors(response):
 def inject_now():
     from datetime import datetime
     return {'now': datetime.now()}
+
+@app.context_processor
+def inject_ticket_groups():
+    return {
+        'can_manage_ticket_groups': can_manage_groups() if current_user.is_authenticated else False,
+    }
 
 @app.after_request
 def add_no_cache_headers(response):

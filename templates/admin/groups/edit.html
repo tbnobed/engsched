@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4" style="max-width:850px">
+    <a href="{{ url_for('ticket_groups.index') }}">Users &amp; Groups / Groups</a>
+    <h1 class="h3 mt-3">{{ 'Edit group' if group.id else 'Create group' }}</h1>
+    <form method="post" class="card mt-3"><div class="card-body">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="mb-3"><label class="form-label" for="groupName">Name</label>
+            <input id="groupName" name="name" required maxlength="100" class="form-control" value="{{ request.form.get('name', group.name or '') }}"></div>
+        <div class="mb-3"><label class="form-label" for="groupDescription">Description</label>
+            <textarea id="groupDescription" name="description" class="form-control" rows="3">{{ request.form.get('description', group.description or '') }}</textarea></div>
+        <div class="mb-3">
+            <label for="managerSearch" class="form-label">Search manager</label>
+            <input type="search" id="managerSearch" class="form-control mb-2" placeholder="Search username or email" aria-controls="groupManager">
+            <label for="groupManager" class="form-label">Reports to (manager)</label>
+            <select id="groupManager" name="manager_user_id" class="form-select">
+                <option value="">No manager</option>
+                {% for user in users %}<option value="{{ user.id }}" {% if request.form.get('manager_user_id', group.manager_user_id|string) == user.id|string %}selected{% endif %}>{{ user.username }} — {{ user.email }}</option>{% endfor %}
+            </select>
+            <small class="text-muted">Managers may add and remove members, but cannot change group or notification settings.</small>
+        </div>
+        {% for field, label, help in [
+            ('enabled', 'Enabled', 'Disabled groups remain on existing tickets and in reporting, but cannot receive new ticket assignments.'),
+            ('notifications_enabled', 'Enable group notifications', 'Master switch: turning this off suppresses every group event.'),
+            ('notify_new_ticket', 'New ticket assigned to group', ''),
+            ('notify_reassigned', 'Ticket reassigned into group', ''),
+            ('notify_comment', 'Comment on a group ticket with no assignee', '')] %}
+        <div class="form-check mb-2">
+            <input type="checkbox" class="form-check-input" id="{{ field }}" name="{{ field }}"
+                {% if (request.method == 'POST' and request.form.get(field) == 'on') or (request.method != 'POST' and (not group.id or group|attr(field))) %}checked{% endif %}>
+            <label for="{{ field }}" class="form-check-label">{{ label }}</label>
+            {% if help %}<div class="small text-muted">{{ help }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="d-flex gap-2 mt-4"><button class="btn btn-primary">Save group</button><a href="{{ url_for('ticket_groups.index') }}" class="btn btn-outline-secondary">Cancel</a></div>
+    </div></form>
+</div>
+<script>
+document.getElementById('managerSearch').addEventListener('input', function () {
+    const needle = this.value.toLocaleLowerCase();
+    for (const option of document.getElementById('groupManager').options) {
+        option.hidden = Boolean(option.value && !option.textContent.toLocaleLowerCase().includes(needle));
+    }
+});
+</script>
+{% endblock %}

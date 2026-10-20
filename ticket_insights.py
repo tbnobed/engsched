@@ -11,7 +11,7 @@ from sqlalchemy.orm import joinedload
 from app import db
 from models import (ProcessedEmail, Ticket, TicketCategory, TicketComment,
                     TicketDashboardLayout, TicketHistory, User, TicketRequesterProfile,
-                    TicketFeedback, TicketAIMessage, TicketAIRating)
+                    TicketFeedback, TicketAIMessage, TicketAIRating, TicketGroup)
 from ticket_insights_service import (CATALOG, PRIORITIES, REPORT_NAMES, STATUS_NAMES,
                                      build_insights, default_layout, utc, validate_layout, requester_key)
 from ticket_insights_extended import extend_insights
@@ -62,6 +62,8 @@ def config():
         options={
             'technicians': [{'id': user.id, 'name': user.username} for user in User.query.order_by(User.username)],
             'categories': [{'id': category.id, 'name': category.name} for category in TicketCategory.query.order_by(TicketCategory.name)],
+            'groups': [{'id': group.id, 'name': group.name + ('' if group.enabled else ' (disabled)'),
+                        'enabled': group.enabled} for group in TicketGroup.query.order_by(TicketGroup.name)],
             'statuses': [{'id': key, 'name': name} for key, name in STATUS_NAMES.items()],
             'priorities': [{'id': key, 'name': name} for key, name in PRIORITIES.items()],
             'sources': [{'id': 'email', 'name': 'Email'}, {'id': 'web', 'name': 'Web'}],
@@ -107,8 +109,8 @@ def save_layout():
 @login_required
 def save_main_ticket_scope():
     payload = request.get_json(silent=True)
-    if not isinstance(payload, dict) or payload.get('scope') not in ('all', 'me'):
-        return jsonify(error='Choose All tickets or My tickets.'), 400
+    if not isinstance(payload, dict) or payload.get('scope') not in ('all', 'me', 'my_groups', 'unassigned_groups'):
+        return jsonify(error="Choose All tickets, My tickets, My Groups' Tickets, or Unassigned in my groups."), 400
     saved = db.session.get(TicketDashboardLayout, current_user.id)
     layout = dict(saved.layout) if saved else default_layout()
     layout['main_ticket_scope'] = payload['scope']
@@ -133,15 +135,16 @@ def read_filters():
     filters = {'start': start, 'end': end}
     allowed = {
         'technician': {'all', 'me', 'unassigned'}, 'category': {'all'},
+        'group': {'all', 'none', 'my_groups'}, 'group_by': {'none', 'group'},
         'priority': {'all', '0', '1', '2', '3'}, 'status': {'all', *STATUS_NAMES},
         'source': {'all', 'email', 'web'}, 'scope': {'team', 'me'},
         'stalled_days': {'3', '7', '14', '30'},
     }
     for key, choices in allowed.items():
-        default = '7' if key == 'stalled_days' else 'team' if key == 'scope' else 'all'
+        default = '7' if key == 'stalled_days' else 'team' if key == 'scope' else 'none' if key == 'group_by' else 'all'
         value = request.args.get(key, default)
         if value not in choices:
-            if key not in {'technician', 'category'} or not value.isdecimal() or not (0 < int(value) <= 2147483647):
+            if key not in {'technician', 'category', 'group'} or not value.isdecimal() or not (0 < int(value) <= 2147483647):
                 raise ValueError(f'Invalid {key.replace("_", " ")} filter.')
         filters[key] = value
     filters['stalled_days'] = int(filters['stalled_days'])
@@ -155,6 +158,13 @@ def read_filters():
 
 def load_data(filters):
     query = Ticket.query
+    if filters['group'] == 'none':
+        query = query.filter(Ticket.group_id.is_(None))
+    elif filters['group'] == 'my_groups':
+        from ticket_groups import user_group_ids
+        query = query.filter(Ticket.group_id.in_(user_group_ids(current_user.id)))
+    elif filters['group'] != 'all':
+        query = query.filter(Ticket.group_id == int(filters['group']))
     if filters['technician'] == 'me':
         query = query.filter(Ticket.assigned_to == current_user.id)
     elif filters['technician'] == 'unassigned':
@@ -169,7 +179,7 @@ def load_data(filters):
         query = query.filter(Ticket.priority == int(filters['priority']))
     if filters['status'] != 'all':
         query = query.filter(Ticket.status == filters['status'])
-    tickets = query.all()
+    tickets = query.options(joinedload(Ticket.group)).all()
     profiles = {profile.key: profile for profile in TicketRequesterProfile.query.all()}
     for attribute in ('department', 'location'):
         selected = filters[attribute]
@@ -201,8 +211,22 @@ def load_data(filters):
     messages = TicketAIMessage.query.filter(TicketAIMessage.ticket_id.in_(ids_query)).all()
     message_ids = db.session.query(TicketAIMessage.id).filter(TicketAIMessage.ticket_id.in_(ids_query))
     ratings = TicketAIRating.query.filter(TicketAIRating.message_id.in_(message_ids)).all()
-    return extend_insights(payload, tickets, histories, users, filters, profile_timezone(), current_user.id,
-                           settings_payload()['targets'], profiles, surveys, messages, ratings)
+    payload = extend_insights(payload, tickets, histories, users, filters, profile_timezone(), current_user.id,
+                              settings_payload()['targets'], profiles, surveys, messages, ratings)
+    # Every ticket-level report uses the same group column, including CSV and print.
+    rows_by_id = {row['id']: row for row in payload['tickets']}
+    for result in payload['reports'].values():
+        if any(column['key'] == 'ticket_id' for column in result['columns']):
+            result['columns'].insert(2, {'key': 'group', 'label': 'Current group'})
+            for row in result['rows']:
+                ticket_row = rows_by_id.get(row.get('ticket_id'))
+                row['group'] = ticket_row['group'] if ticket_row else None
+                row['group_id'] = ticket_row['group_id'] if ticket_row else None
+            if filters['group_by'] == 'group':
+                result['rows'].sort(key=lambda row: ((row['group'] or '').casefold(), row['group_id'] or 0))
+        elif filters['group_by'] == 'group' and result['rows'] and 'group_id' in result['rows'][0]:
+            result['rows'].sort(key=lambda row: ((row['group'] or '').casefold(), row['group_id'] or 0))
+    return payload
 
 
 @insights.route('/api/ticket-insights/data')

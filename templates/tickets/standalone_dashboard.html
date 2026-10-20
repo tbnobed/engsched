@@ -36,6 +36,7 @@
                         <div class="card-body">
                             <h5>Filter Tickets</h5>
                             <form id="filter-form" method="GET" autocomplete="off" novalidate>
+                                {% include 'tickets/_group_filters.html' %}
                                 <div class="mb-3">
                                     <label class="form-label">Status</label>
                                     <select name="status" id="status-filter" class="form-select">
@@ -86,6 +87,7 @@
                                             <th>Status</th>
                                             <th>Priority</th>
                                             <th>Assigned To</th>
+                                            <th>Group</th>
                                             <th>Created</th>
                                             <th>Actions</th>
                                         </tr>
@@ -138,9 +140,10 @@
                                                     {% if ticket.assigned_technician %}
                                                         {{ ticket.assigned_technician.username }}
                                                     {% else %}
-                                                        <span class="text-muted">Unassigned</span>
+                                                        <span class="text-muted">Unassigned{% if ticket.group %} in {{ ticket.group.name }}{% endif %}</span>
                                                     {% endif %}
                                                 </td>
+                                                <td>{{ ticket.group.name if ticket.group else '—' }}</td>
                                                 <td>{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                                 <td>
                                                     <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" class="btn btn-sm btn-primary">
@@ -151,7 +154,7 @@
                                             {% endfor %}
                                         {% else %}
                                             <tr>
-                                                <td colspan="8" class="text-center py-4">
+                                                <td colspan="9" class="text-center py-4">
                                                     <div class="py-5">
                                                         <div class="text-muted mb-2">📭</div>
                                                         <h4 class="mb-1">No tickets found</h4>

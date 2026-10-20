@@ -245,7 +245,7 @@
   .cc-ticket-row .summary { color:var(--cc-muted); font-size:12px; margin-top:5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:anywhere; }
   .cc-ticket-columns, .cc-ticket-row {
     display:grid;
-    grid-template-columns: 48px minmax(240px, 2.5fr) repeat(4, minmax(100px, 1fr)) repeat(2, 100px) 68px;
+    grid-template-columns: 48px minmax(240px, 2.5fr) repeat(5, minmax(100px, 1fr)) repeat(2, 100px) 68px;
     gap:12px;
     min-width:1084px;
     align-items:center;
@@ -447,13 +447,27 @@
 
     <!-- Full-height ticket column alongside the timeline -->
     <div class="cc-panel cc-tickets-panel">
-      <div class="cc-panel-h"><span>Active Tickets</span><div class="cc-ticket-controls"><select id="ccTicketScope" aria-label="Tickets shown"><option value="all" {{ 'selected' if ticket_scope == 'all' }}>All tickets</option><option value="me" {{ 'selected' if ticket_scope == 'me' }}>My tickets</option></select><span class="count" id="ccTicketCount">{{ recent_tickets|length }}</span></div></div>
+      <div class="cc-panel-h"><span>Active Tickets</span><div class="cc-ticket-controls"><select id="ccTicketScope" aria-label="Tickets shown"><option value="all" {{ 'selected' if ticket_scope == 'all' }}>All tickets</option><option value="me" {{ 'selected' if ticket_scope == 'me' }}>My tickets</option><option value="my_groups" {{ 'selected' if ticket_scope == 'my_groups' }}>My Groups' Tickets</option><option value="unassigned_groups" {{ 'selected' if ticket_scope == 'unassigned_groups' }}>Unassigned in my groups</option></select><span class="count" id="ccTicketCount">{{ recent_tickets|length }}</span></div></div>
+      <form method="get" class="cc-ticket-controls" style="padding:8px 16px;flex-wrap:wrap">
+        <label for="ccGroupFilter">Group</label>
+        <select name="group_id" id="ccGroupFilter">
+          <option value="">All groups</option>
+          <option value="none" {% if request.args.get('group_id') == 'none' %}selected{% endif %}>No group</option>
+          {% for group in ticket_group_options %}<option value="{{ group.id }}" {% if request.args.get('group_id') == group.id|string %}selected{% endif %}>{{ group.name }}{{ ' (disabled)' if not group.enabled }}</option>{% endfor %}
+        </select>
+        <label for="ccGroupBy">Group by</label>
+        <select name="group_by" id="ccGroupBy"><option value="">None</option><option value="group" {% if request.args.get('group_by') == 'group' %}selected{% endif %}>Group</option></select>
+        <button type="submit" class="btn btn-sm btn-secondary">Apply</button>
+      </form>
       <div id="ccTicketScopeStatus" role="status" aria-live="polite"></div>
       <div id="ccTicketsList" tabindex="0" role="region" aria-label="Active tickets">
         <div class="cc-ticket-columns">
-          <span>Ticket #</span><span>Subject / Description</span><span>Assigned to</span><span>Status</span><span>Requester</span><span>Category</span><span>Updated</span><span>Due</span><span>Priority</span>
+          <span>Ticket #</span><span>Subject / Description</span><span>Group</span><span>Assigned to</span><span>Status</span><span>Requester</span><span>Category</span><span>Updated</span><span>Due</span><span>Priority</span>
         </div>
         {% for ticket in recent_tickets %}
+        {% if request.args.get('group_by') == 'group' and loop.changed(ticket.group_id) %}
+        <div class="cc-panel-h">{{ ticket.group.name if ticket.group else 'No group' }}</div>
+        {% endif %}
         <a class="cc-ticket-row" href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}">
           <div class="num">#{{ ticket.id }}</div>
           <div>
@@ -466,7 +480,8 @@
             </div>
             <div class="summary">{{ ticket.description|striptags|truncate(240) }}</div>
           </div>
-          <span class="cc-ticket-cell">{% if ticket.assigned_to %}{{ ticket.assigned_technician.username }}{% else %}Unassigned{% endif %}</span>
+          <span class="cc-ticket-cell">{{ ticket.group.name if ticket.group else 'No group' }}</span>
+          <span class="cc-ticket-cell">{% if ticket.assigned_to %}{{ ticket.assigned_technician.username }}{% elif ticket.group %}Unassigned in {{ ticket.group.name }}{% else %}Unassigned{% endif %}</span>
           <span class="cc-ticket-cell">{{ ticket.status.replace('_', ' ').title() }}</span>
           <span class="cc-ticket-cell">{{ ticket.get_display_name() }}</span>
           <span class="cc-ticket-cell">{{ ticket.category.name if ticket.category else 'Uncategorized' }}</span>
@@ -628,7 +643,7 @@
     const ctrl = new AbortController();
     ticketRefreshInFlight = ctrl;
     const mySeq = ++ticketRefreshSeq;
-    return fetch('/dashboard', { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: ctrl.signal })
+    return fetch('/dashboard' + window.location.search, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: ctrl.signal })
       .then(r => { if (!r.ok) throw new Error('Could not refresh tickets.'); return r.text(); })
       .then(html => {
         if (mySeq !== ticketRefreshSeq) return; // stale

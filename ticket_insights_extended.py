@@ -34,6 +34,8 @@ def extend_insights(data, tickets, histories, users, filters, tz, user_id,
                 'priority': PRIORITIES.get(row['priority'], 'Unknown'), 'assignee': row['assignee']}
 
     def report(key, description, columns, rows, summary=None):
+        if key == 'requesters' and filters.get('group_by') == 'group':
+            columns = [('group', 'Current group'), *columns]
         data['reports'][key] = {
             'title': REPORT_NAMES[key], 'description': description,
             'columns': [{'key': key, 'label': label} for key, label in columns],
@@ -101,12 +103,13 @@ def extend_insights(data, tickets, histories, users, filters, tz, user_id,
 
     requester_groups = defaultdict(list)
     for row in base.values():
-        requester_groups[row['requester_key']].append(row)
+        requester_groups[(row['requester_key'], row['group_id'] if filters.get('group_by') == 'group' else None)].append(row)
     requester_rows = []
-    for key, group in requester_groups.items():
+    for (key, _group_id), group in requester_groups.items():
         sample = group[0]
         requester_rows.append({
             'requester_key': key, 'requester': sample['requester'], 'email': sample['requester_email'],
+            'group_id': sample['group_id'], 'group': sample['group'],
             'department': sample['department'] or 'Not assigned', 'location': sample['location'] or 'Not assigned',
             'created': sum(row['in_created_period'] for row in group),
             'open': sum(row['is_open'] for row in group),
@@ -119,7 +122,7 @@ def extend_insights(data, tickets, histories, users, filters, tz, user_id,
            [('requester', 'Requester'), ('email', 'Email'), ('department', 'Department'), ('location', 'Location'),
             ('created', 'Created'), ('open', 'Current open'), ('completed', 'Completed'), ('median_hours', 'Median resolution (hours)')],
            requester_rows,
-           [('Requesters with new tickets', sum(row['created'] > 0 for row in requester_rows)),
+           [('Requesters with new tickets', len({row['requester_key'] for row in requester_rows if row['created'] > 0})),
             ('Current open tickets', sum(row['open'] for row in requester_rows))])
 
     reopened_rows, completion_cohort, later_reopened = [], 0, 0

@@ -24,6 +24,7 @@
                             {{ form.priority_level.label(class="form-label") }}
                             {{ form.priority_level(class="form-select") }}
                         </div>
+                        {% include 'tickets/_category_assignment_defaults.html' %}
                         <div class="d-flex justify-content-between">
                             <a href="{{ url_for('tickets.manage_categories') }}" class="btn btn-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Save Changes</button>

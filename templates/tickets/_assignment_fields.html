@@ -1,0 +1,12 @@
+{% include 'tickets/_group_assignment.html' %}
+{% set selected_assignee = request.form.get('assigned_to', ticket.assigned_to if ticket is defined else '-1') %}
+<div class="mb-3 field">
+  <label class="form-label">Assignee</label>
+  <select name="assigned_to" class="form-select">
+    {% if ticket is not defined %}<option value="-1" {% if selected_assignee == '-1' %}selected{% endif %}>Use category default</option>{% endif %}
+    <option value="0" {% if selected_assignee in (none, '', '0', 0) %}selected{% endif %}>Unassigned</option>
+    {% for user in ticket_group_users %}
+    <option value="{{ user.id }}" {% if selected_assignee|string == user.id|string %}selected{% endif %}>{{ user.username }}</option>
+    {% endfor %}
+  </select>
+</div>
