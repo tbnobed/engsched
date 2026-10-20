@@ -262,6 +262,9 @@ def attempt_db_connection_with_retry():
                         schema_connection.exec_driver_sql(
                             Path(__file__).with_name("ticket_groups_schema.sql").read_text()
                         )
+                        schema_connection.exec_driver_sql(
+                            Path(__file__).with_name("automation_schema.sql").read_text()
+                        )
                 logger.info("Database tables created successfully!")
                 return True
         except sqlalchemy.exc.OperationalError as e:
@@ -418,6 +421,11 @@ def start_scheduler_with_lock():
             process_queue, trigger="interval", seconds=3,
             id="ticket_ai_queue", max_instances=1, coalesce=True,
         )
+        from automation_engine import process_scheduled_jobs
+        scheduler.add_job(
+            process_scheduled_jobs, trigger="interval", minutes=1,
+            id="ticket_automation_queue", max_instances=1, coalesce=True,
+        )
         scheduler.start()
         app.logger.info("✅ Automatic recurring schedule generator started - daily at 2:00 AM + 30s after boot (lock acquired)")
         
@@ -465,6 +473,9 @@ from ticket_reporting_controls import reporting_controls
 app.register_blueprint(reporting_controls)
 from ticket_groups import ticket_groups, can_manage_groups
 app.register_blueprint(ticket_groups)
+from automation_admin import automation
+import automation_hooks
+app.register_blueprint(automation)
 from api_access import api_admin
 from api_v1_resources import api_v1
 import api_v1_docs

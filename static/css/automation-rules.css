@@ -1,0 +1,276 @@
+/*
+ * Automation-only layout and affordances. Reuse the flat workspace palette and
+ * inherited type; do not repaint the surrounding admin workspace.
+ * Match the shared theme's specificity where it resets Bootstrap utilities.
+ */
+.automation-page {
+    color: var(--flat-ink);
+    min-width: 0;
+    max-width: 100rem;
+    margin-inline: auto;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+}
+
+.automation-page h1 {
+    letter-spacing: -.025em;
+    font-weight: 650;
+}
+
+.automation-page :is(h2, .form-label) {
+    font-weight: 600;
+}
+
+.automation-page h2 {
+    margin-bottom: 1rem;
+}
+
+.automation-page :is(.row > *, .d-flex > *, fieldset) {
+    min-width: 0;
+}
+
+.automation-page .automation-toolbar {
+    padding-block: 1rem;
+    align-items: end;
+}
+
+.automation-page .automation-filter-field {
+    flex: 1 1 12rem;
+    max-width: 24rem;
+}
+
+.automation-page .automation-filter-field .form-label {
+    display: block;
+    font-size: .8125rem;
+    margin-bottom: .375rem;
+}
+
+.automation-page :is(.form-control, .form-select) {
+    min-height: 2.625rem;
+    font-size: .9375rem;
+}
+
+.automation-page textarea {
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.automation-page .font-monospace {
+    font-size: .8125rem;
+    tab-size: 2;
+}
+
+.automation-page :is(.btn, summary) {
+    min-height: 2.5rem;
+}
+
+.automation-page .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.automation-page .btn:disabled {
+    cursor: not-allowed;
+    opacity: .5;
+}
+
+.automation-page a:not(.btn):hover {
+    text-decoration: underline;
+    text-underline-offset: .2em;
+}
+
+.automation-page summary {
+    cursor: pointer;
+    padding-block: .625rem;
+    font-weight: 600;
+}
+
+.automation-page details[open] > summary {
+    margin-bottom: .5rem;
+}
+
+.automation-page .table-responsive {
+    overscroll-behavior-inline: contain;
+}
+
+.automation-page .table {
+    min-width: 70rem;
+}
+
+.automation-page .table :is(th, td) {
+    padding: .875rem 1rem;
+}
+
+.automation-page .table th {
+    font-size: .75rem;
+    letter-spacing: .035em;
+    white-space: nowrap;
+}
+
+.automation-page .table td:nth-child(2) {
+    min-width: 15rem;
+    max-width: 28rem;
+}
+
+.automation-page .table td:nth-child(7) {
+    min-width: 10rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.automation-page .table details {
+    min-width: 9rem;
+}
+
+.automation-page .automation-order input {
+    width: 5.5rem;
+}
+
+.automation-page pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.65;
+    max-width: 100%;
+}
+
+.automation-page .automation-pagination {
+    flex-wrap: wrap;
+    padding-block: 1rem;
+}
+
+.automation-page #customTriggers {
+    flex-wrap: wrap;
+}
+
+.automation-page :is(#conditions, #actions) > div > .d-flex {
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+.automation-page :is(#conditions, #actions) > div > .d-flex > .d-flex {
+    flex-wrap: wrap;
+}
+
+.automation-page .automation-save-preview {
+    padding-block: 1.25rem;
+}
+
+.automation-page #previewTicket {
+    max-width: 22rem;
+}
+
+.automation-page #previewSearch {
+    max-width: 16rem;
+}
+
+@media screen {
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page .card {
+        margin-bottom: 1.25rem !important;
+    }
+
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page .card-body {
+        padding: clamp(1rem, 2.5vw, 1.75rem);
+    }
+
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page :is(#conditions, #actions) > div {
+        border: 0 !important;
+        border-radius: 6px !important;
+        background: var(--flat-canvas);
+        padding: 1.25rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page :is(#conditions, #actions) > p {
+        background: var(--flat-canvas);
+        padding: 1rem;
+    }
+
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page pre {
+        border: 0 !important;
+        background: var(--flat-input);
+        color: var(--flat-ink);
+        padding: 1rem !important;
+    }
+
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page :is(.text-danger, pre.text-danger) {
+        color: var(--flat-bad) !important;
+    }
+
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page .text-success {
+        color: var(--flat-good) !important;
+    }
+
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page :is(.btn-success, .badge.bg-success) {
+        background: var(--flat-green) !important;
+        color: var(--flat-good) !important;
+    }
+
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page .badge.bg-secondary {
+        background: var(--flat-input) !important;
+        color: var(--flat-muted) !important;
+        white-space: normal;
+        line-height: 1.5;
+    }
+
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page :is(.btn, summary):hover {
+        text-decoration: underline;
+        text-underline-offset: .2em;
+    }
+
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page :focus-visible {
+        outline: 2px solid var(--flat-accent) !important;
+        outline-offset: 2px !important;
+    }
+
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page #variableDialog {
+        background: var(--flat-blue);
+        color: var(--flat-ink);
+        border: 0 !important;
+        border-radius: 10px !important;
+        padding: 1.5rem !important;
+        width: min(32rem, calc(100vw - 2rem));
+        max-height: 75vh;
+        max-height: 75dvh;
+        overflow-y: auto;
+        color-scheme: inherit;
+    }
+
+    /* Text close control stays legible in both themes without icon filters. */
+    html[data-flat-workspace][data-flat-workspace][data-flat-workspace] body .automation-page #closeVariables {
+        flex-shrink: 0;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .automation-page .automation-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .automation-page .automation-filter-field {
+        flex-basis: auto;
+        max-width: none;
+    }
+
+    .automation-page .automation-save-preview > :is(input, select, button, a) {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    .automation-page .automation-save-preview > .ms-md-auto {
+        display: none;
+    }
+
+    .automation-page .automation-section-tools {
+        flex-wrap: wrap;
+    }
+
+    .automation-page .automation-section-tools .btn {
+        flex-grow: 1;
+    }
+
+    .automation-page .automation-save-preview > label {
+        margin-top: .75rem;
+    }
+}

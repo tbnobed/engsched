@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/automation-rules.css') }}">
+<div class="container-fluid py-4 automation-page">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div><div class="small text-muted">Settings / Workflow</div><h1 class="h3 mb-1">Automation Rules</h1><p class="text-muted mb-0">Route work, keep tickets moving, and see exactly what happened.</p></div>
+        <div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{{ url_for('automation.runs') }}">Run log</a>{% if current_user.is_admin %}<a class="btn btn-primary" href="{{ url_for('automation.edit') }}">Create rule</a>{% endif %}</div>
+    </div>
+    <div class="alert alert-info small">Rules run in ascending order against the same event snapshot. Automation changes never trigger other rules. Native mappings: <strong>New → Open</strong>, <strong>Awaiting Input → Pending</strong>, <strong>Critical → Urgent (3)</strong>.</div>
+    <form class="d-flex gap-2 flex-wrap mb-3 automation-toolbar" method="get" aria-label="Filter automation rules">
+        <div class="automation-filter-field"><label class="form-label" for="automationSearch">Search rules</label><input id="automationSearch" class="form-control" name="q" placeholder="Search rules" value="{{ q }}"></div>
+        <div class="automation-filter-field"><label class="form-label" for="automationStatus">Status</label><select id="automationStatus" class="form-select" name="active">{% for value, label in [('all','All rules'),('true','Active'),('false','Inactive')] %}<option value="{{ value }}" {% if active == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="automation-filter-field"><label class="form-label" for="automationTrigger">Trigger</label><select id="automationTrigger" class="form-select" name="trigger"><option value="">All triggers</option>{% for value in triggers %}<option value="{{ value }}" {% if trigger == value %}selected{% endif %}>{{ value.replace('_',' ').title() }}</option>{% endfor %}</select></div>
+        <button class="btn btn-outline-primary">Filter</button>
+    </form>
+    <div class="card"><div class="table-responsive" tabindex="0" role="region" aria-label="Automation rules; scroll horizontally for all columns"><table class="table align-middle mb-0">
+        <caption class="visually-hidden">Automation rules in execution order</caption>
+        <thead><tr><th scope="col">Order</th><th scope="col">Rule</th><th scope="col">Trigger</th><th scope="col">Conditions</th><th scope="col">Actions</th><th scope="col">Active</th><th scope="col">Last fired</th><th scope="col">Matches · 7d</th><th scope="col">Options</th></tr></thead>
+        <tbody>{% for rule in rules %}<tr>
+            <td>{% if current_user.is_admin %}<form method="post" action="{{ url_for('automation.change', rule_id=rule.id) }}" class="d-flex gap-1 automation-order"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="operation" value="position"><input aria-label="Order for {{ rule.name }}" name="position" type="number" min="0" max="1000000" value="{{ rule.position }}" class="form-control form-control-sm"><button class="btn btn-sm btn-outline-secondary" aria-label="Save order for {{ rule.name }}">Save</button></form>{% else %}{{ rule.position }}{% endif %}</td>
+            <td><a class="fw-semibold" href="{{ url_for('automation.edit', rule_id=rule.id) }}">{{ rule.name }}</a><div class="small text-muted">{{ rule.description|truncate(85) }}</div></td>
+            <td>{{ rule.trigger.replace('_',' ').title() }}</td><td>{{ rule.conditions|length }}</td><td>{{ rule.actions|length }}</td>
+            <td>{% if current_user.is_admin %}<form method="post" action="{{ url_for('automation.change', rule_id=rule.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="operation" value="toggle"><button class="btn btn-sm {{ 'btn-success' if rule.active else 'btn-outline-secondary' }}" aria-label="Toggle {{ rule.name }}">{{ 'Active' if rule.active else 'Inactive' }}</button></form>{% else %}{{ 'Active' if rule.active else 'Inactive' }}{% endif %}</td>
+            <td class="small">{{ stats[rule.id].last.strftime('%Y-%m-%d %H:%M') ~ ' UTC' if rule.id in stats else 'Never' }}</td><td>{{ stats[rule.id].count if rule.id in stats else 0 }}</td>
+            <td><details><summary>Options</summary><div class="d-flex flex-column gap-2 py-2"><a href="{{ url_for('automation.edit', rule_id=rule.id) }}">{{ 'Edit' if current_user.is_admin else 'View' }}</a><a href="{{ url_for('automation.runs', rule_id=rule.id) }}">View run log</a>{% if current_user.is_admin %}<a href="{{ url_for('automation.edit', rule_id=rule.id, clone=1) }}">Clone inactive copy</a><form method="post" action="{{ url_for('automation.change', rule_id=rule.id) }}" onsubmit="return confirm('Delete this rule? Audit runs are retained.');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="operation" value="delete"><button class="btn btn-link text-danger p-0">Delete</button></form>{% endif %}</div></details></td>
+        </tr>{% else %}<tr><td colspan="9" class="text-center text-muted py-5">No automation rules match. Create your first rule to get started.</td></tr>{% endfor %}</tbody>
+    </table></div></div>
+    {% if current_user.is_admin %}
+    <details class="card mt-4"><summary class="card-header">Instance business calendar</summary><div class="card-body">
+        <p class="small text-muted">This app did not previously have business-hour settings. Configure the shared calendar before using business-hour conditions; unconfigured rules report an explicit error. Weekdays use 0 = Monday to 6 = Sunday. Omit non-working days.</p>
+        <form method="post" action="{{ url_for('automation.settings') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="form-label" for="calendarTimezone">IANA timezone</label><input id="calendarTimezone" name="timezone" class="form-control mb-3" value="{{ settings.timezone if settings else 'UTC' }}" required>
+            <label class="form-label" for="calendarHours">Business hours (JSON weekday → [start, end])</label><textarea id="calendarHours" name="business_hours" rows="4" class="form-control font-monospace mb-3" placeholder='{"0":["09:00","17:00"],"1":["09:00","17:00"]}'>{{ settings.business_hours|tojson if settings else '{}' }}</textarea>
+            <button class="btn btn-outline-primary">Save calendar</button>
+        </form>
+    </div></details>
+    <details class="card mt-3"><summary class="card-header">Custom field definitions</summary><div class="card-body">
+        <p class="small text-muted">Custom values are stored per ticket and can be set by automation. Fields are available as <code>custom.key</code>. Native site, subcategory and channel fields do not exist; use an explicitly named custom field instead.</p>
+        {% for field in custom_fields %}<span class="badge bg-secondary me-1 mb-2">{{ field.label }} · custom.{{ field.key }} · {{ field.data_type }}</span>{% endfor %}
+        <form class="row g-2 mt-2" method="post" action="{{ url_for('automation.custom_fields') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-md-3"><label class="form-label" for="fieldKey">Key</label><input id="fieldKey" name="key" class="form-control" pattern="[a-z][a-z0-9_]{0,79}" required></div>
+            <div class="col-md-3"><label class="form-label" for="fieldLabel">Label</label><input id="fieldLabel" name="label" class="form-control" maxlength="150" required></div>
+            <div class="col-md-3"><label class="form-label" for="fieldType">Type</label><select id="fieldType" name="data_type" class="form-select">{% for type in ['text','select','number','date'] %}<option>{{ type }}</option>{% endfor %}</select></div>
+            <div class="col-md-3"><label class="form-label" for="fieldChoices">Dropdown choices (one per line)</label><textarea id="fieldChoices" name="choices" class="form-control" rows="2"></textarea></div>
+            <div><button class="btn btn-outline-primary">Define custom field</button></div>
+        </form>
+    </div></details>
+    {% endif %}
+</div>
+{% endblock %}

@@ -3,6 +3,9 @@
 {% block title %}Ticket #{{ ticket['id'] }} - The Plex Studios{% endblock %}
 
 {% block content %}
+{% if current_user.is_admin or can_manage_ticket_groups %}
+<a class="btn btn-sm btn-outline-secondary mb-2" href="{{ url_for('automation.runs', ticket_id=ticket['id']) }}">Automation run log</a>
+{% endif %}
 <style>
 .ticket-header-gradient {
     background: linear-gradient(to right, #e9ecef, #f8f9fa) !important;

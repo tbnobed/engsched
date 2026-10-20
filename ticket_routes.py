@@ -901,6 +901,10 @@ def view_ticket(ticket_id):
         'created_at': ticket_obj.created_at,
         'updated_at': ticket_obj.updated_at,
         'due_date': ticket_obj.due_date,
+        'custom_values': ticket_obj.custom_values or {},
+        'tags': ticket_obj.tags or [],
+        'cc_user_ids': ticket_obj.cc_user_ids or [],
+        'cc_group_ids': ticket_obj.cc_group_ids or [],
         'attachment': ticket_obj.attachment,
         'category': {
             'id': ticket_obj.category.id,
@@ -909,6 +913,7 @@ def view_ticket(ticket_id):
         'comments': [{
             'id': comment.id,
             'content': comment.content,
+            'is_private': comment.is_private,
             'created_at': comment.created_at,
             'attachment': comment.attachment,
             'user': {
@@ -1011,6 +1016,12 @@ def view_ticket(ticket_id):
             display_last_reply = 'just now'
     previous_ticket = Ticket.query.filter(Ticket.id < ticket_obj.id, Ticket.archived == False).order_by(Ticket.id.desc()).first()
     next_ticket = Ticket.query.filter(Ticket.id > ticket_obj.id, Ticket.archived == False).order_by(Ticket.id).first()
+    from automation_models import AutomationTicketLink
+    automation_links = AutomationTicketLink.query.filter(
+        db.or_(AutomationTicketLink.ticket_id == ticket_obj.id,
+               AutomationTicketLink.linked_ticket_id == ticket_obj.id)).all()
+    automation_linked_ids = sorted({link.linked_ticket_id if link.ticket_id == ticket_obj.id else link.ticket_id
+                                   for link in automation_links})
     return render_template(
         'tickets/view.html', ticket=ticket, comment_form=comment_form, form=form,
         categories=categories, technicians=technicians, TicketStatus=TicketStatus,
@@ -1018,6 +1029,7 @@ def view_ticket(ticket_id):
         display_created=display_time(ticket['created_at']),
         display_updated=display_time(ticket['updated_at']),
         display_last_reply=display_last_reply,
+        automation_linked_ids=automation_linked_ids,
         display_timezone=f"All times {local_time(ticket['created_at']).tzname()} ({timezone.zone})",
         previous_ticket_id=previous_ticket.id if previous_ticket else None,
         next_ticket_id=next_ticket.id if next_ticket else None,

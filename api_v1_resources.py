@@ -45,7 +45,8 @@ def history_json(row):
 
 def comment_json(row):
     return {'id': row.id, 'ticket_id': row.ticket_id, 'author_id': row.user_id,
-            'content': comment_text(row.content), 'content_html': row.content, 'created_at': iso(row.created_at)}
+            'content': comment_text(row.content), 'content_html': row.content,
+            'is_private': bool(row.is_private), 'created_at': iso(row.created_at)}
 
 
 def ticket_event(ticket, action, details):

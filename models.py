@@ -359,6 +359,14 @@ class Ticket(db.Model):
     updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC), onupdate=lambda: datetime.now(pytz.UTC))
     due_date = db.Column(db.DateTime(timezone=True))
     archived = db.Column(db.Boolean, default=False)  # Flag for archived tickets
+    custom_values = db.Column(db.JSON, nullable=False, default=dict)
+    tags = db.Column(db.JSON, nullable=False, default=list)
+    cc_user_ids = db.Column(db.JSON, nullable=False, default=list)
+    cc_group_ids = db.Column(db.JSON, nullable=False, default=list)
+    assigned_at = db.Column(db.DateTime(timezone=True))
+    resolved_at = db.Column(db.DateTime(timezone=True))
+    closed_at = db.Column(db.DateTime(timezone=True))
+    reopened_at = db.Column(db.DateTime(timezone=True))
     
     # External email communication fields
     external_email = db.Column(db.String(255), nullable=True)  # Email address of external user
@@ -503,6 +511,14 @@ class Ticket(db.Model):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
             'due_date': self.due_date.isoformat() if self.due_date else None,
             'archived': self.archived,
+            'custom_values': self.custom_values or {},
+            'tags': self.tags or [],
+            'cc_user_ids': self.cc_user_ids or [],
+            'cc_group_ids': self.cc_group_ids or [],
+            'assigned_at': self.assigned_at.isoformat() if self.assigned_at else None,
+            'resolved_at': self.resolved_at.isoformat() if self.resolved_at else None,
+            'closed_at': self.closed_at.isoformat() if self.closed_at else None,
+            'reopened_at': self.reopened_at.isoformat() if self.reopened_at else None,
             # External user fields
             'external_email': self.external_email,
             'external_name': self.external_name,
@@ -525,6 +541,7 @@ class TicketComment(db.Model):
     ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
+    is_private = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC))
     updated_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC), onupdate=lambda: datetime.now(pytz.UTC))
     
@@ -540,6 +557,7 @@ class TicketComment(db.Model):
             'ticket_id': self.ticket_id,
             'user_id': self.user_id,
             'content': self.content,
+            'is_private': self.is_private,
             'attachment': self.attachment,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,

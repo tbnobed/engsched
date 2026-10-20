@@ -47,6 +47,8 @@ if [ "$1" = "gunicorn" ] || [ "$1" = "python" ] || [ "$1" = "flask" ]; then
   # same advisory lock as Flask initialization; no app import is required.
   PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 --single-transaction \
     -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /app/ticket_groups_schema.sql
+  PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 --single-transaction \
+    -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f /app/automation_schema.sql
 
   echo "Starting the application with: $@"
   exec "$@"

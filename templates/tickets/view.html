@@ -38,6 +38,7 @@
             </div>
         </div>
         <div class="tr-actions">
+            {% if can_manage_ticket_groups %}<a class="tr-btn" href="{{ url_for('automation.runs', ticket_id=ticket['id']) }}">Automation log</a>{% endif %}
             <form method="POST" action="{{ url_for('tickets.assign_ticket', ticket_id=ticket['id']) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="technician_id" value="{{ current_user.id }}">
@@ -69,6 +70,15 @@
         </div>
     </header>
 
+    {% if ticket.tags or ticket.custom_values or ticket.cc_user_ids or ticket.cc_group_ids or automation_linked_ids %}
+    <details class="card mb-3"><summary class="card-header">Tags, custom fields &amp; related records</summary><div class="card-body small">
+        {% if ticket.tags %}<p><strong>Tags:</strong> {% for tag in ticket.tags %}<span class="badge bg-secondary me-1">{{ tag }}</span>{% endfor %}</p>{% endif %}
+        {% for key, value in ticket.custom_values.items() %}<p class="mb-1"><strong>{{ key }}:</strong> {{ value if value is not none else '—' }}</p>{% endfor %}
+        {% if ticket.cc_user_ids %}<p><strong>CC users (IDs):</strong> {{ ticket.cc_user_ids|join(', ') }}</p>{% endif %}
+        {% if ticket.cc_group_ids %}<p><strong>CC groups (IDs):</strong> {{ ticket.cc_group_ids|join(', ') }}</p>{% endif %}
+        {% if automation_linked_ids %}<p><strong>Linked tickets:</strong> {% for id in automation_linked_ids %}<a href="{{ url_for('tickets.view_ticket', ticket_id=id) }}">#{{ id }}</a> {% endfor %}</p>{% endif %}
+    </div></details>
+    {% endif %}
     <section class="tr-meta" aria-label="Ticket metadata">
         <div class="tr-meta-cell">
             <span class="tr-meta-label">Status</span>
@@ -159,7 +169,7 @@
                         {% set author_name = author.username|default(author.name|default(requester_name)) %}
                         <article class="tr-activity-card" data-activity-kind="comment">
                             <header class="tr-activity-top">
-                                <div class="tr-author"><span class="tr-avatar">{{ author_name[:2]|upper }}</span><span>{{ author_name }}</span><span class="tr-activity-label">{{ 'AI analysis' if author_name == 'AI Assistant' else 'replied' }}</span></div>
+                                <div class="tr-author"><span class="tr-avatar">{{ author_name[:2]|upper }}</span><span>{{ author_name }}</span>{% if item.is_private %}<span class="tr-note-tag">Private internal note</span>{% else %}<span class="tr-activity-label">{{ 'AI analysis' if author_name == 'AI Assistant' else 'replied' }}</span>{% endif %}</div>
                                 <time class="tr-time" datetime="{{ entry.created_at.isoformat() if entry.created_at else '' }}">{{ entry.display_time }}</time>
                             </header>
                             <div class="tr-activity-content">{{ item.get('content', '')|clean_ai_analysis|safe }}</div>

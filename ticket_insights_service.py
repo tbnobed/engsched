@@ -79,6 +79,8 @@ def is_ai_comment(content, username=''):
 
 
 def is_staff_reply(comment, ticket):
+    if getattr(comment, 'is_private', False):
+        return False
     if is_ai_comment(comment.content, comment.user.username if comment.user else ''):
         return False
     if not comment.user or comment.user.username.casefold() in {'system', 'ai assistant'}:

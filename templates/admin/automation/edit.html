@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/automation-rules.css') }}">
+<div class="container py-4 automation-page" id="automationEditor">
+    <a href="{{ url_for('automation.index') }}" class="small">Settings / Automation Rules</a>
+    <div class="d-flex justify-content-between flex-wrap gap-2 my-3"><div><h1 class="h3">{{ 'Copy rule' if clone else ('Edit rule' if rule.id and current_user.is_admin else ('View rule' if rule.id else 'Create rule')) }}</h1><p class="text-muted">Define a trigger, match the right tickets, then take action.</p></div><div>{% if rule.id %}<a class="btn btn-outline-secondary" href="{{ url_for('automation.runs', rule_id=rule.id) }}">View run log</a>{% endif %}</div></div>
+    <form method="post" id="ruleForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="definition" id="definitionPayload">
+        <fieldset {% if not current_user.is_admin %}disabled{% endif %}>
+        <section class="card mb-3"><div class="card-body"><h2 class="h5">1. Basics</h2>
+            <div class="row g-3"><div class="col-md-9"><label for="ruleName" class="form-label">Name</label><input id="ruleName" class="form-control" maxlength="200" required></div><div class="col-md-3 d-flex align-items-end"><label class="form-check mb-2"><input id="ruleActive" class="form-check-input" type="checkbox"> Active</label></div>
+            <div><label for="ruleDescription" class="form-label">Description</label><textarea id="ruleDescription" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-3"><label for="rulePosition" class="form-label">Order</label><input id="rulePosition" class="form-control" type="number" min="0" max="1000000" required></div></div>
+        </div></section>
+        <section class="card mb-3"><div class="card-body"><h2 class="h5">2. Trigger</h2><div class="row g-3">
+            <div class="col-md-6"><label for="ruleTrigger" class="form-label">When this happens</label><select id="ruleTrigger" class="form-select">{% for trigger in triggers %}<option value="{{ trigger }}">{{ trigger.replace('_',' ').title() }}</option>{% endfor %}</select></div>
+            <div class="col-md-6"><label for="ruleScope" class="form-label">Scope</label><select id="ruleScope" class="form-select"><option value="ticket">Ticket</option></select></div>
+            <div id="customTriggers" class="d-flex gap-3">{% for value in ['created','comment_added','updated'] %}<label class="form-check"><input class="form-check-input" data-custom-trigger="{{ value }}" type="checkbox"> {{ value.replace('_',' ').title() }}</label>{% endfor %}</div>
+        </div></div></section>
+        <section class="card mb-3"><div class="card-body"><div class="d-flex justify-content-between flex-wrap gap-2 mb-3"><h2 class="h5">3. Conditions</h2><div class="d-flex gap-2 automation-section-tools"><button type="button" id="addCondition" class="btn btn-sm btn-outline-primary">Add condition</button><button type="button" id="addTimed" class="btn btn-sm btn-outline-primary">Add time-based condition</button></div></div>
+            <div class="alert alert-info small">Time conditions cannot be combined with change/from/to conditions: a scheduled run has no original change event to compare. All offsets are capped at 400 days. A missing comment anchor uses ticket creation.</div>
+            <div id="conditions"></div>
+            <div class="row g-3 mt-1"><div class="col-md-4"><label for="conditionLogic" class="form-label">Match</label><select id="conditionLogic" class="form-select"><option value="all">All conditions</option><option value="any">Any condition</option><option value="custom">Custom expression</option></select></div><div class="col-md-8" id="expressionArea"><label for="customExpression" class="form-label">Condition expression</label><input id="customExpression" class="form-control font-monospace" placeholder="1 and (2 or 3)"><div id="expressionFeedback" class="small mt-1" role="status"></div></div></div>
+            <div id="mixWarning" class="text-danger small mt-2" role="alert"></div>
+        </div></section>
+        <section class="card mb-3"><div class="card-body"><div class="d-flex justify-content-between flex-wrap gap-2 mb-3"><h2 class="h5">4. Actions</h2><div class="d-flex gap-2 automation-section-tools"><button type="button" class="btn btn-sm btn-outline-secondary" id="showVariables">Add variable</button><button type="button" class="btn btn-sm btn-outline-primary" id="addAction">Add action</button></div></div>
+            <p class="text-muted small">Actions run in this order. Critical = Urgent (3), New = Open, Awaiting Input = Pending. Private comments stay internal. Notifications only resolve internal users; free-text email addresses are never accepted.</p>
+            <div id="actions"></div>
+        </div></section>
+        </fieldset>
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-4 automation-save-preview">{% if current_user.is_admin %}<button id="saveRule" class="btn btn-primary">Save rule</button>{% endif %}<a href="{{ url_for('automation.index') }}" class="btn btn-outline-secondary">Cancel</a><span class="ms-md-auto"></span><label for="previewSearch" class="small">Preview ticket</label><input type="search" id="previewSearch" class="form-control w-auto" placeholder="Search title or ID"><select id="previewTicket" class="form-select w-auto" aria-label="Select an existing ticket"><option value="">Choose a ticket</option></select><button type="button" id="previewRule" class="btn btn-outline-primary">Preview against ticket</button></div>
+        <div id="editorError" class="alert alert-danger d-none" role="alert"></div>
+        <section id="previewOutput" class="card d-none"><div class="card-body"><h2 class="h5">Preview · no changes applied</h2><div id="previewDetails"></div></div></section>
+    </form>
+    <dialog id="variableDialog" aria-labelledby="variableDialogTitle"><div class="d-flex justify-content-between gap-3 mb-3"><h2 class="h5" id="variableDialogTitle">Add variable</h2><button type="button" class="btn btn-sm btn-outline-secondary" id="closeVariables" aria-label="Close variable picker">Close</button></div><input id="variableSearch" class="form-control mb-3" placeholder="Search variables" aria-label="Search variables"><p class="small text-muted">Choose a variable to insert into the last focused text field.</p><div id="variableList" class="d-flex flex-column gap-1"></div></dialog>
+</div>
+<script id="automationData" type="application/json">{{ {'definition':definition,'fields':fields,'operators':operators,'anchors':anchors,'admin':current_user.is_admin,'users':user_options,'groups':group_options,'validateUrl':url_for('automation.validate_expression'),'previewUrl':url_for('automation.preview'),'ticketChoicesUrl':url_for('automation.ticket_choices'),'csrf':csrf_token()}|tojson }}</script>
+<script src="{{ url_for('static', filename='js/automation_rules.js') }}" defer></script>
+{% endblock %}

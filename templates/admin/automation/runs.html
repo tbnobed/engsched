@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/automation-rules.css') }}">
+<div class="container-fluid py-4 automation-page">
+    <a href="{{ url_for('automation.index') }}">Settings / Automation Rules</a><h1 class="h3 mt-3">Automation run log</h1>
+    <p class="text-muted">Every evaluated rule, including non-matches. Action failures do not stop later actions. Timestamps are UTC.</p>
+    <form method="get" class="d-flex gap-2 flex-wrap my-3 automation-toolbar" aria-label="Filter run log"><div class="automation-filter-field"><label for="runRuleId" class="form-label">Rule ID</label><input id="runRuleId" class="form-control" name="rule_id" type="number" min="1" placeholder="Rule ID" value="{{ rule_id or '' }}"></div><div class="automation-filter-field"><label for="runTicketId" class="form-label">Ticket ID</label><input id="runTicketId" class="form-control" name="ticket_id" type="number" min="1" placeholder="Ticket ID" value="{{ ticket_id or '' }}"></div><button class="btn btn-outline-primary">Filter</button></form>
+    {% for run in page.items %}
+    <article class="card mb-3"><div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-2"><div><span class="badge {{ 'bg-success' if run.matched else 'bg-secondary' }}">{{ 'Matched' if run.matched else 'Not matched' }}</span> <strong>{{ run.rule_name }}</strong> · <a href="{{ url_for('tickets.view_ticket', ticket_id=run.ticket_id) }}">Ticket #{{ run.ticket_id }}</a></div><span class="small text-muted">{{ run.started_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</span></div>
+        <div class="small text-muted mt-2">{{ run.trigger_event }} · Run #{{ run.id }} · {{ 'Finished ' ~ run.finished_at.strftime('%H:%M:%S') if run.finished_at else 'In progress' }}</div>
+        <div class="row mt-3"><div class="col-lg-6"><h2 class="h6">Actions executed</h2>{% for action in run.actions_executed %}<pre class="small text-wrap border rounded p-2">{{ action|tojson(indent=2) }}</pre>{% else %}<p class="small text-muted">No actions executed.</p>{% endfor %}</div><div class="col-lg-6"><h2 class="h6">Errors and variable warnings</h2>{% for error in run.errors %}<pre class="small text-wrap text-danger border rounded p-2">{{ error|tojson(indent=2) }}</pre>{% else %}<p class="small text-muted">No errors.</p>{% endfor %}</div></div>
+    </div></article>
+    {% else %}<div class="card p-5 text-center text-muted">No rule evaluations found.</div>{% endfor %}
+    <nav class="d-flex gap-2 automation-pagination" aria-label="Run log pages">{% if page.has_prev %}<a class="btn btn-outline-secondary" href="{{ url_for('automation.runs', rule_id=rule_id, ticket_id=ticket_id, page=page.prev_num) }}">Previous</a>{% endif %}<span class="align-self-center small" aria-current="page">Page {{ page.page }} of {{ page.pages or 1 }}</span>{% if page.has_next %}<a class="btn btn-outline-secondary" href="{{ url_for('automation.runs', rule_id=rule_id, ticket_id=ticket_id, page=page.next_num) }}">Next</a>{% endif %}</nav>
+</div>
+{% endblock %}

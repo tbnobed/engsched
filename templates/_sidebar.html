@@ -65,6 +65,7 @@
                 <ul class="app-sidebar-sublist" id="sidebarAdmin" hidden>
                     <li><a class="app-sidebar-link" href="{{ url_for('admin_dashboard') }}">User Management</a></li>
                     <li><a class="app-sidebar-link" href="{{ url_for('ticket_groups.index') }}">Users &amp; Groups · Groups</a></li>
+                    <li><a class="app-sidebar-link" href="{{ url_for('automation.index') }}">Automation Rules</a></li>
                     <li><a class="app-sidebar-link" href="{{ url_for('admin_locations') }}">Manage Locations</a></li>
                     <li><a class="app-sidebar-link" href="{{ url_for('admin_quick_links') }}">Manage Quick Links</a></li>
                     <li><a class="app-sidebar-link" href="{{ url_for('admin_backup') }}">Backup &amp; Restore</a></li>
@@ -83,6 +84,7 @@
                 </button>
                 <ul class="app-sidebar-sublist" id="sidebarProfile" hidden>
                     {% if can_manage_ticket_groups and not current_user.is_admin %}
+                    <li><a class="app-sidebar-link" href="{{ url_for('automation.index') }}">Automation Rules</a></li>
                     <li><a class="app-sidebar-link" href="{{ url_for('ticket_groups.index') }}">Manage My Groups</a></li>
                     {% endif %}
                     <li><a class="app-sidebar-link" href="{{ url_for('profile') }}">Profile Settings</a></li>
